@@ -1,0 +1,12 @@
+[package]
+name = "steam_shortcuts_sync"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+steam_shortcuts_util={version="*", path="C:/src/Rust/steam_shortcuts_util"}
+steamgriddb_api="*"
+serde={version="*", features=["derive"]}
+serde_json="*"
