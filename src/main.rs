@@ -1,12 +1,8 @@
-use std::{
-    env::{self},
-    fmt,
-    path::Path,
-};
+use std::{env::{self}, fmt, fs::File, io::Write, path::Path};
 mod egs;
-use egs::get_egs_manifests;
+use egs::{get_egs_manifests, ManifestItem};
 use std::error::Error;
-use steam_shortcuts_util::parse_shortcuts;
+use steam_shortcuts_util::{Shortcut, parse_shortcuts, shortcuts_to_bytes};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let egs_manifests = get_egs_manifests()?;
@@ -17,18 +13,51 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     userinfo_shortcuts.iter().for_each(|user| {
         let mut shortcuts = vec![];
+        let mut new_path = user.shortcut_path.clone();
         if let Some(shortcut_path) = &user.shortcut_path {
             //TODO remove unwrap
             let content = std::fs::read(shortcut_path).unwrap();
-            shortcuts = parse_shortcuts(content.as_slice()).unwrap();
-            println!("Found {} shortcuts , for user: {}", shortcuts.len(),user.steam_user_data_folder);
+            shortcuts = parse_shortcuts(content.as_slice())
+                .unwrap()
+                .iter()
+                .map(|s| s.to_owned())
+                .collect();
+            println!(
+                "Found {} shortcuts , for user: {}",
+                shortcuts.len(),
+                user.steam_user_data_folder
+            );
         } else {
             println!(
                 "Did not find a shortcut file for user {}, createing a new",
                 user.steam_user_data_folder
             );
+            std::fs::create_dir_all(format!("{}/{}", user.steam_user_data_folder, "config")).unwrap();            
+            new_path = Some(format!("{}/{}", user.steam_user_data_folder, "config/shortcuts.vdf"));
         }
+        let cur_number_of_shortcuts = shortcuts.len();
+        egs_manifests.iter().enumerate().for_each(|(i, manifest)| {
+            let exe = format!(
+                "{}/{}",
+                manifest.install_location, manifest.launch_executable
+            );
+            let shortcut = Shortcut::new(
+                cur_number_of_shortcuts + i,
+                manifest.display_name.as_str(),
+                exe.as_str(),
+                manifest.install_location.as_str(),
+                exe.as_str(),
+                exe.as_str(),
+                "",
+            );
+            shortcuts.push(shortcut.to_owned());
+        });
+
+        let shortcut_refs = shortcuts.iter().map(|f| f.borrow()).collect();
+        let new_content = shortcuts_to_bytes(&shortcut_refs);
         
+        let mut file = File::create(new_path.unwrap()).unwrap();
+        file.write(new_content.as_slice()).unwrap();
     });
 
     Ok(())
@@ -99,10 +128,9 @@ fn get_shortcuts_paths() -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
     let users_info = user_folders
         .filter_map(|f| f.ok())
         .map(|folder| {
-            let folder_path = folder
-                .path();
-            let folder_str = 
-                folder_path.to_str()
+            let folder_path = folder.path();
+            let folder_str = folder_path
+                .to_str()
                 .expect("We just checked that this was there");
             let path = format!("{}//config//shortcuts.vdf", folder_str);
             let shortcuts_path = Path::new(path.as_str());
