@@ -12,10 +12,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     let egs_manifests = get_egs_manifests()?;
     println!("Found {} installed EGS Games", egs_manifests.len());
 
-    let shortcut_content = get_shortcuts_content()?;
-    let shortcuts = parse_shortcuts(shortcut_content.as_slice())?;
+    let userinfo_shortcuts = get_shortcuts_paths()?;
+    println!("Found {} user(s)", userinfo_shortcuts.len());
 
-    println!("Shortcuts found {}", shortcuts.len());
+    userinfo_shortcuts.iter().for_each(|user| {
+        let mut shortcuts = vec![];
+        if let Some(shortcut_path) = &user.shortcut_path {
+            //TODO remove unwrap
+            let content = std::fs::read(shortcut_path).unwrap();
+            shortcuts = parse_shortcuts(content.as_slice()).unwrap();
+            println!("Found {} shortcuts , for user: {}", shortcuts.len(),user.steam_user_data_folder);
+        } else {
+            println!(
+                "Did not find a shortcut file for user {}, createing a new",
+                user.steam_user_data_folder
+            );
+        }
+        
+    });
+
     Ok(())
 }
 
@@ -61,7 +76,13 @@ impl Error for SteamUsersDataEmpty {
     }
 }
 
-fn get_shortcuts_content() -> Result<Vec<u8>, Box<dyn Error>> {
+struct SteamUsersInfo {
+    pub steam_user_data_folder: String,
+    pub shortcut_path: Option<String>,
+}
+
+/// Get the paths to the steam users shortcuts (one for each user)
+fn get_shortcuts_paths() -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
     let key = "PROGRAMFILES(X86)";
     let program_files = env::var(key)?;
     let path_string = format!(
@@ -74,18 +95,26 @@ fn get_shortcuts_content() -> Result<Vec<u8>, Box<dyn Error>> {
             location_tried: path_string,
         }));
     }
-    let mut user_folders = std::fs::read_dir(&user_data_path)?;
-    if let Some(Ok(folder)) = user_folders.next() {
-        let path = folder.path();
-        let shortcuts_folder = format!(
-            "{}//config//shortcuts.vdf",
-            path.to_str().expect("We just checked that this was there")
-        );
-        let content = std::fs::read(shortcuts_folder)?;
-        Ok(content)
-    } else {
-        Err(Box::new(SteamUsersDataEmpty {
-            location_tried: path_string,
-        }))
-    }
+    let user_folders = std::fs::read_dir(&user_data_path)?;
+    let users_info = user_folders
+        .filter_map(|f| f.ok())
+        .map(|folder| {
+            let folder_path = folder
+                .path();
+            let folder_str = 
+                folder_path.to_str()
+                .expect("We just checked that this was there");
+            let path = format!("{}//config//shortcuts.vdf", folder_str);
+            let shortcuts_path = Path::new(path.as_str());
+            let mut shortcuts_path_op = None;
+            if shortcuts_path.exists() {
+                shortcuts_path_op = Some(shortcuts_path.to_str().unwrap().to_string());
+            }
+            SteamUsersInfo {
+                steam_user_data_folder: folder_str.to_string(),
+                shortcut_path: shortcuts_path_op,
+            }
+        })
+        .collect();
+    Ok(users_info)
 }
