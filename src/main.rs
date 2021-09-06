@@ -1,66 +1,114 @@
-use std::{env::{self}, fmt, fs::File, io::Write, path::Path};
+use std::{
+    env::{self},
+    fmt,
+    fs::File,
+    io::Write,
+    path::Path,
+};
 mod egs;
 use egs::{get_egs_manifests, ManifestItem};
 use std::error::Error;
-use steam_shortcuts_util::{Shortcut, parse_shortcuts, shortcuts_to_bytes};
+use steam_shortcuts_util::{
+    parse_shortcuts, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
+};
+
+pub struct ShortcutInfo {
+    pub path: String,
+    pub shortcuts: Vec<ShortcutOwned>,
+}
+
+fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
+    let mut shortcuts = vec![];
+    let mut new_path = user.shortcut_path.clone();
+    if let Some(shortcut_path) = &user.shortcut_path {
+        // std::fs::remove_file(path)
+        //TODO remove unwrap
+        let content = std::fs::read(shortcut_path).unwrap();
+        shortcuts = parse_shortcuts(content.as_slice())
+            .unwrap()
+            .iter()
+            .map(|s| s.to_owned())
+            .collect();
+        println!(
+            "Found {} shortcuts , for user: {}",
+            shortcuts.len(),
+            user.steam_user_data_folder
+        );
+    } else {
+        println!(
+            "Did not find a shortcut file for user {}, createing a new",
+            user.steam_user_data_folder
+        );
+        std::fs::create_dir_all(format!("{}/{}", user.steam_user_data_folder, "config")).unwrap();
+        new_path = Some(format!(
+            "{}/{}",
+            user.steam_user_data_folder, "config/shortcuts.vdf"
+        ));
+    }
+    ShortcutInfo {
+        shortcuts,
+        path: new_path.unwrap(),
+    }
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let auth_key = std::fs::read_to_string("auth_key.txt")?;
+    let client = steamgriddb_api::Client::new(auth_key);
+
     let egs_manifests = get_egs_manifests()?;
+    let egs_shortcuts: Vec<ShortcutOwned> =
+        egs_manifests.iter().map(manifest_to_shortcut).collect();
     println!("Found {} installed EGS Games", egs_manifests.len());
 
     let userinfo_shortcuts = get_shortcuts_paths()?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
 
     userinfo_shortcuts.iter().for_each(|user| {
-        let mut shortcuts = vec![];
-        let mut new_path = user.shortcut_path.clone();
-        if let Some(shortcut_path) = &user.shortcut_path {
-            //TODO remove unwrap
-            let content = std::fs::read(shortcut_path).unwrap();
-            shortcuts = parse_shortcuts(content.as_slice())
-                .unwrap()
-                .iter()
-                .map(|s| s.to_owned())
-                .collect();
-            println!(
-                "Found {} shortcuts , for user: {}",
-                shortcuts.len(),
-                user.steam_user_data_folder
-            );
-        } else {
-            println!(
-                "Did not find a shortcut file for user {}, createing a new",
-                user.steam_user_data_folder
-            );
-            std::fs::create_dir_all(format!("{}/{}", user.steam_user_data_folder, "config")).unwrap();            
-            new_path = Some(format!("{}/{}", user.steam_user_data_folder, "config/shortcuts.vdf"));
-        }
-        let cur_number_of_shortcuts = shortcuts.len();
-        egs_manifests.iter().enumerate().for_each(|(i, manifest)| {
-            let exe = format!(
-                "{}/{}",
-                manifest.install_location, manifest.launch_executable
-            );
-            let shortcut = Shortcut::new(
-                cur_number_of_shortcuts + i,
-                manifest.display_name.as_str(),
-                exe.as_str(),
-                manifest.install_location.as_str(),
-                exe.as_str(),
-                exe.as_str(),
-                "",
-            );
-            shortcuts.push(shortcut.to_owned());
-        });
+        let shortcut_info = get_shortcuts_for_user(user);
+        let user_shortcuts = shortcut_info.shortcuts;
+        let new_path = shortcut_info.path;
+        let new_user_shortcuts: Vec<&ShortcutOwned> = user_shortcuts
+            .iter()
+            .filter(|user_shortcut| !user_shortcut.tags.contains(&"EGS".to_owned()))
+            .chain(egs_shortcuts.iter())
+            .collect();
 
-        let shortcut_refs = shortcuts.iter().map(|f| f.borrow()).collect();
+        let shortcut_refs = new_user_shortcuts.iter().map(|f| f.borrow()).collect();
         let new_content = shortcuts_to_bytes(&shortcut_refs);
-        
-        let mut file = File::create(new_path.unwrap()).unwrap();
+
+        let mut file = File::create(new_path).unwrap();
         file.write(new_content.as_slice()).unwrap();
+
+        // shortcut_refs.iter().map(|shortcut| {
+        //     client.search(shortcut.app_name).await?.iter().next();
+        // });
     });
 
     Ok(())
+}
+
+fn manifest_to_shortcut(manifest: &ManifestItem) -> ShortcutOwned {
+    let exe = format!(
+        "\"{}\\{}\"",
+        manifest.install_location, manifest.launch_executable
+    );
+    let mut start_dir = manifest.install_location.clone();
+    if !manifest.install_location.starts_with("\"") {
+        start_dir = format!("\"{}\"", manifest.install_location);
+    }
+    let shortcut = Shortcut::new(
+        0,
+        manifest.display_name.as_str(),
+        exe.as_str(),
+        start_dir.as_str(),
+        "",
+        "",
+        "",
+    );
+    let mut owned_shortcut = shortcut.to_owned();
+    owned_shortcut.tags.push("EGS".to_owned());
+
+    owned_shortcut
 }
 
 #[derive(Debug)]
