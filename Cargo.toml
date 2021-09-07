@@ -7,6 +7,8 @@ edition = "2018"
 
 [dependencies]
 steam_shortcuts_util={version="*", path="C:/src/Rust/steam_shortcuts_util"}
-steamgriddb_api="*"
+steamgriddb_api={version="*", path="C:/src/Rust/steamgriddb_api"}
 serde={version="*", features=["derive"]}
 serde_json="*"
+tokio = { version = "1.11.0", features = ["full"] }
+reqwest = { version = "*", features = ["default"] }

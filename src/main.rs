@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     env::{self},
     fmt,
     fs::File,
@@ -11,6 +12,7 @@ use std::error::Error;
 use steam_shortcuts_util::{
     parse_shortcuts, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
+use steamgriddb_api::{Client, query_parameters::{GridQueryParameters, HeroQueryParameters}, search::SearchResult};
 
 pub struct ShortcutInfo {
     pub path: String,
@@ -51,7 +53,8 @@ fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let auth_key = std::fs::read_to_string("auth_key.txt")?;
     let client = steamgriddb_api::Client::new(auth_key);
 
@@ -63,28 +66,142 @@ fn main() -> Result<(), Box<dyn Error>> {
     let userinfo_shortcuts = get_shortcuts_paths()?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
 
-    userinfo_shortcuts.iter().for_each(|user| {
+    for user in userinfo_shortcuts.iter() {
         let shortcut_info = get_shortcuts_for_user(user);
-        let user_shortcuts = shortcut_info.shortcuts;
-        let new_path = shortcut_info.path;
-        let new_user_shortcuts: Vec<&ShortcutOwned> = user_shortcuts
+        let new_user_shortcuts: Vec<&ShortcutOwned> = shortcut_info
+            .shortcuts
             .iter()
             .filter(|user_shortcut| !user_shortcut.tags.contains(&"EGS".to_owned()))
             .chain(egs_shortcuts.iter())
             .collect();
 
-        let shortcut_refs = new_user_shortcuts.iter().map(|f| f.borrow()).collect();
-        let new_content = shortcuts_to_bytes(&shortcut_refs);
+        let shortcuts = new_user_shortcuts.iter().map(|f| f.borrow()).collect();
 
-        let mut file = File::create(new_path).unwrap();
+        let new_content = shortcuts_to_bytes(&shortcuts);
+        let mut file = File::create(shortcut_info.path).unwrap();
         file.write(new_content.as_slice()).unwrap();
 
-        // shortcut_refs.iter().map(|shortcut| {
-        //     client.search(shortcut.app_name).await?.iter().next();
-        // });
-    });
+        let known_images = get_users_images(user).unwrap();
+        // let mut hash_map = HashMap::new();
+
+        let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
+            let images = vec![
+                format!("{}_hero.png", s.app_id),
+                format!("{}p.png", s.app_id),
+                format!("{}_logo.png", s.app_id),
+            ];
+            // if we are missing any of the images we need to search for them
+            images.iter().any(|image| !known_images.contains(&image))
+        });
+
+        let mut search_results = HashMap::new();
+        for s in shortcuts_to_search_for {
+            println!("Searching for {}", s.app_name);
+            let search = search_for_shortcut(&client, s.app_name).await;
+            if let Some(search) = search {
+                search_results.insert(s.app_id, search);
+            }
+        }
+
+        let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid];
+        for image_type in types {
+            let mut images_needed = shortcuts
+                .iter()
+                .filter(|s| search_results.contains_key(&s.app_id))
+                .filter(|s| !known_images.contains(&image_type.file_name(s.app_id)));
+            let image_ids: Vec<usize> = images_needed
+                .clone()
+                .filter_map(|s| search_results.get(&s.app_id))
+                .map(|search| search.id)
+                .collect();
+
+
+            let animation_order= vec![
+                    steamgriddb_api::query_parameters::AnimtionType::Animated,
+                    steamgriddb_api::query_parameters::AnimtionType::Static,
+                ];
+            let hero_parameters = HeroQueryParameters {
+                types: Some(&animation_order),
+                ..HeroQueryParameters::default()
+            };
+            let grid_parameters = GridQueryParameters {
+                types: Some(&animation_order),
+                ..GridQueryParameters::default()
+            };
+            let query_type = match image_type {
+                ImageType::Hero => {
+                    steamgriddb_api::query_parameters::QueryType::Hero(Some(hero_parameters))
+                }
+                ImageType::Grid => steamgriddb_api::query_parameters::QueryType::Grid(Some(grid_parameters)),
+                ImageType::Logo => steamgriddb_api::query_parameters::QueryType::Logo(None),
+            };
+
+            match client
+                .get_images_for_ids(image_ids.as_slice(), &query_type)
+                .await
+            {
+                Ok(images) => {
+                    for image in images {
+                        if let Some(shortcut) = images_needed.next() {
+                            if let Ok(image) = image {
+                                let grid_folder = Path::new(user.steam_user_data_folder.as_str())
+                                    .join("config/grid");
+                                let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                                println!(
+                                    "Downloading {} to {}",
+                                    image.url,
+                                    path.as_path().to_str().unwrap()
+                                );
+                                let mut file = File::create(path).unwrap();
+                                let response = reqwest::get(image.url).await?;
+                                let content = response.bytes().await?;
+                                file.write(&content).unwrap();
+                            }
+                        }
+                    }
+                }
+                Err(err) => println!("Error getting images: {}", err),
+            }
+        }
+    }
 
     Ok(())
+}
+
+pub enum ImageType {
+    Hero,
+    Grid,
+    Logo,
+}
+
+impl ImageType {
+    pub fn file_name(&self, app_id: u32) -> String {
+        match self {
+            ImageType::Hero => format!("{}_hero.png", app_id),
+            ImageType::Grid => format!("{}p.png", app_id),
+            ImageType::Logo => format!("{}_logo.png", app_id),
+        }
+    }
+}
+
+async fn search_for_shortcut(client: &Client, name: &str) -> Option<SearchResult> {
+    if let Ok(search) = client.search(name).await {
+        if let Some(search_ref) = search.iter().next() {
+            return Some(search_ref.to_owned());
+        }
+    }
+    None
+}
+
+fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Error>> {
+    let grid_folder = Path::new(user.steam_user_data_folder.as_str()).join("config/grid");
+    std::fs::create_dir_all(&grid_folder)?;
+    let user_folders = std::fs::read_dir(&grid_folder)?;
+    let file_names = user_folders
+        .filter_map(|image| image.ok())
+        .map(|image| image.file_name().into_string().unwrap())
+        .collect();
+    Ok(file_names)
 }
 
 fn manifest_to_shortcut(manifest: &ManifestItem) -> ShortcutOwned {
@@ -107,6 +224,8 @@ fn manifest_to_shortcut(manifest: &ManifestItem) -> ShortcutOwned {
     );
     let mut owned_shortcut = shortcut.to_owned();
     owned_shortcut.tags.push("EGS".to_owned());
+    owned_shortcut.tags.push("Ready TO Play".to_owned());
+    owned_shortcut.tags.push("Installed".to_owned());
 
     owned_shortcut
 }
