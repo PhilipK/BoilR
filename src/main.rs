@@ -6,18 +6,23 @@ use std::{
     io::Write,
     path::Path,
 };
+mod cached_search;
 mod egs;
 use egs::{get_egs_manifests, ManifestItem};
 use std::error::Error;
 use steam_shortcuts_util::{
     parse_shortcuts, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
-use steamgriddb_api::{Client, query_parameters::{GridQueryParameters, HeroQueryParameters}, search::SearchResult};
+use steamgriddb_api::{search::SearchResult, Client};
+
+use crate::cached_search::CachedSearch;
 
 pub struct ShortcutInfo {
     pub path: String,
     pub shortcuts: Vec<ShortcutOwned>,
 }
+
+
 
 fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
     let mut shortcuts = vec![];
@@ -55,8 +60,10 @@ fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    
     let auth_key = std::fs::read_to_string("auth_key.txt")?;
     let client = steamgriddb_api::Client::new(auth_key);
+    let mut search = CachedSearch::new(&client);
 
     let egs_manifests = get_egs_manifests()?;
     let egs_shortcuts: Vec<ShortcutOwned> =
@@ -97,11 +104,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let mut search_results = HashMap::new();
         for s in shortcuts_to_search_for {
             println!("Searching for {}", s.app_name);
-            let search = search_for_shortcut(&client, s.app_name).await;
+            let search = search.search(s.app_id,s.app_name).await?;
             if let Some(search) = search {
                 search_results.insert(s.app_id, search);
             }
         }
+
+     
 
         let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid];
         for image_type in types {
@@ -112,27 +121,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let image_ids: Vec<usize> = images_needed
                 .clone()
                 .filter_map(|s| search_results.get(&s.app_id))
-                .map(|search| search.id)
+                .map(|search| *search)
                 .collect();
 
-
-            let animation_order= vec![
-                    steamgriddb_api::query_parameters::AnimtionType::Animated,
-                    steamgriddb_api::query_parameters::AnimtionType::Static,
-                ];
-            let hero_parameters = HeroQueryParameters {
-                types: Some(&animation_order),
-                ..HeroQueryParameters::default()
-            };
-            let grid_parameters = GridQueryParameters {
-                types: Some(&animation_order),
-                ..GridQueryParameters::default()
-            };
             let query_type = match image_type {
-                ImageType::Hero => {
-                    steamgriddb_api::query_parameters::QueryType::Hero(Some(hero_parameters))
-                }
-                ImageType::Grid => steamgriddb_api::query_parameters::QueryType::Grid(Some(grid_parameters)),
+                ImageType::Hero => steamgriddb_api::query_parameters::QueryType::Hero(None),
+                ImageType::Grid => steamgriddb_api::query_parameters::QueryType::Grid(None),
                 ImageType::Logo => steamgriddb_api::query_parameters::QueryType::Logo(None),
             };
 
@@ -164,6 +158,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
+
+    search.save();
 
     Ok(())
 }
