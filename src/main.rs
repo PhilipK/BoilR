@@ -180,14 +180,6 @@ impl ImageType {
     }
 }
 
-async fn search_for_shortcut(client: &Client, name: &str) -> Option<SearchResult> {
-    if let Ok(search) = client.search(name).await {
-        if let Some(search_ref) = search.iter().next() {
-            return Some(search_ref.to_owned());
-        }
-    }
-    None
-}
 
 fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Error>> {
     let grid_folder = Path::new(user.steam_user_data_folder.as_str()).join("config/grid");

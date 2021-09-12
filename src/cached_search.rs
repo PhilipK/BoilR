@@ -1,6 +1,8 @@
 use std::{collections::HashMap, fs::File, io::Write, path::Path};
 
-type SearchMap = HashMap<u32, usize>;
+type SearchMap = HashMap<u32, (String,usize)>;
+
+
 
 pub struct CachedSearch<'a> {
     search_map: SearchMap,
@@ -27,7 +29,7 @@ impl<'a> CachedSearch<'a> {
         
         let cached_result = self.search_map.get(&app_id);
         if let Some(result) = cached_result {
-            return Ok(Some(*result));
+            return Ok(Some(result.1));
         }
 
         let search = self.client.search(query).await?;
@@ -36,7 +38,7 @@ impl<'a> CachedSearch<'a> {
         }
         let first_item = &search[0];
         let assumed_id = first_item.id;
-        self.search_map.insert(app_id, assumed_id);
+        self.search_map.insert(app_id, (query.to_owned(),assumed_id));
 
         Ok(Some(assumed_id))
     }
