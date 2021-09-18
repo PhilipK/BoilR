@@ -8,6 +8,8 @@ use std::{
 };
 mod cached_search;
 mod egs;
+mod legendary;
+use crate::legendary::get_legendary_games;
 use egs::{get_egs_manifests, ManifestItem};
 use std::error::Error;
 use steam_shortcuts_util::{
@@ -22,14 +24,10 @@ pub struct ShortcutInfo {
     pub shortcuts: Vec<ShortcutOwned>,
 }
 
-
-
 fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
     let mut shortcuts = vec![];
     let mut new_path = user.shortcut_path.clone();
     if let Some(shortcut_path) = &user.shortcut_path {
-        // std::fs::remove_file(path)
-        //TODO remove unwrap
         let content = std::fs::read(shortcut_path).unwrap();
         shortcuts = parse_shortcuts(content.as_slice())
             .unwrap()
@@ -60,26 +58,73 @@ fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    
+    if !Path::new("auth_key.txt").exists() {
+        println!("File auth_key.txt not found, the file has been created, please get a key from https://www.steamgriddb.com/ and copy it into auth_key.txt");
+        File::create(Path::new("auth_key.txt"))?;
+        return Ok(());
+    }
+
     let auth_key = std::fs::read_to_string("auth_key.txt")?;
+
+    if auth_key.trim().is_empty() {
+        println!("File auth_key.txt is empty please get an API key from https://www.steamgriddb.com/ and paste it into auth_key.txt");
+        return Ok(());
+    }
+
     let client = steamgriddb_api::Client::new(auth_key);
     let mut search = CachedSearch::new(&client);
 
-    let egs_manifests = get_egs_manifests()?;
-    let egs_shortcuts: Vec<ShortcutOwned> =
-        egs_manifests.iter().map(manifest_to_shortcut).collect();
-    println!("Found {} installed EGS Games", egs_manifests.len());
+    #[cfg(target_os = "windows")]
+    let egs_shortcuts = {
+        let egs_manifests = match get_egs_manifests() {
+            Ok(manifests) => manifests,
+            Err(e) => {
+                println!("Error getting manifests: {}", e);
+                vec![]
+            }
+        };
+        let egs_shortcuts: Vec<ShortcutOwned> = egs_manifests.iter().map(|f| f.into()).collect();
+        println!("Found {} installed EGS Games", egs_manifests.len());
+        egs_shortcuts
+    };
+
+    #[cfg(target_os = "linux")]
+    let legendary_shortcuts = {
+        let legendary_games = match get_legendary_games() {
+            Ok(games) => games,
+            Err(e) => {
+                println!("Error getting legendary games: {}", e);
+                vec![]
+            }
+        };
+        let legendary_shortcuts: Vec<ShortcutOwned> =
+            legendary_games.iter().map(|f| f.into()).collect();
+        println!(
+            "Found {} installed Legendary Games",
+            legendary_shortcuts.len()
+        );
+        legendary_shortcuts
+    };
 
     let userinfo_shortcuts = get_shortcuts_paths()?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
 
     for user in userinfo_shortcuts.iter() {
         let shortcut_info = get_shortcuts_for_user(user);
+
+        #[cfg(target_os = "windows")]
         let new_user_shortcuts: Vec<&ShortcutOwned> = shortcut_info
             .shortcuts
             .iter()
             .filter(|user_shortcut| !user_shortcut.tags.contains(&"EGS".to_owned()))
             .chain(egs_shortcuts.iter())
+            .collect();
+        #[cfg(target_os = "linux")]
+        let new_user_shortcuts: Vec<&ShortcutOwned> = shortcut_info
+            .shortcuts
+            .iter()
+            .filter(|user_shortcut| !user_shortcut.tags.contains(&"Legendary".to_owned()))
+            .chain(legendary_shortcuts.iter())
             .collect();
 
         let shortcuts = new_user_shortcuts.iter().map(|f| f.borrow()).collect();
@@ -104,13 +149,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let mut search_results = HashMap::new();
         for s in shortcuts_to_search_for {
             println!("Searching for {}", s.app_name);
-            let search = search.search(s.app_id,s.app_name).await?;
+            let search = search.search(s.app_id, s.app_name).await?;
             if let Some(search) = search {
                 search_results.insert(s.app_id, search);
             }
         }
-
-     
 
         let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid];
         for image_type in types {
@@ -180,7 +223,6 @@ impl ImageType {
     }
 }
 
-
 fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Error>> {
     let grid_folder = Path::new(user.steam_user_data_folder.as_str()).join("config/grid");
     std::fs::create_dir_all(&grid_folder)?;
@@ -190,32 +232,6 @@ fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Error>
         .map(|image| image.file_name().into_string().unwrap())
         .collect();
     Ok(file_names)
-}
-
-fn manifest_to_shortcut(manifest: &ManifestItem) -> ShortcutOwned {
-    let exe = format!(
-        "\"{}\\{}\"",
-        manifest.install_location, manifest.launch_executable
-    );
-    let mut start_dir = manifest.install_location.clone();
-    if !manifest.install_location.starts_with("\"") {
-        start_dir = format!("\"{}\"", manifest.install_location);
-    }
-    let shortcut = Shortcut::new(
-        0,
-        manifest.display_name.as_str(),
-        exe.as_str(),
-        start_dir.as_str(),
-        "",
-        "",
-        "",
-    );
-    let mut owned_shortcut = shortcut.to_owned();
-    owned_shortcut.tags.push("EGS".to_owned());
-    owned_shortcut.tags.push("Ready TO Play".to_owned());
-    owned_shortcut.tags.push("Installed".to_owned());
-
-    owned_shortcut
 }
 
 #[derive(Debug)]
@@ -267,12 +283,21 @@ struct SteamUsersInfo {
 
 /// Get the paths to the steam users shortcuts (one for each user)
 fn get_shortcuts_paths() -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
-    let key = "PROGRAMFILES(X86)";
-    let program_files = env::var(key)?;
-    let path_string = format!(
-        "{program_files}//Steam//userdata//",
-        program_files = program_files
-    );
+    #[cfg(target_os = "windows")]
+    let path_string = {
+        let key = "PROGRAMFILES(X86)";
+        let program_files = env::var(key)?;
+        format!(
+            "{program_files}//Steam//userdata//",
+            program_files = program_files
+        )
+    };
+    #[cfg(target_os = "linux")]
+    let path_string = {
+        let home = std::env::var("HOME")?;
+        format!("{}/.steam/steam/userdata/", home)
+    };
+
     let user_data_path = Path::new(path_string.as_str());
     if !user_data_path.exists() {
         return Result::Err(Box::new(SteamFolderNotFound {

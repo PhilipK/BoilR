@@ -9,7 +9,6 @@ pub fn get_egs_manifests()  -> Result<Vec<ManifestItem>, Box<dyn Error>> {
     let manifest_dir_path = get_manifest_dir_path()?;
     let manifest_dir_result = std::fs::read_dir(&manifest_dir_path);
     if let Err(err) = manifest_dir_result {
-        //TODO make a new error type here instead
         println!("Could not find manifest directory: {}", manifest_dir_path);
         return Result::Err(Box::new(err));
     }

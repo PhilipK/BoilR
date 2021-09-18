@@ -837,7 +837,9 @@ dependencies = [
 
 [[package]]
 name = "steam_shortcuts_util"
-version = "1.0.0"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8c2fce148525a785a93daaf7b41855fa1a2ba05052bab74f647b56256b2d3a8"
 dependencies = [
  "ascii",
  "crc32fast",
@@ -847,7 +849,9 @@ dependencies = [
 
 [[package]]
 name = "steamgriddb_api"
-version = "0.1.3"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49989dd0a9cb16bc02ea1939b513e310fcdbc31d52981d8c70bcb86a23b12d5f"
 dependencies = [
  "reqwest",
  "serde",
