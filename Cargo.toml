@@ -6,7 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-steam_shortcuts_util="1.1.0"
+steam_shortcuts_util="1.1.1"
 steamgriddb_api="0.2,0"
 serde={version="*", features=["derive"]}
 serde_json="*"
