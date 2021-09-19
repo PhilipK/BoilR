@@ -1,0 +1,32 @@
+name: Test on Push
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test_Ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1    
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v1.3.0    
+    - name: Test
+      run: |        
+        cargo test                     
+      
+  test_Windows:
+    runs-on: windows-latest    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Rust Cache
+      id: rust_cache
+      uses: Swatinem/rust-cache@v1.3.0    
+    - name: Test
+      run: cargo test
