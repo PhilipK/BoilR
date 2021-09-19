@@ -29,3 +29,4 @@ Feel free to submit issues and pull requests
 * Create a file called `auth_key.txt` in the same folder as the executable.
 * Write your [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api) in the `auth_key.txt` file.
 * Run the executable!
+* Restart Steam to see your new shortcuts.
