@@ -9,9 +9,11 @@ use std::{
 mod cached_search;
 mod egs;
 mod legendary;
+mod settings;
 mod steamgriddb;
+mod platform;
 
-use crate::legendary::get_legendary_games;
+use crate::{legendary::get_legendary_games, settings::Settings};
 use egs::{get_egs_manifests, ManifestItem};
 use std::error::Error;
 use steam_shortcuts_util::{
@@ -60,35 +62,35 @@ fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    if !Path::new("auth_key.txt").exists() {
-        println!("File auth_key.txt not found, the file has been created, please get a key from https://www.steamgriddb.com/ and copy it into auth_key.txt");
-        File::create(Path::new("auth_key.txt"))?;
+    let settings = Settings::new()?;
+
+    
+    let auth_key = settings.steamgrid_db.auth_key;
+    if settings.steamgrid_db.enabled && auth_key.is_none() {
+        println!("auth_key not found, please add it to the steamgrid_db settings ");        
         return Ok(());
     }
 
-    let auth_key = std::fs::read_to_string("auth_key.txt")?;
-
-    if auth_key.trim().is_empty() {
-        println!("File auth_key.txt is empty please get an API key from https://www.steamgriddb.com/ and paste it into auth_key.txt");
-        return Ok(());
-    }
-
+    let auth_key = auth_key.unwrap();
+    
     let client = steamgriddb_api::Client::new(auth_key);
     let mut search = CachedSearch::new(&client);
 
-    #[cfg(target_os = "windows")]
-    let egs_shortcuts = {
-        let egs_manifests = match get_egs_manifests() {
-            Ok(manifests) => manifests,
-            Err(e) => {
-                println!("Error getting manifests: {}", e);
-                vec![]
-            }
+    if settings.epic_games.enabled {
+        let egs_shortcuts = {
+            let egs_manifests = match get_egs_manifests(&settings.epic_games) {
+                Ok(manifests) => manifests,
+                Err(e) => {
+                    println!("Error getting manifests for Epic Games Store: {}", e);
+                    vec![]
+                }
+            };
+            let egs_shortcuts: Vec<ShortcutOwned> =
+                egs_manifests.iter().map(|f| f.into()).collect();
+            println!("Found {} installed EGS Games", egs_manifests.len());
+            egs_shortcuts
         };
-        let egs_shortcuts: Vec<ShortcutOwned> = egs_manifests.iter().map(|f| f.into()).collect();
-        println!("Found {} installed EGS Games", egs_manifests.len());
-        egs_shortcuts
-    };
+    }
 
     #[cfg(target_os = "linux")]
     let legendary_shortcuts = {

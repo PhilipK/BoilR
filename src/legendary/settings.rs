@@ -1,16 +1,16 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct SteamGridDbSettings {
+pub struct LegendarySettings {
     pub enabled: bool,
-    pub auth_key: Option<String>,
+    pub executable: Option<String>,
 }
 
-impl Default for SteamGridDbSettings {
+impl Default for LegendarySettings {
     fn default() -> Self {
         Self {
             enabled: true,
-            auth_key: None,
+            executable: None,
         }
     }
 }

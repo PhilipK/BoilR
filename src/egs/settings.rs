@@ -1,12 +1,12 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-struct EpicGamesLauncher {
-    enabled: bool,
-    location: Option<String>,
+pub struct EpicGamesLauncherSettings {
+    pub enabled: bool,
+    pub location: Option<String>,
 }
 
-impl Default for EpicGamesLauncher {
+impl Default for EpicGamesLauncherSettings {
     fn default() -> Self {
         
         // On windows
@@ -16,11 +16,11 @@ impl Default for EpicGamesLauncher {
 
 
         // On linux
-        // We can notguess, so lets not enable by default
+        // We can not guess, so lets not enable by default
         #[cfg(target_os = "linux")]
         let enabled = false;
 
-        EpicGamesLauncher {
+        EpicGamesLauncherSettings {
             enabled,
             location: None,
         }

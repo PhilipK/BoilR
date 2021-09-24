@@ -1,2 +1,2 @@
 mod settings;
-pub use settings::*;
+pub use settings::SteamGridDbSettings;
