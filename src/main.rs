@@ -9,6 +9,8 @@ use std::{
 mod cached_search;
 mod egs;
 mod legendary;
+mod steamgriddb;
+
 use crate::legendary::get_legendary_games;
 use egs::{get_egs_manifests, ManifestItem};
 use std::error::Error;

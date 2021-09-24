@@ -12,3 +12,4 @@ serde={version="*", features=["derive"]}
 serde_json="*"
 tokio = { version = "1.11.0", features = ["full"] }
 reqwest = { version = "*", features = ["default"] }
+config = "*"
