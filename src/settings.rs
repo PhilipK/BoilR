@@ -1,6 +1,4 @@
-use crate::{
-    egs::EpicGamesLauncherSettings, legendary::LegendarySettings, steamgriddb::SteamGridDbSettings,
-};
+use crate::{egs::EpicGamesLauncherSettings, legendary::LegendarySettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
 
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
@@ -12,6 +10,7 @@ pub struct Settings {
     pub epic_games: EpicGamesLauncherSettings,
     pub legendary: LegendarySettings,
     pub steamgrid_db: SteamGridDbSettings,
+    pub steam: SteamSettings
 }
 
 //https://github.com/JosefNemec/Playnite/tree/master/source/Plugins/OriginLibrary

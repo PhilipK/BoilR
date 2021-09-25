@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = steamgriddb_api::Client::new(auth_key);
     let mut search = CachedSearch::new(&client);
 
-    let userinfo_shortcuts = get_shortcuts_paths()?;
+    let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
 
     for user in userinfo_shortcuts.iter() {

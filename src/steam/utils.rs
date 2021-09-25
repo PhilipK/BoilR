@@ -1,47 +1,50 @@
-use std::error::Error;
-use std::{
-    fmt,
-    path::Path,
-};
 #[cfg(target_os = "windows")]
 use std::env::{self};
+use std::error::Error;
+use std::path::PathBuf;
+use std::{fmt, path::Path};
 
 use steam_shortcuts_util::{parse_shortcuts, shortcut::ShortcutOwned};
 
+use super::SteamSettings;
+
 pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
     let mut shortcuts = vec![];
-    let mut new_path = user.shortcut_path.clone();
-    if let Some(shortcut_path) = &user.shortcut_path {
-        let content = std::fs::read(shortcut_path).unwrap();
-        shortcuts = parse_shortcuts(content.as_slice())
-            .unwrap()
-            .iter()
-            .map(|s| s.to_owned())
-            .collect();
-        println!(
-            "Found {} shortcuts , for user: {}",
-            shortcuts.len(),
-            user.steam_user_data_folder
-        );
-    } else {
-        println!(
-            "Did not find a shortcut file for user {}, createing a new",
-            user.steam_user_data_folder
-        );
-        std::fs::create_dir_all(format!("{}/{}", user.steam_user_data_folder, "config")).unwrap();
-        new_path = Some(format!(
-            "{}/{}",
-            user.steam_user_data_folder, "config/shortcuts.vdf"
-        ));
-    }
+
+    let new_path = match &user.shortcut_path {
+        Some(shortcut_path) => {
+            let content = std::fs::read(shortcut_path).unwrap();
+            shortcuts = parse_shortcuts(content.as_slice())
+                .unwrap()
+                .iter()
+                .map(|s| s.to_owned())
+                .collect();
+            println!(
+                "Found {} shortcuts , for user: {}",
+                shortcuts.len(),
+                user.steam_user_data_folder
+            );
+            Path::new(&shortcut_path).to_path_buf()
+        }
+        None => {
+            println!(
+                "Did not find a shortcut file for user {}, creating a new",
+                user.steam_user_data_folder
+            );
+            let path = Path::new(&user.steam_user_data_folder).join("config");
+            std::fs::create_dir_all(path.clone()).unwrap();
+            path.join("shortcuts.vdf")
+        }
+    };
+
     ShortcutInfo {
         shortcuts,
-        path: new_path.unwrap(),
+        path: new_path,
     }
 }
 
 pub struct ShortcutInfo {
-    pub path: String,
+    pub path: PathBuf,
     pub shortcuts: Vec<ShortcutOwned>,
 }
 
@@ -51,28 +54,42 @@ pub struct SteamUsersInfo {
 }
 
 /// Get the paths to the steam users shortcuts (one for each user)
-pub fn get_shortcuts_paths() -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
-    #[cfg(target_os = "windows")]
-    let path_string = {
-        let key = "PROGRAMFILES(X86)";
-        let program_files = env::var(key)?;
-        format!(
-            "{program_files}//Steam//userdata//",
-            program_files = program_files
-        )
+pub fn get_shortcuts_paths(
+    settings: &SteamSettings,
+) -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
+    let user_location = settings.location.clone();
+    let steam_path_str = match user_location {
+        Some(location) => location,
+        None => {
+            #[cfg(target_os = "windows")]
+            let path_string = {
+                let key = "PROGRAMFILES(X86)";
+                let program_files = env::var(key)?;
+                format!("{program_files}//Steam//", program_files = program_files)
+            };
+            #[cfg(target_os = "linux")]
+            let path_string = {
+                let home = std::env::var("HOME")?;
+                format!("{}/.steam/steam/", home)
+            };
+            path_string
+        }
     };
-    #[cfg(target_os = "linux")]
-    let path_string = {
-        let home = std::env::var("HOME")?;
-        format!("{}/.steam/steam/userdata/", home)
-    };
-
-    let user_data_path = Path::new(path_string.as_str());
-    if !user_data_path.exists() {
+    let steam_path = Path::new(&steam_path_str);
+    if !steam_path.exists() {
         return Result::Err(Box::new(SteamFolderNotFound {
-            location_tried: path_string,
+            location_tried: format!("{:?}", steam_path),
         }));
     }
+
+    let user_data_path = steam_path.join("userdata");
+    if !user_data_path.exists() {
+        return Result::Err(Box::new(SteamFolderNotFound {
+            location_tried: format!("{:?}", user_data_path),
+        }));
+    }
+
+    if !user_data_path.exists() {}
     let user_folders = std::fs::read_dir(&user_data_path)?;
     let users_info = user_folders
         .filter_map(|f| f.ok())

@@ -1,4 +1,6 @@
 debug= false
 
+[steam]
+
 [steamgrid_db]
 enabled = true
