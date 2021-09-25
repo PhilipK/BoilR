@@ -1,3 +1,4 @@
+use crate::steamgriddb::{CachedSearch, ImageType};
 use std::{
     collections::HashMap,
     env::{self},
@@ -7,7 +8,6 @@ use std::{
     ops::Deref,
     path::Path,
 };
-mod cached_search;
 mod egs;
 mod legendary;
 mod platform;
@@ -27,8 +27,6 @@ use steam_shortcuts_util::{
     parse_shortcuts, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
 use steamgriddb_api::{search::SearchResult, Client};
-
-use crate::cached_search::CachedSearch;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -144,22 +142,6 @@ fn save_shortcuts(shortcuts: &Vec<Shortcut>, path: &Path) {
     let new_content = shortcuts_to_bytes(shortcuts);
     let mut file = File::create(path).unwrap();
     file.write(new_content.as_slice()).unwrap();
-}
-
-pub enum ImageType {
-    Hero,
-    Grid,
-    Logo,
-}
-
-impl ImageType {
-    pub fn file_name(&self, app_id: u32) -> String {
-        match self {
-            ImageType::Hero => format!("{}_hero.png", app_id),
-            ImageType::Grid => format!("{}p.png", app_id),
-            ImageType::Logo => format!("{}_logo.png", app_id),
-        }
-    }
 }
 
 fn update_platform_shortcuts<P, T, E>(platform: &P, current_shortcuts: &mut Vec<ShortcutOwned>)
