@@ -19,8 +19,8 @@ pub struct ManifestItem {
     pub app_name: String,
 }
 
-impl From<&ManifestItem> for ShortcutOwned {
-    fn from(manifest: &ManifestItem) -> Self {
+impl From<ManifestItem> for ShortcutOwned {
+    fn from(manifest: ManifestItem) -> Self {
         let exe = format!(
             "\"{}\\{}\"",
             manifest.install_location, manifest.launch_executable

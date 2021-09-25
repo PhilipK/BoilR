@@ -11,8 +11,8 @@ pub struct LegendaryGame {
     pub executable: String,
 }
 
-impl From<&LegendaryGame> for ShortcutOwned {
-    fn from(game: &LegendaryGame) -> Self {
+impl From<LegendaryGame> for ShortcutOwned {
+    fn from(game: LegendaryGame) -> Self {
         let exe = format!("\"{}\\{}\"", game.install_path, game.executable);
         let launch = format!("legendary launch {}", game.app_name);
         let mut start_dir = game.install_path.clone();

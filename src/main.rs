@@ -1,20 +1,23 @@
 use std::{
+    borrow::Borrow,
     collections::HashMap,
     env::{self},
     fmt,
     fs::File,
     io::Write,
+    ops::Deref,
     path::Path,
 };
 mod cached_search;
 mod egs;
 mod legendary;
+mod platform;
 mod settings;
 mod steamgriddb;
-mod platform;
 
-use crate::{legendary::get_legendary_games, settings::Settings};
-use egs::{get_egs_manifests, ManifestItem};
+use crate::{
+    egs::EpicPlatform, legendary::LegendaryPlatform, platform::Platform, settings::Settings,
+};
 use std::error::Error;
 use steam_shortcuts_util::{
     parse_shortcuts, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
@@ -64,51 +67,16 @@ fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
 async fn main() -> Result<(), Box<dyn Error>> {
     let settings = Settings::new()?;
 
-    
     let auth_key = settings.steamgrid_db.auth_key;
     if settings.steamgrid_db.enabled && auth_key.is_none() {
-        println!("auth_key not found, please add it to the steamgrid_db settings ");        
+        println!("auth_key not found, please add it to the steamgrid_db settings ");
         return Ok(());
     }
 
     let auth_key = auth_key.unwrap();
-    
+
     let client = steamgriddb_api::Client::new(auth_key);
     let mut search = CachedSearch::new(&client);
-
-    if settings.epic_games.enabled {
-        let egs_shortcuts = {
-            let egs_manifests = match get_egs_manifests(&settings.epic_games) {
-                Ok(manifests) => manifests,
-                Err(e) => {
-                    println!("Error getting manifests for Epic Games Store: {}", e);
-                    vec![]
-                }
-            };
-            let egs_shortcuts: Vec<ShortcutOwned> =
-                egs_manifests.iter().map(|f| f.into()).collect();
-            println!("Found {} installed EGS Games", egs_manifests.len());
-            egs_shortcuts
-        };
-    }
-
-    #[cfg(target_os = "linux")]
-    let legendary_shortcuts = {
-        let legendary_games = match get_legendary_games() {
-            Ok(games) => games,
-            Err(e) => {
-                println!("Error getting legendary games: {}", e);
-                vec![]
-            }
-        };
-        let legendary_shortcuts: Vec<ShortcutOwned> =
-            legendary_games.iter().map(|f| f.into()).collect();
-        println!(
-            "Found {} installed Legendary Games",
-            legendary_shortcuts.len()
-        );
-        legendary_shortcuts
-    };
 
     let userinfo_shortcuts = get_shortcuts_paths()?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
@@ -116,20 +84,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     for user in userinfo_shortcuts.iter() {
         let shortcut_info = get_shortcuts_for_user(user);
 
-        #[cfg(target_os = "windows")]
-        let new_user_shortcuts: Vec<&ShortcutOwned> = shortcut_info
-            .shortcuts
-            .iter()
-            .filter(|user_shortcut| !user_shortcut.tags.contains(&"EGS".to_owned()))
-            .chain(egs_shortcuts.iter())
-            .collect();
-        #[cfg(target_os = "linux")]
-        let new_user_shortcuts: Vec<&ShortcutOwned> = shortcut_info
-            .shortcuts
-            .iter()
-            .filter(|user_shortcut| !user_shortcut.tags.contains(&"Legendary".to_owned()))
-            .chain(legendary_shortcuts.iter())
-            .collect();
+        let mut new_user_shortcuts: Vec<ShortcutOwned> = shortcut_info.shortcuts;
+
+        update_platform_shortcuts(
+            &EpicPlatform::new(settings.epic_games.clone()),
+            &mut new_user_shortcuts,
+        );
+
+        update_platform_shortcuts(
+            &LegendaryPlatform::new(settings.legendary.clone()),
+            &mut new_user_shortcuts,
+        );
 
         let shortcuts = new_user_shortcuts.iter().map(|f| f.borrow()).collect();
 
@@ -329,4 +294,28 @@ fn get_shortcuts_paths() -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
         })
         .collect();
     Ok(users_info)
+}
+
+fn update_platform_shortcuts<P, T, E>(platform: &P, current_shortcuts: &mut Vec<ShortcutOwned>)
+where
+    P: Platform<T, E>,
+    E: std::fmt::Debug + std::fmt::Display,
+    T: Into<ShortcutOwned>,
+{
+    if platform.enabled() {
+        let shortcuts_to_add_result = platform.get_shortcuts();
+        match shortcuts_to_add_result {
+            Ok(shortcuts_to_add) => {
+                current_shortcuts.retain(|f| !f.tags.contains(&platform.name().to_owned()));
+                for shortcut in shortcuts_to_add {
+                    let shortcut_owned: ShortcutOwned = shortcut.into();
+                    current_shortcuts.push(shortcut_owned);
+                }
+            }
+            Err(err) => {
+                eprintln!("Error getting shortcuts from platform: {}", platform.name());
+                eprintln!("{}", err);
+            }
+        }
+    }
 }

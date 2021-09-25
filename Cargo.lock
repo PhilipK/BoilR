@@ -1045,9 +1045,9 @@ dependencies = [
 
 [[package]]
 name = "steam_shortcuts_util"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffa391cd87de757cdc91153362307680c6ec4ad50fe7a582509678f1ede863eb"
+checksum = "51eecf84626e7ba46667be999ca124d9cd16c9feb09918dd991eccbb4ac298e7"
 dependencies = [
  "ascii",
  "crc32fast",

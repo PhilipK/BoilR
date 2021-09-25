@@ -1,13 +1,12 @@
-use crate::{egs::EpicGamesLauncherSettings, legendary::LegendarySettings};
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-pub enum Platform{
-    EpicGames{
-        settings: EpicGamesLauncherSettings,
-    },
-    Legendary{
-        settings: LegendarySettings
-    }
+pub trait Platform<T, E>
+where
+    T: Into<ShortcutOwned>,
+{
+    fn enabled(&self) -> bool;
+
+    fn name(&self) -> &str;
+
+    fn get_shortcuts(&self) -> Result<Vec<T>, E>;
 }
-
-
-

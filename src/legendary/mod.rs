@@ -1,7 +1,8 @@
 mod legendary_game;
-mod get_legendary_games;
 mod settings;
+mod legendary_platform;
 
-pub use get_legendary_games::*;
+
 pub use legendary_game::*;
 pub use settings::*;
+pub use legendary_platform::*;
