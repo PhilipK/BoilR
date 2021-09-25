@@ -47,9 +47,9 @@ impl Settings {
         // This file shouldn't be checked in to git
         s.merge(File::with_name("local.toml").required(false))?;
 
-        // Add in settings from the environment (with a prefix of STEAM_SYNC)
-        // Eg.. `STEAM_SYNC_DEBUG=1 ./target/app` would set the `debug` key
-        s.merge(Environment::with_prefix("steam_sync"))?;
+        // Add in settings from the environment (with a prefix of STEAMSYNC)
+        // Eg.. `STEAMSYNC_DEBUG=1 ./target/app` would set the `debug` key
+        s.merge(Environment::with_prefix("steamsync").separator("-"))?;
 
         s.try_into()
     }
