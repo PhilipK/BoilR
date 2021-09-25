@@ -70,7 +70,7 @@ pub async fn download_images<'a, 'b>(
                             let mut file = File::create(path).unwrap();
                             let response = reqwest::get(image.url).await?;
                             let content = response.bytes().await?;
-                            file.write(&content).unwrap();
+                            file.write_all(&content).unwrap();
                         }
                     }
                 }

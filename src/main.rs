@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 fn save_shortcuts(shortcuts: &Vec<Shortcut>, path: &Path) {
     let new_content = shortcuts_to_bytes(shortcuts);
     let mut file = File::create(path).unwrap();
-    file.write(new_content.as_slice()).unwrap();
+    file.write_all(new_content.as_slice()).unwrap();
 }
 
 fn update_platform_shortcuts<P, T, E>(platform: &P, current_shortcuts: &mut Vec<ShortcutOwned>)

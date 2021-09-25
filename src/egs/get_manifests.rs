@@ -67,7 +67,7 @@ fn get_manifest_dir_path(
         #[cfg(target_os = "linux")]
         {
             //No path defined for epic gamestore, and we cannot guess on linux
-            return Err(PathNotDefined);
+            Err(PathNotDefined)
         }
 
         #[cfg(target_os = "windows")]

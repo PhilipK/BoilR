@@ -1,8 +1,6 @@
 use std::{collections::HashMap, fs::File, io::Write, path::Path};
 
-type SearchMap = HashMap<u32, (String,usize)>;
-
-
+type SearchMap = HashMap<u32, (String, usize)>;
 
 pub struct CachedSearch<'a> {
     search_map: SearchMap,
@@ -26,7 +24,6 @@ impl<'a> CachedSearch<'a> {
         app_id: u32,
         query: &str,
     ) -> Result<Option<usize>, Box<dyn std::error::Error>> {
-        
         let cached_result = self.search_map.get(&app_id);
         if let Some(result) = cached_result {
             return Ok(Some(result.1));
@@ -38,7 +35,8 @@ impl<'a> CachedSearch<'a> {
         }
         let first_item = &search[0];
         let assumed_id = first_item.id;
-        self.search_map.insert(app_id, (query.to_owned(),assumed_id));
+        self.search_map
+            .insert(app_id, (query.to_owned(), assumed_id));
 
         Ok(Some(assumed_id))
     }
@@ -48,9 +46,7 @@ fn get_search_map() -> SearchMap {
     let path = Path::new("cache.json");
     if path.exists() {
         let string = std::fs::read_to_string(path).unwrap();
-        let search_map =
-            serde_json::from_str::<SearchMap>(&string).expect("Failed to parse cache.json");
-        search_map
+        serde_json::from_str::<SearchMap>(&string).expect("Failed to parse cache.json")
     } else {
         SearchMap::new()
     }
