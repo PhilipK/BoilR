@@ -1,17 +1,12 @@
 use std::error::Error;
 use std::{
-    collections::HashMap,
-    env::{self},
     fmt,
-    fs::File,
-    io::Write,
-    ops::Deref,
     path::Path,
 };
+#[cfg(target_os = "windows")]
+use std::env::{self};
 
-use steam_shortcuts_util::{
-    parse_shortcuts, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
-};
+use steam_shortcuts_util::{parse_shortcuts, shortcut::ShortcutOwned};
 
 pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
     let mut shortcuts = vec![];

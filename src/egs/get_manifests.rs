@@ -1,6 +1,7 @@
 use super::{EpicGamesLauncherSettings, ManifestItem};
-use std::env::{self, VarError};
-use std::error::Error;
+#[cfg(target_os = "windows")]
+use std::env::{self};
+
 use std::fs::{DirEntry, File};
 use std::io::BufReader;
 use std::path::Path;
@@ -9,6 +10,7 @@ use failure::*;
 
 #[derive(Debug, Fail)]
 pub enum EpicGamesManifestsError {
+    #[cfg(target_os = "linux")]
     #[fail(display = "Path to EpicGamesLauncher not defined, it must be defined on linux")]
     PathNotDefined,
 
