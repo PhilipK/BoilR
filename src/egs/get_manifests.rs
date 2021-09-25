@@ -76,7 +76,7 @@ fn get_manifest_dir_path(
             let system_drive =
                 env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
 
-            let path = Path::new(system_drive.as_str())
+            let path = Path::new(format!("{}\\",system_drive).as_str())
                 .join("ProgramData")
                 .join("Epic")
                 .join("EpicGamesLauncher")
