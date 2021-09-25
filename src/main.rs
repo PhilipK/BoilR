@@ -84,8 +84,14 @@ where
 {
     if platform.enabled() {
         let shortcuts_to_add_result = platform.get_shortcuts();
+
         match shortcuts_to_add_result {
             Ok(shortcuts_to_add) => {
+                println!(
+                    "Found {} games for platform {}",
+                    shortcuts_to_add.len(),
+                    platform.name()
+                );
                 current_shortcuts.retain(|f| !f.tags.contains(&platform.name().to_owned()));
                 for shortcut in shortcuts_to_add {
                     let shortcut_owned: ShortcutOwned = shortcut.into();

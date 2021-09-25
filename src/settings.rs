@@ -4,9 +4,9 @@ use crate::{
 
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
-use std::{env, path::Path};
+use std::{env};
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize)]
 pub struct Settings {
     pub debug: bool,
     pub epic_games: EpicGamesLauncherSettings,
@@ -14,34 +14,26 @@ pub struct Settings {
     pub steamgrid_db: SteamGridDbSettings,
 }
 
-#[derive(Debug, Deserialize, Default)]
-struct SettingsOptional {
-    pub debug: Option<bool>,
-    pub epic_games: Option<EpicGamesLauncherSettings>,
-    pub legendary: Option<LegendarySettings>,
-    pub steamgrid_db: Option<SteamGridDbSettings>,
-}
-
-impl From<SettingsOptional> for Settings {
-    fn from(optional: SettingsOptional) -> Self {
-        Self {
-            debug: optional.debug.unwrap_or(false),
-            epic_games: optional.epic_games.unwrap_or(Default::default()),
-            legendary: optional.legendary.unwrap_or(Default::default()),
-            steamgrid_db: optional.steamgrid_db.unwrap_or(Default::default()),
-        }
-    }
-}
-
 //https://github.com/JosefNemec/Playnite/tree/master/source/Plugins/OriginLibrary
 //https://github.com/JosefNemec/Playnite/blob/master/source/Plugins/OriginLibrary/Origin.cs#L109
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let default = Self::default();
-        if !Path::new("config.toml").exists() {
-            return Ok(default);
-        }
         let mut s = Config::new();
+
+        let default_str = include_str!("defaultconfig.toml");
+        s.merge(File::from_str(default_str, config::FileFormat::Toml))?;
+        
+        let enable_legendary = true;
+        let enable_epic = false;
+
+        #[cfg(target_os = "windows")]
+        let enable_legendary = false;
+        #[cfg(target_os = "windows")]
+        let enable_epic = true;
+
+        s.set_default("legendary.enabled", enable_legendary)?;
+        s.set_default("epic_games.enabled", enable_epic)?;
+        
 
         // Start off by merging in the "default" configuration file
         s.merge(File::with_name("config.toml").required(false))?;
@@ -60,9 +52,6 @@ impl Settings {
         // Eg.. `STEAM_SYNC_DEBUG=1 ./target/app` would set the `debug` key
         s.merge(Environment::with_prefix("steam_sync"))?;
 
-        // You can deserialize (and thus freeze) the entire configuration as
-        let optionals: SettingsOptional = s.try_into()?;
-
-        Ok(optionals.into())
+        s.try_into()
     }
 }
