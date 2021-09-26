@@ -58,6 +58,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.once.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/${{ matrix.os }}/${{ matrix.file }}
+          asset_path: ${{ github.workspace }}/${{ matrix.file }}
           asset_name: steam_shortcuts_sync-${{ matrix.os }}
           asset_content_type: application/octet-stream
