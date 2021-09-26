@@ -24,10 +24,13 @@ pub async fn download_images<'a, 'b>(
             format!("{}_logo.png", s.app_id),
         ];
         // if we are missing any of the images we need to search for them
-        images.iter().any(|image| !known_images.contains(&image))
+        images.iter().any(|image| !known_images.contains(&image)) && "" != s.app_name
     });
+    if shortcuts_to_search_for.clone().count() == 0 {
+        return Ok(());
+    }
     let mut search_results = HashMap::new();
-    for s in shortcuts_to_search_for {
+    for s in shortcuts_to_search_for {        
         println!("Searching for {}", s.app_name);
         let search = search.search(s.app_id, s.app_name).await?;
         if let Some(search) = search {
