@@ -1,0 +1,63 @@
+name: Create Release Builds
+
+on:
+  push:
+    tags:
+      - "v*" # matches v1.0.1, v1.2, v2, etc
+
+jobs:
+  once:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create a release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: true
+
+  build:
+    name: Create cross-platform release build, tag and upload binaries
+    needs: once
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            file: target/release/steam_shortcuts_sync
+            args: --best --lzma
+            strip: true
+          - os: windows-latest
+            file: target/release/steam_shortcuts_sync.exe
+            args: -9
+            strip: false        
+    steps:
+      - uses: actions/checkout@v1
+      - name: Rust Cache
+        id: rust_cache
+        uses: Swatinem/rust-cache@v1.3.0
+      - name: Build Release Version
+        run: cargo build --release       
+      - name: Compress binaries
+        uses: svenstaro/upx-action@v2
+        with:
+          file: ${{ matrix.file }}
+          args: ${{ matrix.args }}
+          strip: ${{ matrix.strip }}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.once.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/${{ matrix.os }}/${{ matrix.file }}
+          asset_name: steam_shortcuts_sync-${{ matrix.os }}
+          asset_content_type: application/octet-stream
