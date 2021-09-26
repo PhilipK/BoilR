@@ -22,9 +22,11 @@ impl Settings {
         let default_str = include_str!("defaultconfig.toml");
         s.merge(File::from_str(default_str, config::FileFormat::Toml))?;
         
+        #[cfg(target_os = "linux")]
         let enable_legendary = true;
+        #[cfg(target_os = "linux")]
         let enable_epic = false;
-
+        
         #[cfg(target_os = "windows")]
         let enable_legendary = false;
         #[cfg(target_os = "windows")]
