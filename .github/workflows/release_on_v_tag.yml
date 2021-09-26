@@ -32,10 +32,12 @@ jobs:
         include:
           - os: ubuntu-latest
             file: target/release/steam_shortcuts_sync
+            asset_name: linux_steam_shortcuts_sync
             args: --best --lzma
             strip: true
           - os: windows-latest
             file: target/release/steam_shortcuts_sync.exe
+            asset_name: windows_steam_shortcuts_sync.exe
             args: -9
             strip: false        
     steps:
@@ -59,5 +61,5 @@ jobs:
         with:
           upload_url: ${{ needs.once.outputs.upload_url }}
           asset_path: ${{ github.workspace }}/${{ matrix.file }}
-          asset_name: steam_shortcuts_sync-${{ matrix.os }}
+          asset_name: ${{ matrix.asset_name }}
           asset_content_type: application/octet-stream
