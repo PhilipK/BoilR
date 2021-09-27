@@ -17,10 +17,12 @@ jobs:
     - uses: actions/checkout@v1    
     - name: Rust Cache
       uses: Swatinem/rust-cache@v1.3.0    
+    - name: dependencies
+      run: |
+        apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
     - name: Test
       run: |        
-        cargo test                     
-      
+        cargo test
   test_Windows:
     runs-on: windows-latest    
     steps:
