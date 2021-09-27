@@ -114,6 +114,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "cmake"
+version = "0.1.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "config"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -183,6 +192,37 @@ dependencies = [
  "quote",
  "syn",
  "synstructure",
+]
+
+[[package]]
+name = "fltk"
+version = "1.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd19f0144a75a2a1b282c626069a0dd91fdb97779a9638e9658ef6f9cfca284f"
+dependencies = [
+ "bitflags",
+ "fltk-derive",
+ "fltk-sys",
+ "raw-window-handle",
+]
+
+[[package]]
+name = "fltk-derive"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "517c3b4815e56f38981c7cf0d58082b8e87501f245c459dada9aa09edf5bbdc6"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "fltk-sys"
+version = "1.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8e949c024948f1529c92e10a6389cdafeda82d2ba526ef71a0a087234f0db03"
+dependencies = [
+ "cmake",
 ]
 
 [[package]]
@@ -805,6 +845,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "raw-window-handle"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a441a7a6c80ad6473bd4b74ec1c9a4c951794285bf941c2126f607c72e48211"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1035,6 +1084,7 @@ version = "0.2.0"
 dependencies = [
  "config",
  "failure",
+ "fltk",
  "reqwest",
  "serde 1.0.130",
  "serde_json",

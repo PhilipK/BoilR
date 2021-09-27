@@ -6,6 +6,8 @@ mod platform;
 mod settings;
 mod steam;
 mod steamgriddb;
+use fltk::{app, prelude::*, window::Window};
+
 
 use crate::{
     egs::EpicPlatform,
@@ -19,6 +21,13 @@ use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let app = app::App::default();
+    let mut wind = Window::new(100, 100, 400, 300, "Hello from rust");
+    wind.end();
+    wind.show();
+    app.run().unwrap();
+
+
     let settings = Settings::new()?;
 
     let auth_key = settings.steamgrid_db.auth_key;

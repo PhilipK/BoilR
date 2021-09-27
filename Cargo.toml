@@ -14,3 +14,5 @@ tokio = { version = "1.11.0", features = ["full"] }
 reqwest = { version = "0.11.4", features = ["default"] }
 config = "0.11.0"
 failure = "0.1.8"
+#https://fltk-rs.github.io/fltk-rs/
+fltk = { version = "^1.2", features = ["fltk-bundled"] }
