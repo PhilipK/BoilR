@@ -6,7 +6,9 @@ mod platform;
 mod settings;
 mod steam;
 mod steamgriddb;
+#[cfg(feature = "ui")]
 use fltk::{app, prelude::*, window::Window};
+#[cfg(feature = "ui")]
 mod mainview;
 
 use crate::{
@@ -25,6 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     {
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
         let mut ui = mainview::UserInterface::make_window();
+        
 
         app.run().unwrap();
     }
