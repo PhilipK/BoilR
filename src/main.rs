@@ -7,7 +7,7 @@ mod settings;
 mod steam;
 mod steamgriddb;
 use fltk::{app, prelude::*, window::Window};
-
+mod mainview;
 
 use crate::{
     egs::EpicPlatform,
@@ -21,12 +21,13 @@ use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let app = app::App::default();
-    let mut wind = Window::new(100, 100, 400, 300, "Hello from rust");
-    wind.end();
-    wind.show();
-    app.run().unwrap();
+    #[cfg(feature = "ui")]
+    {
+        let app = app::App::default().with_scheme(app::Scheme::Gtk);
+        let mut ui = mainview::UserInterface::make_window();
 
+        app.run().unwrap();
+    }
 
     let settings = Settings::new()?;
 

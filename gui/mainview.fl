@@ -1,0 +1,91 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0305
+header_name {.h}
+code_name {.cxx}
+class UserInterface {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {Main View} open
+      xywh {768 846 660 730} type Double visible
+    } {
+      Fl_Group {} {
+        label {Steam Shortcut Sync} open selected
+        xywh {25 65 635 650} labelsize 26 labelcolor 35 align 5
+      } {}
+      Fl_Group {} {
+        label Steam open
+        xywh {40 126 575 39} align 5
+      } {
+        Fl_Input steam_location_input {
+          label {Steam Location}
+          xywh {40 126 445 26} align 5
+        }
+        Fl_Button browse_steam_location_button {
+          label Browse
+          xywh {485 126 120 26}
+        }
+      }
+      Fl_Group {} {
+        label {Steamgrid DB} open
+        xywh {40 220 600 83} align 5
+      } {
+        Fl_Check_Button enable_steamgrid_db_checkbox {
+          label {Download Images}
+          tooltip {Download coverart for games from www.steamgriddb.com} xywh {40 230 155 26} down_box DOWN_BOX
+        }
+        Fl_Input steamgrid_db_auth_key_input {
+          label {Authentication Key}
+          xywh {40 275 445 26} align 5
+        }
+      }
+      Fl_Group {} {
+        label {Epic Games Store} open
+        xywh {40 350 575 108} align 5
+      } {
+        Fl_Check_Button enable_egs_checkbox {
+          label Synchronize
+          xywh {40 360 560 26} down_box DOWN_BOX
+        }
+        Fl_Input epic_location_input {
+          label {Epic Location}
+          xywh {40 405 445 26} align 5
+        }
+        Fl_Button browse_egs_location_button {
+          label Browse
+          xywh {485 405 120 26}
+        }
+      }
+      Fl_Group {} {
+        label Legendary open
+        xywh {40 480 580 104} align 5
+      } {
+        Fl_Check_Button enable_legendary_checkbox {
+          label Enable
+          xywh {40 490 570 26} down_box DOWN_BOX
+        }
+        Fl_Input legendary_executable_input {
+          label {Legendary Executable}
+          xywh {40 535 445 26} align 5
+        }
+        Fl_Button browse_legendary_executable_button {
+          label Browse
+          xywh {485 535 120 26}
+        }
+      }
+      Fl_Group action_buttons {open
+        xywh {37 652 495 50}
+      } {
+        Fl_Button save_settings_button {
+          label {Save Settings}
+          xywh {40 660 120 40}
+        }
+        Fl_Button synchronize_button {
+          label {Synchronize Games}
+          xywh {170 660 160 40}
+        }
+      }
+    }
+  }
+}

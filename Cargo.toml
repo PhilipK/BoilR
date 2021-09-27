@@ -16,3 +16,10 @@ config = "0.11.0"
 failure = "0.1.8"
 #https://fltk-rs.github.io/fltk-rs/
 fltk = { version = "^1.2", features = ["fltk-bundled"] }
+
+
+[build-dependencies]
+fl2rust = "0.4"
+
+[features]
+ui=[]
