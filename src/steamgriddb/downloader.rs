@@ -30,8 +30,7 @@ pub async fn download_images<'a, 'b>(
         return Ok(());
     }
     let mut search_results = HashMap::new();
-    for s in shortcuts_to_search_for {        
-        println!("Searching for {}", s.app_name);
+    for s in shortcuts_to_search_for {
         let search = search.search(s.app_id, s.app_name).await?;
         if let Some(search) = search {
             search_results.insert(s.app_id, search);

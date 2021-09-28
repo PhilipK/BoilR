@@ -28,7 +28,7 @@ impl<'a> CachedSearch<'a> {
         if let Some(result) = cached_result {
             return Ok(Some(result.1));
         }
-
+        println!("Searching for {}", query);
         let search = self.client.search(query).await?;
         if search.is_empty() {
             return Ok(None);
