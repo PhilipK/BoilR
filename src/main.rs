@@ -25,29 +25,50 @@ use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut
 async fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(feature = "ui")]
     {
+        let settings = Settings::new()?;
+
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
         let mut ui = mainview::UserInterface::make_window();
-        
 
+        ui.enable_steamgrid_db_checkbox
+            .set_value(settings.steamgrid_db.enabled);
+        ui.steamgrid_db_auth_key_input.set_value(
+            &settings
+                .steamgrid_db
+                .auth_key
+                .clone()
+                .unwrap_or(String::from("")),
+        );
+
+        ui.enable_legendary_checkbox
+            .set_value(settings.legendary.enabled);
+        ui.legendary_executable_input.set_value(
+            &settings
+                .legendary
+                .executable
+                .unwrap_or(String::from("legendary")),
+        );
+
+        ui.enable_egs_checkbox
+            .set_value(settings.epic_games.enabled);
         app.run().unwrap();
     }
 
-    let settings = Settings::new()?;
+    run_sync().await
+}
 
+async fn run_sync() -> Result<(), Box<dyn Error>> {
+    let settings = Settings::new()?;
     let auth_key = settings.steamgrid_db.auth_key;
     if settings.steamgrid_db.enabled && auth_key.is_none() {
         println!("auth_key not found, please add it to the steamgrid_db settings ");
         return Ok(());
     }
-
     let auth_key = auth_key.unwrap();
-
     let client = steamgriddb_api::Client::new(auth_key);
     let mut search = CachedSearch::new(&client);
-
     let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
-
     for user in userinfo_shortcuts.iter() {
         let shortcut_info = get_shortcuts_for_user(user);
 
@@ -77,9 +98,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .await?;
     }
-
     search.save();
-
     Ok(())
 }
 
