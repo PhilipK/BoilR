@@ -2,6 +2,7 @@ mod settings;
 mod itch_game;
 mod itch_platform;
 mod butler_db_parser;
+mod receipt;
 
 pub use settings::*;
 pub use itch_game::*;

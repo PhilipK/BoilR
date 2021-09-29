@@ -17,6 +17,7 @@ failure = "^0.1.8"
 fltk = { version = "^1.2", features = ["fltk-bundled"], optional = true }
 nom = "^7.0.*"
 nom_locate = "^3.0.*"
+flate2 = "^1.0.22"
 
 [build-dependencies]
 fl2rust = { version = "0.4", optional = true }

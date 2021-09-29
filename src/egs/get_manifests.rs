@@ -27,7 +27,7 @@ pub enum EpicGamesManifestsError {
     ReadDirError { path: String, error: std::io::Error },
 }
 
-pub fn get_egs_manifests(
+pub(crate) fn get_egs_manifests(
     settings: &EpicGamesLauncherSettings,
 ) -> Result<Vec<ManifestItem>, EpicGamesManifestsError> {
     use EpicGamesManifestsError::*;

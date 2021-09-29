@@ -1,7 +1,12 @@
 use super::butler_db_parser::*;
+use super::receipt::Receipt;
 use super::{ItchGame, ItchSettings};
 use crate::platform::Platform;
+use _core::iter::FromIterator;
 use failure::*;
+use flate2::read::GzDecoder;
+use std::collections::HashSet;
+use std::io::prelude::*;
 use std::path::Path;
 
 pub struct ItchPlatform {
@@ -36,7 +41,7 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
 
         let shortcut_bytes = std::fs::read(&itch_db_location).unwrap();
 
-        let res = match parse_butler_db(&shortcut_bytes) {
+        let paths = match parse_butler_db(&shortcut_bytes) {
             Ok((_, shortcuts)) => Ok(shortcuts),
             Err(e) => Err(ItchErrors::ParseError {
                 error: e.to_string(),
@@ -44,16 +49,33 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
             }),
         }?;
 
-        let res = res
-            .iter()
-            .map(|paths| ItchGame {
-                install_path: paths.base_path.to_owned(),
-                executable: paths.path.to_owned(),
-                title: paths.path.to_owned(),
-            })
-            .collect();
+        //This is done to remove douplicates
+        let paths: HashSet<&DbPaths> = HashSet::from_iter(paths.iter());
+
+        let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
         Ok(res)
     }
+}
+
+fn dbpath_to_game(paths: &DbPaths<'_>) -> Option<ItchGame> {
+    let recipt = Path::new(paths.base_path)
+        .join(".itch")
+        .join("receipt.json.gz");
+    if !&recipt.exists() {
+        return None;
+    }
+
+    let gz_bytes = std::fs::read(&recipt).unwrap();
+    let mut d = GzDecoder::new(gz_bytes.as_slice());
+    let mut s = String::new();
+    d.read_to_string(&mut s).unwrap();
+
+    let receipt_op: Option<Receipt> = serde_json::from_str(&s).ok();
+    receipt_op.map(|re| ItchGame {
+        install_path: paths.base_path.to_owned(),
+        executable: paths.path.to_owned(),
+        title: re.game.title,
+    })
 }
 
 #[cfg(target_os = "linux")]

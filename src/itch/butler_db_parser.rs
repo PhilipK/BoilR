@@ -4,6 +4,7 @@ use nom::{
     IResult,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct DbPaths<'a> {
     pub(crate) base_path: &'a str,
     pub(crate) path: &'a str,
