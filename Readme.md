@@ -10,13 +10,14 @@ The goal is that you do not have to leave your Steam library to launch games fro
 
 * Add shortcuts to games from [Epic Games Store](https://www.epicgames.com/) 
 * Add shortcuts to games from [Legendary](https://github.com/derrod/legendary) 
+* Add shortcuts to games from [Itch.io](https://itch.io/app) 
 * Download custom art for games from [SteamGridDB](https://www.steamgriddb.com/) for any custom steam shortcut.
 
 ## Very early alpha
 
 This tool is still in very early alpha, there are still lots of things to do.
-Currently it is only a cli and there are no recuring synchronizations (you have to manully run it or schedule the run yourself).
-Also only Epic Games and Legendary are supported at the moment, but many more are planned.
+Currently it is only a cli and there are no recuring synchronizations (you have to manually run it or schedule the run yourself).
+Also only Epic Games, Legendary and Itch.io are supported at the moment, but many more are planned.
 
 It is a Minimal Viable Product currently, I will update it with new features and bug fixes as I get time.
 
@@ -49,6 +50,10 @@ location="C:\ProgramData\Epic\EpicGamesLauncher" #If this value is not defined, 
 [legendary]
 enabled=false #On windows this is default false, on linux default true
 executable="legendary" #If this value is not defined, "legendary" will be used, it is assumed to be on the path.
+
+[itch]
+enabled=false #Default false
+location="C:\Users\user\AppData\Roaming\itch" #If this value is not defined, "%APPDATA%itch" will be used on windows, and HOME/.config/itch on linux.
 
 [steam]
 location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the tool will try to find it automatically. If it can't find it, it will fail and tell you.
