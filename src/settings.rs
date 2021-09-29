@@ -1,4 +1,4 @@
-use crate::{egs::EpicGamesLauncherSettings, legendary::LegendarySettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
+use crate::{egs::EpicGamesLauncherSettings, itch::ItchSettings, legendary::LegendarySettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
 
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
@@ -9,6 +9,7 @@ pub struct Settings {
     pub debug: bool,
     pub epic_games: EpicGamesLauncherSettings,
     pub legendary: LegendarySettings,
+    pub itch: ItchSettings,
     pub steamgrid_db: SteamGridDbSettings,
     pub steam: SteamSettings
 }

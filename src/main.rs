@@ -1,6 +1,10 @@
-use crate::steamgriddb::{download_images, CachedSearch};
+use crate::{
+    itch::ItchPlatform,
+    steamgriddb::{download_images, CachedSearch},
+};
 use std::{fs::File, io::Write, path::Path};
 mod egs;
+mod itch;
 mod legendary;
 mod platform;
 mod settings;
@@ -81,6 +85,11 @@ async fn run_sync() -> Result<(), Box<dyn Error>> {
 
         update_platform_shortcuts(
             &LegendaryPlatform::new(settings.legendary.clone()),
+            &mut new_user_shortcuts,
+        );
+
+        update_platform_shortcuts(
+            &ItchPlatform::new(settings.itch.clone()),
             &mut new_user_shortcuts,
         );
 

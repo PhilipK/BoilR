@@ -5,16 +5,18 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-steam_shortcuts_util = "1.1.4"
-steamgriddb_api = "0.2,0"
-serde = { version = "1.0.130", features = ["derive"] }
-serde_json = "1.0.68"
-tokio = { version = "1.11.0", features = ["full"] }
-reqwest = { version = "0.11.4", features = ["default"] }
-config = "0.11.0"
-failure = "0.1.8"
+steam_shortcuts_util = "^1.1.4"
+steamgriddb_api = "^0.2,0"
+serde = { version = "^1.0.130", features = ["derive"] }
+serde_json = "^1.0.68"
+tokio = { version = "^1.11.0", features = ["full"] }
+reqwest = { version = "^0.11.4", features = ["default"] }
+config = "^0.11.0"
+failure = "^0.1.8"
 #https://fltk-rs.github.io/fltk-rs/
 fltk = { version = "^1.2", features = ["fltk-bundled"], optional = true }
+nom = "^7.0.*"
+nom_locate = "^3.0.*"
 
 [build-dependencies]
 fl2rust = { version = "0.4", optional = true }

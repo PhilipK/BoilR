@@ -1092,6 +1092,8 @@ dependencies = [
  "failure",
  "fl2rust",
  "fltk",
+ "nom 7.0.0",
+ "nom_locate",
  "reqwest",
  "serde 1.0.130",
  "serde_json",

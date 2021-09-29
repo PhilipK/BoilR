@@ -6,5 +6,8 @@ debug= false
 
 [steam]
 
+[itch]
+enabled = false
+
 [steamgrid_db]
 enabled = true
