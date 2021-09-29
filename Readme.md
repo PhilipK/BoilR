@@ -54,7 +54,7 @@ And here is a full example of all configuration options:
 
 [epic_games]
 enabled=true #On windows this is default true, on linux default false
-location="C:\ProgramData\Epic\EpicGamesLauncher" #If this value is not defined, the tool will try to find it automatically (only windows). If it can't find it, it will fail and tell you.
+location="C:\\ProgramData\\Epic\\EpicGamesLauncher" #If this value is not defined, the tool will try to find it automatically (only windows). If it can't find it, it will fail and tell you.
 
 [legendary]
 enabled=false #On windows this is default false, on linux default true
@@ -62,7 +62,7 @@ executable="legendary" #If this value is not defined, "legendary" will be used, 
 
 [itch]
 enabled=false #Default false
-location="C:\Users\user\AppData\Roaming\itch" #If this value is not defined, "%APPDATA%itch" will be used on windows, and HOME/.config/itch on linux.
+location="C:\\Users\\user\\AppData\\Roaming\\itch" #If this value is not defined, "%APPDATA%itch" will be used on windows, and HOME/.config/itch on linux.
 
 [steam]
 location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the tool will try to find it automatically. If it can't find it, it will fail and tell you.
