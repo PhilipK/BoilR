@@ -2,16 +2,23 @@
 
 ## Description
 
-This little tool will synchronize games from other platforms into your Steam library.
-
+This little tool will synchronize games from other platforms into your Steam library, using the Steam Shortcuts feature.
 The goal is that you do not have to leave your Steam library to launch games from other launchers/stores.
 
 ## Features
-
-* Add shortcuts to games from [Epic Games Store](https://www.epicgames.com/) 
-* Add shortcuts to games from [Legendary](https://github.com/derrod/legendary) 
-* Add shortcuts to games from [Itch.io](https://itch.io/app) 
-* Download custom art for games from [SteamGridDB](https://www.steamgriddb.com/) for any custom steam shortcut.
+- [x] Download art from [SteamGridDB](https://www.steamgriddb.com/)
+- [x] [Legendary](https://github.com/derrod/legendary) integration 
+- [x] [Epic Games Store](https://www.epicgames.com/) integration
+- [x] [Itch.io](https://itch.io/app) integration
+- [x] Cross Platform
+- [x] Small (~1.5mb on disk), lightweight (~2mb ram) and fast(~1s sync)
+- [ ] Origin integration
+- [ ] XBox/Microsoft Store integration
+- [ ] GOG integration
+- [ ] [Lutris](https://github.com/lutris/lutris) integration
+- [ ] UI For configuration
+- [ ] Scheduling of synchronization
+- [ ] Steam Deck support (should work, but need to test when I get one)
 
 ## Very early alpha
 
@@ -34,6 +41,8 @@ Feel free to submit issues and pull requests
 
 ## Configuration
 The tool reads its configuration from a `config.toml` file.
+In the future there will be an UI for changing these configurations.
+
 Here is a simple example of how to write the config file:
 ```toml
 [steamgrid_db]
