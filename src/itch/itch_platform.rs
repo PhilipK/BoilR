@@ -81,15 +81,16 @@ fn dbpath_to_game(paths: &DbPaths<'_>) -> Option<ItchGame> {
 #[cfg(target_os = "linux")]
 fn get_default_location() -> String {
     //If we don't have a home drive we have to just die
-    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
+    let home = std::env::var("HOME").expect("Expected a home variable to be defined");    
     format!("{}/.config/itch/", home)
 }
 
 #[cfg(target_os = "windows")]
 fn get_default_location() -> String {
-    let key = "PROGRAMFILES(X86)";
-    let program_files = env::var(key).expect("Expected a program files variable to be defined");
-    format!("{}//Itch//", program_files)
+    let key = "APPDATA";
+    let appdata = std::env::var(key).expect("Expected a APPDATA variable to be defined");
+    Path::new(&appdata).join("itch").to_str().unwrap().to_string()
+    //C:\Users\phili\AppData\Local\itch
 }
 
 #[derive(Debug, Fail)]
