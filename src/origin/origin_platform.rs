@@ -85,7 +85,10 @@ fn is_mfst_file(file: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
+
+
 fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
+    let (i, _) = take_until("currentstate=kReadyToStart")(i)?;
     let (i, _) = take_until("&id=")(i)?;
     let (i, _) = nom::bytes::complete::tag("&id=")(i)?;
     take_until("&")(i)
