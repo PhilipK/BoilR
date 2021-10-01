@@ -10,9 +10,9 @@ The goal is that you do not have to leave your Steam library to launch games fro
 - [x] [Legendary](https://github.com/derrod/legendary) integration 
 - [x] [Epic Games Store](https://www.epicgames.com/) integration
 - [x] [Itch.io](https://itch.io/app) integration
+- [x] [Origin](https://www.origin.com) integration
 - [x] Cross Platform
 - [x] Small (~1.5mb on disk), lightweight (~2mb ram) and fast(~1s sync)
-- [ ] Origin integration
 - [ ] XBox/Microsoft Store integration
 - [ ] GOG integration
 - [ ] [Lutris](https://github.com/lutris/lutris) integration
@@ -63,6 +63,11 @@ executable="legendary" #If this value is not defined, "legendary" will be used, 
 [itch]
 enabled=false #Default false
 location="C:\\Users\\user\\AppData\\Roaming\\itch" #If this value is not defined, "%APPDATA%itch" will be used on windows, and HOME/.config/itch on linux.
+
+[origin]
+enabled=false #Default false
+location="C:\\ProgramData\\Origin" #If this value is not defined, "%PROGRAMGDATA%origin" will be used on windows, and HOME/.origin/ on linux.
+
 
 [steam]
 location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the tool will try to find it automatically. If it can't find it, it will fail and tell you.
