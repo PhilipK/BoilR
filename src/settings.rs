@@ -1,4 +1,4 @@
-use crate::{egs::EpicGamesLauncherSettings, itch::ItchSettings, legendary::LegendarySettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
+use crate::{egs::EpicGamesLauncherSettings, itch::ItchSettings, legendary::LegendarySettings, origin::OriginSettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
 
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
@@ -11,11 +11,10 @@ pub struct Settings {
     pub legendary: LegendarySettings,
     pub itch: ItchSettings,
     pub steamgrid_db: SteamGridDbSettings,
-    pub steam: SteamSettings
+    pub steam: SteamSettings,
+    pub origin: OriginSettings,
 }
 
-//https://github.com/JosefNemec/Playnite/tree/master/source/Plugins/OriginLibrary
-//https://github.com/JosefNemec/Playnite/blob/master/source/Plugins/OriginLibrary/Origin.cs#L109
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let mut s = Config::new();
@@ -32,10 +31,6 @@ impl Settings {
         let enable_legendary = false;
         #[cfg(target_os = "windows")]
         let enable_epic = true;
-
-        s.set_default("legendary.enabled", enable_legendary)?;
-        s.set_default("epic_games.enabled", enable_epic)?;
-        
 
         // Start off by merging in the "default" configuration file
         s.merge(File::with_name("config.toml").required(false))?;

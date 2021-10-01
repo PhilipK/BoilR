@@ -1,8 +1,13 @@
 debug= false
 
+[origin]
+enabled = false
+
 [epic_games]
+enabled = false
 
 [legendary]
+enabled = false
 
 [steam]
 
