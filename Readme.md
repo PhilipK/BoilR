@@ -66,7 +66,7 @@ location="C:\\Users\\user\\AppData\\Roaming\\itch" #If this value is not defined
 
 [origin]
 enabled=false #Default false
-location="C:\\ProgramData\\Origin" #If this value is not defined, "%PROGRAMGDATA%origin" will be used on windows, and HOME/.origin/ on linux.
+location="C:\\ProgramData\\Origin" #If this value is not defined, "%PROGRAMGDATA%origin" will be used on windows, and HOME/Games/origin/drive_c/ProgramData/Origin/ on linux.
 
 
 [steam]
