@@ -60,20 +60,7 @@ pub fn get_shortcuts_paths(
     let user_location = settings.location.clone();
     let steam_path_str = match user_location {
         Some(location) => location,
-        None => {
-            #[cfg(target_os = "windows")]
-            let path_string = {
-                let key = "PROGRAMFILES(X86)";
-                let program_files = env::var(key)?;
-                format!("{program_files}//Steam//", program_files = program_files)
-            };
-            #[cfg(target_os = "linux")]
-            let path_string = {
-                let home = std::env::var("HOME")?;
-                format!("{}/.steam/steam/", home)
-            };
-            path_string
-        }
+        None => get_default_location()?,
     };
     let steam_path = Path::new(&steam_path_str);
     if !steam_path.exists() {
@@ -111,6 +98,32 @@ pub fn get_shortcuts_paths(
         })
         .collect();
     Ok(users_info)
+}
+
+pub fn get_default_location() -> Result<String, Box<dyn Error>> {
+    #[cfg(target_os = "windows")]
+    let path_string = {
+        let key = "PROGRAMFILES(X86)";
+        let program_files = env::var(key)?;
+        String::from(
+            Path::new(&program_files)
+                .join("Steam")
+                .to_str()
+                .unwrap_or(""),
+        )
+    };
+    #[cfg(target_os = "linux")]
+    let path_string = {
+        let home = std::env::var("HOME")?;
+        String::from(
+            Path::new(&home)
+                .join(".steam")
+                .join("steam")
+                .to_str()
+                .unwrap_or(""),
+        )
+    };
+    Ok(path_string)
 }
 
 #[derive(Debug)]

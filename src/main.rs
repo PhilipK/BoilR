@@ -121,6 +121,14 @@ fn save_settings_to_file(settings: &Settings) {
 
 #[cfg(feature = "ui")]
 fn update_ui_with_settings(ui: &mut mainview::UserInterface, settings: &Settings) {
+    ui.steam_location_input.set_value(
+        &settings
+            .steam
+            .location
+            .clone()
+            .unwrap_or(steam::get_default_location().unwrap_or(String::from(""))),
+    );
+
     ui.enable_steamgrid_db_checkbox
         .set_value(settings.steamgrid_db.enabled);
     ui.steamgrid_db_auth_key_input.set_value(
