@@ -10,7 +10,7 @@ The goal is that you do not have to leave your Steam library to launch games fro
 - [x] [Legendary](https://github.com/derrod/legendary) integration 
 - [x] [Epic Games Store](https://www.epicgames.com/) integration
 - [x] [Itch.io](https://itch.io/app) integration
-- [x] [Origin](https://www.origin.com) integration
+- [x] [Origin](https://www.origin.com) integration (currently only windows, linux comming soon)
 - [x] Cross Platform
 - [x] Small (~1.5mb on disk), lightweight (~2mb ram) and fast(~1s sync)
 - [ ] XBox/Microsoft Store integration
