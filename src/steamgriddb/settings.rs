@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Serialize,Deserialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug,Serialize, Deserialize)]
 pub struct SteamGridDbSettings {
     pub enabled: bool,
     pub auth_key: Option<String>,

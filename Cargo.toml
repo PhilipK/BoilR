@@ -18,10 +18,11 @@ fltk = { version = "^1.2", features = ["fltk-bundled"], optional = true }
 nom = "^7.0.*"
 nom_locate = "^3.0.*"
 flate2 = "^1.0.22"
+toml = { version = "^0.5.8", optional = true }
 
 [build-dependencies]
 fl2rust = { version = "0.4", optional = true }
 
 [features]
 # default = ["ui"]
-ui = ["fltk", "fl2rust"]
+ui = ["fltk", "fl2rust", "toml"]

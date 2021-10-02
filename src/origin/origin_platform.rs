@@ -93,7 +93,7 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
 }
 
 #[cfg(target_os = "linux")]
-fn get_default_location() -> String {
+pub fn get_default_location() -> String {
 
     //TODO implement this for linux:
     // https://www.toptensoftware.com/blog/running-ea-origin-games-under-linux-via-steam-and-proton/

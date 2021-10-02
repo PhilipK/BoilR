@@ -1,10 +1,13 @@
-use crate::{egs::EpicGamesLauncherSettings, itch::ItchSettings, legendary::LegendarySettings, origin::OriginSettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
+use crate::{
+    egs::EpicGamesLauncherSettings, itch::ItchSettings, legendary::LegendarySettings,
+    origin::OriginSettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings,
+};
 
 use config::{Config, ConfigError, Environment, File};
-use serde::Deserialize;
-use std::{env};
+use serde::{Deserialize, Serialize};
+use std::env;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
     pub debug: bool,
     pub epic_games: EpicGamesLauncherSettings,
@@ -21,16 +24,6 @@ impl Settings {
 
         let default_str = include_str!("defaultconfig.toml");
         s.merge(File::from_str(default_str, config::FileFormat::Toml))?;
-        
-        #[cfg(target_os = "linux")]
-        let enable_legendary = true;
-        #[cfg(target_os = "linux")]
-        let enable_epic = false;
-        
-        #[cfg(target_os = "windows")]
-        let enable_legendary = false;
-        #[cfg(target_os = "windows")]
-        let enable_epic = true;
 
         // Start off by merging in the "default" configuration file
         s.merge(File::with_name("config.toml").required(false))?;

@@ -4,7 +4,7 @@ use std::env::{self};
 
 use std::fs::{DirEntry, File};
 use std::io::BufReader;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use failure::*;
 
@@ -64,31 +64,38 @@ fn get_manifest_dir_path(
             });
         }
     } else {
-        #[cfg(target_os = "linux")]
-        {
-            //No path defined for epic gamestore, and we cannot guess on linux
-            Err(PathNotDefined)
+        let path = get_default_location();
+
+        match path {
+            Some(path) => Ok(path.to_str().unwrap().to_string()),
+            None => Err(PathNotDefined),
         }
+    }
+}
 
-        #[cfg(target_os = "windows")]
-        {
-            let key = "SYSTEMDRIVE";
-            let system_drive =
-                env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
+pub fn get_default_location() -> Option<PathBuf> {
+    #[cfg(target_os = "linux")]
+    {
+        //No path defined for epic gamestore, and we cannot guess on linux
+        None
+    }
 
-            let path = Path::new(format!("{}\\",system_drive).as_str())
-                .join("ProgramData")
-                .join("Epic")
-                .join("EpicGamesLauncher")
-                .join("Data")
-                .join("Manifests");
-            if path.exists() {
-                return Ok(path.to_str().unwrap().to_string());
-            } else {
-                return Err(PathNotFound {
-                    path: path.to_str().unwrap().to_string(),
-                });
-            }
+    #[cfg(target_os = "windows")]
+    {
+        let key = "SYSTEMDRIVE";
+        let system_drive =
+            env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
+
+        let path = Path::new(format!("{}\\", system_drive).as_str())
+            .join("ProgramData")
+            .join("Epic")
+            .join("EpicGamesLauncher")
+            .join("Data")
+            .join("Manifests");
+        if path.exists() {
+            Some(path)
+        } else {
+            None
         }
     }
 }
