@@ -65,14 +65,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 async fn run_sync() -> Result<(), Box<dyn Error>> {
     let settings = Settings::new()?;
-    let auth_key = settings.steamgrid_db.auth_key;
-    if settings.steamgrid_db.enabled && auth_key.is_none() {
-        println!("auth_key not found, please add it to the steamgrid_db settings ");
-        return Ok(());
-    }
-    let auth_key = auth_key.unwrap();
-    let client = steamgriddb_api::Client::new(auth_key);
-    let mut search = CachedSearch::new(&client);
+
     let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
     for user in userinfo_shortcuts.iter() {
@@ -106,17 +99,26 @@ async fn run_sync() -> Result<(), Box<dyn Error>> {
 
         save_shortcuts(&shortcuts, Path::new(&shortcut_info.path));
 
-        let known_images = get_users_images(user).unwrap();
-        download_images(
-            known_images,
-            user.steam_user_data_folder.as_str(),
-            shortcuts,
-            &mut search,
-            &client,
-        )
-        .await?;
+        if settings.steamgrid_db.enabled {
+            let auth_key = &settings.steamgrid_db.auth_key;
+            if let Some(auth_key) = auth_key {
+                let client = steamgriddb_api::Client::new(auth_key);
+                let mut search = CachedSearch::new(&client);
+                let known_images = get_users_images(user).unwrap();
+                download_images(
+                    known_images,
+                    user.steam_user_data_folder.as_str(),
+                    shortcuts,
+                    &mut search,
+                    &client,
+                )
+                .await?;
+                search.save();
+            } else {
+                println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
+            }
+        }
     }
-    search.save();
     Ok(())
 }
 
@@ -138,7 +140,7 @@ where
         match shortcuts_to_add_result {
             Ok(shortcuts_to_add) => {
                 println!(
-                    "Found {} games for platform {}",
+                    "Found {} game(s) for platform {}",
                     shortcuts_to_add.len(),
                     platform.name()
                 );
