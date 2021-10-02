@@ -10,7 +10,6 @@ use failure::*;
 
 #[derive(Debug, Fail)]
 pub enum EpicGamesManifestsError {
-    #[cfg(target_os = "linux")]
     #[fail(display = "Path to EpicGamesLauncher not defined, it must be defined on linux")]
     PathNotDefined,
 
