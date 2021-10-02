@@ -21,24 +21,27 @@ The goal is that you do not have to leave your Steam library to launch games fro
 - [ ] Scheduling of synchronization
 - [ ] Steam Deck support (should work, but need to test when I get one)
 
-## Very early alpha
+## Beta
 
-This tool is still in very early alpha, there are still lots of things to do.
-Currently it is only a cli and there are no recuring synchronizations (you have to manually run it or schedule the run yourself).
-Also only Epic Games, Legendary and Itch.io are supported at the moment, but many more are planned.
+This tool is still in beta, there are still lots of things to do, but the things that are there work.
+Currently it is only a cli and there are no recuring synchronizations, but those things are coming.
 
-It is a Minimal Viable Product currently, I will update it with new features and bug fixes as I get time.
-
-Feel free to submit issues and pull requests
+Feel free to submit issues and pull requests.
 
 ## Getting started
 
 * Download the latest release from the [releases page](https://github.com/PhilipK/steam_shortcuts_sync/releases).
 * Place it in a folder of your choice.
-* Create a file called `config.toml` in the same folder as the executable.
-* Write your [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api) in the `config.toml` file (see the [config section](#configuration)).
 * Run the executable.
 * Restart Steam to see your new shortcuts.
+
+## Getting art for your shortcuts
+
+* Create a file called `config.toml` in the same folder as the executable.
+* Get a [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api)
+* Write it in the `config.toml` file (see how in the [config section](#configuration)).
+* Run the executable again
+
 
 ## Configuration
 The tool reads its configuration from a `config.toml` file.
