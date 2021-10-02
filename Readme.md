@@ -1,4 +1,4 @@
-# Steam Shortcuts Sync
+# BoilR
 
 ## Description
 
@@ -24,7 +24,7 @@ Feel free to submit issues and pull requests
 
 ## Getting started
 
-* Download the latest release from the [releases page](https://github.com/PhilipK/steam_shortcuts_sync/releases).
+* Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
 * Place it in a folder of your choice.
 * Create a file called `config.toml` in the same folder as the executable.
 * Write your [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api) in the `config.toml` file (see the [config section](#configuration)).

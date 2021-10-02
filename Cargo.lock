@@ -84,6 +84,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "boilr"
+version = "0.2.7"
+dependencies = [
+ "config",
+ "failure",
+ "fl2rust",
+ "fltk",
+ "reqwest",
+ "serde 1.0.130",
+ "serde_json",
+ "steam_shortcuts_util",
+ "steamgriddb_api",
+ "tokio",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1083,22 +1099,6 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
-
-[[package]]
-name = "steam_shortcuts_sync"
-version = "0.2.0"
-dependencies = [
- "config",
- "failure",
- "fl2rust",
- "fltk",
- "reqwest",
- "serde 1.0.130",
- "serde_json",
- "steam_shortcuts_util",
- "steamgriddb_api",
- "tokio",
-]
 
 [[package]]
 name = "steam_shortcuts_util"

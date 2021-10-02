@@ -31,13 +31,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            file: target/release/steam_shortcuts_sync
-            asset_name: linux_steam_shortcuts_sync
+            file: target/release/boilr
+            asset_name: linux_BoilR
             args: --best --lzma
             strip: true
           - os: windows-latest
-            file: target/release/steam_shortcuts_sync.exe
-            asset_name: windows_steam_shortcuts_sync.exe
+            file: target/release/boilr.exe
+            asset_name: windows_BoilR.exe
             args: -9
             strip: false        
     steps:
