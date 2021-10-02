@@ -3,13 +3,9 @@ use crate::{
     origin::OriginPlatform,
     steamgriddb::{download_images, CachedSearch},
 };
-use std::{
-    cell::{Ref, RefCell},
-    fs::File,
-    io::Write,
-    path::Path,
-    rc::Rc,
-};
+#[cfg(feature = "ui")]
+use std::{cell::RefCell, rc::Rc};
+use std::{fs::File, io::Write, path::Path};
 mod egs;
 mod itch;
 mod legendary;
@@ -18,11 +14,15 @@ mod platform;
 mod settings;
 mod steam;
 mod steamgriddb;
+#[cfg(feature = "ui")]
 use egs::get_default_location;
 #[cfg(feature = "ui")]
-use fltk::{app, prelude::*, window::Window};
+use fltk::{app, prelude::*};
 #[cfg(feature = "ui")]
 mod mainview;
+
+#[cfg(feature = "ui")]
+use futures::executor::block_on;
 
 use crate::{
     egs::EpicPlatform,
@@ -60,8 +60,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let sync_settings = settings.clone();
                 synch_bytton.set_callback(move |cb| {
                     update_settings_with_ui_values(&mut sync_settings.borrow_mut(), &synch_ui);
-                    run_sync(&sync_settings.borrow());
-                    cb.set_label("Synched");
+                    match block_on(run_sync(&sync_settings.borrow())) {
+                        Ok(_) => cb.set_label("Synched"),
+                        Err(e) => println!("{}", e),
+                    }
                 });
             }
 
@@ -76,6 +78,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
+#[cfg(feature = "ui")]
 fn empty_or_whitespace(input: String) -> Option<String> {
     if input.trim().is_empty() {
         None
@@ -83,7 +86,7 @@ fn empty_or_whitespace(input: String) -> Option<String> {
         Some(input)
     }
 }
-
+#[cfg(feature = "ui")]
 fn update_settings_with_ui_values(settings: &mut Settings, ui: &mainview::UserInterface) {
     // Steam location
     settings.steam.location = empty_or_whitespace(ui.steam_location_input.value());
@@ -109,11 +112,14 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &mainview::UserIn
     settings.itch.location = empty_or_whitespace(ui.itch_locatoin_input.value());
 }
 
+#[cfg(feature = "ui")]
+
 fn save_settings_to_file(settings: &Settings) {
     let toml = toml::to_string(&settings).unwrap();
     std::fs::write("config.toml", toml).unwrap();
 }
 
+#[cfg(feature = "ui")]
 fn update_ui_with_settings(ui: &mut mainview::UserInterface, settings: &Settings) {
     ui.enable_steamgrid_db_checkbox
         .set_value(settings.steamgrid_db.enabled);

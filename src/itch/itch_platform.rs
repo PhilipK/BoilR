@@ -101,9 +101,6 @@ pub enum ItchErrors {
     )]
     PathNotFound { path: String },
 
-    #[fail(display = "Could not read Itch db at {} error: {}", path, error)]
-    ReadDirError { path: String, error: std::io::Error },
-
     #[fail(display = "Could not parse Itch db at {} error: {}", path, error)]
     ParseError { path: String, error: String },
 }
