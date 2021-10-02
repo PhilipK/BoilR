@@ -24,7 +24,7 @@ jobs:
           prerelease: true
 
   build:
-    name: Create cross-platform release build, tag and upload binaries
+    name: Cross-platform release build
     needs: once
     runs-on: ${{ matrix.os }}
     strategy:
@@ -71,6 +71,7 @@ jobs:
         if: ${{ matrix.ui == false}}
         run: cargo build --release       
       - name: Compress binaries
+        if: ${{ matrix.ui == false}}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
