@@ -58,7 +58,7 @@ And here is a full example of all configuration options:
 
 [epic_games]
 enabled=true #On windows this is default true, on linux default false
-location="C:\\ProgramData\\Epic\\EpicGamesLauncher" #If this value is not defined, the tool will try to find it automatically (only windows). If it can't find it, it will fail and tell you.
+location="C:\\ProgramData\\Epic\\EpicGamesLauncher\\Data\\Manifests" #If this value is not defined, the tool will try to find it automatically (only windows). If it can't find it, it will fail and tell you.
 
 [legendary]
 enabled=false #On windows this is default false, on linux default true

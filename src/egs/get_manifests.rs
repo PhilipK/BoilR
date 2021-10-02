@@ -54,7 +54,7 @@ fn get_manifest_dir_path(
 ) -> Result<String, EpicGamesManifestsError> {
     use EpicGamesManifestsError::*;
     if let Some(location) = &settings.location {
-        let path = Path::new(location).join("Data").join("Manifests");
+        let path = Path::new(location);
         if path.exists() {
             return Ok(path.to_str().unwrap().to_string());
         } else {
