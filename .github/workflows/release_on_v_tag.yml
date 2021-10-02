@@ -35,22 +35,40 @@ jobs:
             asset_name: linux_BoilR
             args: --best --lzma
             strip: true
+            ui: false
+          - os: ubuntu-latest
+            file: target/release/boilr
+            asset_name: linux_ui_BoilR
+            args: --best --lzma
+            strip: true
+            ui: true
           - os: windows-latest
             file: target/release/boilr.exe
             asset_name: windows_BoilR.exe
             args: -9
-            strip: false        
+            strip: false      
+            ui: false
+          - os: windows-latest
+            file: target/release/boilr.exe
+            asset_name: windows_ui_BoilR.exe
+            args: -9
+            strip: false     
+            ui: true   
     steps:
       - uses: actions/checkout@v1
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v1.3.0
       - name: Install dependencies
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.ui}}
         run: |
           sudo apt-get update 
           sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
-      - name: Build Release Version
+      - name: Build Release Version UI 
+        if: ${{ matrix.ui}}
+        run: cargo build --release --features ui     
+      - name: Build Release Version CLI 
+        if: ${{ matrix.ui == false}}
         run: cargo build --release       
       - name: Compress binaries
         uses: svenstaro/upx-action@v2
