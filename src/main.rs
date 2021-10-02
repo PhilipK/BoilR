@@ -193,6 +193,8 @@ async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
     for user in userinfo_shortcuts.iter() {
+        let start_time = std::time::Instant::now();
+
         let shortcut_info = get_shortcuts_for_user(user);
 
         let mut new_user_shortcuts: Vec<ShortcutOwned> = shortcut_info.shortcuts;
@@ -223,9 +225,15 @@ async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
 
         save_shortcuts(&shortcuts, Path::new(&shortcut_info.path));
 
+        let duration = start_time.elapsed();
+
+        println!("Finished synchronizing games in: {:?}", duration);
+
         if settings.steamgrid_db.enabled {
             let auth_key = &settings.steamgrid_db.auth_key;
             if let Some(auth_key) = auth_key {
+                let start_time = std::time::Instant::now();
+                println!("Checking for game images");
                 let client = steamgriddb_api::Client::new(auth_key);
                 let mut search = CachedSearch::new(&client);
                 let known_images = get_users_images(user).unwrap();
@@ -238,6 +246,8 @@ async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
                 )
                 .await?;
                 search.save();
+                let duration = start_time.elapsed();
+                println!("Finished getting images in: {:?}", duration);
             } else {
                 println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
             }
