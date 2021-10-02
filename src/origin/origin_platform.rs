@@ -85,8 +85,6 @@ fn is_mfst_file(file: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
-
-
 fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
     let (i, _) = take_until("currentstate=kReadyToStart")(i)?;
     let (i, _) = take_until("&id=")(i)?;
@@ -96,9 +94,17 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
 
 #[cfg(target_os = "linux")]
 fn get_default_location() -> String {
+
+    //TODO implement this for linux:
+    // https://www.toptensoftware.com/blog/running-ea-origin-games-under-linux-via-steam-and-proton/
+
     //If we don't have a home drive we have to just die
     let home = std::env::var("HOME").expect("Expected a home variable to be defined");
-    format!("{}/.origin/", home)
+    Path::new(&home)
+        .join("Games/origin/drive_c/ProgramData/Origin/")
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
 #[cfg(target_os = "windows")]
