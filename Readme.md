@@ -7,13 +7,13 @@ The goal is that you do not have to leave your Steam library to launch games fro
 
 ## Features
 - [x] Download art from [SteamGridDB](https://www.steamgriddb.com/)
-- [x] [Legendary](https://github.com/derrod/legendary) integration 
+- [x] [Legendary](https://github.com/derrod/legendary) integration
 - [x] [Epic Games Store](https://www.epicgames.com/) integration
 - [x] [Itch.io](https://itch.io/app) integration
 - [x] [Origin](https://www.origin.com) integration (currently only windows, linux comming soon)
 - [x] Cross Platform
 - [x] Small (~1.5mb on disk), lightweight (~2mb ram) and fast(~1s sync)
-- [ ] UI For configuration
+- [x] UI For configuration
 - [ ] GOG integration
 - [ ] UPlay integration
 - [ ] [Lutris](https://github.com/lutris/lutris) integration
@@ -24,28 +24,26 @@ The goal is that you do not have to leave your Steam library to launch games fro
 ## Beta
 
 This tool is still in beta, there are still lots of things to do, but the things that are there work.
-Currently it is only a cli and there are no recuring synchronizations, but those things are coming.
-
 Feel free to submit issues and pull requests.
 
 ## Getting started
 
 * Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
+* Choose the UI version or the cli version (if in doubt pick the UI version)
 * Place it in a folder of your choice.
 * Run the executable.
 * Restart Steam to see your new shortcuts.
 
 ## Getting art for your shortcuts
-
-* Create a file called `config.toml` in the same folder as the executable.
 * Get a [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api)
-* Write it in the `config.toml` file (see how in the [config section](#configuration)).
+* For the CLI version, Write it in the `config.toml` file (see how in the [config section](#configuration)).
+* for the Ui version , copy it into the auth key input.
 * Run the executable again
 
 
 ## Configuration
 The tool reads its configuration from a `config.toml` file.
-In the future there will be an UI for changing these configurations.
+You can either manually edit this file or use the UI version to changing these configurations.
 
 Here is a simple example of how to write the config file:
 ```toml
