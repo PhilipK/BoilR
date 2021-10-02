@@ -108,7 +108,7 @@ pub fn get_default_location() -> String {
 }
 
 #[cfg(target_os = "windows")]
-fn get_default_location() -> String {
+pub fn get_default_location() -> String {
     let key = "PROGRAMDATA";
     let program_data = std::env::var(key).expect("Expected a APPDATA variable to be defined");
     Path::new(&program_data)

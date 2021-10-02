@@ -86,7 +86,7 @@ pub fn get_default_location() -> String {
 }
 
 #[cfg(target_os = "windows")]
-fn get_default_location() -> String {
+pub fn get_default_location() -> String {
     let key = "APPDATA";
     let appdata = std::env::var(key).expect("Expected a APPDATA variable to be defined");
     Path::new(&appdata).join("itch").to_str().unwrap().to_string()
