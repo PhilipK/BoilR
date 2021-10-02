@@ -1,4 +1,4 @@
-# Steam Shortcuts Sync
+# BoilR
 
 ## Description
 
@@ -30,7 +30,7 @@ Feel free to submit issues and pull requests.
 
 ## Getting started
 
-* Download the latest release from the [releases page](https://github.com/PhilipK/steam_shortcuts_sync/releases).
+* Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
 * Place it in a folder of your choice.
 * Run the executable.
 * Restart Steam to see your new shortcuts.
