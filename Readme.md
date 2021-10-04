@@ -78,3 +78,7 @@ location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the t
 enabled = true #If false, the whole download of custom art will be skipped.
 auth_key="<your steamgrid db auth key>" #This value is mandatory if you have steamgrid_db enabled.
 ```
+
+
+## License
+This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
