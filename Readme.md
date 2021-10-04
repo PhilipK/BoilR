@@ -11,10 +11,10 @@ The goal is that you do not have to leave your Steam library to launch games fro
 - [x] [Epic Games Store](https://www.epicgames.com/) integration
 - [x] [Itch.io](https://itch.io/app) integration
 - [x] [Origin](https://www.origin.com) integration (currently only windows, linux comming soon)
+- [x] [GOG](https://www.gog.com/galaxy) integration
 - [x] Cross Platform
 - [x] Small (~1.5mb on disk), lightweight (~2mb ram) and fast(~30ms sync)
 - [x] UI For configuration
-- [ ] GOG integration
 - [ ] UPlay integration
 - [ ] [Lutris](https://github.com/lutris/lutris) integration
 - [ ] XBox/Microsoft Store integration
@@ -70,6 +70,9 @@ location="C:\\Users\\user\\AppData\\Roaming\\itch" #If this value is not defined
 enabled=false #Default false
 location="C:\\ProgramData\\Origin" #If this value is not defined, "%PROGRAMGDATA%origin" will be used on windows, and HOME/Games/origin/drive_c/ProgramData/Origin/ on linux.
 
+[gog]
+enabled=false #Default false
+location="C:\\ProgramData\\GOG.com\\Galaxy" #The location of GOG Galaxy (will default to this value if not defined)
 
 [steam]
 location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the tool will try to find it automatically. If it can't find it, it will fail and tell you.
@@ -79,6 +82,6 @@ enabled = true #If false, the whole download of custom art will be skipped.
 auth_key="<your steamgrid db auth key>" #This value is mandatory if you have steamgrid_db enabled.
 ```
 
-
 ## License
+
 This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
