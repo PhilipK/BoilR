@@ -1,11 +1,13 @@
 use crate::{
     itch::ItchPlatform,
     origin::OriginPlatform,
+    gog::GogPlatform,
     steamgriddb::{download_images, CachedSearch},
 };
 #[cfg(feature = "ui")]
 use std::{cell::RefCell, rc::Rc};
 use std::{fs::File, io::Write, path::Path};
+mod gog;
 mod egs;
 mod itch;
 mod legendary;
@@ -217,6 +219,14 @@ async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         update_platform_shortcuts(
             &OriginPlatform {
                 settings: settings.origin.clone(),
+            },
+            &mut new_user_shortcuts,
+        );
+
+
+        update_platform_shortcuts(
+            &GogPlatform{
+                settings: settings.gog.clone(),
             },
             &mut new_user_shortcuts,
         );

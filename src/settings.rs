@@ -1,6 +1,7 @@
 use crate::{
-    egs::EpicGamesLauncherSettings, itch::ItchSettings, legendary::LegendarySettings,
-    origin::OriginSettings, steam::SteamSettings, steamgriddb::SteamGridDbSettings,
+    egs::EpicGamesLauncherSettings, gog::GogSettings, itch::ItchSettings,
+    legendary::LegendarySettings, origin::OriginSettings, steam::SteamSettings,
+    steamgriddb::SteamGridDbSettings,
 };
 
 use config::{Config, ConfigError, Environment, File};
@@ -16,6 +17,7 @@ pub struct Settings {
     pub steamgrid_db: SteamGridDbSettings,
     pub steam: SteamSettings,
     pub origin: OriginSettings,
+    pub gog: GogSettings,
 }
 
 impl Settings {

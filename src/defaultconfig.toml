@@ -3,6 +3,9 @@ debug= false
 [origin]
 enabled = false
 
+[gog]
+enabled = false
+
 [epic_games]
 enabled = false
 
