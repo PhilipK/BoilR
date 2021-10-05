@@ -36,11 +36,19 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
             return Err(GogErrors::ConfigFileNotFound { path: config_path });
         }
         let install_locations = get_install_locations(config_path)?;
+        let install_locations = if let Some(wine_c_drive) = &self.settings.wine_c_drive {
+            fix_paths(&wine_c_drive, install_locations)
+        } else {
+            install_locations
+        };
+
         dbg!(&install_locations);
+
         let mut game_folders = vec![];
         for install_location in install_locations {
             let path = Path::new(&install_location);
             if path.exists() {
+                println!("exists {:?}", &path);
                 let dirs = path.read_dir();
                 if let Ok(dirs) = dirs {
                     for dir in dirs {
@@ -107,12 +115,21 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
                                         .to_string(),
                                     None => folder_path.to_string(),
                                 };
+
+                                #[cfg(target_os = "linux")]
+                                let working_dir = working_dir.replace("\\", "/");
+                                
+                                let full_path_string = full_path.to_string();
+
+                                #[cfg(target_os = "linux")]
+                                let full_path_string = full_path_string.replace("\\", "/");
+
                                 let shortcut = GogShortcut {
                                     name: game.name,
                                     game_folder: folder_path,
                                     working_dir,
                                     game_id: game.game_id,
-                                    path: full_path.to_string(),
+                                    path: full_path_string,
                                 };
                                 shortcuts.push(shortcut);
                             }
@@ -123,6 +140,25 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         }
 
         Ok(shortcuts)
+    }
+}
+
+fn fix_paths(wine_c_drive: &String, paths: Vec<String>) -> Vec<String> {
+    #[cfg(not(target_os = "linux"))]
+    return paths;
+    #[cfg(target_os = "linux")]
+    {
+        paths
+            .iter()
+            .flat_map(|path| {
+                if path.starts_with("C:\\") {
+                    let path_buf = Path::new(wine_c_drive).join(&path[3..]);
+                    path_buf.to_str().map(|s| s.to_string().replace("\\", "/"))
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 }
 
@@ -137,7 +173,11 @@ fn get_install_locations(path: PathBuf) -> Result<Vec<String>, GogErrors> {
             path,
             error: format!("{}", e),
         })?;
-    Ok(config.installation_paths)
+    let path_vec = match config.library_path {
+        Some(path) => vec![path],
+        None => vec![],
+    };
+    Ok(config.installation_paths.unwrap_or(path_vec))
 }
 
 pub fn default_location() -> PathBuf {
@@ -150,7 +190,7 @@ pub fn default_location() -> PathBuf {
     #[cfg(target_os = "linux")]
     {
         let home = std::env::var("HOME").expect("Expected a home variable to be defined");
-        Path::new(&home).join("GOG.com").join("Galaxy")
+        Path::new(&home).join("Games/gog-galaxy/drive_c/ProgramData/GOG.com/Galaxy")
     }
 }
 
