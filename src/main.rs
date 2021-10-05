@@ -22,7 +22,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
     #[cfg(not(feature = "ui"))]
     {
-        let settings = Settings::new()?;
+        let settings = settings::Settings::new()?;
         sync::run_sync(&settings).await
     }
 }
