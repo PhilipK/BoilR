@@ -93,10 +93,10 @@ where
     T: Into<ShortcutOwned>,
 {
     if platform.enabled() {
-        let name = platform.name();
 
         #[cfg(target_os = "linux")]
         if platform.create_symlinks() {
+            let name = platform.name();
             super::symlinks::ensure_links_folder_created(name);
         }
 
