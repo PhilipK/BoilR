@@ -18,12 +18,7 @@ pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
                 .unwrap()
                 .iter()
                 .map(|s| s.to_owned())
-                .collect();
-            println!(
-                "Found {} shortcuts for user: {}",
-                shortcuts.len(),
-                user.steam_user_data_folder
-            );
+                .collect();        
             Path::new(&shortcut_path).to_path_buf()
         }
         None => {

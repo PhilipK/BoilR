@@ -6,7 +6,7 @@ use crate::{
     platform::Platform,
     settings::Settings,
     steam::{get_shortcuts_for_user, get_shortcuts_paths},
-    steamgriddb::{download_images_for_users},
+    steamgriddb::download_images_for_users,
 };
 use std::error::Error;
 
@@ -20,6 +20,12 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         let start_time = std::time::Instant::now();
 
         let mut shortcut_info = get_shortcuts_for_user(user);
+        println!(
+            "Found {} shortcuts for user: {}",
+            shortcut_info.shortcuts.len(),
+            user.steam_user_data_folder
+        );
+
         update_platforms(settings, &mut shortcut_info.shortcuts);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
@@ -93,7 +99,6 @@ where
     T: Into<ShortcutOwned>,
 {
     if platform.enabled() {
-
         #[cfg(target_os = "linux")]
         if platform.create_symlinks() {
             let name = platform.name();

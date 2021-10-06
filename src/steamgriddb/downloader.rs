@@ -18,27 +18,37 @@ use super::CachedSearch;
 const CONCURRENT_REQUESTS: usize = 10;
 
 pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<SteamUsersInfo>) {
+    let start_time = std::time::Instant::now();
+
     let to_downloads = stream::iter(users)
         .map(|user| {
             let shortcut_info = get_shortcuts_for_user(user);
             async move {
-                find_art(settings, user, &shortcut_info.shortcuts)
+                start_search_for_to_download(settings, user, &shortcut_info.shortcuts)
                     .await
                     .unwrap_or(vec![])
             }
         })
-        .buffer_unordered(CONCURRENT_REQUESTS);
-    let to_download = to_downloads.flat_map(futures::stream::iter);
-    to_download
-        .for_each(|to_download| async move {
+        .buffer_unordered(CONCURRENT_REQUESTS)
+        .collect::<Vec<Vec<ToDownload>>>()
+        .await;
+    let to_downloads = to_downloads.iter().flatten().collect::<Vec<&ToDownload>>();
+
+    stream::iter(to_downloads)
+        .map(|to_download| async move {
             if let Err(e) = download_to_download(&to_download).await {
                 println!("Error downloading {:?}: {}", &to_download.path, e);
             }
         })
+        .buffer_unordered(CONCURRENT_REQUESTS)
+        .collect::<Vec<()>>()
         .await;
+    let duration = start_time.elapsed();
+
+    println!("Finished getting images in: {:?}", duration);
 }
 
-async fn find_art(
+async fn start_search_for_to_download(
     settings: &Settings,
     user: &crate::steam::SteamUsersInfo,
     shortcut_info: &Vec<ShortcutOwned>,
@@ -46,12 +56,11 @@ async fn find_art(
     let auth_key = &settings.steamgrid_db.auth_key;
 
     if let Some(auth_key) = auth_key {
-        let start_time = std::time::Instant::now();
         println!("Checking for game images");
         let client = steamgriddb_api::Client::new(auth_key);
         let mut search = CachedSearch::new(&client);
         let known_images = get_users_images(user).unwrap();
-        let res = download_images(
+        let res = search_fo_to_download(
             known_images,
             user.steam_user_data_folder.as_str(),
             shortcut_info,
@@ -60,8 +69,6 @@ async fn find_art(
         )
         .await?;
         search.save();
-        let duration = start_time.elapsed();
-        println!("Finished getting images in: {:?}", duration);
         Ok(res)
     } else {
         println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
@@ -69,7 +76,7 @@ async fn find_art(
     }
 }
 
-async fn download_images<'b>(
+async fn search_fo_to_download<'b>(
     known_images: Vec<String>,
     user_data_folder: &str,
     shortcuts: &Vec<ShortcutOwned>,
