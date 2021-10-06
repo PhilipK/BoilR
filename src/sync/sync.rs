@@ -1,20 +1,16 @@
-use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut};
+use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
 
 use crate::{
     egs::EpicPlatform,
     legendary::LegendaryPlatform,
     platform::Platform,
     settings::Settings,
-    steam::{get_shortcuts_for_user, get_shortcuts_paths, get_users_images},
+    steam::{get_shortcuts_for_user, get_shortcuts_paths},
+    steamgriddb::{download_images_for_users},
 };
 use std::error::Error;
 
-use crate::{
-    gog::GogPlatform,
-    itch::ItchPlatform,
-    origin::OriginPlatform,
-    steamgriddb::{download_images, CachedSearch},
-};
+use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
 
 pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
@@ -29,39 +25,13 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
 
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
-        if settings.steamgrid_db.enabled {
-            find_art(settings, user, &shortcut_info.shortcuts).await?;
-        }
     }
-    Ok(())
-}
 
-async fn find_art(
-    settings: &Settings,
-    user: &crate::steam::SteamUsersInfo,
-    shortcut_info: &Vec<ShortcutOwned>,
-) -> Result<(), Box<dyn Error>> {
-    let auth_key = &settings.steamgrid_db.auth_key;
-    Ok(if let Some(auth_key) = auth_key {
-        let start_time = std::time::Instant::now();
-        println!("Checking for game images");
-        let client = steamgriddb_api::Client::new(auth_key);
-        let mut search = CachedSearch::new(&client);
-        let known_images = get_users_images(user).unwrap();
-        download_images(
-            known_images,
-            user.steam_user_data_folder.as_str(),
-            shortcut_info,
-            &mut search,
-            &client,
-        )
-        .await?;
-        search.save();
-        let duration = start_time.elapsed();
-        println!("Finished getting images in: {:?}", duration);
-    } else {
-        println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
-    })
+    if settings.steamgrid_db.enabled {
+        download_images_for_users(settings, &userinfo_shortcuts).await;
+    }
+
+    Ok(())
 }
 
 fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOwned>) {

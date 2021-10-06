@@ -1,22 +1,81 @@
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 
+use futures::{stream, StreamExt}; // 0.3.1
 use std::error::Error;
+
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::Client;
 
+use crate::settings::Settings;
+use crate::steam::{get_shortcuts_for_user, get_users_images, SteamUsersInfo};
 use crate::steamgriddb::ImageType;
 
 use super::CachedSearch;
 
-pub async fn download_images<'b>(
+const CONCURRENT_REQUESTS: usize = 10;
+
+pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<SteamUsersInfo>) {
+    let to_downloads = stream::iter(users)
+        .map(|user| {
+            let shortcut_info = get_shortcuts_for_user(user);
+            async move {
+                find_art(settings, user, &shortcut_info.shortcuts)
+                    .await
+                    .unwrap_or(vec![])
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS);
+    let to_download = to_downloads.flat_map(futures::stream::iter);
+    to_download
+        .for_each(|to_download| async move {
+            if let Err(e) = download_to_download(&to_download).await {
+                println!("Error downloading {:?}: {}", &to_download.path, e);
+            }
+        })
+        .await;
+}
+
+async fn find_art(
+    settings: &Settings,
+    user: &crate::steam::SteamUsersInfo,
+    shortcut_info: &Vec<ShortcutOwned>,
+) -> Result<Vec<ToDownload>, Box<dyn Error>> {
+    let auth_key = &settings.steamgrid_db.auth_key;
+
+    if let Some(auth_key) = auth_key {
+        let start_time = std::time::Instant::now();
+        println!("Checking for game images");
+        let client = steamgriddb_api::Client::new(auth_key);
+        let mut search = CachedSearch::new(&client);
+        let known_images = get_users_images(user).unwrap();
+        let res = download_images(
+            known_images,
+            user.steam_user_data_folder.as_str(),
+            shortcut_info,
+            &mut search,
+            &client,
+        )
+        .await?;
+        search.save();
+        let duration = start_time.elapsed();
+        println!("Finished getting images in: {:?}", duration);
+        Ok(res)
+    } else {
+        println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
+        Ok(Vec::new())
+    }
+}
+
+async fn download_images<'b>(
     known_images: Vec<String>,
     user_data_folder: &str,
     shortcuts: &Vec<ShortcutOwned>,
     search: &mut CachedSearch<'b>,
     client: &Client,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
         let images = vec![
             format!("{}_hero.png", s.app_id),
@@ -27,7 +86,7 @@ pub async fn download_images<'b>(
         images.iter().any(|image| !known_images.contains(&image)) && "" != s.app_name
     });
     if shortcuts_to_search_for.clone().count() == 0 {
-        return Ok(());
+        return Ok(vec![]);
     }
     let mut search_results = HashMap::new();
     for s in shortcuts_to_search_for {
@@ -37,7 +96,8 @@ pub async fn download_images<'b>(
         }
     }
     let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid];
-    Ok(for image_type in types {
+    let mut to_download = vec![];
+    for image_type in types {
         let mut images_needed = shortcuts
             .iter()
             .filter(|s| search_results.contains_key(&s.app_id))
@@ -64,20 +124,32 @@ pub async fn download_images<'b>(
                         if let Ok(image) = image {
                             let grid_folder = Path::new(user_data_folder).join("config/grid");
                             let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                            println!(
-                                "Downloading {} to {}",
-                                image.url,
-                                path.as_path().to_str().unwrap()
-                            );
-                            let mut file = File::create(path).unwrap();
-                            let response = reqwest::get(image.url).await?;
-                            let content = response.bytes().await?;
-                            file.write_all(&content).unwrap();
+                            to_download.push(ToDownload {
+                                path,
+                                url: image.url,
+                            });
                         }
                     }
                 }
             }
             Err(err) => println!("Error getting images: {}", err),
         }
-    })
+    }
+    Ok(to_download)
+}
+
+async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {
+    println!("Downloading {} to {:?}", to_download.url, to_download.path);
+    let path = &to_download.path;
+    let url = &to_download.url;
+    let mut file = File::create(path).unwrap();
+    let response = reqwest::get(url).await?;
+    let content = response.bytes().await?;
+    file.write_all(&content).unwrap();
+    Ok(())
+}
+
+pub struct ToDownload {
+    path: PathBuf,
+    url: String,
 }
