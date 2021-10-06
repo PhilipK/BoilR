@@ -21,6 +21,11 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         "Gog"
     }
 
+    #[cfg(target_os = "linux")]
+    fn create_symlinks(&self) -> bool {
+        self.settings.create_symlinks
+    }
+
     fn get_shortcuts(&self) -> Result<Vec<GogShortcut>, GogErrors> {
         let gog_location = self
             .settings
@@ -36,13 +41,12 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
             return Err(GogErrors::ConfigFileNotFound { path: config_path });
         }
         let install_locations = get_install_locations(config_path)?;
+        #[cfg(target_os = "linux")]
         let install_locations = if let Some(wine_c_drive) = &self.settings.wine_c_drive {
             fix_paths(&wine_c_drive, install_locations)
         } else {
             install_locations
         };
-
-        dbg!(&install_locations);
 
         let mut game_folders = vec![];
         for install_location in install_locations {
@@ -143,11 +147,8 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
     }
 }
 
+#[cfg(target_os = "linux")]
 fn fix_paths(wine_c_drive: &String, paths: Vec<String>) -> Vec<String> {
-    #[cfg(not(target_os = "linux"))]
-    return paths;
-    #[cfg(target_os = "linux")]
-    {
         paths
             .iter()
             .flat_map(|path| {
@@ -159,7 +160,6 @@ fn fix_paths(wine_c_drive: &String, paths: Vec<String>) -> Vec<String> {
                 }
             })
             .collect()
-    }
 }
 
 fn get_install_locations(path: PathBuf) -> Result<Vec<String>, GogErrors> {

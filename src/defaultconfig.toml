@@ -5,9 +5,11 @@ enabled = false
 
 [gog]
 enabled = false
+create_symlinks = true
 
 [epic_games]
 enabled = false
+create_symlinks = true
 
 [legendary]
 enabled = false
@@ -16,6 +18,7 @@ enabled = false
 
 [itch]
 enabled = false
+create_symlinks = true
 
 [steamgrid_db]
 enabled = true

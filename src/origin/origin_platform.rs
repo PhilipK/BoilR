@@ -21,6 +21,11 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         "Origin"
     }
 
+    #[cfg(target_os = "linux")]
+    fn create_symlinks(&self) -> bool {
+        false
+    }
+
     fn get_shortcuts(&self) -> Result<Vec<OriginGame>, OriginErrors> {
         let origin_folder = Path::new(
             &self

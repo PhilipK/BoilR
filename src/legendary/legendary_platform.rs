@@ -32,4 +32,9 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
         let legendary_ouput = from_str(&json)?;
         Ok(legendary_ouput)
     }
+
+    #[cfg(target_os = "linux")]
+    fn create_symlinks(&self) -> bool {
+        false
+    }
 }

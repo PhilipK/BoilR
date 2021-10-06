@@ -55,6 +55,11 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
         let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
         Ok(res)
     }
+
+    #[cfg(target_os = "linux")]
+    fn create_symlinks(&self) -> bool {
+        self.settings.create_symlinks
+    }
 }
 
 fn dbpath_to_game(paths: &DbPaths<'_>) -> Option<ItchGame> {

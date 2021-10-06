@@ -1,5 +1,4 @@
-
-use steam_shortcuts_util::{Shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes};
+use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut};
 
 use crate::{
     egs::EpicPlatform,
@@ -10,14 +9,13 @@ use crate::{
 };
 use std::error::Error;
 
-
-use std::{fs::File, io::Write, path::Path};
 use crate::{
     gog::GogPlatform,
     itch::ItchPlatform,
     origin::OriginPlatform,
     steamgriddb::{download_images, CachedSearch},
 };
+use std::{fs::File, io::Write, path::Path};
 
 pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
@@ -108,6 +106,20 @@ where
     if platform.enabled() {
         let shortcuts_to_add_result = platform.get_shortcuts();
 
+        #[cfg(target_os = "linux")]
+        if platform.create_symlinks() {
+            let boilr_links_path = get_boilr_links_path();
+            if !boilr_links_path.exists() {
+                if let Err(e) = std::fs::create_dir_all(&boilr_links_path) {
+                    println!(
+                        "Could not create links folder for symlinks at path: {:?} , error: {:?} , you can try to disable creating symlinks for platform {}",
+                        boilr_links_path, e, platform.name()
+                    );
+                    return;
+                }
+            }
+        }
+
         match shortcuts_to_add_result {
             Ok(shortcuts_to_add) => {
                 println!(
@@ -115,9 +127,16 @@ where
                     shortcuts_to_add.len(),
                     platform.name()
                 );
+
                 current_shortcuts.retain(|f| !f.tags.contains(&platform.name().to_owned()));
                 for shortcut in shortcuts_to_add {
                     let shortcut_owned: ShortcutOwned = shortcut.into();
+                    #[cfg(target_os = "linux")]
+                    let shortcut_owned = if platform.create_symlinks() {
+                        create_sym_links(&shortcut_owned)
+                    } else {
+                        shortcut_owned
+                    };
                     current_shortcuts.push(shortcut_owned);
                 }
             }
@@ -125,6 +144,50 @@ where
                 eprintln!("Error getting shortcuts from platform: {}", platform.name());
                 eprintln!("{}", err);
             }
+        }
+    }
+}
+#[cfg(target_os = "linux")]
+fn get_boilr_links_path() -> std::path::PathBuf {
+    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
+    let boilr_links_path = Path::new(&home).join(".boilr").join("links");
+    boilr_links_path
+}
+#[cfg(target_os = "linux")]
+fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
+    let links_folder = get_boilr_links_path();
+
+    let target_link = links_folder.join(format!("t{}", shortcut.app_id));
+    let workdir_link = links_folder.join(format!("w{}", shortcut.app_id));
+
+    let target_original = Path::new(&shortcut.exe);
+    let workdir_original = Path::new(&shortcut.start_dir);
+
+    use std::os::unix::fs::symlink;
+
+    match (
+        symlink(&target_original, &target_link),
+        symlink(&workdir_original, &workdir_link),
+    ) {
+        (Ok(_), Ok(_)) => {
+            let exe = target_link.to_string_lossy().to_string();
+            let start_dir = workdir_link.to_string_lossy().to_string();
+            let new_shortcut = Shortcut::new(
+                0,
+                shortcut.app_name.as_str(),
+                exe.as_str(),
+                &start_dir.as_str(),
+                shortcut.icon.as_str(),
+                shortcut.shortcut_path.as_str(),
+                shortcut.launch_options.as_str(),
+            );
+            let mut new_shortcut = new_shortcut.to_owned();
+            new_shortcut.tags = shortcut.tags.clone();
+            new_shortcut
+        }
+        _ => {
+            println!("Could not create symlinks for game: {}", shortcut.app_name);
+            shortcut.clone()
         }
     }
 }

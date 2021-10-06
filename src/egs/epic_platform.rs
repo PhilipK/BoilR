@@ -27,4 +27,9 @@ impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
     fn get_shortcuts(&self) -> Result<Vec<ManifestItem>, EpicGamesManifestsError> {
         get_egs_manifests(&self.settings)
     }
+
+    #[cfg(target_os = "linux")]
+    fn create_symlinks(&self) -> bool {
+        self.settings.create_symlinks
+    }
 }

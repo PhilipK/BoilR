@@ -4,4 +4,6 @@ use serde::{Serialize,Deserialize};
 pub struct ItchSettings {
     pub enabled: bool,
     pub location: Option<String>,
+    #[cfg(target_os = "linux")]
+    pub create_symlinks: bool,
 }
