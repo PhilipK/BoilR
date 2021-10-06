@@ -19,24 +19,26 @@ impl<'a> CachedSearch<'a> {
         save_search_map(&self.search_map);
     }
 
-    pub async fn search(
+    pub async fn search<S>(
         &mut self,
         app_id: u32,
-        query: &str,
-    ) -> Result<Option<usize>, Box<dyn std::error::Error>> {
+        query: S,
+    ) -> Result<Option<usize>, Box<dyn std::error::Error>>
+    where
+        S: AsRef<str> + Into<String>,
+    {
         let cached_result = self.search_map.get(&app_id);
         if let Some(result) = cached_result {
             return Ok(Some(result.1));
         }
-        println!("Searching for {}", query);
-        let search = self.client.search(query).await?;
+        println!("Searching for {}", query.as_ref());
+        let search = self.client.search(query.as_ref()).await?;
         if search.is_empty() {
             return Ok(None);
         }
         let first_item = &search[0];
         let assumed_id = first_item.id;
-        self.search_map
-            .insert(app_id, (query.to_owned(), assumed_id));
+        self.search_map.insert(app_id, (query.into(), assumed_id));
 
         Ok(Some(assumed_id))
     }

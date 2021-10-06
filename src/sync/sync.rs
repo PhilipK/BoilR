@@ -23,47 +23,12 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     for user in userinfo_shortcuts.iter() {
         let start_time = std::time::Instant::now();
 
-        let shortcut_info = get_shortcuts_for_user(user);
-
-        let mut new_user_shortcuts: Vec<ShortcutOwned> = shortcut_info.shortcuts;
-
-        update_platform_shortcuts(
-            &EpicPlatform::new(settings.epic_games.clone()),
-            &mut new_user_shortcuts,
-        );
-
-        update_platform_shortcuts(
-            &LegendaryPlatform::new(settings.legendary.clone()),
-            &mut new_user_shortcuts,
-        );
-
-        update_platform_shortcuts(
-            &ItchPlatform::new(settings.itch.clone()),
-            &mut new_user_shortcuts,
-        );
-
-        update_platform_shortcuts(
-            &OriginPlatform {
-                settings: settings.origin.clone(),
-            },
-            &mut new_user_shortcuts,
-        );
-
-        update_platform_shortcuts(
-            &GogPlatform {
-                settings: settings.gog.clone(),
-            },
-            &mut new_user_shortcuts,
-        );
-
-        let shortcuts = new_user_shortcuts.iter().map(|f| f.borrow()).collect();
-
-        save_shortcuts(&shortcuts, Path::new(&shortcut_info.path));
+        let mut shortcut_info = get_shortcuts_for_user(user);
+        update_platforms(settings, &mut shortcut_info.shortcuts);
+        save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
         let duration = start_time.elapsed();
-
         println!("Finished synchronizing games in: {:?}", duration);
-
         if settings.steamgrid_db.enabled {
             let auth_key = &settings.steamgrid_db.auth_key;
             if let Some(auth_key) = auth_key {
@@ -75,7 +40,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
                 download_images(
                     known_images,
                     user.steam_user_data_folder.as_str(),
-                    shortcuts,
+                    &shortcut_info.shortcuts,
                     &mut search,
                     &client,
                 )
@@ -91,10 +56,56 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn save_shortcuts(shortcuts: &Vec<Shortcut>, path: &Path) {
-    let new_content = shortcuts_to_bytes(shortcuts);
-    let mut file = File::create(path).unwrap();
-    file.write_all(new_content.as_slice()).unwrap();
+fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOwned>) {
+    update_platform_shortcuts(
+        &EpicPlatform::new(settings.epic_games.clone()),
+        new_user_shortcuts,
+    );
+    update_platform_shortcuts(
+        &LegendaryPlatform::new(settings.legendary.clone()),
+        new_user_shortcuts,
+    );
+    update_platform_shortcuts(
+        &ItchPlatform::new(settings.itch.clone()),
+        new_user_shortcuts,
+    );
+    update_platform_shortcuts(
+        &OriginPlatform {
+            settings: settings.origin.clone(),
+        },
+        new_user_shortcuts,
+    );
+    update_platform_shortcuts(
+        &GogPlatform {
+            settings: settings.gog.clone(),
+        },
+        new_user_shortcuts,
+    );
+}
+
+fn save_shortcuts(shortcuts: &Vec<ShortcutOwned>, path: &Path) {
+    let mut shortcuts_refs = vec![];
+    for shortcut in shortcuts {
+        shortcuts_refs.push(shortcut.borrow());
+    }
+    let new_content = shortcuts_to_bytes(&shortcuts_refs);
+    match File::create(path) {
+        Ok(mut file) => match file.write_all(new_content.as_slice()) {
+            Ok(_) => println!("Saved {} shortcuts", shortcuts.len()),
+            Err(e) => println!(
+                "Failed to save shortcuts to {} error: {}",
+                path.to_string_lossy(),
+                e
+            ),
+        },
+        Err(e) => {
+            println!(
+                "Failed to save shortcuts to {} error: {}",
+                path.to_string_lossy(),
+                e
+            );
+        }
+    }
 }
 
 fn update_platform_shortcuts<P, T, E>(platform: &P, current_shortcuts: &mut Vec<ShortcutOwned>)
@@ -104,21 +115,14 @@ where
     T: Into<ShortcutOwned>,
 {
     if platform.enabled() {
-        let shortcuts_to_add_result = platform.get_shortcuts();
+        let name = platform.name();
 
         #[cfg(target_os = "linux")]
         if platform.create_symlinks() {
-            let boilr_links_path = get_boilr_links_path();
-            if !boilr_links_path.exists() {
-                if let Err(e) = std::fs::create_dir_all(&boilr_links_path) {
-                    println!(
-                        "Could not create links folder for symlinks at path: {:?} , error: {:?} , you can try to disable creating symlinks for platform {}",
-                        boilr_links_path, e, platform.name()
-                    );
-                    return;
-                }
-            }
+            super::symlinks::ensure_links_folder_created(name);
         }
+
+        let shortcuts_to_add_result = platform.get_shortcuts();
 
         match shortcuts_to_add_result {
             Ok(shortcuts_to_add) => {
@@ -133,7 +137,7 @@ where
                     let shortcut_owned: ShortcutOwned = shortcut.into();
                     #[cfg(target_os = "linux")]
                     let shortcut_owned = if platform.create_symlinks() {
-                        create_sym_links(&shortcut_owned)
+                        crate::sync::symlinks::create_sym_links(&shortcut_owned)
                     } else {
                         shortcut_owned
                     };
@@ -144,49 +148,6 @@ where
                 eprintln!("Error getting shortcuts from platform: {}", platform.name());
                 eprintln!("{}", err);
             }
-        }
-    }
-}
-#[cfg(target_os = "linux")]
-fn get_boilr_links_path() -> std::path::PathBuf {
-    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
-    let boilr_links_path = Path::new(&home).join(".boilr").join("links");
-    boilr_links_path
-}
-#[cfg(target_os = "linux")]
-fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
-    let links_folder = get_boilr_links_path();
-
-    let target_link = links_folder.join(format!("t{}", shortcut.app_id));
-    let workdir_link = links_folder.join(format!("w{}", shortcut.app_id));
-
-    let target_original = Path::new(&shortcut.exe);
-    let workdir_original = Path::new(&shortcut.start_dir);
-
-    use std::os::unix::fs::symlink;
-    // If the links exsists, then they must point towards what is needed, otherwise they would have a different app id
-    let target_ok = target_link.exists() || symlink(&target_original, &target_link).is_ok();
-    let workdir_ok = workdir_link.exists() || symlink(&workdir_original, &workdir_link).is_ok();
-    match (target_ok, workdir_ok) {
-        (true, true) => {
-            let exe = target_link.to_string_lossy().to_string();
-            let start_dir = workdir_link.to_string_lossy().to_string();
-            let new_shortcut = Shortcut::new(
-                0,
-                shortcut.app_name.as_str(),
-                exe.as_str(),
-                &start_dir.as_str(),
-                shortcut.icon.as_str(),
-                shortcut.shortcut_path.as_str(),
-                shortcut.launch_options.as_str(),
-            );
-            let mut new_shortcut = new_shortcut.to_owned();
-            new_shortcut.tags = shortcut.tags.clone();
-            new_shortcut
-        }
-        _ => {
-            println!("Could not create symlinks for game: {}", shortcut.app_name);
-            shortcut.clone()
         }
     }
 }

@@ -3,17 +3,17 @@ use std::io::Write;
 use std::{collections::HashMap, path::Path};
 
 use std::error::Error;
-use steam_shortcuts_util::Shortcut;
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::Client;
 
 use crate::steamgriddb::ImageType;
 
 use super::CachedSearch;
 
-pub async fn download_images<'a, 'b>(
+pub async fn download_images<'b>(
     known_images: Vec<String>,
     user_data_folder: &str,
-    shortcuts: Vec<Shortcut<'a>>,
+    shortcuts: &Vec<ShortcutOwned>,
     search: &mut CachedSearch<'b>,
     client: &Client,
 ) -> Result<(), Box<dyn Error>> {
@@ -31,7 +31,7 @@ pub async fn download_images<'a, 'b>(
     }
     let mut search_results = HashMap::new();
     for s in shortcuts_to_search_for {
-        let search = search.search(s.app_id, s.app_name).await?;
+        let search = search.search(s.app_id, &s.app_name).await?;
         if let Some(search) = search {
             search_results.insert(s.app_id, search);
         }
