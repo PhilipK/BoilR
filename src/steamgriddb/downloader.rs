@@ -47,11 +47,11 @@ pub async fn download_images<'b>(
             .filter_map(|s| search_results.get(&s.app_id))
             .map(|search| *search)
             .collect();
-
+        use steamgriddb_api::query_parameters::QueryType::*;
         let query_type = match image_type {
-            ImageType::Hero => steamgriddb_api::query_parameters::QueryType::Hero(None),
-            ImageType::Grid => steamgriddb_api::query_parameters::QueryType::Grid(None),
-            ImageType::Logo => steamgriddb_api::query_parameters::QueryType::Logo(None),
+            ImageType::Hero => Hero(None),
+            ImageType::Grid => Grid(None),
+            ImageType::Logo => Logo(None),
         };
 
         match client

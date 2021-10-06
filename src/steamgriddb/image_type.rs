@@ -1,4 +1,5 @@
 
+#[derive(Debug,Clone,Copy)]
 pub enum ImageType {
     Hero,
     Grid,
