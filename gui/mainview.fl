@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window win {
       label {Main View} open
-      xywh {768 30 535 865} type Double visible
+      xywh {768 0 575 985} type Double visible
     } {
       Fl_Group {} {
         label BoilR
@@ -76,11 +76,11 @@ class UserInterface {open
         }
       }
       Fl_Group origin_group {
-        label Origin open
-        xywh {40 699 633 78} align 5
+        label Origin
+        xywh {35 699 638 121} align 5
       } {
         Fl_Input origin_folder_input {
-          label {Origin Data Folder} selected
+          label {Origin Data Folder}
           xywh {40 745 445 26} align 5
         }
         Fl_Check_Button enable_origin_checkbox {
@@ -89,15 +89,32 @@ class UserInterface {open
         }
       }
       Fl_Group action_buttons {
-        xywh {35 800 570 50}
+        xywh {35 800 570 170}
       } {
         Fl_Button save_settings_button {
           label {Save Settings}
-          xywh {38 808 120 40}
+          xywh {35 930 120 40}
         }
         Fl_Button synchronize_button {
           label {Synchronize Games}
-          xywh {325 806 160 40}
+          xywh {325 925 160 40}
+        }
+      }
+      Fl_Group {} {
+        label {GOG Galaxy} open
+        xywh {35 799 570 121} align 5
+      } {
+        Fl_Check_Button enable_gog_checkbox {
+          label Enable
+          xywh {35 799 570 26} down_box DOWN_BOX
+        }
+        Fl_Input gog_folder_input {
+          label {GOG Data Folder}
+          xywh {35 844 445 26} align 5
+        }
+        Fl_Input gog_winedrive_input {
+          label {GOG Wine C Drive} selected
+          xywh {35 894 445 26} align 5
         }
       }
     }

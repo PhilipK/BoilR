@@ -164,12 +164,11 @@ fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
     let workdir_original = Path::new(&shortcut.start_dir);
 
     use std::os::unix::fs::symlink;
-
-    match (
-        symlink(&target_original, &target_link),
-        symlink(&workdir_original, &workdir_link),
-    ) {
-        (Ok(_), Ok(_)) => {
+    // If the links exsists, then they must point towards what is needed, otherwise they would have a different app id
+    let target_ok = target_link.exists() || symlink(&target_original, &target_link).is_ok();
+    let workdir_ok = workdir_link.exists() || symlink(&workdir_original, &workdir_link).is_ok();
+    match (target_ok, workdir_ok) {
+        (true, true) => {
             let exe = target_link.to_string_lossy().to_string();
             let start_dir = workdir_link.to_string_lossy().to_string();
             let new_shortcut = Shortcut::new(

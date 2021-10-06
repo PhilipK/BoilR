@@ -52,7 +52,6 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         for install_location in install_locations {
             let path = Path::new(&install_location);
             if path.exists() {
-                println!("exists {:?}", &path);
                 let dirs = path.read_dir();
                 if let Ok(dirs) = dirs {
                     for dir in dirs {
@@ -122,7 +121,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
 
                                 #[cfg(target_os = "linux")]
                                 let working_dir = working_dir.replace("\\", "/");
-                                
+
                                 let full_path_string = full_path.to_string();
 
                                 #[cfg(target_os = "linux")]
@@ -149,17 +148,17 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
 
 #[cfg(target_os = "linux")]
 fn fix_paths(wine_c_drive: &String, paths: Vec<String>) -> Vec<String> {
-        paths
-            .iter()
-            .flat_map(|path| {
-                if path.starts_with("C:\\") {
-                    let path_buf = Path::new(wine_c_drive).join(&path[3..]);
-                    path_buf.to_str().map(|s| s.to_string().replace("\\", "/"))
-                } else {
-                    None
-                }
-            })
-            .collect()
+    paths
+        .iter()
+        .flat_map(|path| {
+            if path.starts_with("C:\\") {
+                let path_buf = Path::new(wine_c_drive).join(&path[3..]);
+                path_buf.to_str().map(|s| s.to_string().replace("\\", "/"))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn get_install_locations(path: PathBuf) -> Result<Vec<String>, GogErrors> {

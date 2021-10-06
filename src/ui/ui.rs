@@ -71,6 +71,11 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     // Itch
     settings.itch.enabled = ui.enable_itch_checkbox.value();
     settings.itch.location = empty_or_whitespace(ui.itch_locatoin_input.value());
+
+    // Gog
+    settings.gog.enabled = ui.enable_gog_checkbox.value();
+    settings.gog.location = empty_or_whitespace(ui.gog_folder_input.value());
+    settings.gog.wine_c_drive = empty_or_whitespace(ui.gog_winedrive_input.value());
 }
 
 #[cfg(feature = "ui")]
@@ -84,7 +89,7 @@ fn save_settings_to_file(settings: &Settings) {
 fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     use std::path::Path;
 
-    use crate::{itch, origin, steam};
+    use crate::{gog, itch, origin, steam};
 
     ui.steam_location_input.set_value(
         &settings
@@ -152,4 +157,29 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
             .clone()
             .unwrap_or(default_origin_location),
     );
+
+    ui.enable_gog_checkbox.set_value(settings.gog.enabled);
+    let default_gog_location = gog::default_location();
+    let default_gog_location = if !default_gog_location.exists() {
+        String::from("")
+    } else {
+        default_gog_location.to_string_lossy().to_string()
+    };
+    ui.gog_folder_input.set_value(
+        &settings
+            .gog
+            .location
+            .clone()
+            .unwrap_or(default_gog_location),
+    );
+
+    #[cfg(target_os = "linux")]
+    {
+        ui.gog_winedrive_input
+            .set_value(&settings.gog.wine_c_drive.clone().unwrap_or("".to_string()));
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        ui.gog_winedrive_input.deactivate();
+    }
 }
