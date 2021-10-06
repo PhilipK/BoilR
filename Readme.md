@@ -100,7 +100,7 @@ If you are on linux, and want to use one of the launchers that is not available 
 - Install GOG thourgh Lutris [here](https://lutris.net/games/gog-galaxy/)
 - Set the path to GOG in the config.toml (or through the ui)
 - Run BoilR
-- Remember to pick which version of Proton you want to use for a game, before the first time you want to rn it.
+- Remember to pick which version of Proton you want to use for a game, before the first time you play it.
 
 ### Epic
 
@@ -110,7 +110,7 @@ I recommend you just use [Legendary](https://github.com/derrod/legendary). But i
 - Install EGS thourgh Lutris [here](https://lutris.net/games/epic-games-store/)
 - Set the path to EGS in the config.toml (or through the ui)
 - Run BoilR
-- Remember to pick which version of Proton you want to use for a game, before the first time you want to rn it.
+- Remember to pick which version of Proton you want to use for a game, before the first time you play it.
 
 ### Origin
 
