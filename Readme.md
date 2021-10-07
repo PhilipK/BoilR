@@ -13,9 +13,12 @@ The goal is that you do not have to leave your Steam library to launch games fro
 - [x] [Itch.io](https://itch.io/app) integration
 - [x] [Origin](https://www.origin.com) integration (currently only windows, linux comming soon)
 - [x] [GOG](https://www.gog.com/galaxy) integration
-- [x] Cross Platform
-- [x] Small (~1.5mb on disk), lightweight (~2mb ram) and fast(~30ms sync)
+- [x] Cross Platform (Linux & Windows)
 - [x] UI For configuration
+- [x] Small (~1.5mb on disk)
+- [x] Lightweight (~2mb ram)
+- [x] Fast synchronization (~30ms)
+- [x] Fast art download (as fast as your internet will take you)
 - [ ] UPlay integration
 - [ ] [Lutris](https://github.com/lutris/lutris) integration
 - [ ] XBox/Microsoft Store integration
