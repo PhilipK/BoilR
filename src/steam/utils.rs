@@ -18,7 +18,7 @@ pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
                 .unwrap()
                 .iter()
                 .map(|s| s.to_owned())
-                .collect();        
+                .collect();
             Path::new(&shortcut_path).to_path_buf()
         }
         None => {
@@ -164,11 +164,13 @@ impl Error for SteamUsersDataEmpty {
 }
 pub fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Error>> {
     let grid_folder = Path::new(user.steam_user_data_folder.as_str()).join("config/grid");
-    std::fs::create_dir_all(&grid_folder)?;
+    if !grid_folder.exists() {
+        std::fs::create_dir_all(&grid_folder)?;
+    }
     let user_folders = std::fs::read_dir(&grid_folder)?;
     let file_names = user_folders
         .filter_map(|image| image.ok())
-        .map(|image| image.file_name().into_string().unwrap())
+        .map(|image| image.file_name().to_string_lossy().to_string())
         .collect();
     Ok(file_names)
 }

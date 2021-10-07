@@ -18,11 +18,10 @@ use super::CachedSearch;
 const CONCURRENT_REQUESTS: usize = 10;
 
 pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<SteamUsersInfo>) {
-    let start_time = std::time::Instant::now();
-
     let auth_key = &settings.steamgrid_db.auth_key;
     if let Some(auth_key) = auth_key {
         println!("Checking for game images");
+        let start_time = std::time::Instant::now();
         let client = steamgriddb_api::Client::new(auth_key);
         let search = CachedSearch::new(&client);
         let search = &search;
@@ -47,20 +46,23 @@ pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<Stea
             .collect::<Vec<Vec<ToDownload>>>()
             .await;
         let to_downloads = to_downloads.iter().flatten().collect::<Vec<&ToDownload>>();
-        search.save();
+        if !to_downloads.is_empty() {
+            search.save();
 
-        stream::iter(to_downloads)
-            .map(|to_download| async move {
-                if let Err(e) = download_to_download(&to_download).await {
-                    println!("Error downloading {:?}: {}", &to_download.path, e);
-                }
-            })
-            .buffer_unordered(CONCURRENT_REQUESTS)
-            .collect::<Vec<()>>()
-            .await;
-        let duration = start_time.elapsed();
-
-        println!("Finished getting images in: {:?}", duration);
+            stream::iter(to_downloads)
+                .map(|to_download| async move {
+                    if let Err(e) = download_to_download(&to_download).await {
+                        println!("Error downloading {:?}: {}", &to_download.path, e);
+                    }
+                })
+                .buffer_unordered(CONCURRENT_REQUESTS)
+                .collect::<Vec<()>>()
+                .await;
+            let duration = start_time.elapsed();
+            println!("Finished getting images in: {:?}", duration);
+        } else {
+            println!("No images needed");
+        }
     } else {
         println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
     }
@@ -82,7 +84,8 @@ async fn search_fo_to_download<'b>(
         // if we are missing any of the images we need to search for them
         images.iter().any(|image| !known_images.contains(&image)) && "" != s.app_name
     });
-    if shortcuts_to_search_for.clone().count() == 0 {
+    let shortcuts_to_search_for: Vec<&ShortcutOwned> = shortcuts_to_search_for.collect();
+    if shortcuts_to_search_for.is_empty() {
         return Ok(vec![]);
     }
     let mut search_results = HashMap::new();
