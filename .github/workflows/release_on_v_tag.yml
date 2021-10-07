@@ -77,6 +77,9 @@ jobs:
           file: ${{ matrix.file }}
           args: ${{ matrix.args }}
           strip: ${{ matrix.strip }}
+      - name: Strip binaries
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.ui == true}}
+        run: strip ${{ matrix.file }}
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
