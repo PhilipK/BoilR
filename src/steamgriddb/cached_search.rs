@@ -1,6 +1,7 @@
-use std::{collections::HashMap, fs::File, io::Write, path::Path};
+use std::{ fs::File, io::Write, path::Path};
+use dashmap::DashMap;
 
-type SearchMap = HashMap<u32, (String, usize)>;
+type SearchMap = DashMap<u32, (String, usize)>;
 
 pub struct CachedSearch<'a> {
     search_map: SearchMap,
@@ -20,7 +21,7 @@ impl<'a> CachedSearch<'a> {
     }
 
     pub async fn search<S>(
-        &mut self,
+        &self,
         app_id: u32,
         query: S,
     ) -> Result<Option<usize>, Box<dyn std::error::Error>>

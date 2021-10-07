@@ -20,6 +20,7 @@ nom_locate = "^3.0.*"
 flate2 = "^1.0.22"
 toml = { version = "^0.5.8", optional = true }
 futures = { version = "^0.3.17" }
+dashmap = { version = "^4.0.2", features = ["serde"] }
 
 [build-dependencies]
 fl2rust = { version = "0.4", optional = true }
