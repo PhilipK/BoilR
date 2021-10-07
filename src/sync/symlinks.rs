@@ -1,9 +1,6 @@
 use std::path::Path;
 
-use steam_shortcuts_util::{
-    shortcut::{ShortcutOwned},
-    Shortcut,
-};
+use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 fn get_boilr_links_path() -> std::path::PathBuf {
     let home = std::env::var("HOME").expect("Expected a home variable to be defined");
@@ -28,12 +25,19 @@ pub fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
         (true, true) => {
             let exe = target_link.to_string_lossy().to_string();
             let start_dir = workdir_link.to_string_lossy().to_string();
+
+            let icon = if shortcut.icon.eq(&shortcut.exe) {
+                &exe
+            } else {
+                &shortcut.icon
+            };
+
             let new_shortcut = Shortcut::new(
                 0,
                 shortcut.app_name.as_str(),
                 exe.as_str(),
                 &start_dir.as_str(),
-                shortcut.icon.as_str(),
+                icon.as_str(),
                 shortcut.shortcut_path.as_str(),
                 shortcut.launch_options.as_str(),
             );

@@ -5,7 +5,7 @@ use crate::{
     legendary::LegendaryPlatform,
     platform::Platform,
     settings::Settings,
-    steam::{get_shortcuts_for_user, get_shortcuts_paths},
+    steam::{get_shortcuts_for_user, get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::download_images_for_users,
 };
 use std::error::Error;
@@ -27,6 +27,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         );
 
         update_platforms(settings, &mut shortcut_info.shortcuts);
+        fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
         let duration = start_time.elapsed();
@@ -38,6 +39,29 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
+    let image_folder = Path::new(&user.steam_user_data_folder)
+        .join("config")
+        .join("grid");
+    for shortcut in shortcuts {
+        #[cfg(not(target_os = "linux"))]
+        let replace_icon = shortcut.icon.trim().eq("");
+        #[cfg(target_os = "linux")]
+        let replace_icon = shortcut.icon.trim().eq("") || shortcut.icon.eq(&shortcut.exe);
+        if replace_icon {
+            let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
+                &shortcut.exe,
+                &shortcut.app_name,
+            );
+            let new_icon = image_folder
+                .join(format!("{}_hero.png", app_id))
+                .to_string_lossy()
+                .to_string();
+            shortcut.icon = new_icon;
+        }
+    }
 }
 
 fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOwned>) {
