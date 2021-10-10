@@ -39,7 +39,6 @@ pub async fn run_ui() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg(feature = "ui")]
 fn empty_or_whitespace(input: String) -> Option<String> {
     if input.trim().is_empty() {
         None
@@ -47,7 +46,6 @@ fn empty_or_whitespace(input: String) -> Option<String> {
         Some(input)
     }
 }
-#[cfg(feature = "ui")]
 fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     // Steam location
     settings.steam.location = empty_or_whitespace(ui.steam_location_input.value());
@@ -78,14 +76,12 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     settings.gog.wine_c_drive = empty_or_whitespace(ui.gog_winedrive_input.value());
 }
 
-#[cfg(feature = "ui")]
 
 fn save_settings_to_file(settings: &Settings) {
     let toml = toml::to_string(&settings).unwrap();
     std::fs::write("config.toml", toml).unwrap();
 }
 
-#[cfg(feature = "ui")]
 fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     use std::path::Path;
 
