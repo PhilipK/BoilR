@@ -92,7 +92,7 @@ fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOw
     );
 }
 
-fn save_shortcuts(shortcuts: &Vec<ShortcutOwned>, path: &Path) {
+fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
     let mut shortcuts_refs = vec![];
     for shortcut in shortcuts {
         shortcuts_refs.push(shortcut.borrow());

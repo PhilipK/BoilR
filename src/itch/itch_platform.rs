@@ -2,7 +2,6 @@ use super::butler_db_parser::*;
 use super::receipt::Receipt;
 use super::{ItchGame, ItchSettings};
 use crate::platform::Platform;
-use _core::iter::FromIterator;
 use failure::*;
 use flate2::read::GzDecoder;
 use std::collections::HashSet;
@@ -50,7 +49,7 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
         }?;
 
         //This is done to remove douplicates
-        let paths: HashSet<&DbPaths> = HashSet::from_iter(paths.iter());
+        let paths: HashSet<&DbPaths> = paths.iter().collect();
 
         let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
         Ok(res)

@@ -26,7 +26,7 @@ impl From<ManifestItem> for ShortcutOwned {
             manifest.install_location, manifest.launch_executable
         );
         let mut start_dir = manifest.install_location.clone();
-        if !manifest.install_location.starts_with("\"") {
+        if !manifest.install_location.starts_with('"') {
             start_dir = format!("\"{}\"", manifest.install_location);
         }
         let shortcut = Shortcut::new(

@@ -16,7 +16,7 @@ impl From<LegendaryGame> for ShortcutOwned {
         let exe = format!("\"{}\\{}\"", game.install_path, game.executable);
         let launch = format!("legendary launch {}", game.app_name);
         let mut start_dir = game.install_path.clone();
-        if !game.install_path.starts_with("\"") {
+        if !game.install_path.starts_with('"') {
             start_dir = format!("\"{}\"", game.install_path);
         }
         let shortcut = Shortcut::new(

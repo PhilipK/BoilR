@@ -17,7 +17,7 @@ use super::CachedSearch;
 
 const CONCURRENT_REQUESTS: usize = 10;
 
-pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<SteamUsersInfo>) {
+pub async fn download_images_for_users<'b>(settings: &Settings, users: &[SteamUsersInfo]) {
     let auth_key = &settings.steamgrid_db.auth_key;
     if let Some(auth_key) = auth_key {
         println!("Checking for game images");
@@ -51,7 +51,7 @@ pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<Stea
 
             stream::iter(to_downloads)
                 .map(|to_download| async move {
-                    if let Err(e) = download_to_download(&to_download).await {
+                    if let Err(e) = download_to_download(to_download).await {
                         println!("Error downloading {:?}: {}", &to_download.path, e);
                     }
                 })
@@ -68,11 +68,11 @@ pub async fn download_images_for_users<'b>(settings: &Settings, users: &Vec<Stea
     }
 }
 
-async fn search_fo_to_download<'b>(
+async fn search_fo_to_download(
     known_images: Vec<String>,
     user_data_folder: &str,
-    shortcuts: &Vec<ShortcutOwned>,
-    search: &CachedSearch<'b>,
+    shortcuts: &[ShortcutOwned],
+    search: &CachedSearch<'_>,
     client: &Client,
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
@@ -82,7 +82,7 @@ async fn search_fo_to_download<'b>(
             format!("{}_logo.png", s.app_id),
         ];
         // if we are missing any of the images we need to search for them
-        images.iter().any(|image| !known_images.contains(&image)) && "" != s.app_name
+        images.iter().any(|image| !known_images.contains(image)) && !s.app_name.is_empty()
     });
     let shortcuts_to_search_for: Vec<&ShortcutOwned> = shortcuts_to_search_for.collect();
     if shortcuts_to_search_for.is_empty() {
@@ -96,19 +96,15 @@ async fn search_fo_to_download<'b>(
                 return None;
             }
             let search_result = search_result.unwrap();
-            if search_result.is_none() {
-                return None;
-            }
+            search_result?;
             let search_result = search_result.unwrap();
             Some((s.app_id, search_result))
         })
         .buffer_unordered(CONCURRENT_REQUESTS)
         .collect::<Vec<Option<(u32, usize)>>>()
         .await;
-    for r in search_results_a {
-        if let Some((app_id, search)) = r {
-            search_results.insert(app_id, search);
-        }
+    for (app_id, search) in search_results_a.into_iter().flatten() {
+        search_results.insert(app_id, search);
     }
     let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid];
     let mut to_download = vec![];
@@ -120,7 +116,7 @@ async fn search_fo_to_download<'b>(
         let image_ids: Vec<usize> = images_needed
             .clone()
             .filter_map(|s| search_results.get(&s.app_id))
-            .map(|search| *search)
+            .copied()
             .collect();
         use steamgriddb_api::query_parameters::QueryType::*;
         let query_type = match image_type {

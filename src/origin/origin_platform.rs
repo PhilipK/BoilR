@@ -32,7 +32,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
                 .settings
                 .path
                 .clone()
-                .unwrap_or_else(|| get_default_location()),
+                .unwrap_or_else(get_default_location),
         )
         .join("LocalContent");
         if !origin_folder.exists() {
@@ -59,7 +59,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
                     None => None,
                 };
                 id.map(|id| OriginGame {
-                    id: id.to_string(),
+                    id,
                     title: game_title,
                 })
             });
@@ -72,8 +72,7 @@ fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {
     if let Ok(game_folder_files) = game_folder_files {
         let mfst_file = game_folder_files
             .filter_map(|file| file.ok())
-            .filter(is_mfst_file)
-            .next()
+            .find(is_mfst_file)
             .map(|file| std::fs::read_to_string(&file.path()));
         return match mfst_file {
             Some(mfst_file) => mfst_file.ok(),
@@ -99,7 +98,6 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
 
 #[cfg(target_os = "linux")]
 pub fn get_default_location() -> String {
-
     //TODO implement this for linux:
     // https://www.toptensoftware.com/blog/running-ea-origin-games-under-linux-via-steam-and-proton/
 
