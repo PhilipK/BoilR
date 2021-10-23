@@ -14,9 +14,9 @@ use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
 
 pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
-    let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     println!("Found {} user(s)", userinfo_shortcuts.len());
-    for user in userinfo_shortcuts.iter() {
+    for user in userinfo_shortcuts.iter_mut() {
         let start_time = std::time::Instant::now();
 
         let mut shortcut_info = get_shortcuts_for_user(user);
@@ -29,6 +29,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         update_platforms(settings, &mut shortcut_info.shortcuts);
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+        user.shortcut_path = Some(shortcut_info.path.to_string_lossy().to_string());
 
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
@@ -91,7 +92,7 @@ fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOw
     );
 }
 
-fn save_shortcuts(shortcuts: &Vec<ShortcutOwned>, path: &Path) {
+fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
     let mut shortcuts_refs = vec![];
     for shortcut in shortcuts {
         shortcuts_refs.push(shortcut.borrow());
@@ -99,7 +100,9 @@ fn save_shortcuts(shortcuts: &Vec<ShortcutOwned>, path: &Path) {
     let new_content = shortcuts_to_bytes(&shortcuts_refs);
     match File::create(path) {
         Ok(mut file) => match file.write_all(new_content.as_slice()) {
-            Ok(_) => println!("Saved {} shortcuts", shortcuts.len()),
+            Ok(_) => {
+                println!("Saved {} shortcuts", shortcuts.len())
+            }
             Err(e) => println!(
                 "Failed to save shortcuts to {} error: {}",
                 path.to_string_lossy(),

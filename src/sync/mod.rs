@@ -1,5 +1,5 @@
 #[cfg(target_os = "linux")]
 mod symlinks;
-mod sync;
+mod synchronization;
 
-pub use sync::run_sync;
+pub use synchronization::run_sync;

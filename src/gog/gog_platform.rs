@@ -54,12 +54,10 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
             if path.exists() {
                 let dirs = path.read_dir();
                 if let Ok(dirs) = dirs {
-                    for dir in dirs {
-                        if let Ok(dir) = dir {
-                            if let Ok(file_type) = dir.file_type() {
-                                if file_type.is_dir() {
-                                    game_folders.push(dir.path());
-                                }
+                    for dir in dirs.flatten() {
+                        if let Ok(file_type) = dir.file_type() {
+                            if file_type.is_dir() {
+                                game_folders.push(dir.path());
                             }
                         }
                     }
@@ -69,22 +67,18 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         let mut games = vec![];
         for game_folder in &game_folders {
             if let Ok(files) = game_folder.read_dir() {
-                for file in files {
-                    if let Ok(file) = file {
-                        if let Some(file_name) = file.file_name().to_str() {
-                            if file_name.starts_with("goggame-") {
-                                if let Some(extension) = file.path().extension() {
-                                    if let Some(extension) = extension.to_str() {
-                                        if extension == "info" {
-                                            // Finally we know we can parse this as a game
-                                            if let Ok(content) =
-                                                std::fs::read_to_string(file.path())
+                for file in files.flatten() {
+                    if let Some(file_name) = file.file_name().to_str() {
+                        if file_name.starts_with("goggame-") {
+                            if let Some(extension) = file.path().extension() {
+                                if let Some(extension) = extension.to_str() {
+                                    if extension == "info" {
+                                        // Finally we know we can parse this as a game
+                                        if let Ok(content) = std::fs::read_to_string(file.path()) {
+                                            if let Ok(gog_game) =
+                                                serde_json::from_str::<GogGame>(&content)
                                             {
-                                                if let Ok(gog_game) =
-                                                    serde_json::from_str::<GogGame>(&content)
-                                                {
-                                                    games.push((gog_game, game_folder));
-                                                }
+                                                games.push((gog_game, game_folder));
                                             }
                                         }
                                     }
@@ -114,7 +108,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
                                     Some(working_dir) => game_folder
                                         .join(working_dir)
                                         .to_str()
-                                        .unwrap_or(folder_path.as_str())
+                                        .unwrap_or_else(|| folder_path.as_str())
                                         .to_string(),
                                     None => folder_path.to_string(),
                                 };
