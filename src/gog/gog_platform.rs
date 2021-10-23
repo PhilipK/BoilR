@@ -43,7 +43,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         let install_locations = get_install_locations(config_path)?;
         #[cfg(target_os = "linux")]
         let install_locations = if let Some(wine_c_drive) = &self.settings.wine_c_drive {
-            fix_paths(&wine_c_drive, install_locations)
+            fix_paths(wine_c_drive, install_locations)
         } else {
             install_locations
         };
@@ -141,12 +141,12 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
 }
 
 #[cfg(target_os = "linux")]
-fn fix_paths(wine_c_drive: &String, paths: Vec<String>) -> Vec<String> {
+fn fix_paths(wine_c_drive: &str, paths: Vec<String>) -> Vec<String> {
     paths
         .iter()
         .flat_map(|path| {
-            if path.starts_with("C:\\") {
-                let path_buf = Path::new(wine_c_drive).join(&path[3..]);
+            if let Some(stripped) = path.strip_prefix("C:\\") {
+                let path_buf = Path::new(wine_c_drive).join(stripped);
                 path_buf.to_str().map(|s| s.to_string().replace("\\", "/"))
             } else {
                 None

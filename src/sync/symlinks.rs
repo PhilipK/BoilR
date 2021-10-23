@@ -36,7 +36,7 @@ pub fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
                 0,
                 shortcut.app_name.as_str(),
                 exe.as_str(),
-                &start_dir.as_str(),
+                start_dir.as_str(),
                 icon.as_str(),
                 shortcut.shortcut_path.as_str(),
                 shortcut.launch_options.as_str(),
@@ -60,7 +60,6 @@ pub fn ensure_links_folder_created(name: &str) {
                 "Could not create links folder for symlinks at path: {:?} , error: {:?} , you can try to disable creating symlinks for platform {}",
                 boilr_links_path, e, name
             );
-            return;
         }
     }
 }
