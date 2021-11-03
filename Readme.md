@@ -91,6 +91,7 @@ location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the t
 [steamgrid_db]
 enabled = true #If false, the whole download of custom art will be skipped.
 auth_key="<your steamgrid db auth key>" #This value is mandatory if you have steamgrid_db enabled.
+prefer_animated = false #If true, animated images will be prefered over static images when downloading art.
 ```
 
 ## Tips for Linux
