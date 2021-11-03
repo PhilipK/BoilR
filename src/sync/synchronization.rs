@@ -57,7 +57,7 @@ fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>)
                 &shortcut.app_name,
             );
             let new_icon = image_folder
-                .join(format!("{}p.png", app_id))
+                .join(format!("{}_bigpicture.png", app_id))
                 .to_string_lossy()
                 .to_string();
             shortcut.icon = new_icon;

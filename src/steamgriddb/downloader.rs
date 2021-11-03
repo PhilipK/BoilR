@@ -3,11 +3,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 
-use futures::{stream, StreamExt}; // 0.3.1
+use futures::{stream, StreamExt};
+use steamgriddb_api::query_parameters::GridDimentions; // 0.3.1
 use std::error::Error;
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
-use steamgriddb_api::Client;
+use steamgriddb_api::{Client, QueryType};
 
 use crate::settings::Settings;
 use crate::steam::{get_shortcuts_for_user, get_users_images, SteamUsersInfo};
@@ -80,6 +81,7 @@ async fn search_fo_to_download(
             format!("{}_hero.png", s.app_id),
             format!("{}p.png", s.app_id),
             format!("{}_logo.png", s.app_id),
+            format!("{}_bigpicture.png", s.app_id),
         ];
         // if we are missing any of the images we need to search for them
         images.iter().any(|image| !known_images.contains(image)) && !s.app_name.is_empty()
@@ -106,7 +108,7 @@ async fn search_fo_to_download(
     for (app_id, search) in search_results_a.into_iter().flatten() {
         search_results.insert(app_id, search);
     }
-    let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid];
+    let types = vec![ImageType::Logo, ImageType::Hero, ImageType::Grid, ImageType::BigPicture];
     let mut to_download = vec![];
     for image_type in types {
         let mut images_needed = shortcuts
@@ -119,8 +121,16 @@ async fn search_fo_to_download(
             .copied()
             .collect();
         use steamgriddb_api::query_parameters::QueryType::*;
+        let big_picture_dims = [GridDimentions::D920x430, GridDimentions::D460x215];
+        let big_picture_parameters = steamgriddb_api::query_parameters::GridQueryParameters{
+            dimentions: Some(&big_picture_dims),
+            ..Default::default()
+
+        }; 
+
         let query_type = match image_type {
             ImageType::Hero => Hero(None),
+            ImageType::BigPicture => Grid(Some(big_picture_parameters)),
             ImageType::Grid => Grid(None),
             ImageType::Logo => Logo(None),
         };

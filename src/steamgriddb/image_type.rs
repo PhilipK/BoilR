@@ -4,6 +4,7 @@ pub enum ImageType {
     Hero,
     Grid,
     Logo,
+    BigPicture
 }
 
 impl ImageType {
@@ -12,6 +13,7 @@ impl ImageType {
             ImageType::Hero => format!("{}_hero.png", app_id),
             ImageType::Grid => format!("{}p.png", app_id),
             ImageType::Logo => format!("{}_logo.png", app_id),
+            ImageType::BigPicture => format!("{}_bigpicture.png", app_id),
         }
     }
 }
