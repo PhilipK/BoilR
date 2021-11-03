@@ -36,7 +36,11 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     }
 
     if settings.steamgrid_db.enabled {
-        download_images_for_users(settings, &userinfo_shortcuts).await;
+        if settings.steamgrid_db.prefer_animated {
+            println!("downloading animated images");
+            download_images_for_users(settings, &userinfo_shortcuts,true).await;
+        }
+        download_images_for_users(settings, &userinfo_shortcuts,false).await;
     }
 
     Ok(())

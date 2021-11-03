@@ -8,7 +8,7 @@ use steamgriddb_api::query_parameters::GridDimentions; // 0.3.1
 use std::error::Error;
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
-use steamgriddb_api::{Client, QueryType};
+use steamgriddb_api::Client;
 
 use crate::settings::Settings;
 use crate::steam::{get_shortcuts_for_user, get_users_images, SteamUsersInfo};
@@ -18,7 +18,7 @@ use super::CachedSearch;
 
 const CONCURRENT_REQUESTS: usize = 10;
 
-pub async fn download_images_for_users<'b>(settings: &Settings, users: &[SteamUsersInfo]) {
+pub async fn download_images_for_users<'b>(settings: &Settings, users: &[SteamUsersInfo], download_animated:bool) {
     let auth_key = &settings.steamgrid_db.auth_key;
     if let Some(auth_key) = auth_key {
         println!("Checking for game images");
@@ -38,6 +38,7 @@ pub async fn download_images_for_users<'b>(settings: &Settings, users: &[SteamUs
                         &shortcut_info.shortcuts,
                         search,
                         client,
+                        download_animated,
                     )
                     .await;
                     res.unwrap_or_default()
@@ -75,6 +76,7 @@ async fn search_fo_to_download(
     shortcuts: &[ShortcutOwned],
     search: &CachedSearch<'_>,
     client: &Client,
+    download_animated:bool,
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
         let images = vec![
@@ -121,18 +123,45 @@ async fn search_fo_to_download(
             .copied()
             .collect();
         use steamgriddb_api::query_parameters::QueryType::*;
+        use steamgriddb_api::query_parameters::AnimtionType;
+        let anymation_type = if download_animated {
+            Some(&[AnimtionType::Animated][..])
+        }else{
+            None
+        };
         let big_picture_dims = [GridDimentions::D920x430, GridDimentions::D460x215];
-        let big_picture_parameters = steamgriddb_api::query_parameters::GridQueryParameters{
-            dimentions: Some(&big_picture_dims),
-            ..Default::default()
 
+        use steamgriddb_api::query_parameters::GridQueryParameters;
+        let big_picture_parameters = GridQueryParameters{
+            dimentions: Some(&big_picture_dims),
+            types: anymation_type,
+            ..Default::default()
         }; 
 
+        use steamgriddb_api::query_parameters::HeroQueryParameters;
+        let hero_parameters = HeroQueryParameters{
+            types: anymation_type,
+            ..Default::default()
+        };
+
+        let grid_parameters = GridQueryParameters{
+            types: anymation_type,
+            ..Default::default()
+        }; 
+
+
+        use steamgriddb_api::query_parameters::LogoQueryParameters;
+        let logo_parameters = LogoQueryParameters{
+            types: anymation_type,
+            ..Default::default()
+        };
+
+
         let query_type = match image_type {
-            ImageType::Hero => Hero(None),
+            ImageType::Hero => Hero(Some(hero_parameters)),
             ImageType::BigPicture => Grid(Some(big_picture_parameters)),
-            ImageType::Grid => Grid(None),
-            ImageType::Logo => Logo(None),
+            ImageType::Grid => Grid(Some(grid_parameters)),
+            ImageType::Logo => Logo(Some(logo_parameters)),
         };
 
         match client
