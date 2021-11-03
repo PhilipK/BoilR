@@ -1,5 +1,5 @@
 use super::{LegendaryGame, LegendarySettings};
-use crate::platform::Platform;
+use crate::platform::{Platform, SettingsValidity};
 use serde_json::from_str;
 use std::error::Error;
 use std::process::Command;
@@ -36,5 +36,13 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     #[cfg(target_os = "linux")]
     fn create_symlinks(&self) -> bool {
         false
+    }
+
+    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+        let shortcuts_res = self.get_shortcuts();
+        match shortcuts_res {
+            Ok(_) => SettingsValidity::Valid,
+            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)}
+        }
     }
 }

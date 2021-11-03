@@ -1,4 +1,4 @@
-use crate::platform::Platform;
+use crate::platform::{Platform, SettingsValidity};
 
 use super::{
     get_egs_manifests, get_manifests::EpicGamesManifestsError, EpicGamesLauncherSettings,
@@ -32,4 +32,13 @@ impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
     fn create_symlinks(&self) -> bool {
         self.settings.create_symlinks
     }
+
+    fn settings_valid(&self) -> SettingsValidity {
+        let shortcuts_res = self.get_shortcuts();
+        match shortcuts_res {
+            Ok(_) => SettingsValidity::Valid,
+            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)}
+        }
+    }
+    
 }

@@ -126,6 +126,11 @@ where
     T: Into<ShortcutOwned>,
 {
     if platform.enabled() {
+        if let crate::platform::SettingsValidity::Invalid { reason } = platform.settings_valid() {
+            eprintln!("Setting for platform {} are invalid, reason: {}",platform.name(),reason);
+            return;
+        }
+
         #[cfg(target_os = "linux")]
         if platform.create_symlinks() {
             let name = platform.name();

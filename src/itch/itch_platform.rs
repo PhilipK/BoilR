@@ -1,7 +1,7 @@
 use super::butler_db_parser::*;
 use super::receipt::Receipt;
 use super::{ItchGame, ItchSettings};
-use crate::platform::Platform;
+use crate::platform::{Platform, SettingsValidity};
 use failure::*;
 use flate2::read::GzDecoder;
 use std::collections::HashSet;
@@ -58,6 +58,15 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
     #[cfg(target_os = "linux")]
     fn create_symlinks(&self) -> bool {
         self.settings.create_symlinks
+    }
+
+    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+        let shortcuts_res = self.get_shortcuts();
+        match shortcuts_res {
+            Ok(_) => SettingsValidity::Valid,
+            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)}
+        }
+ 
     }
 }
 

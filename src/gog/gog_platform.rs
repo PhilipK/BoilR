@@ -138,6 +138,15 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
 
         Ok(shortcuts)
     }
+
+    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+        use crate::platform::*;
+        let shortcuts_res = self.get_shortcuts();
+        match shortcuts_res {
+            Ok(_) => SettingsValidity::Valid,
+            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)},
+        }
+    }
 }
 
 #[cfg(target_os = "linux")]
