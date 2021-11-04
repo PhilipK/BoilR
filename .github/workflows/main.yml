@@ -29,9 +29,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install latest stable
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: stable
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
     - name: Rust Cache
       id: rust_cache
       uses: Swatinem/rust-cache@v1.3.0    
