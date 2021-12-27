@@ -5,13 +5,15 @@ use crate::{
     legendary::LegendaryPlatform,
     platform::Platform,
     settings::Settings,
-    steam::{get_shortcuts_for_user, get_shortcuts_paths, SteamUsersInfo},
+    steam::{get_shortcuts_for_user, get_shortcuts_paths, SteamUsersInfo, ShortcutInfo},
     steamgriddb::download_images_for_users,
 };
 use std::error::Error;
 
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
+
+const BOILR_TAG : &str ="boilr";
 
 pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
@@ -26,6 +28,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
             user.steam_user_data_folder
         );
 
+        remove_old_shortcuts(&mut shortcut_info);
         update_platforms(settings, &mut shortcut_info.shortcuts);
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
@@ -44,6 +47,11 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo){
+    let boilr_tag = BOILR_TAG.to_string();
+    shortcut_info.shortcuts.retain(|shortcut| !shortcut.tags.contains(&boilr_tag));
 }
 
 fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
@@ -68,6 +76,8 @@ fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>)
         }
     }
 }
+
+
 
 fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOwned>) {
     update_platform_shortcuts(
@@ -152,8 +162,12 @@ where
                 );
 
                 current_shortcuts.retain(|f| !f.tags.contains(&platform.name().to_owned()));
+                let boilr_tag = BOILR_TAG.to_string();
                 for shortcut in shortcuts_to_add {
-                    let shortcut_owned: ShortcutOwned = shortcut.into();
+                    let mut shortcut_owned: ShortcutOwned = shortcut.into();
+                    if !shortcut_owned.tags.contains(&boilr_tag){
+                        shortcut_owned.tags.push(boilr_tag.clone());
+                    }
                     #[cfg(target_os = "linux")]
                     let shortcut_owned = if platform.create_symlinks() {
                         crate::sync::symlinks::create_sym_links(&shortcut_owned)
