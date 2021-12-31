@@ -25,6 +25,9 @@ pub(crate) struct ManifestItem {
 
     #[serde(alias = "CatalogItemId")]
     pub catalog_item_id: String,
+
+    #[serde(alias = "bIsManaged")]
+    pub is_managed: bool,
 }
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
@@ -92,7 +95,7 @@ impl ManifestItem {
         )
     }
     fn needs_launcher(&self) -> bool {
-        false
+        self.is_managed
     }
 }
 
@@ -116,5 +119,26 @@ mod tests {
         let actual = manifest.get_launch_url();
 
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn generates_shortcut_managed() {
+        let json = include_str!("example_item.json");
+        let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
+        manifest.is_managed = true;
+        let shortcut: ShortcutOwned = manifest.clone().into();
+
+        assert_eq!(shortcut.exe, "explorer.exe");
+        assert_eq!(shortcut.launch_options, manifest.get_launch_url());
+    }
+    #[test]
+    fn generates_shortcut_not_managed() {
+        let json = include_str!("example_item.json");
+        let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
+        manifest.is_managed = false;
+        let shortcut: ShortcutOwned = manifest.clone().into();
+
+        assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG/retail/gotg.exe\"");
+        assert_eq!(shortcut.launch_options, "");
     }
 }
