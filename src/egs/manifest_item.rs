@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use serde::{Deserialize, Serialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
@@ -28,6 +28,9 @@ pub(crate) struct ManifestItem {
 
     #[serde(alias = "bIsManaged")]
     pub is_managed: bool,
+
+    #[serde(alias = "ExpectingDLCInstalled")]
+    pub expected_dlc: Option<HashMap<String, bool>>,
 }
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
@@ -50,15 +53,15 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
 
 fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let icon = manifest.exe();
-    let options = manifest.get_launch_url();
+    let url = manifest.get_launch_url();
     Shortcut::new(
         0,
         manifest.display_name.as_str(),
-        "explorer.exe",
+        url.as_str(),
         "",
         icon.as_str(),
         "",
-        options.as_str(),
+        "",
     )
     .to_owned()
 }
@@ -95,7 +98,11 @@ impl ManifestItem {
         )
     }
     fn needs_launcher(&self) -> bool {
-        self.is_managed
+        match (&self.is_managed, &self.expected_dlc) {
+            (true, _) => true,
+            (false, Some(map)) => !map.is_empty(),
+            _ => false,
+        }
     }
 }
 
@@ -113,11 +120,11 @@ mod tests {
     #[test]
     fn generates_launch_string() {
         let json = include_str!("example_item.json");
-        let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
 
         let manifest: ManifestItem = serde_json::from_str(json).unwrap();
-        let actual = manifest.get_launch_url();
 
+        let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
+        let actual = manifest.get_launch_url();
         assert_eq!(expected, actual);
     }
 
@@ -128,21 +135,34 @@ mod tests {
         manifest.is_managed = true;
         let shortcut: ShortcutOwned = manifest.clone().into();
 
-        assert_eq!(shortcut.exe, "explorer.exe");
-        assert_eq!(shortcut.launch_options, manifest.get_launch_url());
+        assert_eq!(shortcut.exe, manifest.get_launch_url());
+        assert_eq!(shortcut.launch_options, "");
     }
     #[test]
     fn generates_shortcut_not_managed() {
         let json = include_str!("example_item.json");
         let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
         manifest.is_managed = false;
+        manifest.expected_dlc = None;
         let shortcut: ShortcutOwned = manifest.clone().into();
 
         #[cfg(target_os = "windows")]
         assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG\\retail/gotg.exe\"");
         #[cfg(target_os = "linux")]
         assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG/retail/gotg.exe\"");
-        
+
         assert_eq!(shortcut.launch_options, "");
+    }
+
+    #[test]
+    fn generates_shortcut_with_dlc() {
+        let json = include_str!("example_item.json");
+        let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
+        manifest.is_managed = false;
+        let shortcut: ShortcutOwned = manifest.clone().into();
+
+        let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
+        let actual = shortcut.exe;
+        assert_eq!(expected, actual);
     }
 }
