@@ -138,7 +138,11 @@ mod tests {
         manifest.is_managed = false;
         let shortcut: ShortcutOwned = manifest.clone().into();
 
+        #[cfg(target_os = "windows")]
+        assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG\\retail/gotg.exe\"");
+        #[cfg(target_os = "linux")]
         assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG/retail/gotg.exe\"");
+        
         assert_eq!(shortcut.launch_options, "");
     }
 }
