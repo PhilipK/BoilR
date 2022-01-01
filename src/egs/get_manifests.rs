@@ -39,7 +39,8 @@ pub(crate) fn get_egs_manifests(
             let manifests = manifest_dir
                 .filter_map(|dir| dir.ok())
                 .filter_map(get_manifest_item)
-                .filter(is_game_installed);
+                .filter(is_game_installed)
+                .filter(is_game_launchable);
             Ok(manifests.collect())
         }
         Err(err) => Err(ReadDirError {
@@ -127,6 +128,10 @@ fn guess_default_location() -> PathBuf {
 
 fn is_game_installed(manifest: &ManifestItem) -> bool {
     Path::new(manifest.manifest_location.as_str()).exists()
+}
+
+fn is_game_launchable(manifest: &ManifestItem) -> bool {
+    (!manifest.launch_executable.is_empty()) || (manifest.is_managed)
 }
 
 fn get_manifest_item(dir_entry: DirEntry) -> Option<ManifestItem> {
