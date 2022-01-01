@@ -81,22 +81,48 @@ pub fn get_default_location() -> Option<PathBuf> {
 
     #[cfg(target_os = "windows")]
     {
-        let key = "SYSTEMDRIVE";
-        let system_drive =
-            env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
-
-        let path = Path::new(format!("{}\\", system_drive).as_str())
-            .join("ProgramData")
-            .join("Epic")
-            .join("EpicGamesLauncher")
-            .join("Data")
-            .join("Manifests");
+        let path = match  location_from_registry(){
+            Some(path) => path,
+            None => guess_default_location()
+        };
         if path.exists() {
             Some(path)
         } else {
             None
         }
     }
+}
+#[cfg(target_os = "windows")]
+fn location_from_registry() -> Option<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    if let Ok(launcher) = hklm.open_subkey("SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher") {
+        let path_string: Result<String, _> = launcher.get_value("AppDataPath");
+        if let Ok(path_string) = path_string {
+            let path = Path::new(&path_string).join("Manifests");
+            if path.exists() {
+                return Some(path.to_path_buf());
+            }
+        }
+    }
+    None
+}
+
+#[cfg(target_os = "windows")]
+fn guess_default_location() -> PathBuf {
+    let key = "SYSTEMDRIVE";
+    let system_drive =
+        env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
+
+    let path = Path::new(format!("{}\\", system_drive).as_str())
+        .join("ProgramData")
+        .join("Epic")
+        .join("EpicGamesLauncher")
+        .join("Data")
+        .join("Manifests");
+    path.to_path_buf()
 }
 
 fn is_game_installed(manifest: &ManifestItem) -> bool {
