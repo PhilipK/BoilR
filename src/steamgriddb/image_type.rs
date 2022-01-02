@@ -1,10 +1,9 @@
-
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum ImageType {
     Hero,
     Grid,
     Logo,
-    BigPicture
+    BigPicture,
 }
 
 impl ImageType {

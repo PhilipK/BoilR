@@ -7,5 +7,4 @@ pub struct GogSettings {
     pub wine_c_drive: Option<String>,
     #[cfg(target_os = "linux")]
     pub create_symlinks: bool,
-    
 }

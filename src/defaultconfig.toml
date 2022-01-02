@@ -11,6 +11,9 @@ create_symlinks = true
 enabled = false
 create_symlinks = true
 
+[uplay]
+enabled = false
+
 [legendary]
 enabled = false
 

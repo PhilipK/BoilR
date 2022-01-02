@@ -16,8 +16,7 @@ where
     fn create_symlinks(&self) -> bool;
 }
 
-
-pub enum SettingsValidity{
+pub enum SettingsValidity {
     Valid,
-    Invalid{reason:String},
+    Invalid { reason: String },
 }

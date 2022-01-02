@@ -64,9 +64,10 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,
-            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)}
+            Err(err) => SettingsValidity::Invalid {
+                reason: format!("{}", err),
+            },
         }
- 
     }
 }
 
@@ -94,7 +95,7 @@ fn dbpath_to_game(paths: &DbPaths<'_>) -> Option<ItchGame> {
 #[cfg(target_os = "linux")]
 pub fn get_default_location() -> String {
     //If we don't have a home drive we have to just die
-    let home = std::env::var("HOME").expect("Expected a home variable to be defined");    
+    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
     format!("{}/.config/itch/", home)
 }
 
@@ -102,7 +103,11 @@ pub fn get_default_location() -> String {
 pub fn get_default_location() -> String {
     let key = "APPDATA";
     let appdata = std::env::var(key).expect("Expected a APPDATA variable to be defined");
-    Path::new(&appdata).join("itch").to_str().unwrap().to_string()
+    Path::new(&appdata)
+        .join("itch")
+        .to_str()
+        .unwrap()
+        .to_string()
     //C:\Users\phili\AppData\Local\itch
 }
 

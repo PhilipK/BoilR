@@ -1,5 +1,5 @@
-mod utils;
 mod settings;
+mod utils;
 
-pub use utils::*;
 pub use settings::SteamSettings;
+pub use utils::*;

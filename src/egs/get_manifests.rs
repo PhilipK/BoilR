@@ -82,9 +82,9 @@ pub fn get_default_location() -> Option<PathBuf> {
 
     #[cfg(target_os = "windows")]
     {
-        let path = match  location_from_registry(){
+        let path = match location_from_registry() {
             Some(path) => path,
-            None => guess_default_location()
+            None => guess_default_location(),
         };
         if path.exists() {
             Some(path)

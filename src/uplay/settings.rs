@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct LegendarySettings {
+pub struct UplaySettings {
     pub enabled: bool,
-    pub executable: Option<String>,
 }

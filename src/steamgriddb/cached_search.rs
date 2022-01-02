@@ -1,5 +1,5 @@
-use std::{ fs::File, io::Write, path::Path};
 use dashmap::DashMap;
+use std::{fs::File, io::Write, path::Path};
 
 type SearchMap = DashMap<u32, (String, usize)>;
 

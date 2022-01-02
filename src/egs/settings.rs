@@ -1,6 +1,6 @@
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug,Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EpicGamesLauncherSettings {
     pub enabled: bool,
     pub location: Option<String>,
@@ -8,5 +8,3 @@ pub struct EpicGamesLauncherSettings {
     #[cfg(target_os = "linux")]
     pub create_symlinks: bool,
 }
-
-

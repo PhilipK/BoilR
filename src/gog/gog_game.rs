@@ -22,15 +22,14 @@ pub(crate) struct PlayTask {
     #[serde(alias = "type")]
     pub task_type: String,
     #[serde(alias = "workingDir")]
-    pub working_dir: Option<String>,    
-
+    pub working_dir: Option<String>,
 }
 
 pub(crate) struct GogShortcut {
     pub name: String,
     pub game_folder: String,
     pub path: String,
-    pub working_dir:String,
+    pub working_dir: String,
     pub game_id: String,
 }
 

@@ -5,9 +5,10 @@ mod legendary;
 mod origin;
 mod platform;
 mod settings;
-mod sync;
 mod steam;
 mod steamgriddb;
+mod sync;
+mod uplay;
 
 #[cfg(feature = "ui")]
 mod ui;
@@ -26,4 +27,3 @@ async fn main() -> Result<(), Box<dyn Error>> {
         sync::run_sync(&settings).await
     }
 }
-

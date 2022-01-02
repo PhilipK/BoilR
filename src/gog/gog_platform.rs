@@ -144,7 +144,9 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,
-            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)},
+            Err(err) => SettingsValidity::Invalid {
+                reason: format!("{}", err),
+            },
         }
     }
 }

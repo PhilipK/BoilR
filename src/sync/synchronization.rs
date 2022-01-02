@@ -5,15 +5,16 @@ use crate::{
     legendary::LegendaryPlatform,
     platform::Platform,
     settings::Settings,
-    steam::{get_shortcuts_for_user, get_shortcuts_paths, SteamUsersInfo, ShortcutInfo},
+    steam::{get_shortcuts_for_user, get_shortcuts_paths, ShortcutInfo, SteamUsersInfo},
     steamgriddb::download_images_for_users,
+    uplay::Uplay,
 };
 use std::error::Error;
 
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
 
-const BOILR_TAG : &str ="boilr";
+const BOILR_TAG: &str = "boilr";
 
 pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
@@ -41,17 +42,19 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     if settings.steamgrid_db.enabled {
         if settings.steamgrid_db.prefer_animated {
             println!("downloading animated images");
-            download_images_for_users(settings, &userinfo_shortcuts,true).await;
+            download_images_for_users(settings, &userinfo_shortcuts, true).await;
         }
-        download_images_for_users(settings, &userinfo_shortcuts,false).await;
+        download_images_for_users(settings, &userinfo_shortcuts, false).await;
     }
 
     Ok(())
 }
 
-fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo){
+fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
     let boilr_tag = BOILR_TAG.to_string();
-    shortcut_info.shortcuts.retain(|shortcut| !shortcut.tags.contains(&boilr_tag));
+    shortcut_info
+        .shortcuts
+        .retain(|shortcut| !shortcut.tags.contains(&boilr_tag));
 }
 
 fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
@@ -77,8 +80,6 @@ fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>)
     }
 }
 
-
-
 fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOwned>) {
     update_platform_shortcuts(
         &EpicPlatform::new(settings.epic_games.clone()),
@@ -101,6 +102,12 @@ fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOw
     update_platform_shortcuts(
         &GogPlatform {
             settings: settings.gog.clone(),
+        },
+        new_user_shortcuts,
+    );
+    update_platform_shortcuts(
+        &Uplay {
+            settings: settings.uplay.clone(),
         },
         new_user_shortcuts,
     );
@@ -141,7 +148,11 @@ where
 {
     if platform.enabled() {
         if let crate::platform::SettingsValidity::Invalid { reason } = platform.settings_valid() {
-            eprintln!("Setting for platform {} are invalid, reason: {}",platform.name(),reason);
+            eprintln!(
+                "Setting for platform {} are invalid, reason: {}",
+                platform.name(),
+                reason
+            );
             return;
         }
 
@@ -165,7 +176,7 @@ where
                 let boilr_tag = BOILR_TAG.to_string();
                 for shortcut in shortcuts_to_add {
                     let mut shortcut_owned: ShortcutOwned = shortcut.into();
-                    if !shortcut_owned.tags.contains(&boilr_tag){
+                    if !shortcut_owned.tags.contains(&boilr_tag) {
                         shortcut_owned.tags.push(boilr_tag.clone());
                     }
                     #[cfg(target_os = "linux")]

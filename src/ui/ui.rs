@@ -76,7 +76,6 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     settings.gog.wine_c_drive = empty_or_whitespace(ui.gog_winedrive_input.value());
 }
 
-
 fn save_settings_to_file(settings: &Settings) {
     let toml = toml::to_string(&settings).unwrap();
     std::fs::write("config.toml", toml).unwrap();

@@ -67,13 +67,13 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
     }
 
     fn settings_valid(&self) -> crate::platform::SettingsValidity {
-       let shortcuts_res = self.get_shortcuts();
+        let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,
-            Err(err) => SettingsValidity::Invalid{reason:format!("{}",err)}
+            Err(err) => SettingsValidity::Invalid {
+                reason: format!("{}", err),
+            },
         }
- 
-
     }
 }
 
