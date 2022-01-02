@@ -74,6 +74,10 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     settings.gog.enabled = ui.enable_gog_checkbox.value();
     settings.gog.location = empty_or_whitespace(ui.gog_folder_input.value());
     settings.gog.wine_c_drive = empty_or_whitespace(ui.gog_winedrive_input.value());
+
+
+    // Uplay
+    settings.uplay.enabled = ui.enable_uplay_checkbox.value();
 }
 
 fn save_settings_to_file(settings: &Settings) {
@@ -177,4 +181,6 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     {
         ui.gog_winedrive_input.deactivate();
     }
+    
+    ui.enable_uplay_checkbox.set_value(settings.uplay.enabled);
 }
