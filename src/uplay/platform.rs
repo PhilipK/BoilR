@@ -37,6 +37,11 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
             get_games_from_winreg()
         }
     }
+
+    #[cfg(target_os = "linux")]
+    fn create_symlinks(&self) -> bool {
+        false
+    }
 }
 
 #[cfg(target_os = "windows")]
