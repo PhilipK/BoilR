@@ -74,7 +74,7 @@ fn get_games_from_winreg() -> Result<Vec<Game>, Box<dyn Error>> {
         if let Ok(subkey) = subkey {
             let name: Result<String, _> = subkey.get_value("DisplayName");
             if let Ok(name) = name {
-                let icon: String = subkey.get_value("DisplayName").unwrap_or_default();
+                let icon: String = subkey.get_value("DisplayIcon").unwrap_or_default();
                 games.push(Game { name, icon, id })
             }
         }
