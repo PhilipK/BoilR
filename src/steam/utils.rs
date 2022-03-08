@@ -107,13 +107,25 @@ pub fn get_default_location() -> Result<String, Box<dyn Error>> {
                 .unwrap_or(""),
         )
     };
-    #[cfg(target_family = "unix")]
+    #[cfg(target_os = "linux")]
     let path_string = {
         let home = std::env::var("HOME")?;
         String::from(
             Path::new(&home)
                 .join(".steam")
                 .join("steam")
+                .to_str()
+                .unwrap_or(""),
+        )
+    };
+    #[cfg(target_os = "macos")]
+    let path_string = {
+        let home = std::env::var("HOME")?;
+        String::from(
+            Path::new(&home)
+                .join("Library")
+                .join("Application Support")
+                .join("Steam")
                 .to_str()
                 .unwrap_or(""),
         )
