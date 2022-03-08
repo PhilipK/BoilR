@@ -14,13 +14,13 @@ The goal is that you do not have to leave your Steam library to launch games fro
 - [x] [Origin](https://www.origin.com) integration (currently only windows, linux comming soon)
 - [x] [GOG](https://www.gog.com/galaxy) integration
 - [x] [UPlay](https://ubisoftconnect.com) integration (Windows only)
+- [x] [Lutris](https://github.com/lutris/lutris) integration
 - [x] Cross Platform (Linux & Windows)
 - [x] UI For configuration
 - [x] Small (~1.5mb on disk)
 - [x] Lightweight (~2mb ram)
 - [x] Fast synchronization (~30ms)
 - [x] Fast art download (as fast as your internet will take you)
-- [ ] [Lutris](https://github.com/lutris/lutris) integration
 - [ ] XBox/Microsoft Store integration
 - [ ] Scheduling of synchronization
 - [ ] Steam Deck support (should work, but need to test when I get one)
@@ -70,6 +70,10 @@ create_symlinks = true #Only for Linux, To get around a bug in steam where paths
 enabled=false #On windows this is default false, on linux default true
 executable="legendary" #If this value is not defined, "legendary" will be used, it is assumed to be on the path.
 
+[lutris]
+enabled=true #Default true
+executable="lutris" #The executable to run for lutris, default is "lutris".
+
 [itch]
 enabled=false #Default false
 location="C:\\Users\\user\\AppData\\Roaming\\itch" #If this value is not defined, "%APPDATA%itch" will be used on windows, and HOME/.config/itch on linux.
@@ -96,7 +100,7 @@ prefer_animated = false #If true, animated images will be prefered over static i
 
 ## Tips for Linux
 
-If you are on linux, and want to use one of the launchers that is not available natively, here are a few ways that you can make them work.
+If you are on linux, and want to use one of the launchers that is not available natively, i suggest you use Lutris and make sure the BoilR integration for Lutris is enabled (see config section). If you don't want to use launch into Lutris here here are a few ways that you can make them work.
 
 ### GOG
 
@@ -118,7 +122,7 @@ I recommend you just use [Legendary](https://github.com/derrod/legendary). But i
 
 ### Origin
 
-Currently BoilR can't setup shortcuts to Origin because Origin uses a special link to open games. But I know of a workaround, it is just going to take a bit to make (basicly let Boiler take that url as input and let it call origin with proton settings and the url).
+Currently BoilR can't setup shortcuts to Origin, on linux, because Origin uses a special link to open games. But I know of a workaround, it is just going to take a bit to make (basicly let Boiler take that url as input and let it call origin with proton settings and the url).
 This section will be updated when it is ready.
 Untill then you can still play origin games thourgh Lutris [here](https://lutris.net/games/origin/)
 
