@@ -1,0 +1,19 @@
+   7 | 7 Billion Humans                         | 7-billion-humans                         | steam           | -                                                               
+   1 | Cave Story+                              | cave-story                               | steam           | -                                                               
+  15 | Dead Cells                               | dead-cells                               | steam           | -                                                               
+   6 | Dicey Dungeons                           | dicey-dungeons                           | steam           | -                                                               
+  12 | Finding Paradise                         | finding-paradise                         | steam           | -                                                               
+  17 | Griftlands                               | griftlands                               | steam           | -                                                               
+   4 | Gunpoint                                 | gunpoint                                 | steam           | -                                                               
+   5 | Impostor Factory                         | impostor-factory                         | steam           | -                                                               
+   3 | Kentucky Route Zero                      | kentucky-route-zero                      | steam           | -                                                               
+  13 | Monster Train                            | monster-train                            | steam           | -                                                               
+  19 | My Test Game                             | my-test-game                             | linux           | -                                                               
+   8 | Owlboy                                   | owlboy                                   | steam           | -                                                               
+  16 | Papers, Please                           | papers-please                            | steam           | -                                                               
+  11 | Reventure                                | reventure                                | steam           | -                                                               
+   2 | Slay the Spire                           | slay-the-spire                           | steam           | -                                                               
+   9 | Space Pirates and Zombies                | space-pirates-and-zombies                | steam           | -                                                               
+  10 | The Detail                               | the-detail                               | steam           | -                                                               
+  14 | The Henry Stickmin Collection            | the-henry-stickmin-collection            | steam           | -                                                               
+  18 | Vampire Survivors                        | vampire-survivors                        | steam           | -                                                               
