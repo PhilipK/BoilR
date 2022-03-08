@@ -1,4 +1,4 @@
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 mod symlinks;
 mod synchronization;
 

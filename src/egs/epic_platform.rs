@@ -28,7 +28,7 @@ impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
         get_egs_manifests(&self.settings)
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         self.settings.create_symlinks
     }

@@ -172,12 +172,12 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
             .unwrap_or(default_gog_location),
     );
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     {
         ui.gog_winedrive_input
             .set_value(&settings.gog.wine_c_drive.clone().unwrap_or("".to_string()));
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(target_family = "unix"))]
     {
         ui.gog_winedrive_input.deactivate();
     }

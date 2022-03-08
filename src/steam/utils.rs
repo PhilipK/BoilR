@@ -107,7 +107,7 @@ pub fn get_default_location() -> Result<String, Box<dyn Error>> {
                 .unwrap_or(""),
         )
     };
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     let path_string = {
         let home = std::env::var("HOME")?;
         String::from(

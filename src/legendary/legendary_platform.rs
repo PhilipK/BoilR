@@ -33,7 +33,7 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
         Ok(legendary_ouput)
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         false
     }

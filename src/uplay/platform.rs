@@ -9,7 +9,7 @@ pub struct Uplay {
 
 impl Platform<Game, Box<dyn Error>> for Uplay {
     fn enabled(&self) -> bool {
-        #[cfg(target_os = "linux")]
+        #[cfg(target_family = "unix")]
         {
             false
         }
@@ -28,7 +28,7 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<Game>, Box<dyn Error>> {
-        #[cfg(target_os = "linux")]
+        #[cfg(target_family = "unix")]
         {
             Ok(vec![])
         }
@@ -38,7 +38,7 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         false
     }

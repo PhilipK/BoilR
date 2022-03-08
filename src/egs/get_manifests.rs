@@ -74,7 +74,7 @@ fn get_manifest_dir_path(
 }
 
 pub fn get_default_location() -> Option<PathBuf> {
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     {
         //No path defined for epic gamestore, and we cannot guess on linux
         None
