@@ -1,7 +1,13 @@
 use crate::{
-    egs::EpicGamesLauncherSettings, gog::GogSettings, itch::ItchSettings,
-    legendary::LegendarySettings, origin::OriginSettings, steam::SteamSettings,
-    steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
+    egs::EpicGamesLauncherSettings,
+     gog::GogSettings,
+     itch::ItchSettings,
+    legendary::LegendarySettings,
+     origin::OriginSettings,
+     steam::SteamSettings,
+    steamgriddb::SteamGridDbSettings,
+     uplay::UplaySettings,
+     lutris::settings::LutrisSettings,
 };
 
 use config::{Config, ConfigError, Environment, File};
@@ -19,6 +25,7 @@ pub struct Settings {
     pub origin: OriginSettings,
     pub gog: GogSettings,
     pub uplay: UplaySettings,
+    pub lutris: LutrisSettings,
 }
 
 impl Settings {
