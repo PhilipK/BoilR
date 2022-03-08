@@ -26,3 +26,6 @@ create_symlinks = true
 [steamgrid_db]
 enabled = true
 prefer_animated = false
+
+[lutris]
+enabled = true

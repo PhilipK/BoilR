@@ -3,6 +3,7 @@ use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
 use crate::{
     egs::EpicPlatform,
     legendary::LegendaryPlatform,
+    lutris::lutris_platform::LutrisPlatform,
     platform::Platform,
     settings::Settings,
     steam::{get_shortcuts_for_user, get_shortcuts_paths, ShortcutInfo, SteamUsersInfo},
@@ -108,6 +109,13 @@ fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOw
     update_platform_shortcuts(
         &Uplay {
             settings: settings.uplay.clone(),
+        },
+        new_user_shortcuts,
+    );
+
+    update_platform_shortcuts(
+        &LutrisPlatform {
+            settings: settings.lutris.clone(),
         },
         new_user_shortcuts,
     );

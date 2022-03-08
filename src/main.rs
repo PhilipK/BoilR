@@ -1,6 +1,7 @@
 mod egs;
 mod gog;
 mod itch;
+mod lutris;
 mod legendary;
 mod origin;
 mod platform;
