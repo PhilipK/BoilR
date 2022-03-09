@@ -20,20 +20,40 @@ fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths<'a>> {
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, base_path) = take_until(suffix)(i)?;
-
+    let base_path_str = std::str::from_utf8(base_path);
+    let base_path = match base_path_str{
+        Ok(base_path) => base_path,
+        Err(e) => {
+            return convert_to_nom_error(i, e);
+        },
+    };
+    
     let prefix = ":[{\"path\":\"";
     let suffix = "\",\"depth";
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, path) = take_until(suffix)(i)?;
+    let path_str = std::str::from_utf8(path);
+    let path = match path_str{
+        Ok(path) => path,
+        Err(e) => {
+            return convert_to_nom_error(i, e);
+        },
+    };
 
     IResult::Ok((
         i,
         DbPaths {
-            base_path: std::str::from_utf8(base_path).unwrap(),
-            path: std::str::from_utf8(path).unwrap(),
+            base_path,
+            path,
         },
     ))
+}
+
+fn convert_to_nom_error(i: &[u8], e: std::str::Utf8Error) -> Result<(&[u8], DbPaths), nom::Err<nom::error::Error<&[u8]>>> {
+    use nom::error::*;
+     IResult::Err(nom::Err::Error(Error::from_external_error(i, ErrorKind::AlphaNumeric,e)))
+    
 }
 
 #[cfg(test)]
