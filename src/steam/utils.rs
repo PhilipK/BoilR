@@ -75,21 +75,22 @@ pub fn get_shortcuts_paths(
     let user_folders = std::fs::read_dir(&user_data_path)?;
     let users_info = user_folders
         .filter_map(|f| f.ok())
-        .map(|folder| {
+        .filter_map(|folder| {
             let folder_path = folder.path();
             let folder_str = folder_path
                 .to_str()
                 .expect("We just checked that this was there");
             let path = format!("{}//config//shortcuts.vdf", folder_str);
             let shortcuts_path = Path::new(path.as_str());
-            let mut shortcuts_path_op = None;
             if shortcuts_path.exists() {
-                shortcuts_path_op = Some(shortcuts_path.to_str().unwrap().to_string());
+                return Some(SteamUsersInfo {
+                    steam_user_data_folder: folder_str.to_string(),
+                    shortcut_path: Some(shortcuts_path.to_str().unwrap().to_string()),
+                })
+            } else {
+                return None;
             }
-            SteamUsersInfo {
-                steam_user_data_folder: folder_str.to_string(),
-                shortcut_path: shortcuts_path_op,
-            }
+           
         })
         .collect();
     Ok(users_info)
