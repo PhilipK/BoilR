@@ -63,9 +63,9 @@ fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>)
         .join("config")
         .join("grid");
     for shortcut in shortcuts {
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(target_family = "unix"))]
         let replace_icon = shortcut.icon.trim().eq("");
-        #[cfg(target_os = "linux")]
+        #[cfg(target_family = "unix")]
         let replace_icon = shortcut.icon.trim().eq("") || shortcut.icon.eq(&shortcut.exe);
         if replace_icon {
             let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
@@ -164,7 +164,7 @@ where
             return;
         }
 
-        #[cfg(target_os = "linux")]
+        #[cfg(target_family = "unix")]
         if platform.create_symlinks() {
             let name = platform.name();
             super::symlinks::ensure_links_folder_created(name);
@@ -187,7 +187,7 @@ where
                     if !shortcut_owned.tags.contains(&boilr_tag) {
                         shortcut_owned.tags.push(boilr_tag.clone());
                     }
-                    #[cfg(target_os = "linux")]
+                    #[cfg(target_family = "unix")]
                     let shortcut_owned = if platform.create_symlinks() {
                         crate::sync::symlinks::create_sym_links(&shortcut_owned)
                     } else {

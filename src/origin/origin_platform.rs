@@ -21,7 +21,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         "Origin"
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         false
     }
@@ -106,7 +106,7 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
     take_until("&")(i)
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 pub fn get_default_location() -> String {
     //TODO implement this for linux:
     // https://www.toptensoftware.com/blog/running-ea-origin-games-under-linux-via-steam-and-proton/

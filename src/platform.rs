@@ -12,7 +12,7 @@ where
 
     fn settings_valid(&self) -> SettingsValidity;
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool;
 }
 

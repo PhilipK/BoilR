@@ -55,7 +55,7 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
         Ok(res)
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         self.settings.create_symlinks
     }
@@ -92,7 +92,7 @@ fn dbpath_to_game(paths: &DbPaths<'_>) -> Option<ItchGame> {
     })
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 pub fn get_default_location() -> String {
     //If we don't have a home drive we have to just die
     let home = std::env::var("HOME").expect("Expected a home variable to be defined");

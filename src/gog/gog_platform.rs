@@ -21,7 +21,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         "Gog"
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         self.settings.create_symlinks
     }
@@ -41,7 +41,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
             return Err(GogErrors::ConfigFileNotFound { path: config_path });
         }
         let install_locations = get_install_locations(config_path)?;
-        #[cfg(target_os = "linux")]
+        #[cfg(target_family = "unix")]
         let install_locations = if let Some(wine_c_drive) = &self.settings.wine_c_drive {
             fix_paths(wine_c_drive, install_locations)
         } else {
@@ -113,12 +113,12 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
                                     None => folder_path.to_string(),
                                 };
 
-                                #[cfg(target_os = "linux")]
+                                #[cfg(target_family = "unix")]
                                 let working_dir = working_dir.replace("\\", "/");
 
                                 let full_path_string = full_path.to_string();
 
-                                #[cfg(target_os = "linux")]
+                                #[cfg(target_family = "unix")]
                                 let full_path_string = full_path_string.replace("\\", "/");
 
                                 let shortcut = GogShortcut {
@@ -151,7 +151,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 fn fix_paths(wine_c_drive: &str, paths: Vec<String>) -> Vec<String> {
     paths
         .iter()
@@ -191,7 +191,7 @@ pub fn default_location() -> PathBuf {
         let program_data = std::env::var(key).expect("Expected a APPDATA variable to be defined");
         Path::new(&program_data).join("GOG.com").join("Galaxy")
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     {
         let home = std::env::var("HOME").expect("Expected a home variable to be defined");
         Path::new(&home).join("Games/gog-galaxy/drive_c/ProgramData/GOG.com/Galaxy")

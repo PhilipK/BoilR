@@ -148,7 +148,7 @@ mod tests {
 
         #[cfg(target_os = "windows")]
         assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG\\retail/gotg.exe\"");
-        #[cfg(target_os = "linux")]
+        #[cfg(target_family = "unix")]
         assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG/retail/gotg.exe\"");
 
         assert_eq!(shortcut.launch_options, "");
