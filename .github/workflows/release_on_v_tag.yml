@@ -54,6 +54,19 @@ jobs:
             args: -9
             strip: false     
             ui: true   
+          - os: macos-latest
+            file: target/release/boilr
+            asset_name: macos_x86_64_BoilR
+            args: -9
+            strip: false
+            ui: false
+          - os: macos-latest
+            file: target/release/boilr
+            asset_name: macos_x86_64_BoilR
+            args: -9
+            strip: false
+            ui: false
+            target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v1
       - name: Rust Cache
@@ -68,8 +81,11 @@ jobs:
         if: ${{ matrix.ui}}
         run: cargo build --release --features ui     
       - name: Build Release Version CLI 
-        if: ${{ matrix.ui == false}}
+        if: ${{ matrix.ui == false && matrix.target != 'aarch64-apple-darwin'}}
         run: cargo build --release       
+      - name: Build aarch64 Release Version CLI 
+        if: ${{ matrix.ui == false && matrix.target == 'aarch64-apple-darwin'}}
+        run: cargo build --release --target aarch64-apple-darwin
       - name: Compress binaries
         if: ${{ matrix.os == 'windows-latest' || matrix.ui == false}}
         uses: svenstaro/upx-action@v2
