@@ -48,9 +48,8 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
             }),
         }?;
 
-        //This is done to remove douplicates
+        //This is done dedupe
         let paths: HashSet<&DbPaths> = paths.iter().collect();
-
         let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
         Ok(res)
     }
@@ -71,8 +70,8 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
     }
 }
 
-fn dbpath_to_game(paths: &DbPaths<'_>) -> Option<ItchGame> {
-    let recipt = Path::new(paths.base_path)
+fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
+    let recipt = Path::new(paths.base_path.as_str())
         .join(".itch")
         .join("receipt.json.gz");
     if !&recipt.exists() {

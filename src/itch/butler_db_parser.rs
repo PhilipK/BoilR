@@ -5,41 +5,29 @@ use nom::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) struct DbPaths<'a> {
-    pub(crate) base_path: &'a str,
-    pub(crate) path: &'a str,
+pub(crate) struct DbPaths {
+    pub(crate) base_path: String,
+    pub(crate) path: String,
 }
 
-pub(crate) fn parse_butler_db<'a>(content: &'a [u8]) -> nom::IResult<&[u8], Vec<DbPaths<'a>>> {
+pub(crate) fn parse_butler_db<'a>(content: &'a [u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
     many0(parse_path)(content)
 }
 
-fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths<'a>> {
+fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
     let prefix = "{\"basePath\":\"";
     let suffix = "\",\"totalSize\"";
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, base_path) = take_until(suffix)(i)?;
-    let base_path_str = std::str::from_utf8(base_path);
-    let base_path = match base_path_str{
-        Ok(base_path) => base_path,
-        Err(e) => {
-            return convert_to_nom_error(i, e);
-        },
-    };
+    let base_path = String::from_utf8_lossy(base_path).to_string();
     
     let prefix = ":[{\"path\":\"";
     let suffix = "\",\"depth";
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, path) = take_until(suffix)(i)?;
-    let path_str = std::str::from_utf8(path);
-    let path = match path_str{
-        Ok(path) => path,
-        Err(e) => {
-            return convert_to_nom_error(i, e);
-        },
-    };
+    let path = String::from_utf8_lossy(path).to_string();
 
     IResult::Ok((
         i,
@@ -48,12 +36,6 @@ fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths<'a>> {
             path,
         },
     ))
-}
-
-fn convert_to_nom_error(i: &[u8], e: std::str::Utf8Error) -> Result<(&[u8], DbPaths), nom::Err<nom::error::Error<&[u8]>>> {
-    use nom::error::*;
-     IResult::Err(nom::Err::Error(Error::from_external_error(i, ErrorKind::AlphaNumeric,e)))
-    
 }
 
 #[cfg(test)]
@@ -90,5 +72,22 @@ mod tests {
         assert_eq!(paths[4].path, "Night in the Woods.x86_64");
         assert_eq!(paths[5].base_path, "/home/philip/.config/itch/apps/islands");
         assert_eq!(paths[5].path, "Islands_Linux.x86_64");
+    }
+
+    #[test]
+    fn parse_itch_butler_db_test_other() {
+        let content = include_bytes!("../testdata/itch/other-butler.db-wal");
+        let result = parse_butler_db(content);
+        assert!(result.is_ok());
+        let (_r, paths) = result.unwrap();
+        assert_eq!(paths.len(), 94);
+
+        assert_eq!(paths[0].base_path, "/home/deck/.config/itch/apps/risetoruins");
+        assert_eq!(paths[0].path, "Core.jar");
+        //The parser finds douplicates 
+        assert_eq!(paths[0], paths[1]);
+        assert_eq!(paths[1], paths[2]);
+
+        
     }
 }
