@@ -4,19 +4,20 @@
 
 This little tool will synchronize games from other platforms into your Steam library, using the Steam Shortcuts feature.
 The goal is that you do not have to leave your Steam library to launch games from other launchers/stores.
+If you set it up, it will also download artwork from [SteamGridDB](https://www.steamgriddb.com/). 
 
 ## Features
 
-- [x] Download art from [SteamGridDB](https://www.steamgriddb.com/)
 - [x] [Legendary](https://github.com/derrod/legendary) integration
 - [x] [Epic Games Store](https://www.epicgames.com/) integration
 - [x] [Itch.io](https://itch.io/app) integration
-- [x] [Origin](https://www.origin.com) integration (currently only windows, linux comming soon)
+- [x] [Origin](https://www.origin.com) integration
 - [x] [GOG](https://www.gog.com/galaxy) integration
-- [x] [UPlay](https://ubisoftconnect.com) integration (Windows only)
+- [x] [UPlay](https://ubisoftconnect.com) integration
 - [x] [Lutris](https://github.com/lutris/lutris) integration
+- [x] Download art from [SteamGridDB](https://www.steamgriddb.com/)
+- [x] Cross Platform (Windows, Linux, Mac)
 - [x] Steam Deck support
-- [x] Cross Platform (Linux & Windows)
 - [x] UI For configuration
 - [x] Small (~1.5mb on disk)
 - [x] Lightweight (~2mb ram)
@@ -28,18 +29,16 @@ The goal is that you do not have to leave your Steam library to launch games fro
 
 ## Beta
 
-This tool is still in beta, there are still lots of things to do, but the things that are there work.
+This tool is still in beta, there are still a few things to do, but the things that are there work.
 Feel free to submit issues and pull requests.
 
 ## Getting started
 
 - Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
-- Choose the UI version or the cli version (if in doubt pick the UI version)
-- Place it in a folder of your choice.
 - Run the executable.
 - Restart Steam to see your new shortcuts.
 
-## Getting art for your shortcuts
+## Getting cover art for your shortcuts
 
 - Get a [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api)
 - For the CLI version, Write it in the `config.toml` file (see how in the [config section](#configuration)).
@@ -101,7 +100,7 @@ prefer_animated = false #If true, animated images will be prefered over static i
 
 ## Tips for Linux
 
-If you are on linux, and want to use one of the launchers that is not available natively, i suggest you use Lutris and make sure the BoilR integration for Lutris is enabled (see config section). If you don't want to use launch into Lutris here here are a few ways that you can make them work.
+If you are on linux, and want to use one of the launchers that is not available natively, i suggest you use Lutris and make sure that the BoilR integration for Lutris is enabled (see config section). If you want to avoid launching into Lutris here here are a few ways that you can do that.
 
 ### GOG
 
@@ -113,7 +112,7 @@ If you are on linux, and want to use one of the launchers that is not available 
 
 ### Epic
 
-I recommend you just use [Legendary](https://github.com/derrod/legendary). But if you really want to use EGS you can:
+I recommend you just use [Legendary](https://github.com/derrod/legendary). But if you really really want to use EGS you can:
 
 - Install [Lutris](https://lutris.net/)
 - Install EGS thourgh Lutris [here](https://lutris.net/games/epic-games-store/)
@@ -123,9 +122,7 @@ I recommend you just use [Legendary](https://github.com/derrod/legendary). But i
 
 ### Origin
 
-Currently BoilR can't setup shortcuts to Origin, on linux, because Origin uses a special link to open games. But I know of a workaround, it is just going to take a bit to make (basicly let Boiler take that url as input and let it call origin with proton settings and the url).
-This section will be updated when it is ready.
-Untill then you can still play origin games thourgh Lutris [here](https://lutris.net/games/origin/)
+Here i just suggest you use [Lutris](https://lutris.net/games/origin/)
 
 
 ## License
