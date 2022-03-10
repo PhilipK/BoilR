@@ -85,7 +85,7 @@ jobs:
         run: cargo build --release       
       - name: Build aarch64 Release Version CLI 
         if: ${{ matrix.ui == false && matrix.target == 'aarch64-apple-darwin'}}
-        run: rustup target add aarch64-apple-darwi && cargo build --release --target aarch64-apple-darwin
+        run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin
       - name: Compress binaries
         if: ${{ matrix.os == 'windows-latest' || matrix.ui == false}}
         uses: svenstaro/upx-action@v2
