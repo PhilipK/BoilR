@@ -61,7 +61,7 @@ jobs:
             strip: false
             ui: false
           - os: macos-latest
-            file: target/aarch64-apple-darwin/boilr
+            file: target/aarch64-apple-darwin/release/boilr
             asset_name: macos_darwin_BoilR
             args: -9
             strip: false
@@ -85,7 +85,7 @@ jobs:
         run: cargo build --release       
       - name: Build aarch64 Release Version CLI 
         if: ${{ matrix.ui == false && matrix.target == 'aarch64-apple-darwin'}}
-        run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin && ls target && ls target/aarch64-apple-darwin && ls target/release
+        run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin ls target/aarch64-apple-darwin/release
       - name: Compress binaries
         if: ${{ (matrix.os == 'windows-latest' || matrix.ui == false) && matrix.os != 'macos-latest' }}
         uses: svenstaro/upx-action@v2
