@@ -1,26 +1,28 @@
 debug= false
 
+[steamgrid_db]
+
 [origin]
-enabled = false
+enabled = true
 
 [gog]
-enabled = false
+enabled = true
 create_symlinks = true
 
 [epic_games]
-enabled = false
+enabled = true
 create_symlinks = true
 
 [uplay]
-enabled = false
+enabled = true
 
 [legendary]
-enabled = false
+enabled = true
 
 [steam]
 
 [itch]
-enabled = false
+enabled = true
 create_symlinks = true
 
 [steamgrid_db]
