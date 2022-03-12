@@ -21,13 +21,15 @@ flate2 = "^1.0.22"
 toml = { version = "^0.5.8", optional = true }
 futures = { version = "^0.3.17" }
 dashmap = { version = "^4.0.2", features = ["serde"] }
+fltk-theme = {version ="0.4" , optional = true }
 
 [build-dependencies]
 fl2rust = { version = "0.4", optional = true }
 
 [features]
 # default = ["ui"]
-ui = ["fltk", "fl2rust", "toml"]
+ui = ["fltk", "fl2rust", "toml", "fltk-theme"]
+
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.10.1"
