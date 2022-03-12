@@ -129,7 +129,7 @@ Here I just suggest you use [Lutris](https://lutris.net/games/origin/)
 
 ## What is up with the name BoilR?
 
-This tool turns things into Steam, therefor boiler, And it is written in **R**urst so therefor: BoilR
+This tool turns things into Steam, therefor boiler, And it is written in **R**ust so therefor: BoilR
 
 ## License
 
