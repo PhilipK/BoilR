@@ -179,7 +179,7 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     }
     #[cfg(not(target_family = "unix"))]
     {
-        ui.gog_winedrive_input.deactivate();
+        ui.gog_winedrive_input.hide();
     }
     
     ui.enable_uplay_checkbox.set_value(settings.uplay.enabled);

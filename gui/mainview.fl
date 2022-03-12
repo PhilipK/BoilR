@@ -7,124 +7,105 @@ class UserInterface {open
   Function {make_window()} {open
   } {
     Fl_Window win {
-      label {Main View} open
-      xywh {1 31 958 1024} type Double visible
-    } {
-      Fl_Group {} {
-        label BoilR
-        xywh {25 65 487 929} labelsize 26 labelcolor 35 align 5
-      } {}
-      Fl_Group {} {
-        label Steam
-        xywh {40 92 575 73} labeltype SHADOW_LABEL align 5
-      } {
-        Fl_Input steam_location_input {
-          label {Steam Location}
-          xywh {40 92 445 26} align 5
-        }
+      label {BoilR} open
+      xywh {1 1 500 475} type Double visible
+    } {      
+
+
+      # ----- Steam -----
+      Fl_Input steam_location_input {
+        label {Steam Location}
+        xywh {25 25 450 25} align 5
       }
-      Fl_Group {} {
-        label {Steamgrid DB} open
-        xywh {40 147 590 77} align 5
-      } {
-        Fl_Check_Button enable_steamgrid_db_checkbox {
-          label {Download Images}
-          tooltip {Download coverart for games from www.steamgriddb.com} xywh {40 154 155 26} down_box DOWN_BOX
-        }
-        Fl_Input steamgrid_db_auth_key_input {
-          label {Authentication Key}
-          xywh {40 194 445 26} align 5
-        }
+
+
+      # ----- Art download -----
+      Fl_Check_Button enable_steamgrid_db_checkbox {
+        label {Download Images}
+        tooltip {Download coverart for games from www.steamgriddb.com} 
+        xywh {25 75 155 25} down_box DOWN_BOX
       }
-      Fl_Group {} {
-        label {Epic Games Store} open selected
-        xywh {40 252 575 206} align 5
-      } {
-        Fl_Check_Button enable_egs_checkbox {
-          label Enable
-          xywh {40 254 560 26} down_box DOWN_BOX
-        }
-        Fl_Input epic_location_input {
-          label {Epic Folder}
-          xywh {40 294 445 26} align 5
-        }
+      Fl_Input steamgrid_db_auth_key_input {
+        label {Authentication Key}
+        xywh {175 75 300 25} align 5
       }
-      Fl_Group {} {
-        label Legendary open
-        xywh {40 357 585 86} align 5
-      } {
-        Fl_Check_Button enable_legendary_checkbox {
-          label Enable
-          xywh {40 357 570 26} down_box DOWN_BOX
+
+
+      # ----- Epic games -----
+      Fl_Check_Button enable_egs_checkbox {
+        label {Epic Games}
+        xywh {25 125 155 25} down_box DOWN_BOX
+      }
+      Fl_Input epic_location_input {
+        label {Epic Folder}
+        xywh {175 125 300 25} align 5
+      }
+
+      # ----- Legendary -----
+      Fl_Check_Button enable_legendary_checkbox {
+          label Legendary
+          xywh {25 175 155 25} down_box DOWN_BOX
         }
         Fl_Input legendary_executable_input {
           label {Legendary Executable}
-          xywh {40 401 445 26} align 5
+          xywh {175 175 300 25} align 5
         }
+
+      # ----- Itch -----
+      Fl_Check_Button enable_itch_checkbox {
+          label {Itch.io}
+          xywh {25 225 155 25} down_box DOWN_BOX
       }
-      Fl_Group itchio_group {
-        label {itch.io} open
-        xywh {35 470 575 104} align 5
-      } {
-        Fl_Check_Button enable_itch_checkbox {
-          label Enable
-          xywh {35 470 575 36} down_box DOWN_BOX
-        }
-        Fl_Input itch_locatoin_input {
-          label {Itch Folder}
-          xywh {35 521 445 29} align 5
-        }
+      Fl_Input itch_locatoin_input {
+        label {Itch Folder}
+        xywh {175 225 300 25} align 5
       }
+  
+      # ----- Origin -----
       Fl_Group origin_group {
-        label Origin
-        xywh {35 594 638 87} align 5
+        xywh {25 275 375 50} align 5
       } {
+      
+        Fl_Check_Button enable_origin_checkbox {
+          label Origin
+          xywh {25 275 155 25} down_box DOWN_BOX
+        }
         Fl_Input origin_folder_input {
           label {Origin Data Folder}
-          xywh {40 640 445 26} align 5
+          xywh {175 275 300 25} align 5
         }
-        Fl_Check_Button enable_origin_checkbox {
-          label Enable
-          xywh {40 596 570 26} down_box DOWN_BOX
-        }
-      }
-      Fl_Group action_buttons {
-        xywh {30 900 450 35}
-      } {
-        Fl_Button save_settings_button {
-          label {Save Settings}
-          xywh {30 900 115 35}
-        }
-        Fl_Button synchronize_button {
-          label {Synchronize Games}
-          xywh {315 900 160 35}
-        }
-      }
-      Fl_Group {} {
-        label {GOG Galaxy} open
-        xywh {35 709 570 121} align 5
-      } {
+      }    
+            
+      # ----- Origin -----
         Fl_Check_Button enable_gog_checkbox {
-          label Enable
-          xywh {35 709 570 26} down_box DOWN_BOX
+          label {GOG Galaxy}
+          xywh {25 325 155 25} down_box DOWN_BOX
         }
         Fl_Input gog_folder_input {
           label {GOG Data Folder}
-          xywh {35 754 445 26} align 5
+          xywh {175 325 300 25} align 5
         }
         Fl_Input gog_winedrive_input {
           label {GOG Wine C Drive}
-          xywh {35 804 445 26} align 5
+          xywh {175 375 300 25} align 5
         }
+     
+      # ----- Uplay -----
+      Fl_Check_Button enable_uplay_checkbox {
+          label Uplay
+          xywh {25 375 155 25} down_box DOWN_BOX
+        }
+     
+
+      # ----- Buttons -----
+
+      Fl_Button save_settings_button {
+        label {Save Settings}
+        xywh {25 425 125 25}
       }
-      Fl_Group {} {
-        label Uplay open
-        xywh {35 859 570 127} align 5
-      } {
-        Fl_Check_Button enable_uplay_checkbox {
-          label Enable
-          xywh {35 859 570 26} down_box DOWN_BOX
-        }
+      Fl_Button synchronize_button {
+        label {Synchronize Games}
+        xywh {175 425 300 25}
       }
     }
   }
