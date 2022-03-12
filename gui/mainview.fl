@@ -76,7 +76,7 @@ class UserInterface {open
         }
       }    
             
-      # ----- Origin -----
+      # ----- GOG -----
         Fl_Check_Button enable_gog_checkbox {
           label {GOG Galaxy}
           xywh {25 325 155 25} down_box DOWN_BOX
