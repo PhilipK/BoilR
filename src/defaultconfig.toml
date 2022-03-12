@@ -1,6 +1,9 @@
 debug= false
 
 [steamgrid_db]
+auth_key = "Write your authentication key between these quotes"
+enabled = true
+prefer_animated = false
 
 [origin]
 enabled = true
@@ -19,15 +22,11 @@ enabled = true
 [legendary]
 enabled = true
 
-[steam]
-
 [itch]
 enabled = true
 create_symlinks = true
 
-[steamgrid_db]
-enabled = true
-prefer_animated = false
-
 [lutris]
 enabled = true
+
+[steam]

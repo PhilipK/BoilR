@@ -1,13 +1,7 @@
 use crate::{
-    egs::EpicGamesLauncherSettings,
-     gog::GogSettings,
-     itch::ItchSettings,
-    legendary::LegendarySettings,
-     origin::OriginSettings,
-     steam::SteamSettings,
-    steamgriddb::SteamGridDbSettings,
-     uplay::UplaySettings,
-     lutris::settings::LutrisSettings,
+    egs::EpicGamesLauncherSettings, gog::GogSettings, itch::ItchSettings,
+    legendary::LegendarySettings, lutris::settings::LutrisSettings, origin::OriginSettings,
+    steam::SteamSettings, steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
 };
 
 use config::{Config, ConfigError, Environment, File};
@@ -52,6 +46,36 @@ impl Settings {
         // Eg.. `STEAMSYNC_DEBUG=1 ./target/app` would set the `debug` key
         s.merge(Environment::with_prefix("steamsync").separator("-"))?;
 
-        s.try_into()
+        let mut result: Result<Self, ConfigError> = s.try_into();
+
+        sanitize_auth_key(&mut result);
+
+        
+
+        result
+    }
+
+    pub fn write_config_if_missing() {
+        let config_path = std::path::Path::new("config.toml");
+        if !config_path.exists() {
+            let worked = std::fs::write(config_path, include_str!("defaultconfig.toml"));
+            match worked {
+                Ok(_) => println!("Create configuration file at {:?}", &config_path),
+                Err(err) => println!(
+                    "Could not create configuration file at {:?}, reason: {:?}",
+                    &config_path, err
+                ),
+            }
+        }
+    }
+}
+
+fn sanitize_auth_key(result: &mut Result<Settings, ConfigError>) {
+    if let Ok(result) = result.as_mut() {
+        if let Some(auth_key) = result.steamgrid_db.auth_key.as_ref() {
+            if auth_key == "Write your authentication key between these quotes" {
+                result.steamgrid_db.auth_key = None;
+            }
+        }
     }
 }

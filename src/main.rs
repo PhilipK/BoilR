@@ -25,6 +25,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(feature = "ui"))]
     {
         let settings = settings::Settings::new()?;
+        settings::Settings::write_config_if_missing();
         sync::run_sync(&settings).await
     }
 }
