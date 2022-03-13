@@ -31,39 +31,19 @@ pub async fn download_images_for_users<'b>(
         let search = CachedSearch::new(&client);
         let search = &search;
         let client = &client;
-        let to_downloads = stream::iter(users)
-            .map(|user| {
-                let shortcut_info = get_shortcuts_for_user(user);
-                async move {
-                    let known_images = get_users_images(user).unwrap_or_default();
-                    let res = search_fo_to_download(
-                        known_images,
-                        user.steam_user_data_folder.as_str(),
-                        &shortcut_info.shortcuts,
-                        search,
-                        client,
-                        download_animated,
-                    )
-                    .await;
-                    res.unwrap_or_default()
-                }
-            })
-            .buffer_unordered(CONCURRENT_REQUESTS)
-            .collect::<Vec<Vec<ToDownload>>>()
-            .await;
+        let to_downloads = if settings.steamgrid_db.safe_download {
+            find_to_download_serial(users,search,client,download_animated).await
+        }else{
+            find_to_download_parallel(users,search,client,download_animated).await
+        };
         let to_downloads = to_downloads.iter().flatten().collect::<Vec<&ToDownload>>();
         if !to_downloads.is_empty() {
             search.save();
-
-            stream::iter(to_downloads)
-                .map(|to_download| async move {
-                    if let Err(e) = download_to_download(to_download).await {
-                        println!("Error downloading {:?}: {}", &to_download.path, e);
-                    }
-                })
-                .buffer_unordered(CONCURRENT_REQUESTS)
-                .collect::<Vec<()>>()
-                .await;
+            if settings.steamgrid_db.safe_download{
+                download_in_serial(to_downloads).await;
+            }else{
+                download_in_parallel(to_downloads).await;
+            }
             let duration = start_time.elapsed();
             println!("Finished getting images in: {:?}", duration);
         } else {
@@ -72,6 +52,81 @@ pub async fn download_images_for_users<'b>(
     } else {
         println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
     }
+}
+
+async fn download_in_parallel(to_downloads: Vec<&ToDownload>) {
+    stream::iter(to_downloads)
+        .map(|to_download| async move {
+            if let Err(e) = download_to_download(to_download).await {
+                println!("Error downloading {:?}: {}", &to_download.path, e);
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS)
+        .collect::<Vec<()>>()
+        .await;
+}
+
+
+async fn download_in_serial(to_downloads: Vec<&ToDownload>) {
+    for to_download in to_downloads{
+        if let Err(e) = download_to_download(to_download).await {
+            println!("Error downloading {:?}: {}", &to_download.path, e);
+        }
+    }
+}
+
+async fn find_to_download_parallel(
+    users: &[SteamUsersInfo],
+    search: &CachedSearch<'_>,
+    client: &Client,
+    download_animated: bool,
+) -> Vec<Vec<ToDownload>> {
+    let to_downloads = stream::iter(users)
+        .map(|user| {
+            let shortcut_info = get_shortcuts_for_user(user);
+            async move {
+                let known_images = get_users_images(user).unwrap_or_default();
+                let res = search_fo_to_download(
+                    known_images,
+                    user.steam_user_data_folder.as_str(),
+                    &shortcut_info.shortcuts,
+                    search,
+                    client,
+                    download_animated,
+                )
+                .await;
+                res.unwrap_or_default()
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS)
+        .collect::<Vec<Vec<ToDownload>>>()
+        .await;
+    to_downloads
+}
+
+
+async fn find_to_download_serial(
+    users: &[SteamUsersInfo],
+    search: &CachedSearch<'_>,
+    client: &Client,
+    download_animated: bool,
+) -> Vec<Vec<ToDownload>> {
+    let mut result = vec![];
+    for user in users {
+        let shortcut_info = get_shortcuts_for_user(user);
+        let known_images = get_users_images(user).unwrap_or_default();
+        let res = search_fo_to_download(
+            known_images,
+            user.steam_user_data_folder.as_str(),
+            &shortcut_info.shortcuts,
+            search,
+            client,
+            download_animated,
+        )
+        .await;
+        result.push(res.unwrap_or_default());
+    }
+    return result;
 }
 
 async fn search_fo_to_download(

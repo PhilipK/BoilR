@@ -4,6 +4,7 @@ debug= false
 auth_key = "Write your authentication key between these quotes"
 enabled = true
 prefer_animated = false
+safe_download = true
 
 [origin]
 enabled = true
