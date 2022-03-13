@@ -30,10 +30,20 @@ pub async fn run_ui() -> Result<(), Box<dyn Error>> {
         let synch_ui = ui.clone();
         let sync_settings = settings.clone();
         synch_bytton.set_callback(move |cb| {
-            update_settings_with_ui_values(&mut sync_settings.borrow_mut(), &synch_ui);
-            match block_on(run_sync(&sync_settings.borrow())) {
+            let mut settings_clone = sync_settings.borrow().clone();
+            update_settings_with_ui_values(&mut settings_clone, &synch_ui);
+            use tokio::task;
+            let task = task::spawn_blocking(move || {
+                let setting_ref = settings_clone.clone();
+                let synchro_task = run_sync(&setting_ref);
+                match block_on(synchro_task) {
+                    Ok(_) => println!("Finished sync"),
+                    Err(e) => println!("{}", e),
+                }
+            });
+            match block_on(task){
                 Ok(_) => cb.set_label("Synched"),
-                Err(e) => println!("{}", e),
+                Err(_) => cb.set_label("Error Synching"),
             }
         });
     }
@@ -77,7 +87,6 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     settings.gog.enabled = ui.enable_gog_checkbox.value();
     settings.gog.location = empty_or_whitespace(ui.gog_folder_input.value());
     settings.gog.wine_c_drive = empty_or_whitespace(ui.gog_winedrive_input.value());
-
 
     // Uplay
     settings.uplay.enabled = ui.enable_uplay_checkbox.value();
@@ -184,6 +193,6 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     {
         ui.gog_winedrive_input.hide();
     }
-    
+
     ui.enable_uplay_checkbox.set_value(settings.uplay.enabled);
 }
