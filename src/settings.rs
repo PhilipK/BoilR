@@ -8,7 +8,7 @@ use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
 use std::env;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub debug: bool,
     pub epic_games: EpicGamesLauncherSettings,
@@ -49,8 +49,6 @@ impl Settings {
         let mut result: Result<Self, ConfigError> = s.try_into();
 
         sanitize_auth_key(&mut result);
-
-        
 
         result
     }
