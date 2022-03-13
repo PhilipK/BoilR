@@ -11,7 +11,6 @@ class UserInterface {open
       xywh {1 1 500 475} type Double visible
     } {      
 
-
       # ----- Steam -----
       Fl_Input steam_location_input {
         label {Steam Location}
@@ -26,7 +25,8 @@ class UserInterface {open
         xywh {25 75 155 25} down_box DOWN_BOX
       }
       Fl_Input steamgrid_db_auth_key_input {
-        label {Authentication Key}
+        label {SteamGridDb API Key}
+        tooltip {See how to get your key here https://github.com/PhilipK/BoilR#getting-cover-art-for-your-shortcuts} 
         xywh {175 75 300 25} align 5
       }
 
@@ -76,7 +76,7 @@ class UserInterface {open
         }
       }    
             
-      # ----- Origin -----
+      # ----- GOG -----
         Fl_Check_Button enable_gog_checkbox {
           label {GOG Galaxy}
           xywh {25 325 155 25} down_box DOWN_BOX

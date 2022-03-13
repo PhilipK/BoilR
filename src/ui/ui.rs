@@ -1,14 +1,17 @@
 use crate::sync::run_sync;
 use crate::ui::UserInterface;
 use crate::{egs::get_default_location, settings::Settings};
+use fltk::enums::Color;
 use fltk::{app, prelude::*};
+use fltk_theme::{ColorTheme, WidgetTheme, color_themes, ThemeType};
 use futures::executor::block_on;
 use std::error::Error;
 use std::{cell::RefCell, rc::Rc};
 
 pub async fn run_ui() -> Result<(), Box<dyn Error>> {
     let app = app::App::default().with_scheme(app::Scheme::Gtk);
-
+    let widget_theme = WidgetTheme::new(ThemeType::Greybird);
+    widget_theme.apply();
     let settings = Rc::new(RefCell::new(Settings::new()?));
     let mut ui = UserInterface::make_window();
     update_ui_with_settings(&mut ui, &settings.clone().borrow());
