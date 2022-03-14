@@ -24,13 +24,13 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
-        let legendary_command = Command::new("legendary")
-            .arg("list-installed")
-            .arg("--json")
-            .output()?;
-        let json = String::from_utf8_lossy(&legendary_command.stdout);
-        let legendary_ouput = from_str(&json)?;
-        Ok(legendary_ouput)
+        let legendary_string = self
+            .settings
+            .executable
+            .clone()
+            .unwrap_or("legendary".to_string());
+        let legendary = legendary_string.as_str();
+        execute_legendary_command(legendary)
     }
 
     #[cfg(target_family = "unix")]
@@ -47,4 +47,14 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
             },
         }
     }
+}
+
+fn execute_legendary_command(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
+    let legendary_command = Command::new(program)
+        .arg("list-installed")
+        .arg("--json")
+        .output()?;
+    let json = String::from_utf8_lossy(&legendary_command.stdout);
+    let legendary_ouput = from_str(&json)?;
+    Ok(legendary_ouput)
 }

@@ -29,4 +29,7 @@ create_symlinks = true
 [lutris]
 enabled = true
 
+[heroic]
+enabled = true
+
 [steam]
