@@ -20,17 +20,24 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 
     fn name(&self) -> &str {
-        "Legendary"
+        "Legendary/Heroic"
     }
 
     fn get_shortcuts(&self) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
-        let legendary_command = Command::new("legendary")
-            .arg("list-installed")
-            .arg("--json")
-            .output()?;
-        let json = String::from_utf8_lossy(&legendary_command.stdout);
-        let legendary_ouput = from_str(&json)?;
-        Ok(legendary_ouput)
+        let heroic = "/opt/Heroic/resources/app.asar.unpacked/build/bin/linux/legendary";
+        let legendary_string = self
+            .settings
+            .executable
+            .clone()
+            .unwrap_or("legendary".to_string());
+        let legendary = legendary_string.as_str();
+        match fun_name(legendary) {
+            Ok(res) => return Ok(res),
+            Err(first_error) => match fun_name(heroic){
+                Ok(res) => return Ok(res),
+                Err(_second_error) => return Err(first_error),
+            },
+        }
     }
 
     #[cfg(target_family = "unix")]
@@ -47,4 +54,14 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
             },
         }
     }
+}
+
+fn fun_name(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
+    let legendary_command = Command::new(program)
+        .arg("list-installed")
+        .arg("--json")
+        .output()?;
+    let json = String::from_utf8_lossy(&legendary_command.stdout);
+    let legendary_ouput = from_str(&json)?;
+    Ok(legendary_ouput)
 }

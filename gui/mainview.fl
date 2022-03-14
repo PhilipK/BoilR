@@ -43,11 +43,11 @@ class UserInterface {open
 
       # ----- Legendary -----
       Fl_Check_Button enable_legendary_checkbox {
-          label Legendary
+          label {Legendary/Heroic}
           xywh {25 175 155 25} down_box DOWN_BOX
         }
         Fl_Input legendary_executable_input {
-          label {Legendary Executable}
+          label {Legendary/Heroic Executable}
           xywh {175 175 300 25} align 5
         }
 
