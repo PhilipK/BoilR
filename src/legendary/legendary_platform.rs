@@ -24,19 +24,24 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
+        //Try to find legendary inside heroic in different locations
         let heroic = "/opt/Heroic/resources/app.asar.unpacked/build/bin/linux/legendary";
+        let heroic_discovery = "/app/bin/heroic/resources/[app.asar.unpacked/build/bin/linux/legendary](http://app.asar.unpacked/build/bin/linux/legendary)";
+        let heroic_discovery_safe =
+            "/app/bin/heroic/resources/app.asar.unpacked/build/bin/linux/legendary";
         let legendary_string = self
             .settings
             .executable
             .clone()
             .unwrap_or("legendary".to_string());
         let legendary = legendary_string.as_str();
-        match fun_name(legendary) {
-            Ok(res) => return Ok(res),
-            Err(first_error) => match fun_name(heroic){
-                Ok(res) => return Ok(res),
-                Err(_second_error) => return Err(first_error),
-            },
+        let possible_commands = vec![legendary, heroic, heroic_discovery_safe, heroic_discovery];
+        let found_command = possible_commands
+            .iter()
+            .find_map(|command| try_to_run_command(command).ok());
+        match found_command {
+            Some(result) => return Ok(result),
+            None => try_to_run_command(possible_commands[0]),
         }
     }
 
@@ -56,7 +61,7 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 }
 
-fn fun_name(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
+fn try_to_run_command(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
     let legendary_command = Command::new(program)
         .arg("list-installed")
         .arg("--json")
