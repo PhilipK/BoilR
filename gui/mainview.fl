@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window win {
       label {BoilR} open
-      xywh {1 1 500 475} type Double visible
+      xywh {1 1 500 525} type Double visible
     } {      
 
       # ----- Steam -----
@@ -95,17 +95,27 @@ class UserInterface {open
           label Uplay
           xywh {25 375 155 25} down_box DOWN_BOX
         }
+
+        # ----- Lutris -----
+      Fl_Check_Button enable_lutris_checkbox {
+          label Lutris
+          xywh {25 425 155 25} down_box DOWN_BOX
+        }
+        Fl_Input lutris_executable_input {
+          label {Lutris Executable}
+          xywh {175 425 300 25} align 5
+        }
      
 
       # ----- Buttons -----
 
       Fl_Button save_settings_button {
         label {Save Settings}
-        xywh {25 425 125 25}
+        xywh {25 475 125 25}
       }
       Fl_Button synchronize_button {
         label {Synchronize Games}
-        xywh {175 425 300 25}
+        xywh {175 475 300 25}
       }
     }
   }

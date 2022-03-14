@@ -1,9 +1,8 @@
 use crate::sync::run_sync;
 use crate::ui::UserInterface;
 use crate::{egs::get_default_location, settings::Settings};
-use fltk::enums::Color;
 use fltk::{app, prelude::*};
-use fltk_theme::{ColorTheme, WidgetTheme, color_themes, ThemeType};
+use fltk_theme::{WidgetTheme, ThemeType};
 use futures::executor::block_on;
 use std::error::Error;
 use std::{cell::RefCell, rc::Rc};
@@ -90,6 +89,10 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
 
     // Uplay
     settings.uplay.enabled = ui.enable_uplay_checkbox.value();
+
+    // Lutris
+    settings.lutris.enabled = ui.enable_lutris_checkbox.value();
+    settings.lutris.executable = empty_or_whitespace(ui.lutris_executable_input.value());
 }
 
 fn save_settings_to_file(settings: &Settings) {
@@ -195,4 +198,15 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     }
 
     ui.enable_uplay_checkbox.set_value(settings.uplay.enabled);
+
+
+    ui.enable_lutris_checkbox.set_value(settings.lutris.enabled);
+    ui.lutris_executable_input.set_value(
+        settings
+            .lutris
+            .executable
+            .clone()
+            .unwrap_or(String::from("lutris"))
+            .as_str(),
+    );
 }
