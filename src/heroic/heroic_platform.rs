@@ -35,6 +35,7 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
             .env("XDG_CONFIG_HOME", config_folder)
             .output()?;
         let json = String::from_utf8_lossy(&legendary_command.stdout);
+        println!("json: {}",json);
         let legendary_ouput = from_str(&json)?;
         
         Ok(legendary_ouput)
