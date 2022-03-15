@@ -30,43 +30,43 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            file: target/release/boilr
-            asset_name: linux_BoilR
-            args: --best --lzma
-            strip: true
-            ui: false
+          # - os: ubuntu-latest
+          #   file: target/release/boilr
+          #   asset_name: linux_BoilR
+          #   args: --best --lzma
+          #   strip: true
+          #   ui: false
           - os: ubuntu-latest
             file: target/release/boilr
             asset_name: linux_ui_BoilR
             args: --best --lzma
             strip: true
             ui: true
-          - os: windows-latest
-            file: target/release/boilr.exe
-            asset_name: windows_BoilR.exe
-            args: -9
-            strip: false      
-            ui: false
-          - os: windows-latest
-            file: target/release/boilr.exe
-            asset_name: windows_ui_BoilR.exe
-            args: -9
-            strip: false     
-            ui: true   
-          - os: macos-latest
-            file: target/release/boilr
-            asset_name: macos_x86_64_BoilR
-            args: -9
-            strip: false
-            ui: false
-          - os: macos-latest
-            file: target/aarch64-apple-darwin/release/boilr
-            asset_name: macos_darwin_BoilR
-            args: -9
-            strip: false
-            ui: false
-            target: aarch64-apple-darwin
+          # - os: windows-latest
+          #   file: target/release/boilr.exe
+          #   asset_name: windows_BoilR.exe
+          #   args: -9
+          #   strip: false      
+          #   ui: false
+          # - os: windows-latest
+          #   file: target/release/boilr.exe
+          #   asset_name: windows_ui_BoilR.exe
+          #   args: -9
+          #   strip: false     
+          #   ui: true   
+          # - os: macos-latest
+          #   file: target/release/boilr
+          #   asset_name: macos_x86_64_BoilR
+          #   args: -9
+          #   strip: false
+          #   ui: false
+          # - os: macos-latest
+          #   file: target/aarch64-apple-darwin/release/boilr
+          #   asset_name: macos_darwin_BoilR
+          #   args: -9
+          #   strip: false
+          #   ui: false
+          #   target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v1
       - name: Rust Cache
