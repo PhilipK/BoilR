@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
@@ -13,8 +15,14 @@ pub struct HeroicGame {
 
 impl From<HeroicGame> for ShortcutOwned {
     fn from(game: HeroicGame) -> Self {
+
+        let home_dir = std::env::var("HOME").unwrap_or("".to_string());
+        let legendary = "/var/lib/flatpak/app/com.heroicgameslauncher.hgl/current/active/files/bin/heroic/resources/app.asar.unpacked/build/bin/linux/";
+        let home = Path::new(&home_dir);
+        let config_folder = home.join("/.var/app/com.heroicgameslauncher.hgl/config");
+
         let exe = format!("\"{}\\{}\"", game.install_path, game.executable);
-        let launch = format!("legendary launch {}", game.app_name);
+        let launch = format!("env XDG_CONFIG_HOME={} {} launch {}", config_folder.as_os_str().to_string_lossy(), legendary, game.app_name);
         let mut start_dir = game.install_path.clone();
         if !game.install_path.starts_with('"') {
             start_dir = format!("\"{}\"", game.install_path);

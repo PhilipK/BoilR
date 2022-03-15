@@ -27,7 +27,7 @@ fltk-theme = {version ="0.4" , optional = true }
 fl2rust = { version = "0.4", optional = true }
 
 [features]
- default = ["ui"]
+# default = ["ui"]
 ui = ["fltk", "fl2rust", "toml", "fltk-theme"]
 
 

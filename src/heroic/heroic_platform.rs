@@ -6,7 +6,7 @@ use std::path::Path;
 use std::process::Command;
 
 pub struct HeroicPlatform {
-    settings: HeroicSettings,
+   pub settings: HeroicSettings,
 }
 
 impl HeroicPlatform {
@@ -26,7 +26,8 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
 
     fn get_shortcuts(&self) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
         let legendary = "/var/lib/flatpak/app/com.heroicgameslauncher.hgl/current/active/files/bin/heroic/resources/app.asar.unpacked/build/bin/linux/";
-        let home = Path::new(std::env!("HOME"));
+        let home_dir = std::env::var("HOME").unwrap_or("".to_string());
+        let home = Path::new(&home_dir);
         let config_folder = home.join("/.var/app/com.heroicgameslauncher.hgl/config");
         let legendary_command = Command::new(legendary)
             .arg("list-installed")

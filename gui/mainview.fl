@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window win {
       label {BoilR} open
-      xywh {1 1 500 525} type Double visible
+      xywh {1 1 500 575} type Double visible
     } {      
 
       # ----- Steam -----
@@ -106,16 +106,22 @@ class UserInterface {open
           xywh {175 425 300 25} align 5
         }
      
+   # ----- Heroic -----
+      Fl_Check_Button enable_heroic_checkbox {
+          label Heroic
+          xywh {25 475 155 25} down_box DOWN_BOX
+        }
+
 
       # ----- Buttons -----
 
       Fl_Button save_settings_button {
         label {Save Settings}
-        xywh {25 475 125 25}
+        xywh {25 525 125 25}
       }
       Fl_Button synchronize_button {
         label {Synchronize Games}
-        xywh {175 475 300 25}
+        xywh {175 525 300 25}
       }
     }
   }
