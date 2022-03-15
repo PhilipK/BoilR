@@ -20,24 +20,17 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 
     fn name(&self) -> &str {
-        "Legendary/Heroic"
+        "Legendary"
     }
 
     fn get_shortcuts(&self) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
-        let heroic = "/opt/Heroic/resources/app.asar.unpacked/build/bin/linux/legendary";
         let legendary_string = self
             .settings
             .executable
             .clone()
             .unwrap_or("legendary".to_string());
         let legendary = legendary_string.as_str();
-        match fun_name(legendary) {
-            Ok(res) => return Ok(res),
-            Err(first_error) => match fun_name(heroic){
-                Ok(res) => return Ok(res),
-                Err(_second_error) => return Err(first_error),
-            },
-        }
+        execute_legendary_command(legendary)
     }
 
     #[cfg(target_family = "unix")]
@@ -56,7 +49,7 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 }
 
-fn fun_name(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
+fn execute_legendary_command(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {
     let legendary_command = Command::new(program)
         .arg("list-installed")
         .arg("--json")
