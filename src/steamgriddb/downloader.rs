@@ -86,6 +86,7 @@ async fn search_fo_to_download(
         let images = vec![
             format!("{}_hero.png", s.app_id),
             format!("{}p.png", s.app_id),
+            format!("{}.png", s.app_id),
             format!("{}_logo.png", s.app_id),
             format!("{}_bigpicture.png", s.app_id),
         ];
@@ -118,6 +119,7 @@ async fn search_fo_to_download(
         ImageType::Logo,
         ImageType::Hero,
         ImageType::Grid,
+        ImageType::WideGrid,
         ImageType::BigPicture,
     ];
     let mut to_download = vec![];
@@ -168,6 +170,7 @@ async fn search_fo_to_download(
             ImageType::Hero => Hero(Some(hero_parameters)),
             ImageType::BigPicture => Grid(Some(big_picture_parameters)),
             ImageType::Grid => Grid(Some(grid_parameters)),
+            ImageType::WideGrid => Grid(Some(big_picture_parameters)),
             ImageType::Logo => Logo(Some(logo_parameters)),
         };
 
