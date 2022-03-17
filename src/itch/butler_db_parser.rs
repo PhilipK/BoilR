@@ -4,10 +4,18 @@ use nom::{
     IResult,
 };
 
+use serde::{Deserialize};
+
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct DbPaths {
     pub(crate) base_path: String,
-    pub(crate) path: String,
+    pub(crate) paths: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct Candidate{
+    pub path:String,
 }
 
 pub(crate) fn parse_butler_db<'a>(content: &'a [u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
@@ -22,20 +30,35 @@ fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
     let (i, base_path) = take_until(suffix)(i)?;
     let base_path = String::from_utf8_lossy(base_path).to_string();
     
-    let prefix = ":[{\"path\":\"";
-    let suffix = "\",\"depth";
+    let prefix = "\"candidates\":[";
+    let suffix = "]}";
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
-    let (i, path) = take_until(suffix)(i)?;
-    let path = String::from_utf8_lossy(path).to_string();
+    let (i, candidates_json) = take_until(suffix)(i)?;
+    let candidates_json = format!("[{}]",String::from_utf8_lossy(candidates_json).to_string());
 
-    IResult::Ok((
-        i,
-        DbPaths {
-            base_path,
-            path,
+    let candidates = serde_json::from_str::<Vec<Candidate>>(&candidates_json);
+    match candidates{
+        Ok(candidates) => {
+            return IResult::Ok((
+                i,
+                DbPaths {
+                    base_path,
+                    paths: candidates.iter().map(|c| c.path.clone()).collect(),
+                },
+            ))
         },
-    ))
+        Err(_err) => {
+            //we found a basepath, but no executables
+            return IResult::Ok((
+                i,
+                DbPaths {
+                    base_path,
+                    paths: vec![],
+                },
+            ))
+        },
+    }
 }
 
 #[cfg(test)]
@@ -52,26 +75,26 @@ mod tests {
         assert_eq!(paths.len(), 6);
 
         assert_eq!(paths[0].base_path, "/home/philip/.config/itch/apps/islands");
-        assert_eq!(paths[0].path, "Islands_Linux.x86_64");
+        assert_eq!(paths[0].paths[0], "Islands_Linux.x86_64");
         assert_eq!(
             paths[1].base_path,
             "/home/philip/.config/itch/apps/night-in-the-woods"
         );
-        assert_eq!(paths[1].path, "Night in the Woods.x86_64");
+        assert_eq!(paths[1].paths[0], "Night in the Woods.x86_64");
         assert_eq!(paths[2].base_path, "/home/philip/.config/itch/apps/islands");
-        assert_eq!(paths[2].path, "Islands_Linux.x86_64");
+        assert_eq!(paths[2].paths[0], "Islands_Linux.x86_64");
         assert_eq!(
             paths[3].base_path,
             "/home/philip/.config/itch/apps/overland"
         );
-        assert_eq!(paths[3].path, "Overland.x86_64");
+        assert_eq!(paths[3].paths[0], "Overland.x86_64");
         assert_eq!(
             paths[4].base_path,
             "/home/philip/.config/itch/apps/night-in-the-woods"
         );
-        assert_eq!(paths[4].path, "Night in the Woods.x86_64");
+        assert_eq!(paths[4].paths[0], "Night in the Woods.x86_64");
         assert_eq!(paths[5].base_path, "/home/philip/.config/itch/apps/islands");
-        assert_eq!(paths[5].path, "Islands_Linux.x86_64");
+        assert_eq!(paths[5].paths[0], "Islands_Linux.x86_64");
     }
 
     #[test]
@@ -83,7 +106,7 @@ mod tests {
         assert_eq!(paths.len(), 94);
 
         assert_eq!(paths[0].base_path, "/home/deck/.config/itch/apps/risetoruins");
-        assert_eq!(paths[0].path, "Core.jar");
+        assert_eq!(paths[0].paths[0], "Core.jar");
         //The parser finds douplicates 
         assert_eq!(paths[0], paths[1]);
         assert_eq!(paths[1], paths[2]);
