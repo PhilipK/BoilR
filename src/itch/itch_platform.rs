@@ -4,6 +4,7 @@ use super::{ItchGame, ItchSettings};
 use crate::platform::{Platform, SettingsValidity};
 use failure::*;
 use flate2::read::GzDecoder;
+use is_executable::IsExecutable;
 use std::collections::HashSet;
 use std::io::prelude::*;
 use std::path::Path;
@@ -48,9 +49,12 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
             }),
         }?;
 
-        //This is done dedupe
+        //This is done to paths dedupe
         let paths: HashSet<&DbPaths> = paths.iter().collect();
-        let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
+        let res = paths
+            .iter()
+            .filter_map(|e| dbpath_to_game(*e))
+            .collect();
         Ok(res)
     }
 
@@ -78,17 +82,26 @@ fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
         return None;
     }
 
-    let gz_bytes = std::fs::read(&recipt).unwrap();
-    let mut d = GzDecoder::new(gz_bytes.as_slice());
-    let mut s = String::new();
-    d.read_to_string(&mut s).unwrap();
+    let executable = paths
+        .paths
+        .iter()
+        .find(|p| Path::new(&paths.base_path).join(&p).is_executable());
+    match executable {
+        Some(executable) => {
+            let gz_bytes = std::fs::read(&recipt).unwrap();
+            let mut d = GzDecoder::new(gz_bytes.as_slice());
+            let mut s = String::new();
+            d.read_to_string(&mut s).unwrap();
 
-    let receipt_op: Option<Receipt> = serde_json::from_str(&s).ok();
-    receipt_op.map(|re| ItchGame {
-        install_path: paths.base_path.to_owned(),
-        executable: paths.path.to_owned(),
-        title: re.game.title,
-    })
+            let receipt_op: Option<Receipt> = serde_json::from_str(&s).ok();
+            receipt_op.map(|re| ItchGame {
+                install_path: paths.base_path.to_owned(),
+                executable: executable.to_owned(),
+                title: re.game.title,
+            })
+        }
+        None => None,
+    }
 }
 
 #[cfg(target_family = "unix")]
