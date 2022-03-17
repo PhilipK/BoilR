@@ -93,6 +93,9 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     // Lutris
     settings.lutris.enabled = ui.enable_lutris_checkbox.value();
     settings.lutris.executable = empty_or_whitespace(ui.lutris_executable_input.value());
+
+     // Heroic
+    settings.heroic.enabled = ui.enable_heroic_checkbox.value();    
 }
 
 fn save_settings_to_file(settings: &Settings) {
@@ -196,7 +199,7 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     {
         ui.gog_winedrive_input.hide();
     }
-
+    
     ui.enable_uplay_checkbox.set_value(settings.uplay.enabled);
 
 

@@ -10,6 +10,7 @@ mod steam;
 mod steamgriddb;
 mod sync;
 mod uplay;
+mod heroic;
 
 #[cfg(feature = "ui")]
 mod ui;

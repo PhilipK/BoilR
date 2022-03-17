@@ -1,7 +1,7 @@
 use crate::{
     egs::EpicGamesLauncherSettings, gog::GogSettings, itch::ItchSettings,
     legendary::LegendarySettings, lutris::settings::LutrisSettings, origin::OriginSettings,
-    steam::SteamSettings, steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
+    steam::SteamSettings, steamgriddb::SteamGridDbSettings, uplay::UplaySettings, heroic::HeroicSettings,
 };
 
 use config::{Config, ConfigError, Environment, File};
@@ -20,6 +20,7 @@ pub struct Settings {
     pub gog: GogSettings,
     pub uplay: UplaySettings,
     pub lutris: LutrisSettings,
+    pub heroic: HeroicSettings,
 }
 
 impl Settings {

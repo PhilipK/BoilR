@@ -8,7 +8,7 @@ use crate::{
     settings::Settings,
     steam::{get_shortcuts_for_user, get_shortcuts_paths, ShortcutInfo, SteamUsersInfo},
     steamgriddb::download_images_for_users,
-    uplay::Uplay,
+    uplay::Uplay, heroic::HeroicPlatform,
 };
 use std::error::Error;
 
@@ -116,6 +116,12 @@ fn update_platforms(settings: &Settings, new_user_shortcuts: &mut Vec<ShortcutOw
     update_platform_shortcuts(
         &LutrisPlatform {
             settings: settings.lutris.clone(),
+        },
+        new_user_shortcuts,
+    );
+    update_platform_shortcuts(
+        &HeroicPlatform {
+            settings: settings.heroic.clone(),
         },
         new_user_shortcuts,
     );
