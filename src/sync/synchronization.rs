@@ -33,6 +33,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         remove_old_shortcuts(&mut shortcut_info);
         update_platforms(settings, &mut shortcut_info.shortcuts);
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
+        set_dev_kit_game_id_to_boilr( &mut shortcut_info);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
         user.shortcut_path = Some(shortcut_info.path.to_string_lossy().to_string());
 
@@ -51,11 +52,21 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+
+fn set_dev_kit_game_id_to_boilr(shortcut_info: &mut ShortcutInfo){
+    shortcut_info.shortcuts.iter_mut().for_each(|shortcut|{
+        shortcut.dev_kit_game_id = format!("{}{}", BOILR_TAG,shortcut.app_id);
+    })
+}
+
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
     let boilr_tag = BOILR_TAG.to_string();
     shortcut_info
         .shortcuts
         .retain(|shortcut| !shortcut.tags.contains(&boilr_tag));
+    shortcut_info
+        .shortcuts
+        .retain(|shortcut| !shortcut.dev_kit_game_id.starts_with(&boilr_tag));
 }
 
 fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
