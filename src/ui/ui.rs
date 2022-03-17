@@ -212,4 +212,6 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
             .unwrap_or(String::from("lutris"))
             .as_str(),
     );
+
+    ui.enable_heroic_checkbox.set_value(settings.heroic.enabled);
 }
