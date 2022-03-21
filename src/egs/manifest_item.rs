@@ -35,15 +35,14 @@ pub(crate) struct ManifestItem {
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let exe = manifest.exe();
-    let mut start_dir = manifest.install_location.clone();
-    if !manifest.install_location.starts_with('"') {
-        start_dir = format!("\"{}\"", manifest.install_location);
-    }
+    let start_dir = manifest.install_location.clone();
+    let exe = exe.trim_matches('\"');
+    let start_dir = start_dir.trim_matches('\"');
     Shortcut::new(
         0,
         manifest.display_name.as_str(),
-        exe.as_str(),
-        start_dir.as_str(),
+        exe,
+        start_dir,
         "",
         "",
         "",

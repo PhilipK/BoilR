@@ -40,8 +40,11 @@ pub(crate) fn get_egs_manifests(
                 .filter_map(|dir| dir.ok())
                 .filter_map(get_manifest_item)
                 .filter(is_game_installed)
-                .filter(is_game_launchable);
-            Ok(manifests.collect())
+                .filter(is_game_launchable);            
+            let mut manifests : Vec<ManifestItem> = manifests.collect();
+            manifests.sort_by_key(|m| format!("{}-{}-{}",m.install_location,m.launch_executable,m.is_managed));
+            manifests.dedup_by_key(|m| format!("{}-{}-{}",m.install_location,m.launch_executable,m.is_managed));
+            Ok(manifests)
         }
         Err(err) => Err(ReadDirError {
             error: err,
@@ -49,6 +52,7 @@ pub(crate) fn get_egs_manifests(
         }),
     }
 }
+
 
 fn get_manifest_dir_path(
     settings: &EpicGamesLauncherSettings,
