@@ -33,7 +33,6 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         remove_old_shortcuts(&mut shortcut_info);
         update_platforms(settings, &mut shortcut_info.shortcuts);
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
-        set_dev_kit_game_id_to_boilr( &mut shortcut_info);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
         user.shortcut_path = Some(shortcut_info.path.to_string_lossy().to_string());
 
@@ -50,13 +49,6 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-
-fn set_dev_kit_game_id_to_boilr(shortcut_info: &mut ShortcutInfo){
-    shortcut_info.shortcuts.iter_mut().for_each(|shortcut|{
-        shortcut.dev_kit_game_id = format!("{}{}", BOILR_TAG,shortcut.app_id);
-    })
 }
 
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
@@ -188,22 +180,26 @@ where
         }
 
         let shortcuts_to_add_result = platform.get_shortcuts();
+        
 
         match shortcuts_to_add_result {
             Ok(shortcuts_to_add) => {
+                let mut shortcuts_to_add_transformed = vec![];
+                for shortcut in shortcuts_to_add{
+                    let mut shortcut_owned: ShortcutOwned = shortcut.into();
+                    shortcut_owned.dev_kit_game_id = format!("{}-{}",BOILR_TAG,shortcut_owned.app_id);
+                    shortcuts_to_add_transformed.push(shortcut_owned);
+                }
+
+                let shortcuts_to_add = shortcuts_to_add_transformed;
+
                 println!(
                     "Found {} game(s) for platform {}",
                     shortcuts_to_add.len(),
                     platform.name()
                 );
 
-                current_shortcuts.retain(|f| !f.tags.contains(&platform.name().to_owned()));
-                let boilr_tag = BOILR_TAG.to_string();
-                for shortcut in shortcuts_to_add {
-                    let mut shortcut_owned: ShortcutOwned = shortcut.into();
-                    if !shortcut_owned.tags.contains(&boilr_tag) {
-                        shortcut_owned.tags.push(boilr_tag.clone());
-                    }
+                for shortcut_owned in shortcuts_to_add {
                     #[cfg(target_family = "unix")]
                     let shortcut_owned = if platform.create_symlinks() {
                         crate::sync::symlinks::create_sym_links(&shortcut_owned)
