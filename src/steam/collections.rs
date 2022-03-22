@@ -45,7 +45,9 @@ pub struct InnerCollection {
     removed: Vec<usize>,
 }
 
-fn get_categories<S: AsRef<str>>(steamid: S) -> Result<HashMap<String, String>, Box<dyn Error>> {
+fn get_categories_data<S: AsRef<str>>(
+    steamid: S,
+) -> Result<HashMap<String, String>, Box<dyn Error>> {
     let steamid = steamid.as_ref();
 
     let keyprefix = format!(
@@ -98,7 +100,26 @@ fn get_collections(db: &mut DB, key_bytes: &[u8]) -> Option<Vec<(i32, String)>> 
     }
 }
 
-//TODO make this for unix as well
+#[cfg(target_family = "unix")]
+fn get_level_db_location() -> Option<PathBuf> {
+    match std::env::var("HOME") {
+        Ok(home) => {
+            let path = Path::new(&home)
+                .join(".steam")
+                .join("Steam")
+                .join("htmlcache")
+                .join("Local Storage")
+                .join("leveldb");
+            if path.exists() {
+                return Some(path.to_path_buf());
+            }
+            return None;
+        }
+        Err(e) => return None,
+    }
+}
+
+#[cfg(target_os = "windows")]
 fn get_level_db_location() -> Option<PathBuf> {
     match std::env::var("LOCALAPPDATA") {
         Ok(localdata) => {
@@ -117,40 +138,12 @@ fn get_level_db_location() -> Option<PathBuf> {
 }
 
 fn parse_collections<S: AsRef<str>>(input: S) -> Vec<(i32, String)> {
-    let input = input.as_ref().trim_matches(|c| c == '[' || c == ']');
-    let splits = input.split("],[");
-    //TODO clean up this nested mess
-    splits
-        .into_iter()
-        .filter(|c| c.contains(","))
-        .filter_map(|txt| {
-            let mut inner_split = txt.split(',');
-            let first = inner_split.next();
-            match first {
-                Some(first) => {
-                    let first_number = first.parse::<i32>();
-                    match first_number {
-                        Ok(first_number) => {
-                            let second = inner_split.next();
-                            match second {
-                                Some(second) => {
-                                    Some((first_number, second.trim_matches('"').to_string()))
-                                }
-                                None => None,
-                            }
-                        }
-                        Err(_) => None,
-                    }
-                }
-                None => None,
-            }
-        })
-        .collect()
+    serde_json::from_str(input.as_ref()).unwrap_or_default()
 }
 
 fn parse_steam_collections<S: AsRef<str>>(input: S) -> Vec<(String, SteamCollectionType)> {
     let input = input.as_ref();
-    let input = if !input.starts_with("[") {
+    let input = if input.starts_with("\u{1}") {
         input[1..].to_string()
     } else {
         input.to_string()
@@ -175,12 +168,11 @@ mod tests {
         assert_eq!(input, &serialized);
     }
 
-
     #[test]
     fn can_parse_categories() {
         let input = include_str!("../testdata/leveldb/testcollections.json");
         let collection = parse_steam_collections(input);
-        assert_eq!(28,collection.len())
+        assert_eq!(28, collection.len())
     }
 
     #[test]
