@@ -1,0 +1,271 @@
+[
+    [
+        "showcases.2",
+        {
+            "key": "showcases.2",
+            "timestamp": 1627185068,
+            "value": "{\"nShowcaseId\":2,\"strCollectionId\":\"type-games\",\"eSortBy\":11,\"bExpanded\":true,\"nOrder\":1572675717433,\"nLastChangedMS\":1627185068325}"
+        }
+    ],
+    [
+        "showcases.-1",
+        {
+            "key": "showcases.-1",
+            "timestamp": 1572551831,
+            "value": "{\"nShowcaseId\":-1,\"strCollectionId\":\"\",\"eSortBy\":1,\"bExpanded\":false}",
+            "conflictResolutionMethod": "initial"
+        }
+    ],
+    [
+        "user-collections.favorite",
+        {
+            "key": "user-collections.favorite",
+            "timestamp": 1646915179,
+            "value": "{\"id\":\"favorite\",\"name\":\"Favorites\",\"added\":[265930,751780,433340,361420,337340,1055540,960990,240720,1364100,398850,233290,1245620],\"removed\":[]}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "766"
+        }
+    ],
+    [
+        "user-collections.hidden",
+        {
+            "key": "user-collections.hidden",
+            "timestamp": 1583777127,
+            "value": "{\"id\":\"hidden\",\"name\":\"Hidden\",\"added\":[622590,813000],\"removed\":[]}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections"
+        }
+    ],
+    [
+        "collection-bootstrap-complete",
+        {
+            "key": "collection-bootstrap-complete",
+            "timestamp": 1572551831,
+            "value": "true",
+            "conflictResolutionMethod": "initial"
+        }
+    ],
+    [
+        "sc-version",
+        {
+            "key": "sc-version",
+            "timestamp": 1627720308,
+            "value": "6"
+        }
+    ],
+    [
+        "user-collections.uc-tyBrO3av85Yt",
+        {
+            "key": "user-collections.uc-tyBrO3av85Yt",
+            "timestamp": 1647172018,
+            "value": "{\"id\":\"uc-tyBrO3av85Yt\",\"name\":\"Installed\",\"added\":[],\"removed\":[],\"filterSpec\":{\"nFormatVersion\":2,\"strSearchText\":\"\",\"filterGroups\":[{\"rgOptions\":[],\"bAcceptUnion\":true},{\"rgOptions\":[2,1],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false}]}}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "767"
+        }
+    ],
+    [
+        "user-collections.uc-m1aOnX+0j8hd",
+        {
+            "key": "user-collections.uc-m1aOnX+0j8hd",
+            "timestamp": 1647172018,
+            "value": "{\"id\":\"uc-m1aOnX+0j8hd\",\"name\":\"Ready TO Play\",\"added\":[],\"removed\":[],\"filterSpec\":{\"nFormatVersion\":2,\"strSearchText\":\"\",\"filterGroups\":[{\"rgOptions\":[],\"bAcceptUnion\":true},{\"rgOptions\":[2],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false}]}}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "767"
+        }
+    ],
+    [
+        "showcases.3",
+        {
+            "key": "showcases.3",
+            "timestamp": 1589544934,
+            "value": "{\"nShowcaseId\":3,\"strCollectionId\":\"play-next\",\"eSortBy\":1,\"bExpanded\":false,\"nOrder\":1589544935035}",
+            "conflictResolutionMethod": "initial"
+        }
+    ],
+    [
+        "whatsnew_lastseen",
+        {
+            "key": "whatsnew_lastseen",
+            "timestamp": 1589544939,
+            "value": "3"
+        }
+    ],
+    [
+        "user-collections.uc-Y33SC/drzUUE",
+        {
+            "key": "user-collections.uc-Y33SC/drzUUE",
+            "timestamp": 1607528488,
+            "value": "{\"id\":\"uc-Y33SC/drzUUE\",\"name\":\"AllGames\",\"added\":[],\"removed\":[],\"filterSpec\":{\"nFormatVersion\":2,\"strSearchText\":\"\",\"filterGroups\":[{\"rgOptions\":[],\"bAcceptUnion\":true},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false}]}}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections"
+        }
+    ],
+    [
+        "user-collections.uc-in3wyYtlPtji",
+        {
+            "key": "user-collections.uc-in3wyYtlPtji",
+            "timestamp": 1640761113,
+            "is_deleted": true,
+            "version": "359"
+        }
+    ],
+    [
+        "showcases.1616699857157",
+        {
+            "key": "showcases.1616699857157",
+            "timestamp": 1647376978,
+            "value": "{\"nShowcaseId\":1616699857157,\"strCollectionId\":\"recent-games\",\"eSortBy\":1,\"nLastChangedMS\":1647376978744}",
+            "version": "768"
+        }
+    ],
+    [
+        "user-collections.uc-viSLEvPBQo8y",
+        {
+            "key": "user-collections.uc-viSLEvPBQo8y",
+            "timestamp": 1640761088,
+            "is_deleted": true,
+            "version": "354"
+        }
+    ],
+    [
+        "user-collections.uc-v49SJCW8hvGt",
+        {
+            "key": "user-collections.uc-v49SJCW8hvGt",
+            "timestamp": 1640761084,
+            "is_deleted": true,
+            "version": "353"
+        }
+    ],
+    [
+        "user-collections.uc-qOFB6+htBEw+",
+        {
+            "key": "user-collections.uc-qOFB6+htBEw+",
+            "timestamp": 1640761104,
+            "is_deleted": true,
+            "version": "357"
+        }
+    ],
+    [
+        "user-collections.uc-eK5FEQBVV/f4",
+        {
+            "key": "user-collections.uc-eK5FEQBVV/f4",
+            "timestamp": 1640761102,
+            "is_deleted": true,
+            "version": "356"
+        }
+    ],
+    [
+        "user-collections.uc-WY8/sP0+o0mi",
+        {
+            "key": "user-collections.uc-WY8/sP0+o0mi",
+            "timestamp": 1640761091,
+            "is_deleted": true,
+            "version": "355"
+        }
+    ],
+    [
+        "user-collections.uc-tuuA/xdtEaPL",
+        {
+            "key": "user-collections.uc-tuuA/xdtEaPL",
+            "timestamp": 1640761110,
+            "is_deleted": true,
+            "version": "358"
+        }
+    ],
+    [
+        "user-collections.uc-JxLU0W6+VB99",
+        {
+            "key": "user-collections.uc-JxLU0W6+VB99",
+            "timestamp": 1640778296,
+            "is_deleted": true,
+            "version": "513"
+        }
+    ],
+    [
+        "user-collections.uc-x7kKBnx8rlm1",
+        {
+            "key": "user-collections.uc-x7kKBnx8rlm1",
+            "timestamp": 1645356629,
+            "value": "{\"id\":\"uc-x7kKBnx8rlm1\",\"name\":\"Next\",\"added\":[1252330,403640,582160,337340,780290,236870,1182620,214560,105000,514900,480490,900270,384190,473690,34010,934780,536270,484900,984800,208650,250680,960990,692850,774361,1092430,399810,717610,893180,870780,718670,262060,214340,373650,452570,65930,330020,312200,1091500,548430,356650,17470,47780,337000,435150,373420,379720,47810,239140,761030,245280,716500,396750,470260,716490,1047220,330840,792100,368360,255070,331870,882100,268500,857980,427290,391540,499520,297130,205910,1150950,464920,2400,750920,418240,814380,302510,312520,9200,474960,741820,485030,633060,788100,760060,846470,1449560,529660,305620,1405790,414340,394510,863550,323190,233290,1349230,371140,214490,611760,1172450,206190,460950,739630,683320,304430,319630,264710,207690,1147550,601840,362890,200260,843260,557340,238320,1018850,1181400,874390,351920,274500,504210,322190,996580,813630,393190,597760,242760,470780,530320,965680,268130,424840,587430,582560,207170,960690,764790,220780,257850,234270,48000,200900,523780,1054490,428550,224480,547480,963000,613100,388880,230230,356400,475150,890720,701160,1168880,712730,493340,690640,699170,250700,522470,1127610,300550,1063490,233740,412020,291650,20900,223830,581270,281990,584980,209830,605450,1011190,555880,110800,582010,994220,115800,532210,304650,535480,443810,240760,431940,356040,231200,231910,437630],\"removed\":[]}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "765"
+        }
+    ],
+    [
+        "user-collections.uc-BfHgIPPLf03m",
+        {
+            "key": "user-collections.uc-BfHgIPPLf03m",
+            "timestamp": 1640778301,
+            "is_deleted": true,
+            "version": "514"
+        }
+    ],
+    [
+        "user-collections.uc-rlBhYJWJVfT7",
+        {
+            "key": "user-collections.uc-rlBhYJWJVfT7",
+            "timestamp": 1644677712,
+            "value": "{\"id\":\"uc-rlBhYJWJVfT7\",\"name\":\"Completed\",\"added\":[80310,269050,250320,20920,258520,237930,98100,203160,205650,257510,343860,252410,221910,646570,31220,391220,212050,227000,632470,617290,1349230,873940,294100,1102190,1092790,874260,383870,409160,861540,1222140,894020,3830,1145360,546560,28050,205100,1070710,367520,219150,220,434170,213670,420,242680,102600,1057090,221640,286160,8930,35140,246420,341800,550,261570,40700,450390,380,8870,113200,620980,107100,207610,261030,436820,4580,219890,500,204360,212910,240,35700,80350,80360,29720,49400,225080,72850,57300,26800,55230,374320,405820,858260,80340,251470,1079800,201790,248820,50300,688420,211420,283160,266510,320,448280,368230,287700,113020,1172380,462770,80330,236430,12140,322500,244160,26500,40930,400430,17410,335300,238370,631570,1151640,1055540],\"removed\":[]}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "752"
+        }
+    ],
+    [
+        "user-collections.uc-2mg3hoGsWUvy",
+        {
+            "key": "user-collections.uc-2mg3hoGsWUvy",
+            "timestamp": 1640778308,
+            "is_deleted": true,
+            "version": "515"
+        }
+    ],
+    [
+        "user-collections.uc-UGQi/7wUEotn",
+        {
+            "key": "user-collections.uc-UGQi/7wUEotn",
+            "timestamp": 1644590139,
+            "value": "{\"id\":\"uc-UGQi/7wUEotn\",\"name\":\"Single player and Story Rich\",\"added\":[],\"removed\":[],\"filterSpec\":{\"nFormatVersion\":2,\"strSearchText\":\"\",\"filterGroups\":[{\"rgOptions\":[],\"bAcceptUnion\":true},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[7],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[1742],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false}]}}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "749"
+        }
+    ],
+    [
+        "user-collections.uc-kiAlA*+Nothpn",
+        {
+            "key": "user-collections.uc-kiAlA*+Nothpn",
+            "timestamp": 1645030805,
+            "value": "{\"id\":\"uc-kiAlA*+Nothpn\",\"name\":\"Co-op\",\"added\":[],\"removed\":[],\"filterSpec\":{\"nFormatVersion\":2,\"strSearchText\":\"\",\"filterGroups\":[{\"rgOptions\":[],\"bAcceptUnion\":true},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false},{\"rgOptions\":[3841,1685],\"bAcceptUnion\":false},{\"rgOptions\":[],\"bAcceptUnion\":false}]}}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "755"
+        }
+    ],
+    [
+        "user-collections.uc-VLUd605CHPd+",
+        {
+            "key": "user-collections.uc-VLUd605CHPd+",
+            "timestamp": 1647763452,
+            "value": "{\"id\":\"uc-VLUd605CHPd+\",\"name\":\"Itch\",\"added\":[312200],\"removed\":[]}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "771"
+        }
+    ],
+    [
+        "user-collections.uc-DU8F01868yMa",
+        {
+            "key": "user-collections.uc-DU8F01868yMa",
+            "timestamp": 1647763461,
+            "value": "{\"id\":\"uc-DU8F01868yMa\",\"name\":\"TestTag\",\"added\":[],\"removed\":[]}",
+            "conflictResolutionMethod": "custom",
+            "strMethodId": "union-collections",
+            "version": "772"
+        }
+    ]
+]

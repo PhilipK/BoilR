@@ -137,6 +137,10 @@ fn get_level_db_location() -> Option<PathBuf> {
     }
 }
 
+fn serialize_collection_value<S:AsRef<str>>(name:S, game_ids:&Vec<u32>) -> String{
+    "".to_string()
+}
+
 fn parse_collections<S: AsRef<str>>(input: S) -> Vec<(i32, String)> {
     serde_json::from_str(input.as_ref()).unwrap_or_default()
 }
@@ -159,6 +163,15 @@ fn serialize_steam_collections(input: Vec<(String, SteamCollectionType)>) -> Str
 #[cfg(test)]
 mod tests {
     use super::*;
+
+
+    #[test]
+    fn can_serialize_collection_inner(){
+        let games = vec![312200];
+        let res = serialize_collection_value("Itch",&games);
+        let expected = include_str!("../testdata/leveldb/test_collection_value.json");
+        assert_eq!(res,expected);
+    }
 
     #[test]
     fn can_serialize_and_deserialize() {
