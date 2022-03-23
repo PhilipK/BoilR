@@ -99,8 +99,8 @@ struct DeletedCollection {
 }
 
 pub struct Collection {
-    name: String,
-    game_ids: Vec<usize>,
+    pub name: String,
+    pub game_ids: Vec<usize>,
 }
 
 pub fn write_collections<S: AsRef<str>>(
@@ -148,7 +148,6 @@ fn get_categories<S: AsRef<str>>(
     db: &mut DB,
 ) -> Result<HashMap<String, Vec<(String, SteamCollection)>>, Box<dyn Error>> {
     let namespace_keys = get_namespace_keys(steamid, db);
-    dbg!(&namespace_keys);
     let mut db_iter = db.new_iter()?;
     let mut res = HashMap::new();
     while let Some((key_bytes, data_bytes)) = db_iter.next() {
