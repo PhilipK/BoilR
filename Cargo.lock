@@ -87,6 +87,7 @@ dependencies = [
 name = "boilr"
 version = "0.2.7"
 dependencies = [
+ "base64",
  "config",
  "dashmap",
  "failure",

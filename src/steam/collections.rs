@@ -2,13 +2,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use rusty_leveldb::{DBIterator, LdbIterator, Options, DB};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SteamCollection {
     key: String,
-    timestamp: usize,
+    timestamp: u64,
     value: String,
     #[serde(
         skip_serializing_if = "Option::is_none",
@@ -19,6 +20,28 @@ pub struct SteamCollection {
     str_method_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     version: Option<String>,
+}
+
+impl SteamCollection {
+    fn new<B: AsRef<str>>(name: B, ids: &Vec<usize>) -> Self {
+        let name = name.as_ref();
+        let key = format!("user-collections.{}", name_to_key(name));
+        let value = serialize_collection_value(name, ids);
+        let start = SystemTime::now();
+        let since_the_epoch = start
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+        let timestamp = since_the_epoch.as_secs();
+
+        SteamCollection {
+            key,
+            timestamp,
+            value,
+            conflict_resolution_method: Some("custom".to_string()),
+            str_method_id: Some("union-collections".to_string()),
+            version: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -35,14 +58,6 @@ pub struct DeletedCollection {
 pub enum SteamCollectionType {
     Actual(SteamCollection),
     Deleted(DeletedCollection),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct InnerCollection {
-    id: String,
-    name: String,
-    added: Vec<usize>,
-    removed: Vec<usize>,
 }
 
 fn get_categories_data<S: AsRef<str>>(
@@ -137,8 +152,35 @@ fn get_level_db_location() -> Option<PathBuf> {
     }
 }
 
-fn serialize_collection_value<S:AsRef<str>>(name:S, game_ids:&Vec<u32>) -> String{
-    "".to_string()
+const BOILR_TAG: &'static str = "boilr";
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct ValueCollection {
+    id: String,
+    name: String,
+    added: Vec<usize>,
+    removed: Vec<usize>,
+}
+
+fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &Vec<usize>) -> String {
+    let name = name.as_ref();
+    let key = name_to_key(name);
+    let value = ValueCollection {
+        id: key,
+        name: name.to_string(),
+        added: game_ids.clone(),
+        removed: vec![],
+    };
+    let value_json = serde_json::to_string(&value).expect("Should be able to serialize known type");
+
+    value_json
+}
+
+fn name_to_key<S: AsRef<str>>(name: S) -> String {
+    let config = base64::Config::new(base64::CharacterSet::Standard, false);
+    let base64 = base64::encode_config(name.as_ref(), config);
+    let key = format!("{}-{}", BOILR_TAG, base64);
+    key
 }
 
 fn parse_collections<S: AsRef<str>>(input: S) -> Vec<(i32, String)> {
@@ -164,13 +206,23 @@ fn serialize_steam_collections(input: Vec<(String, SteamCollectionType)>) -> Str
 mod tests {
     use super::*;
 
+    #[test]
+    fn can_serialize_collection(){
+        let games = vec![312200];
+        let mut collection = SteamCollection::new("Itch",&games);
+        collection.timestamp = 1647763452;
+        let json = serde_json::to_string(&collection).unwrap();
+        let expected = include_str!("../testdata/leveldb/test_collection.json");
+        assert_eq!(json, expected);
+
+    }
 
     #[test]
-    fn can_serialize_collection_inner(){
+    fn can_serialize_collection_inner() {
         let games = vec![312200];
-        let res = serialize_collection_value("Itch",&games);
+        let res = serialize_collection_value("Itch", &games);
         let expected = include_str!("../testdata/leveldb/test_collection_value.json");
-        assert_eq!(res,expected);
+        assert_eq!(res, expected);
     }
 
     #[test]

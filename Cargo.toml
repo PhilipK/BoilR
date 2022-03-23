@@ -24,6 +24,7 @@ dashmap = { version = "^4.0.2", features = ["serde"] }
 fltk-theme = {version ="0.4" , optional = true }
 is_executable = "1.0.1"
 rusty-leveldb = "0.3.6"
+base64="0.13.0"
 
 [build-dependencies]
 fl2rust = { version = "0.4", optional = true }
