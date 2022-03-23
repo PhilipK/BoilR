@@ -37,7 +37,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         println!(
             "Found {} shortcuts for user: {}",
             shortcut_info.shortcuts.len(),
-            user.steam_id
+            user.user_id
         );
 
         remove_old_shortcuts(&mut shortcut_info);
