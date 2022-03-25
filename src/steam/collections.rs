@@ -4,7 +4,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rusty_leveldb::{DBIterator, LdbIterator, Options, DB, WriteBatch};
+use rusty_leveldb::{ LdbIterator, Options, DB, WriteBatch};
 
 const BOILR_TAG: &'static str = "boilr";
 
@@ -138,8 +138,8 @@ fn save_category<S: AsRef<str>>(
     batch : &mut WriteBatch,
 ) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_string(&category)?;
-    let prefixed_json = format!("\u{1}{}", json);
-    batch.put(category_key.as_ref().as_bytes(),prefixed_json.as_bytes());
+    let prefixed = format!("\u{00}{}",json);
+    batch.put(category_key.as_ref().as_bytes(),prefixed.as_bytes());
     Ok(())
 }
 
@@ -154,8 +154,8 @@ fn get_categories<S: AsRef<str>>(
         let key = String::from_utf8_lossy(&key_bytes).to_string();
         //make sure that what we are looking at is a collection
         //there are other things in this db as well
-        if namespace_keys.contains(&key) {
-            let data = String::from_utf8_lossy(&data_bytes).to_string();
+        if namespace_keys.contains(&key) {                      
+            let data = String::from_utf8_lossy(&data_bytes);
             let collections = parse_steam_collections(&data)?;
             res.insert(key, collections);
         }
@@ -168,7 +168,8 @@ fn open_db() -> Result<DB, Box<dyn Error>> {
     if let None = location {
         todo!()
     };
-    Ok(DB::open(location.unwrap(), Options::default())?)
+    let options = Options::default();
+    Ok(DB::open(location.unwrap(),options )?)
 }
 
 fn get_namespace_keys<S: AsRef<str>>(steamid: S, db: &mut DB) -> HashSet<String> {

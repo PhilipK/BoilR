@@ -46,7 +46,12 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
 
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
-        write_shortcut_collections(&user.user_id, &platform_shortcuts)?;
+        
+        
+        match write_shortcut_collections(&user.user_id, &platform_shortcuts){
+            Ok(_) => (),
+            Err(e) => eprintln!("Could not write collections: {}",e),
+        }
 
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
