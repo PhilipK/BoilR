@@ -4,7 +4,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rusty_leveldb::{DBIterator, LdbIterator, Options, DB};
+use rusty_leveldb::{DBIterator, LdbIterator, Options, DB, WriteBatch};
 
 const BOILR_TAG: &'static str = "boilr";
 
@@ -120,13 +120,14 @@ pub fn write_collections<S: AsRef<str>>(
 
     let current_categories = get_categories(steam_user_id, &mut db)?;
     //this is a collection of collections, known as a category
+    let mut write_batch = WriteBatch::new();
+
     for (category_key, mut collections) in current_categories {
         collections.retain(|(_key, collection)| !collection.is_boilr_collection());
         collections.extend(new_collections.clone());
-        save_category(category_key, collections, &mut db)?
+        save_category(category_key, collections, &mut write_batch)?
     }
-
-    
+    db.write(write_batch,true)?;
 
     Ok(())
 }
@@ -134,12 +135,11 @@ pub fn write_collections<S: AsRef<str>>(
 fn save_category<S: AsRef<str>>(
     category_key: S,
     category: Vec<(String, SteamCollection)>,
-    db: &mut DB,
+    batch : &mut WriteBatch,
 ) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_string(&category)?;
     let prefixed_json = format!("\u{1}{}", json);
-    db.put(category_key.as_ref().as_bytes(),prefixed_json.as_bytes())?;
-    db.flush()?;
+    batch.put(category_key.as_ref().as_bytes(),prefixed_json.as_bytes());
     Ok(())
 }
 
@@ -282,19 +282,18 @@ fn get_steam_user_prefix<S: AsRef<str>>(steamid: S) -> String {
 mod tests {
     use super::*;
 
-    #[test]
-
-    fn write_collections_test() {
-        let steamid = "10342635";
-        let colllections = vec![Collection {
-            name: "This is how we do".to_string(),
-            game_ids: vec![265930, 751780, 433340, 361420, 337340, 1055540],
-        }];
-        write_collections(
-            steamid,
-            &colllections,
-        ).unwrap();
-    }
+    // #[test]
+    // fn write_collections_test() {
+    //     let steamid = "10342635";
+    //     let colllections = vec![Collection {
+    //         name: "Test Collection".to_string(),
+    //         game_ids: vec![265930, 751780, 433340, 361420, 337340, 1055540],
+    //     }];
+    //     write_collections(
+    //         steamid,
+    //         &colllections,
+    //     ).unwrap();
+    // }
 
     #[test]
     fn can_serialize_collection() {

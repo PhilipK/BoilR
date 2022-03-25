@@ -109,6 +109,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
             game_ids,
         });
     }
+    println!("Writing {} collections ", collections.len());
     write_collections(steam_id.as_ref(), &collections)?;
     Ok(())
 }
