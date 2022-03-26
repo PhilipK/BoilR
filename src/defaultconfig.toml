@@ -33,3 +33,4 @@ enabled = true
 enabled = true
 
 [steam]
+create_collections = false

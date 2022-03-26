@@ -25,7 +25,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
 
     let platform_shortcuts = get_platform_shortcuts(settings);
-    let all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts        
+    let all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
         .collect();
@@ -46,11 +46,12 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
 
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
-        
-        
-        match write_shortcut_collections(&user.user_id, &platform_shortcuts){
-            Ok(_) => (),
-            Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
+
+        if settings.steam.create_collections {
+            match write_shortcut_collections(&user.user_id, &platform_shortcuts) {
+                Ok(_) => (),
+                Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
+            }
         }
 
         let duration = start_time.elapsed();

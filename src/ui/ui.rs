@@ -61,6 +61,7 @@ fn empty_or_whitespace(input: String) -> Option<String> {
 fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
     // Steam location
     settings.steam.location = empty_or_whitespace(ui.steam_location_input.value());
+    settings.steam.create_collections = ui.steam_create_collections.value();
 
     // Steamgrid db
     settings.steamgrid_db.enabled = ui.enable_steamgrid_db_checkbox.value();
@@ -115,6 +116,9 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
             .clone()
             .unwrap_or(steam::get_default_location().unwrap_or(String::from(""))),
     );
+
+    ui.steam_create_collections
+        .set_value(settings.steam.create_collections);
 
     ui.enable_steamgrid_db_checkbox
         .set_value(settings.steamgrid_db.enabled);
