@@ -46,6 +46,7 @@ pub struct ShortcutInfo {
 pub struct SteamUsersInfo {
     pub steam_user_data_folder: String,
     pub shortcut_path: Option<String>,
+    pub user_id : String,
 }
 
 /// Get the paths to the steam users shortcuts (one for each user)
@@ -80,6 +81,7 @@ pub fn get_shortcuts_paths(
             _ => false,
         })
         .map(|folder| {
+            let user_id = folder.file_name().to_string_lossy().to_string();
             let folder_path = folder.path();
             let folder_str = folder_path
                 .to_str()
@@ -91,11 +93,13 @@ pub fn get_shortcuts_paths(
                 return SteamUsersInfo {
                     steam_user_data_folder: folder_string,
                     shortcut_path: Some(shortcuts_path.to_str().unwrap().to_string()),
+                    user_id
                 };
             } else {
                 return SteamUsersInfo {
                     steam_user_data_folder: folder_string,
                     shortcut_path: None,
+                    user_id
                 };
             }
         })

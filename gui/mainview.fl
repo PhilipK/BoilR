@@ -12,11 +12,16 @@ class UserInterface {open
     } {      
 
       # ----- Steam -----
-      Fl_Input steam_location_input {
-        label {Steam Location}
-        xywh {25 25 450 25} align 5
+      Fl_Check_Button steam_create_collections {
+        label {Create Collections}
+        tooltip {Create Collections for each platform} 
+        xywh {25 25 155 25} down_box DOWN_BOX
       }
 
+      Fl_Input steam_location_input {
+        label {Steam Location}
+        xywh {175 25 300 25} align 5
+      }
 
       # ----- Art download -----
       Fl_Check_Button enable_steamgrid_db_checkbox {
