@@ -1,10 +1,11 @@
+use nom::FindSubstring;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rusty_leveldb::{ LdbIterator, Options, DB, WriteBatch};
+use rusty_leveldb::{LdbIterator, Options, WriteBatch, DB};
 
 const BOILR_TAG: &'static str = "boilr";
 
@@ -105,10 +106,10 @@ pub struct Collection {
 
 pub fn write_collections<S: AsRef<str>>(
     steam_user_id: S,
-    collections: &Vec<Collection>,
+    collections_to_add: &Vec<Collection>,
 ) -> Result<(), Box<dyn Error>> {
     let steam_user_id = steam_user_id.as_ref();
-    let new_collections: Vec<(String, SteamCollection)> = collections
+    let new_collections: Vec<(String, SteamCollection)> = collections_to_add
         .iter()
         .map(|c| {
             let collection = ActualSteamCollection::new(&c.name, &c.game_ids);
@@ -125,22 +126,106 @@ pub fn write_collections<S: AsRef<str>>(
     for (category_key, mut collections) in current_categories {
         collections.retain(|(_key, collection)| !collection.is_boilr_collection());
         collections.extend(new_collections.clone());
-        save_category(category_key, collections, &mut write_batch)?
+        save_category(category_key, collections, &mut write_batch)?;
+
+        if let Some(path) =get_vdf_path(steam_user_id){
+            let content = std::fs::read_to_string(path).expect("Should be able to read this file");
+            if let Some(mut vdf_collections) = parse_vdf_collection(content){
+                
+                let boilr_keys :Vec<String> = vdf_collections.keys().filter(|k| k.contains(BOILR_TAG)).map(|k|k.clone()).collect(); 
+                for key in boilr_keys {
+                    vdf_collections.remove(&key);
+                }
+
+                let new_vdfs = collections_to_add.iter().map(|collection| {
+                    let key = name_to_key(&collection.name);
+                    let vd_collection=  VdfCollection{
+                        id : key,
+                        added: collection.game_ids.clone(),
+                        removed: vec![],
+                    };
+                    vd_collection
+                });
+                for new_vdf in new_vdfs{
+                    vdf_collections.insert(new_vdf.id,new_vdf.clone());
+                }
+
+               let new_string=  write_vdf_collection_to_string(
+                    &path.clone().to_string_lossy(), 
+                    &vdf_collections
+                );
+                if let Some(new_string) = new_string{
+                    // std::fs::write_all()
+                }
+              
+            }
+        }
+
+
     }
-    db.write(write_batch,true)?;
+
+  
+    db.write(write_batch, true)?;
+
+
 
     Ok(())
+}
+
+
+#[cfg(target_family = "unix")]
+fn get_vdf_path<S: AsRef<str>>(steamid:S)-> Option<PathBuf> {
+    match std::env::var("HOME") {
+        Ok(home) => {
+            let path = Path::new(&home)
+                .join(".steam")
+                .join("steam")
+                .join("userdata")
+                .join(steamid.as_ref())
+                .join("config")
+                .join("localconfig.vdf");
+            if path.exists() {
+                return Some(path.to_path_buf());
+            }
+            return None;
+        }
+        Err(e) => return None,
+    }
 }
 
 fn save_category<S: AsRef<str>>(
     category_key: S,
     category: Vec<(String, SteamCollection)>,
-    batch : &mut WriteBatch,
+    batch: &mut WriteBatch,
 ) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_string(&category)?;
-    let prefixed = format!("\u{00}{}",json);
-    batch.put(category_key.as_ref().as_bytes(),prefixed.as_bytes());
+    let prefixed = format!("\u{1}{}", json);
+    batch.put(category_key.as_ref().as_bytes(), prefixed.as_bytes());
     Ok(())
+}
+
+fn category_to_bytes(category: Vec<(String, SteamCollection)>) -> Result<Vec<u8>, Box<dyn Error>> {
+    let json = serde_json::to_string(&category)?;
+    let prefixed = format!("\u{1}{}", json);
+    Ok(prefixed.as_bytes().to_vec())
+}
+
+fn get_categories_data<S: AsRef<str>>(
+    steamid: S,
+    db: &mut DB,
+) -> Result<HashMap<String, Vec<u8>>, Box<dyn Error>> {
+    let namespace_keys = get_namespace_keys(steamid, db);
+    let mut db_iter = db.new_iter()?;
+    let mut res = HashMap::new();
+    while let Some((key_bytes, data_bytes)) = db_iter.next() {
+        let key = String::from_utf8_lossy(&key_bytes).to_string();
+        //make sure that what we are looking at is a collection
+        //there are other things in this db as well
+        if namespace_keys.contains(&key) {
+            res.insert(key, data_bytes.to_vec());
+        }
+    }
+    Ok(res)
 }
 
 fn get_categories<S: AsRef<str>>(
@@ -154,7 +239,7 @@ fn get_categories<S: AsRef<str>>(
         let key = String::from_utf8_lossy(&key_bytes).to_string();
         //make sure that what we are looking at is a collection
         //there are other things in this db as well
-        if namespace_keys.contains(&key) {                      
+        if namespace_keys.contains(&key) {
             let data = String::from_utf8_lossy(&data_bytes);
             let collections = parse_steam_collections(&data)?;
             res.insert(key, collections);
@@ -169,7 +254,7 @@ fn open_db() -> Result<DB, Box<dyn Error>> {
         todo!()
     };
     let options = Options::default();
-    Ok(DB::open(location.unwrap(),options )?)
+    Ok(DB::open(location.unwrap(), options)?)
 }
 
 fn get_namespace_keys<S: AsRef<str>>(steamid: S, db: &mut DB) -> HashSet<String> {
@@ -279,6 +364,56 @@ fn get_steam_user_prefix<S: AsRef<str>>(steamid: S) -> String {
     keyprefix
 }
 
+fn get_collection_part<S: AsRef<str>>(input: S) -> Option<String> {
+    let input = input.as_ref();
+    let key = "\t\"user-collections\"\t\t";
+    if let Some(start_index) = input.find_substring(key) {
+        let start_index = start_index + key.len();
+        if let Some(line_index) = input[start_index..].find("\n") {
+            let encoded_json = input[start_index..][..line_index].to_string();
+            let json = encoded_json.replace("\\\"", "\"");
+            return Some(json.trim_matches('"').to_string());
+        }
+    }
+    None
+}
+
+pub fn parse_vdf_collection<S: AsRef<str>>(input: S) -> Option<HashMap<String, VdfCollection>> {
+    let input = input.as_ref();
+    serde_json::from_str(input).ok()
+}
+
+pub fn write_vdf_collection_to_string<S: AsRef<str>>(
+    input: S,
+    vdf: &HashMap<String, VdfCollection>,
+) -> Option<String> {
+    let input = input.as_ref();
+    let str = serde_json::to_string(vdf).expect("Should be able to serialize known type");
+    let encoded_json = format!("\"{}\"", str.replace("\"", "\\\""));
+    let key = "\t\"user-collections\"\t\t";
+    if let Some(start_index) = input.find_substring(key) {
+        let start_index_plus_key = start_index + key.len();
+        if let Some(line_index) = input[start_index_plus_key..].find("\n") {
+            let end_index_in_full = line_index + start_index_plus_key;
+            let result = format!(
+                "{}{}{}",
+                input[..start_index_plus_key].to_string(),
+                encoded_json,
+                input[end_index_in_full..].to_string()
+            );
+            return Some(result);
+        }
+    }
+    None
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct VdfCollection {
+    id: String,
+    added: Vec<usize>,
+    removed: Vec<usize>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -294,6 +429,55 @@ mod tests {
     //         steamid,
     //         &colllections,
     //     ).unwrap();
+    // }
+
+    #[test]
+    fn get_collection_part_test() {
+        let vdf_text = std::fs::read_to_string(
+            "/home/philip/.steam/steam/userdata/10342635/config/localconfig.vdf",
+        )
+        .unwrap();
+        let collection_part = get_collection_part(&vdf_text).unwrap();
+        let collection = parse_vdf_collection(collection_part).unwrap();
+        let new_string = write_vdf_collection_to_string(&vdf_text, &collection).unwrap();
+        assert_eq!(vdf_text, new_string);
+    }
+
+    #[test]
+    fn same_bytes() {
+        let mut db = open_db().unwrap();
+        let categores_data = get_categories_data("10342635", &mut db).unwrap();
+        for (_key, data_bytes) in categores_data {
+            let data_string = String::from_utf8_lossy(&data_bytes);
+            let collections = parse_steam_collections(&data_string).unwrap();
+            let new_bytes = category_to_bytes(collections).unwrap();
+            assert_eq!(data_bytes.to_vec(), new_bytes);
+        }
+    }
+
+    // #[test]
+    // fn can_parse_vdf() {
+    //     use keyvalues_parser::Vdf;
+    //     let vdf_text = std::fs::read_to_string(
+    //         "/home/philip/.steam/steam/userdata/10342635/config/localconfig.vdf",
+    //     )
+    //     .unwrap();
+    //     let mut vdf = Vdf::parse(&vdf_text).unwrap();
+    //     vdf.
+    //     match vdf.value {
+    //         keyvalues_parser::Value::Str(str) => todo!(),
+    //         keyvalues_parser::Value::Obj(obj) => {
+    //             let localstore = obj.get("UserLocalConfigStore").unwrap();
+    //             let first = localstore.iter().find(|v| match v {
+    //                 keyvalues_parser::Value::Str(str) => false,
+    //                 keyvalues_parser::Value::Obj(obj) => obj.get("WebStorage").is_some(),
+    //             });
+
+    //             let first = first.unwrap().unwrap_obj();
+    //         }
+    //     };
+    //     // vdf.keys().first(|k| k == "UserLocalConfigStore").unwrap();
+    //     // localConfig.UserLocalConfigStore.WebStorage
     // }
 
     #[test]
