@@ -64,7 +64,7 @@ impl ActualSteamCollection {
 
     pub fn is_boilr_collection(&self) -> bool {
         self.key
-            .starts_with(&format!("user-collections.{}", BOILR_TAG))
+            .contains(&format!("user-collections.{}", BOILR_TAG))
     }
 }
 
@@ -128,51 +128,49 @@ pub fn write_collections<S: AsRef<str>>(
         collections.extend(new_collections.clone());
         save_category(category_key, collections, &mut write_batch)?;
 
-        if let Some(path) =get_vdf_path(steam_user_id){
+        if let Some(path) = get_vdf_path(steam_user_id) {
             let content = std::fs::read_to_string(&path).expect("Should be able to read this file");
-            if let Some(mut vdf_collections) = parse_vdf_collection(content){
-                
-                let boilr_keys :Vec<String> = vdf_collections.keys().filter(|k| k.contains(BOILR_TAG)).map(|k|k.clone()).collect(); 
+            if let Some(mut vdf_collections) = parse_vdf_collection(content) {
+                let boilr_keys: Vec<String> = vdf_collections
+                    .keys()
+                    .filter(|k| k.contains(BOILR_TAG))
+                    .map(|k| k.clone())
+                    .collect();
                 for key in boilr_keys {
                     vdf_collections.remove(&key);
                 }
 
                 let new_vdfs = collections_to_add.iter().map(|collection| {
                     let key = name_to_key(&collection.name);
-                    let vd_collection=  VdfCollection{
-                        id : key,
+                    let vd_collection = VdfCollection {
+                        id: key,
                         added: collection.game_ids.clone(),
                         removed: vec![],
                     };
                     vd_collection
                 });
-                for new_vdf in new_vdfs{
-                    vdf_collections.insert(new_vdf.id.clone(),new_vdf.clone());
+                for new_vdf in new_vdfs {
+                    vdf_collections.insert(new_vdf.id.clone(), new_vdf.clone());
                 }
 
-               let new_string=  write_vdf_collection_to_string(
-                    &path.clone().to_string_lossy(), 
-                    &vdf_collections
+                let new_string = write_vdf_collection_to_string(
+                    &path.clone().to_string_lossy(),
+                    &vdf_collections,
                 );
-                if let Some(new_string) = new_string{
-                     std::fs::write(path,new_string).unwrap();
+                if let Some(new_string) = new_string {
+                    std::fs::write(path, new_string).unwrap();
                 }
-              
             }
         }
     }
 
-  
     db.write(write_batch, true)?;
-
-
 
     Ok(())
 }
 
-
 #[cfg(target_family = "unix")]
-fn get_vdf_path<S: AsRef<str>>(steamid:S)-> Option<PathBuf> {
+fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
     match std::env::var("HOME") {
         Ok(home) => {
             let path = Path::new(&home)
@@ -188,6 +186,26 @@ fn get_vdf_path<S: AsRef<str>>(steamid:S)-> Option<PathBuf> {
             return None;
         }
         Err(e) => return None,
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
+    match std::env::var("PROGRAMFILES(X86)") {
+        Ok(program_files) => {
+            let path = Path::new(&program_files)
+                .join("Steam")
+                .join("userdata")
+                .join(steamid.as_ref())
+                .join("config")
+                .join("localconfig.vdf");
+            if path.exists() {
+                Some(path.to_path_buf())
+            } else {
+                None
+            }
+        }
+        Err(_e) => None,
     }
 }
 
@@ -342,16 +360,6 @@ fn parse_steam_collections<S: AsRef<str>>(
     };
     let res = serde_json::from_str::<Vec<(String, SteamCollection)>>(&input)?;
     Ok(res)
-}
-
-fn serialize_steam_collections(input: Vec<(String, SteamCollection)>) -> String {
-    let res = serde_json::to_string(&input).unwrap();
-    format!("\u{1}{}", res)
-}
-
-fn local_key_to_global<A: AsRef<str>, B: AsRef<str>>(steamid: A, local_key: B) -> String {
-    let user_prefix = get_steam_user_prefix(steamid);
-    format!("{}-{}", user_prefix, local_key.as_ref())
 }
 
 fn get_steam_user_prefix<S: AsRef<str>>(steamid: S) -> String {

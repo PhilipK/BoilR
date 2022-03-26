@@ -50,7 +50,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         
         match write_shortcut_collections(&user.user_id, &platform_shortcuts){
             Ok(_) => (),
-            Err(e) => eprintln!("Could not write collections: {}",e),
+            Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
         }
 
         let duration = start_time.elapsed();
