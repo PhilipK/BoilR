@@ -129,7 +129,7 @@ pub fn write_collections<S: AsRef<str>>(
         save_category(category_key, collections, &mut write_batch)?;
 
         if let Some(path) =get_vdf_path(steam_user_id){
-            let content = std::fs::read_to_string(path).expect("Should be able to read this file");
+            let content = std::fs::read_to_string(&path).expect("Should be able to read this file");
             if let Some(mut vdf_collections) = parse_vdf_collection(content){
                 
                 let boilr_keys :Vec<String> = vdf_collections.keys().filter(|k| k.contains(BOILR_TAG)).map(|k|k.clone()).collect(); 
@@ -147,7 +147,7 @@ pub fn write_collections<S: AsRef<str>>(
                     vd_collection
                 });
                 for new_vdf in new_vdfs{
-                    vdf_collections.insert(new_vdf.id,new_vdf.clone());
+                    vdf_collections.insert(new_vdf.id.clone(),new_vdf.clone());
                 }
 
                let new_string=  write_vdf_collection_to_string(
@@ -155,13 +155,11 @@ pub fn write_collections<S: AsRef<str>>(
                     &vdf_collections
                 );
                 if let Some(new_string) = new_string{
-                    // std::fs::write_all()
+                     std::fs::write(path,new_string).unwrap();
                 }
               
             }
         }
-
-
     }
 
   
