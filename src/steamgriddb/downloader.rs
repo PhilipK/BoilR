@@ -6,7 +6,7 @@ use std::{collections::HashMap, path::Path};
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
-use steamgriddb_api::query_parameters::GridDimentions; // 0.3.1
+use steamgriddb_api::query_parameters::{GridDimentions, Nsfw}; // 0.3.1
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::Client;
@@ -224,20 +224,24 @@ async fn get_images_for_ids(
     let big_picture_parameters = GridQueryParameters {
         dimentions: Some(&big_picture_dims),
         types: anymation_type,
+        nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
     use steamgriddb_api::query_parameters::HeroQueryParameters;
     let hero_parameters = HeroQueryParameters {
         types: anymation_type,
+        nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
     let grid_parameters = GridQueryParameters {
         types: anymation_type,
+        nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
     use steamgriddb_api::query_parameters::LogoQueryParameters;
     let logo_parameters = LogoQueryParameters {
         types: anymation_type,
+        nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
     let query_type = match image_type {
