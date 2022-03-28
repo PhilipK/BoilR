@@ -12,7 +12,7 @@ impl From<LutrisGame> for ShortcutOwned {
     fn from(game: LutrisGame) -> Self {
         let options = format!("lutris:rungame/{}", game.id);
         Shortcut::new(
-            0,
+            "0",
             game.name.as_str(),
             "lutris",
             "",

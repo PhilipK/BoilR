@@ -832,6 +832,7 @@ checksum = "9c5c51b9083a3c620fa67a2a635d1ce7d95b897e957d6b28ff9a5da960a103a6"
 dependencies = [
  "bitvec",
  "funty",
+ "lexical-core",
  "memchr",
  "version_check",
 ]
@@ -1363,13 +1364,12 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "steam_shortcuts_util"
-version = "1.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66ae244ca0579ba5b4e05a52a3afef6f23412e85b8eb448dbf0aa92d0687cb50"
+version = "1.1.6"
+source = "git+https://github.com/PhilipK/steam_shortcuts_util#45ea43c26aa34a088f4c2a5343434c546c0359a0"
 dependencies = [
  "ascii",
  "crc32fast",
- "nom 7.0.0",
+ "nom 6.2.1",
  "nom_locate",
 ]
 

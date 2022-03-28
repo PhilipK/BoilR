@@ -33,7 +33,7 @@ pub fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
             };
 
             let new_shortcut = Shortcut::new(
-                0,
+                "0",
                 shortcut.app_name.as_str(),
                 exe.as_str(),
                 start_dir.as_str(),

@@ -39,7 +39,7 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let exe = exe.trim_matches('\"');
     let start_dir = start_dir.trim_matches('\"');
     Shortcut::new(
-        0,
+        "0",
         manifest.display_name.as_str(),
         exe,
         start_dir,
@@ -54,7 +54,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let icon = manifest.exe();
     let url = manifest.get_launch_url();
     Shortcut::new(
-        0,
+        "0",
         manifest.display_name.as_str(),
         url.as_str(),
         "",
