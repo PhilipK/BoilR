@@ -31,7 +31,7 @@ impl From<HeroicGame> for ShortcutOwned {
         let launch_options = format!("launch {}",game.app_name);
         
         let shortcut = Shortcut::new(
-            0,
+            "0",
             game.title.as_str(),
             launch.as_str(),
             "",

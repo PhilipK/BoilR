@@ -44,7 +44,7 @@ impl From<GogShortcut> for ShortcutOwned {
             exe.to_str().unwrap_or("").to_string()
         };
         let shortcut = Shortcut::new(
-            0,
+            "0",
             gogs.name.as_str(),
             exe.to_str().unwrap(),
             gogs.working_dir.as_str(),

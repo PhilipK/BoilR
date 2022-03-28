@@ -20,7 +20,7 @@ impl From<LegendaryGame> for ShortcutOwned {
             start_dir = format!("\"{}\"", game.install_path);
         }
         let shortcut = Shortcut::new(
-            0,
+            "0",
             game.title.as_str(),
             launch.as_str(),
             start_dir.as_str(),

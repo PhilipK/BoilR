@@ -9,6 +9,6 @@ pub(crate) struct Game {
 impl From<Game> for ShortcutOwned {
     fn from(game: Game) -> Self {
         let launch = format!("uplay://launch/{}", game.id);
-        Shortcut::new(0, &game.name, &launch, "", &game.icon, "", "").to_owned()
+        Shortcut::new("0", &game.name, &launch, "", &game.icon, "", "").to_owned()
     }
 }

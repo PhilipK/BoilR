@@ -16,7 +16,7 @@ impl From<ItchGame> for ShortcutOwned {
         let exe = Path::new(&game.install_path).join(&game.executable);
         let exe = exe.to_str().unwrap().to_string();
         let shortcut = Shortcut::new(
-            0,
+            "0",
             game.title.as_str(),
             exe.as_str(),
             &game.install_path,
