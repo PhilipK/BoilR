@@ -1,6 +1,5 @@
 use super::{HeroicGame, HeroicSettings};
 use crate::platform::{Platform, SettingsValidity};
-use serde_json::from_str;
 use std::error::Error;
 use std::path::Path;
 use std::process::Command;
@@ -19,14 +18,6 @@ enum InstallationMode {
 }
 
 #[cfg(target_family = "unix")]
-fn get_legendary_location(install_mode: &InstallationMode) -> &'static str {
-    match install_mode{
-        InstallationMode::FlatPak => "/var/lib/flatpak/app/com.heroicgameslauncher.hgl/current/active/files/bin/heroic/resources/app.asar.unpacked/build/bin/linux/legendary",
-        InstallationMode::UserBin => "/opt/Heroic/resources/app.asar.unpacked/build/bin/linux/legendary"
-    }
-}
-
-#[cfg(target_family = "unix")]
 fn get_config_folder(install_mode: &InstallationMode) -> Option<String> {
     match install_mode {
         InstallationMode::FlatPak => {
@@ -38,23 +29,8 @@ fn get_config_folder(install_mode: &InstallationMode) -> Option<String> {
                     .to_string(),
             )
         }
+        //TODO Fix this to find the acutal config folder when it is installed with userbin 
         InstallationMode::UserBin => None,
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn find_legendary_location() -> Option<String> {
-    match heroic_folder_from_registry().or_else(heroic_folder_from_appdata) {
-        Some(heroic_folder) => {
-            let legendary_path = heroic_folder
-                .join("resources\\app.asar.unpacked\\build\\bin\\win32\\legendary.exe");
-            if legendary_path.exists() {
-                Some(legendary_path.to_path_buf().to_string_lossy().to_string())
-            } else {
-                None
-            }
-        }
-        None => None,
     }
 }
 
@@ -67,7 +43,6 @@ fn heroic_folder_from_registry() -> Option<PathBuf> {
     if let Ok(launcher) = hklm.open_subkey("Software\\035fb1f9-7381-565b-92bb-ed6b2a3b99ba") {
         let path_string: Result<String, _> = launcher.get_value("InstallLocation");
         if let Ok(path_string) = path_string {
-            //.join("resources/app.asar.unpacked/build/bin/win32/legendary.exe")
             let path = Path::new(&path_string);
             if path.exists() {
                 return Some(path.to_path_buf());
@@ -77,6 +52,7 @@ fn heroic_folder_from_registry() -> Option<PathBuf> {
     None
 }
 
+// TODO update this to find the manifest files when proton works
 #[cfg(target_os = "windows")]
 fn heroic_folder_from_appdata() -> Option<PathBuf> {
     let key = "APPDATA";
@@ -97,34 +73,27 @@ fn heroic_folder_from_appdata() -> Option<PathBuf> {
 fn get_shortcuts_from_install_mode(
     install_mode: &InstallationMode,
 ) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
-    let legendary = get_legendary_location(install_mode);
     let config_folder = get_config_folder(install_mode);
-    get_shortcuts_from_location(config_folder, legendary.to_string())
+    get_shortcuts_from_location(config_folder)
 }
+
+
+//~/.var/app/com.heroicgameslauncher.hgl/config/legendary/installed.json
 
 fn get_shortcuts_from_location(
     config_folder: Option<String>,
-    legendary: String,
 ) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
-    let output = if let Some(config_folder) = config_folder.clone() {
-        Command::new(&legendary)
-            .env("XDG_CONFIG_HOME", config_folder)
-            .arg("list-installed")
-            .arg("--json")
-            .output()?
-    } else {
-        Command::new(&legendary)
-            .arg("list-installed")
-            .arg("--json")
-            .output()?
-    };
-    let json = String::from_utf8_lossy(&output.stdout);
-    let mut legendary_ouput: Vec<HeroicGame> = from_str(&json)?;
-    legendary_ouput.iter_mut().for_each(|mut game| {
-        game.config_folder = config_folder.clone();
-        game.legendary_location = Some(legendary.to_string());
-    });
-    Ok(legendary_ouput)
+
+    if let Some(config_folder) = config_folder{
+        let installed_json_path = Path::new(&config_folder).join("legendary").join("installed.json");
+        if installed_json_path.exists(){
+            let json = std::fs::read_to_string(installed_json_path)?;
+            let games = serde_json::from_str::<Vec<HeroicGame>>(&json)?;
+            return Ok(games);
+        }
+    }
+    //TODO Should error be returned instead?
+    return Ok(vec![]);
 }
 
 impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
