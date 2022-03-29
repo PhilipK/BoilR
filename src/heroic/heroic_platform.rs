@@ -3,8 +3,10 @@ use crate::platform::{Platform, SettingsValidity};
 use serde_json::from_str;
 use std::error::Error;
 use std::path::Path;
-use std::path::PathBuf;
 use std::process::Command;
+
+#[cfg(target_os = "windows")]
+use std::path::PathBuf;
 
 pub struct HeroicPlatform {
     pub settings: HeroicSettings,
@@ -166,7 +168,7 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
         }
     }
 
-    fn needs_proton(input: &HeroicGame) -> bool {
+    fn needs_proton(_input: &HeroicGame) -> bool {
         #[cfg(target_os = "windows")]
         return false;
         #[cfg(target_family = "unix")]

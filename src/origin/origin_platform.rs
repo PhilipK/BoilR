@@ -76,7 +76,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         }
     }
 
-    fn needs_proton(input: &OriginGame) -> bool {
+    fn needs_proton(_input: &OriginGame) -> bool {
         #[cfg(target_os = "windows")]
         return false;
         #[cfg(target_family = "unix")]
