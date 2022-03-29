@@ -1,5 +1,6 @@
 use super::{HeroicGame, HeroicSettings};
 use crate::platform::{Platform, SettingsValidity};
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 use std::process::Command;
@@ -88,8 +89,12 @@ fn get_shortcuts_from_location(
         let installed_json_path = Path::new(&config_folder).join("legendary").join("installed.json");
         if installed_json_path.exists(){
             let json = std::fs::read_to_string(installed_json_path)?;
-            let games = serde_json::from_str::<Vec<HeroicGame>>(&json)?;
-            return Ok(games);
+            let games_map = serde_json::from_str::<HashMap<String,HeroicGame>>(&json)?;
+            let mut games = vec![];
+            for game in games_map.values(){
+                games.push(game.clone());
+            }
+            return Ok( games );
         }
     }
     //TODO Should error be returned instead?
