@@ -16,7 +16,14 @@ pub struct HeroicGame {
 impl From<HeroicGame> for ShortcutOwned {
     fn from(game: HeroicGame) -> Self {
         let target_path = Path::new(&game.install_path).join(game.executable);
-        let target = target_path.to_string_lossy();
+        let mut target = target_path.to_string_lossy().to_string();
+
+        #[cfg(target_family = "unix")]
+        {
+            if !target.starts_with("\"") && !target.ends_with("\"") {
+                target = format!("\"{}\"", target);
+            }
+        }
 
         let shortcut = Shortcut::new(
             0,

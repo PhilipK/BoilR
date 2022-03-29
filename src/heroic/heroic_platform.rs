@@ -3,36 +3,31 @@ use crate::platform::{Platform, SettingsValidity};
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
-use std::process::Command;
 
-#[cfg(target_os = "windows")]
 use std::path::PathBuf;
 
 pub struct HeroicPlatform {
     pub settings: HeroicSettings,
 }
 
-#[cfg(target_family = "unix")]
 enum InstallationMode {
     FlatPak,
-    UserBin,
+    UserBin,    
+    Windows
 }
 
-#[cfg(target_family = "unix")]
-fn get_config_folder(install_mode: &InstallationMode) -> Option<String> {
+fn get_installed_json_location(install_mode: &InstallationMode) -> PathBuf {
+    let home_dir = std::env::var("HOME").unwrap_or("".to_string());
     match install_mode {
-        InstallationMode::FlatPak => {
-            let home_dir = std::env::var("HOME").unwrap_or("".to_string());
-            Some(
-                Path::new(&home_dir)
-                    .join(".var/app/com.heroicgameslauncher.hgl/config")
-                    .to_string_lossy()
-                    .to_string(),
-            )
-        }
-        //TODO Fix this to find the acutal config folder when it is installed with userbin 
-        InstallationMode::UserBin => None,
+        InstallationMode::FlatPak => Path::new(&home_dir)
+            .join(".var/app/com.heroicgameslauncher.hgl/config/legendary/installed.json"),
+        InstallationMode::UserBin => Path::new(&home_dir).join(".config/legendary/installed.json"),
+        InstallationMode::Windows => {            
+            Path::new(&home_dir).join(".config/legendary/installed.json")            
+        },
+        
     }
+    .to_path_buf()
 }
 
 #[cfg(target_os = "windows")]
@@ -70,34 +65,24 @@ fn heroic_folder_from_appdata() -> Option<PathBuf> {
     }
 }
 
-#[cfg(target_family = "unix")]
 fn get_shortcuts_from_install_mode(
     install_mode: &InstallationMode,
 ) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
-    let config_folder = get_config_folder(install_mode);
-    get_shortcuts_from_location(config_folder)
+    let installed_path = get_installed_json_location(install_mode);
+    get_shortcuts_from_location(installed_path)
 }
 
-
-//~/.var/app/com.heroicgameslauncher.hgl/config/legendary/installed.json
-
-fn get_shortcuts_from_location(
-    config_folder: Option<String>,
-) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
-
-    if let Some(config_folder) = config_folder{
-        let installed_json_path = Path::new(&config_folder).join("legendary").join("installed.json");
-        if installed_json_path.exists(){
-            let json = std::fs::read_to_string(installed_json_path)?;
-            let games_map = serde_json::from_str::<HashMap<String,HeroicGame>>(&json)?;
-            let mut games = vec![];
-            for game in games_map.values(){
-                games.push(game.clone());
-            }
-            return Ok( games );
+fn get_shortcuts_from_location<P: AsRef<Path>>(path: P) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
+    let installed_json_path = path.as_ref();
+    if installed_json_path.exists() {
+        let json = std::fs::read_to_string(installed_json_path)?;
+        let games_map = serde_json::from_str::<HashMap<String, HeroicGame>>(&json)?;
+        let mut games = vec![];
+        for game in games_map.values() {
+            games.push(game.clone());
         }
+        return Ok(games);
     }
-    //TODO Should error be returned instead?
     return Ok(vec![]);
 }
 
@@ -109,16 +94,18 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
     fn name(&self) -> &str {
         "Heroic"
     }
-    #[cfg(target_family = "unix")]
     fn get_shortcuts(&self) -> Result<Vec<HeroicGame>, Box<dyn Error>> {
+        #[cfg(target_family = "unix")]
         let install_modes = vec![InstallationMode::FlatPak, InstallationMode::UserBin];
-        let first_working_instal = install_modes
+        #[cfg(target_os = "windows")]
+        let install_modes = vec![InstallationMode::Windows];
+
+        let shortcuts = install_modes
             .iter()
-            .find_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok());
-        match first_working_instal {
-            Some(res) => return Ok(res),
-            None => get_shortcuts_from_install_mode(&install_modes[0]),
-        }
+            .filter_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok())
+            .flatten()
+            .collect();
+        Ok(shortcuts)
     }
 
     #[cfg(target_os = "windows")]
@@ -148,7 +135,7 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
         #[cfg(target_family = "unix")]
         {
             //TODO update this when Heroic is updated
-            return false;
-        }        
+            return true;
+        }
     }
 }
