@@ -29,6 +29,9 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         .iter()
         .flat_map(|s| s.1.clone())
         .collect();
+    for shortcut in &all_shortcuts{
+        println!("Appid: {} name: {}",shortcut.app_id,shortcut.app_name);    
+    }
     println!("Found {} user(s)", userinfo_shortcuts.len());
     for user in userinfo_shortcuts.iter_mut() {
         let start_time = std::time::Instant::now();

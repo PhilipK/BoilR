@@ -75,6 +75,16 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
             },
         }
     }
+
+    fn needs_proton(input: &OriginGame) -> bool {
+        #[cfg(target_os = "windows")]
+        return false;
+        #[cfg(target_family = "unix")]
+        {
+            //TODO Update this when origin gets support on linux
+            return true;
+        }
+    }
 }
 
 fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {

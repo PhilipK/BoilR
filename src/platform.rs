@@ -14,6 +14,9 @@ where
 
     #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool;
+
+    // HOME/.local/share/Steam/config/config.vdf
+    fn needs_proton(input: &T) -> bool;
 }
 
 pub enum SettingsValidity {

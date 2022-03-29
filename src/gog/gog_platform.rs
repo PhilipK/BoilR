@@ -149,6 +149,13 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
             },
         }
     }
+
+    fn needs_proton(input: &GogShortcut) -> bool {
+            #[cfg(target_family = "unix")]
+            return true;
+            #[cfg(target_os = "windows")]
+            return false;
+    }
 }
 
 #[cfg(target_family = "unix")]
