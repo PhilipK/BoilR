@@ -79,7 +79,7 @@
 						"config"		""
 						"Priority"		"250"
 					}
-					"2302272632"
+					"43"
 					{
 						"name"		"proton_experimental"
 						"config"		""
@@ -91,12 +91,16 @@
 						"config"		""
 						"Priority"		"250"
 					}
+					"44"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
 				}
-				
 			}
 		}
 	}
-
 	"Music"
 	{
 		"LocalLibrary"

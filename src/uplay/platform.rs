@@ -43,7 +43,7 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         false
     }
 
-    fn needs_proton(_input: &Game) -> bool {
+    fn needs_proton(&self, _input: &Game) -> bool {
         #[cfg(target_os = "windows")]
         return false;
         #[cfg(target_family = "unix")]

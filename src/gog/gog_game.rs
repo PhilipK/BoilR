@@ -25,6 +25,7 @@ pub(crate) struct PlayTask {
     pub working_dir: Option<String>,
 }
 
+#[derive(Clone)]
 pub(crate) struct GogShortcut {
     pub name: String,
     pub game_folder: String,

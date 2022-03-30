@@ -1,5 +1,6 @@
 use steam_shortcuts_util::shortcut::{Shortcut, ShortcutOwned};
 
+#[derive(Clone)]
 pub(crate) struct Game {
     pub(crate) name: String,
     pub(crate) icon: String,

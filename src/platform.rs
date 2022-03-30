@@ -16,7 +16,7 @@ where
     fn create_symlinks(&self) -> bool;
 
     // HOME/.local/share/Steam/config/config.vdf
-    fn needs_proton(input: &T) -> bool;
+    fn needs_proton(&self, input: &T) -> bool;
 }
 
 pub enum SettingsValidity {

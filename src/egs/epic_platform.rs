@@ -43,7 +43,7 @@ impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
         }
     }
 
-    fn needs_proton(_input: &ManifestItem) -> bool {
+    fn needs_proton(&self, _input: &ManifestItem) -> bool {
         #[cfg(target_family = "unix")]
         return true;
         #[cfg(target_os = "windows")]

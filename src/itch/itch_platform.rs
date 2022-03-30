@@ -70,7 +70,7 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
         }
     }
 
-    fn needs_proton(input: &ItchGame) -> bool {
+    fn needs_proton(&self, input: &ItchGame) -> bool {
         #[cfg(target_os = "windows")]
         return false;
         #[cfg(target_family = "unix")]

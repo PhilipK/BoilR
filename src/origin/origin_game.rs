@@ -1,4 +1,6 @@
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
+
+#[derive(Clone)]
 pub struct OriginGame {
     pub id: String,
     pub title: String,

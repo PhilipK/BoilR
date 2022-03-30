@@ -129,7 +129,7 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
         }
     }
 
-    fn needs_proton(_input: &HeroicGame) -> bool {
+    fn needs_proton(&self, _input: &HeroicGame) -> bool {
         #[cfg(target_os = "windows")]
         return false;
         #[cfg(target_family = "unix")]
