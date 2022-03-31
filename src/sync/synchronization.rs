@@ -1,8 +1,7 @@
 use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
 
 use crate::{
-    egs::EpicPlatform,
-    heroic::HeroicPlatform,
+    egs::EpicPlatform,    
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
     platform::Platform,
@@ -14,6 +13,10 @@ use crate::{
     steamgriddb::download_images_for_users,
     uplay::Uplay,
 };
+
+#[cfg(target_family = "unix")]
+use crate::heroic::HeroicPlatform;
+
 use std::error::Error;
 
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
@@ -125,7 +128,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
 }
 
 fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
-    let platform_results = vec![
+    let mut platform_results = vec![
         update_platform_shortcuts(&EpicPlatform::new(settings.epic_games.clone())),
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
         update_platform_shortcuts(&ItchPlatform::new(settings.itch.clone())),
@@ -141,10 +144,14 @@ fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned
         update_platform_shortcuts(&LutrisPlatform {
             settings: settings.lutris.clone(),
         }),
-        update_platform_shortcuts(&HeroicPlatform {
-            settings: settings.heroic.clone(),
-        }),
+        
     ];
+    #[cfg(target_family = "unix")]
+    {
+        platform_results.push(update_platform_shortcuts(&HeroicPlatform {
+            settings: settings.heroic.clone(),
+        }));
+    }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }
 
@@ -233,7 +240,7 @@ where
                     }
                     current_shortcuts.push(shortcut_owned.clone());
                 }
-                if shortcuts_to_proton.len() > 0{
+                if shortcuts_to_proton.len() > 0 {
                     setup_proton_games(shortcuts_to_proton.as_slice());
                 }
 

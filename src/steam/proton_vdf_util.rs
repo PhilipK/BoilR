@@ -97,6 +97,7 @@ fn find_indexes<S: AsRef<str>>(vdf_content: S) -> Option<SectionInfo> {
 }
 
 #[cfg(test)]
+#[cfg(target_family = "unix")]
 mod tests {
 
     use super::*;
