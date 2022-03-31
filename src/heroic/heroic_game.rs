@@ -1,43 +1,42 @@
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeroicGame {
     pub app_name: String,
-    pub can_run_offline: bool,
     pub title: String,
     pub is_dlc: bool,
     pub install_path: String,
     pub executable: String,
-    pub config_folder: Option<String>,
-    pub legendary_location: Option<String>
+    pub launch_parameters: String,
 }
 
 impl From<HeroicGame> for ShortcutOwned {
     fn from(game: HeroicGame) -> Self {
-
-        let legendary = game.legendary_location.unwrap_or("legendary".to_string());
-
-        let icon = format!("\"{}\\{}\"", game.install_path, game.executable);
-        let launch = match game.config_folder{
-            Some(config_folder) => {
-                format!("env XDG_CONFIG_HOME={} {}", config_folder, legendary)
-            },
-            None => {
-                format!("{}", legendary)
-            },
-        };
-
-        let launch_options = format!("launch {}",game.app_name);
+        let target_path = Path::new(&game.install_path).join(game.executable);
         
+        #[cfg(target_family = "unix")]
+        let mut target = target_path.to_string_lossy().to_string();
+        #[cfg(target_family = "unix")]
+        {
+            if !target.starts_with("\"") && !target.ends_with("\"") {
+                target = format!("\"{}\"", target);
+            }
+        }
+
+        #[cfg(target_os = "windows")]
+        let target = target_path.to_string_lossy().to_string();
+
         let shortcut = Shortcut::new(
             "0",
             game.title.as_str(),
-            launch.as_str(),
+            &target,
             "",
-            icon.as_str(),
             "",
-            &launch_options.as_str()
+            "",
+            &game.launch_parameters.as_str(),
         );
         let mut owned_shortcut = shortcut.to_owned();
         owned_shortcut.tags.push("Heroic".to_owned());

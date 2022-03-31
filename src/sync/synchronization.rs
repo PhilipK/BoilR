@@ -1,19 +1,22 @@
 use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
 
 use crate::{
-    egs::EpicPlatform,
-    heroic::HeroicPlatform,
+    egs::EpicPlatform,    
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
     platform::Platform,
     settings::Settings,
     steam::{
-        get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
-        SteamUsersInfo,
+        get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
+        Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::download_images_for_users,
     uplay::Uplay,
 };
+
+#[cfg(target_family = "unix")]
+use crate::heroic::HeroicPlatform;
+
 use std::error::Error;
 
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
@@ -29,6 +32,9 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         .iter()
         .flat_map(|s| s.1.clone())
         .collect();
+    for shortcut in &all_shortcuts {
+        println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
+    }
     println!("Found {} user(s)", userinfo_shortcuts.len());
     for user in userinfo_shortcuts.iter_mut() {
         let start_time = std::time::Instant::now();
@@ -45,6 +51,7 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         shortcut_info.shortcuts.extend(all_shortcuts.clone());
 
         fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
+
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
         if settings.steam.create_collections {
@@ -121,7 +128,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
 }
 
 fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
-    let platform_results = vec![
+    let mut platform_results = vec![
         update_platform_shortcuts(&EpicPlatform::new(settings.epic_games.clone())),
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
         update_platform_shortcuts(&ItchPlatform::new(settings.itch.clone())),
@@ -137,10 +144,14 @@ fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned
         update_platform_shortcuts(&LutrisPlatform {
             settings: settings.lutris.clone(),
         }),
-        update_platform_shortcuts(&HeroicPlatform {
-            settings: settings.heroic.clone(),
-        }),
+        
     ];
+    #[cfg(target_family = "unix")]
+    {
+        platform_results.push(update_platform_shortcuts(&HeroicPlatform {
+            settings: settings.heroic.clone(),
+        }));
+    }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }
 
@@ -176,6 +187,7 @@ where
     P: Platform<T, E>,
     E: std::fmt::Debug + std::fmt::Display,
     T: Into<ShortcutOwned>,
+    T: Clone,
 {
     if platform.enabled() {
         if let crate::platform::SettingsValidity::Invalid { reason } = platform.settings_valid() {
@@ -199,12 +211,13 @@ where
 
         match shortcuts_to_add_result {
             Ok(shortcuts_to_add) => {
+                let mut shortcuts_to_proton = vec![];
                 let mut shortcuts_to_add_transformed = vec![];
                 for shortcut in shortcuts_to_add {
-                    let mut shortcut_owned: ShortcutOwned = shortcut.into();
+                    let mut shortcut_owned: ShortcutOwned = shortcut.clone().into();
                     shortcut_owned.dev_kit_game_id =
                         format!("{}-{}", BOILR_TAG, shortcut_owned.app_id);
-                    shortcuts_to_add_transformed.push(shortcut_owned);
+                    shortcuts_to_add_transformed.push((shortcut, shortcut_owned));
                 }
 
                 let shortcuts_to_add = shortcuts_to_add_transformed;
@@ -215,15 +228,22 @@ where
                     platform.name()
                 );
 
-                for shortcut_owned in shortcuts_to_add {
+                for (orign_shortcut, shortcut_owned) in shortcuts_to_add {
                     #[cfg(target_family = "unix")]
                     let shortcut_owned = if platform.create_symlinks() {
                         crate::sync::symlinks::create_sym_links(&shortcut_owned)
                     } else {
                         shortcut_owned
                     };
+                    if platform.needs_proton(&orign_shortcut) {
+                        shortcuts_to_proton.push(format!("{}", shortcut_owned.app_id));
+                    }
                     current_shortcuts.push(shortcut_owned.clone());
                 }
+                if shortcuts_to_proton.len() > 0 {
+                    setup_proton_games(shortcuts_to_proton.as_slice());
+                }
+
                 let name = platform.name();
                 return Some((name.to_string(), current_shortcuts));
             }

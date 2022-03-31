@@ -185,7 +185,7 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
             }
             return None;
         }
-        Err(e) => return None,
+        Err(_e) => return None,
     }
 }
 
@@ -299,7 +299,7 @@ fn get_level_db_location() -> Option<PathBuf> {
             }
             return None;
         }
-        Err(e) => return None,
+        Err(_e) => return None,
     }
 }
 

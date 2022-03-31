@@ -51,10 +51,7 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
 
         //This is done to paths dedupe
         let paths: HashSet<&DbPaths> = paths.iter().collect();
-        let res = paths
-            .iter()
-            .filter_map(|e| dbpath_to_game(*e))
-            .collect();
+        let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
         Ok(res)
     }
 
@@ -71,6 +68,16 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
                 reason: format!("{}", err),
             },
         }
+    }
+    #[cfg(target_os = "windows")]
+    fn needs_proton(&self, _input: &ItchGame) -> bool {
+        return false;
+    }
+    
+    #[cfg(target_family = "unix")]
+    fn needs_proton(&self, input: &ItchGame) -> bool {    
+        //We can only really guess here
+        return input.executable.ends_with("exe");
     }
 }
 

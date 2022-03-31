@@ -47,6 +47,10 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
             },
         }
     }
+
+    fn needs_proton(&self, _input: &LegendaryGame) -> bool {
+        return false;
+    }
 }
 
 fn execute_legendary_command(program: &str) -> Result<Vec<LegendaryGame>, Box<dyn Error>> {

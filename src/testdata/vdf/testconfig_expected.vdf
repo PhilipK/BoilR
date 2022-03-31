@@ -1,0 +1,116 @@
+"InstallConfigStore"
+{
+	"Software"
+	{
+		"Valve"
+		{
+			"Steam"
+			{
+				"AutoUpdateWindowEnabled"		"0"
+				"ipv6check_http_state"		"bad"
+				"ipv6check_udp_state"		"bad"
+				"ShaderCacheManager"
+				{
+					"HasCurrentBucket"		"1"
+					"ProcessingQueue"		""
+					"EnableShaderBackgroundProcessing"		"1"
+				}
+				"Rate"		"30000"
+				"LastConfigstoreUploadTime"		"1648654726"
+				"CompatToolMapping"
+				{
+					"1102190"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"0"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"75"
+					}
+					"337340"
+					{
+						"name"		"proton_7"
+						"config"		""
+						"Priority"		"250"
+					}
+					"1794680"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"3601140154"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"3230402366"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"3065048582"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"4068205213"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"3667283406"
+					{
+						"name"		""
+						"config"		""
+						"Priority"		"250"
+					}
+					"2719403116"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"43"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"42"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+					"44"
+					{
+						"name"		"proton_experimental"
+						"config"		""
+						"Priority"		"250"
+					}
+				}
+			}
+		}
+	}
+	"Music"
+	{
+		"LocalLibrary"
+		{
+			"Directories"
+			{
+				"0"		"2"
+				"1"		"3"
+			}
+		}
+	}
+	
+}
