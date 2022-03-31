@@ -26,6 +26,15 @@ impl From<HeroicGame> for ShortcutOwned {
             }
         }
 
+        #[cfg(target_family = "unix")]
+        let mut install_path = game.install_path.to_string();
+        #[cfg(target_family = "unix")]
+        {
+            if !install_path.starts_with("\"") && !install_path.ends_with("\"") {
+                install_path = format!("\"{}\"", install_path);
+            }
+        }
+
         #[cfg(target_os = "windows")]
         let target = target_path.to_string_lossy().to_string();
 
@@ -33,7 +42,7 @@ impl From<HeroicGame> for ShortcutOwned {
             "0",
             game.title.as_str(),
             &target,
-            "",
+            &install_path,
             "",
             "",
             &game.launch_parameters.as_str(),
