@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct SteamSettings {
     pub location: Option<String>,
     pub create_collections: bool,
+    pub optimize_for_big_picture: bool,
 }

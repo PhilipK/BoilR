@@ -50,7 +50,10 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
 
         shortcut_info.shortcuts.extend(all_shortcuts.clone());
 
-        fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
+        if settings.steam.optimize_for_big_picture {
+            fix_shortcut_icons_for_big_picture(user, &mut shortcut_info.shortcuts);
+        }
+        
 
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
@@ -86,7 +89,7 @@ fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
         .retain(|shortcut| !shortcut.dev_kit_game_id.starts_with(&boilr_tag));
 }
 
-fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
+fn fix_shortcut_icons_for_big_picture(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
     let image_folder = Path::new(&user.steam_user_data_folder)
         .join("config")
         .join("grid");

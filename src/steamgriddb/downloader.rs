@@ -44,6 +44,7 @@ pub async fn download_images_for_users<'b>(
                         search,
                         client,
                         download_animated,
+                        settings.steam.optimize_for_big_picture
                     )
                     .await;
                     res.unwrap_or_default()
@@ -109,6 +110,7 @@ async fn search_fo_to_download(
     search: &CachedSearch<'_>,
     client: &Client,
     download_animated: bool,
+    download_big_picture: bool,
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
         let images = vec![
@@ -143,13 +145,18 @@ async fn search_fo_to_download(
     for (app_id, search) in search_results_a.into_iter().flatten() {
         search_results.insert(app_id, search);
     }
-    let types = vec![
-        ImageType::Logo,
-        ImageType::Hero,
-        ImageType::Grid,
-        ImageType::WideGrid,
-        ImageType::BigPicture,
-    ];
+    let types = {
+        let mut types = vec![
+            ImageType::Logo,
+            ImageType::Hero,
+            ImageType::Grid,
+            ImageType::WideGrid,
+        ];
+        if download_big_picture {
+            types.push(ImageType::BigPicture);
+        }
+        types
+    };
     let mut to_download = vec![];
     for image_type in types {
         let images_needed = shortcuts

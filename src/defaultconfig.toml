@@ -34,3 +34,4 @@ enabled = true
 
 [steam]
 create_collections = false
+optimize_for_big_picture = false
