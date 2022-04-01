@@ -58,11 +58,15 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
     }
     fn get_shortcuts(&self) -> Result<Vec<HeroicGame>, Box<dyn Error>> {        
         let install_modes = vec![InstallationMode::FlatPak, InstallationMode::UserBin];
-        let shortcuts = install_modes
+        let mut shortcuts :Vec<HeroicGame> = install_modes
             .iter()
             .filter_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok())
             .flatten()
             .collect();
+
+        shortcuts.sort_by_key(|m| format!("{}-{}-{}",m.launch_parameters,m.executable,&m.app_name));
+        shortcuts.dedup_by_key(|m| format!("{}-{}-{}",m.launch_parameters,m.executable,&m.app_name));
+
         Ok(shortcuts)
     }
 
