@@ -115,9 +115,7 @@ fn fix_shortcut_icons(
                 &shortcut.app_name,
             );
             let new_icon_path = image_folder.join(image_type.file_name(app_id));
-            if new_icon_path.exists() {
                 shortcut.icon = new_icon_path.to_string_lossy().to_string();
-            }
         }
     }
 }
