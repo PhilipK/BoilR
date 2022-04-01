@@ -5,6 +5,7 @@ pub enum ImageType {
     WideGrid,
     Logo,
     BigPicture,
+    Icon
 }
 
 impl ImageType {
@@ -15,6 +16,7 @@ impl ImageType {
             ImageType::WideGrid => format!("{}.png", app_id),
             ImageType::Logo => format!("{}_logo.png", app_id),
             ImageType::BigPicture => format!("{}_bigpicture.png", app_id),
+            ImageType::Icon => format!("{}.ico", app_id),
         }
     }
 
@@ -25,7 +27,11 @@ impl ImageType {
             ImageType::Grid => format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/library_600x900_2x.jpg?t={}",steam_app_id,mtime),
             ImageType::WideGrid => format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg?t={}",steam_app_id,mtime),
             ImageType::Logo => format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/logo.png?t={}",steam_app_id,mtime),
-            ImageType::BigPicture => format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg?t={}",steam_app_id,mtime),
-        }
+            ImageType::BigPicture => format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg?t={}",steam_app_id,mtime),            
+            // This should not happen
+            _ => "".to_string()
+        }        
     }
+
+    
 }

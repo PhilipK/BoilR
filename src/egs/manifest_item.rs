@@ -43,7 +43,7 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
         manifest.display_name.as_str(),
         exe,
         start_dir,
-        "",
+        exe,
         "",
         "",
     )

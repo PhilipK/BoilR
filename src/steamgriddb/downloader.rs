@@ -44,6 +44,7 @@ pub async fn download_images_for_users<'b>(
                         search,
                         client,
                         download_animated,
+                        settings.steam.optimize_for_big_picture,
                     )
                     .await;
                     res.unwrap_or_default()
@@ -78,6 +79,7 @@ pub async fn download_images_for_users<'b>(
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PublicGameResponseMetadata {
     store_asset_mtime: Option<u64>,
+    clienticon: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -109,17 +111,25 @@ async fn search_fo_to_download(
     search: &CachedSearch<'_>,
     client: &Client,
     download_animated: bool,
+    download_big_picture: bool,
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
-    let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
-        let images = vec![
-            format!("{}_hero.png", s.app_id),
-            format!("{}p.png", s.app_id),
-            format!("{}.png", s.app_id),
-            format!("{}_logo.png", s.app_id),
-            format!("{}_bigpicture.png", s.app_id),
+    let types = {
+        let mut types = vec![
+            ImageType::Logo,
+            ImageType::Hero,
+            ImageType::Grid,
+            ImageType::WideGrid,
+            ImageType::Icon,
         ];
+        if download_big_picture {
+            types.push(ImageType::BigPicture);
+        }
+        types
+    };
+
+    let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
         // if we are missing any of the images we need to search for them
-        images.iter().any(|image| !known_images.contains(image)) && !s.app_name.is_empty()
+        types.iter().map(|t| t.file_name(s.app_id)).any(|image| !known_images.contains(&image)) && !s.app_name.is_empty()
     });
     let shortcuts_to_search_for: Vec<&ShortcutOwned> = shortcuts_to_search_for.collect();
     if shortcuts_to_search_for.is_empty() {
@@ -143,14 +153,9 @@ async fn search_fo_to_download(
     for (app_id, search) in search_results_a.into_iter().flatten() {
         search_results.insert(app_id, search);
     }
-    let types = vec![
-        ImageType::Logo,
-        ImageType::Hero,
-        ImageType::Grid,
-        ImageType::WideGrid,
-        ImageType::BigPicture,
-    ];
+ 
     let mut to_download = vec![];
+    let grid_folder = Path::new(user_data_folder).join("config").join("grid");
     for image_type in types {
         let images_needed = shortcuts
             .iter()
@@ -163,41 +168,59 @@ async fn search_fo_to_download(
             .collect();
 
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
-        let image_search_result =
-            get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
-        match image_search_result {
-            Ok(images) => {
-                let grid_folder = Path::new(user_data_folder).join("config").join("grid");
-                let images = images
-                    .iter()
-                    .enumerate()
-                    .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
-                let download_for_this_type = stream::iter(images)
-                    .filter_map(|(image, shortcut, game_id)| {
-                        let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                        async move {
-                            let image_url = match image {
-                                Ok(img) => Some(img.url.clone()),
-                                Err(_) => get_steam_image_url(game_id, &image_type).await,
-                            };
-                            if let Some(url) = image_url {
-                                Some(ToDownload {
-                                    path,
-                                    url,
-                                    app_name: shortcut.app_name.clone(),
-                                    image_type: image_type.clone(),
-                                })
-                            } else {
-                                None
-                            }
-                        }
-                    })
-                    .collect::<Vec<ToDownload>>()
-                    .await;
+        
 
-                to_download.extend(download_for_this_type);
+        if let ImageType::Icon = image_type {
+            let mut index = 0;
+            for image_id in image_ids{
+                let shortcut = shortcuts[index];
+                if let Some(url) = get_steam_icon_url(image_id).await{
+                    let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                    to_download.push(ToDownload {
+                        path,
+                        url,
+                        app_name: shortcut.app_name.clone(),
+                        image_type: image_type.clone(),
+                    });
+                }
+                index = index + 1;
             }
-            Err(err) => println!("Error getting images: {}", err),
+        } else {
+            let image_search_result =
+                get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
+            match image_search_result {
+                Ok(images) => {
+                    let images = images
+                        .iter()
+                        .enumerate()
+                        .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
+                    let download_for_this_type = stream::iter(images)
+                        .filter_map(|(image, shortcut, game_id)| {
+                            let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                            async move {
+                                let image_url = match image {
+                                    Ok(img) => Some(img.url.clone()),
+                                    Err(_) => get_steam_image_url(game_id, &image_type).await,
+                                };
+                                if let Some(url) = image_url {
+                                    Some(ToDownload {
+                                        path,
+                                        url,
+                                        app_name: shortcut.app_name.clone(),
+                                        image_type: image_type.clone(),
+                                    })
+                                } else {
+                                    None
+                                }
+                            }
+                        })
+                        .collect::<Vec<ToDownload>>()
+                        .await;
+
+                    to_download.extend(download_for_this_type);
+                }
+                Err(err) => println!("Error getting images: {}", err),
+            }
         }
     }
     Ok(to_download)
@@ -244,15 +267,18 @@ async fn get_images_for_ids(
         nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
+
     let query_type = match image_type {
         ImageType::Hero => Hero(Some(hero_parameters)),
         ImageType::BigPicture => Grid(Some(big_picture_parameters)),
         ImageType::Grid => Grid(Some(grid_parameters)),
         ImageType::WideGrid => Grid(Some(big_picture_parameters)),
         ImageType::Logo => Logo(Some(logo_parameters)),
+        _ => panic!("Unsupported image type"),
     };
 
     let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
+
     image_search_result
 }
 
@@ -284,6 +310,43 @@ async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<S
         Err(_) => (),
     }
     return None;
+}
+
+async fn get_steam_icon_url(game_id: usize) -> Option<String> {
+    let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
+    let response = reqwest::get(steamgriddb_page_url).await;
+    match response {
+        Ok(response) => {
+            let text_response = response.json::<PublicGameResponse>().await;
+            match text_response {
+                Ok(response) => {
+                    let game_id = response
+                        .data
+                        .clone()
+                        .map(|d| d.platforms.map(|p| p.steam.map(|s| s.id)));
+                    let mtime = response.data.map(|d| {
+                        d.platforms
+                            .map(|p| p.steam.map(|s| s.metadata.map(|m| m.clienticon)))
+                    });
+                    if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(Some(mtime)))))) =
+                        (game_id, mtime)
+                    {
+                        return Some(icon_url(&steam_app_id, &mtime));
+                    }
+                }
+                Err(_) => (),
+            }
+        }
+        Err(_) => (),
+    }
+    return None;
+}
+
+fn icon_url(steam_app_id: &str, icon_id: &str) -> String {
+    format!(
+        "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/{}/{}.ico",
+        steam_app_id, icon_id
+    )
 }
 
 async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {

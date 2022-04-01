@@ -45,7 +45,7 @@ impl From<HeroicGame> for ShortcutOwned {
             game.title.as_str(),
             &target,
             &install_path,
-            "",
+            &target,
             "",
             &game.launch_parameters.as_str(),
         );

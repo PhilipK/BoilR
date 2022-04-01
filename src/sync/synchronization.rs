@@ -1,7 +1,7 @@
 use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
 
 use crate::{
-    egs::EpicPlatform,    
+    egs::EpicPlatform,
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
     platform::Platform,
@@ -10,7 +10,7 @@ use crate::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
         Collection, ShortcutInfo, SteamUsersInfo,
     },
-    steamgriddb::download_images_for_users,
+    steamgriddb::{download_images_for_users, ImageType},
     uplay::Uplay,
 };
 
@@ -50,7 +50,11 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
 
         shortcut_info.shortcuts.extend(all_shortcuts.clone());
 
-        fix_shortcut_icons(user, &mut shortcut_info.shortcuts);
+        fix_shortcut_icons(
+            user,
+            &mut shortcut_info.shortcuts,
+            settings.steam.optimize_for_big_picture,
+        );
 
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
@@ -86,10 +90,20 @@ fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
         .retain(|shortcut| !shortcut.dev_kit_game_id.starts_with(&boilr_tag));
 }
 
-fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>) {
+fn fix_shortcut_icons(
+    user: &SteamUsersInfo,
+    shortcuts: &mut Vec<ShortcutOwned>,
+    big_picture_mode: bool,
+) {
     let image_folder = Path::new(&user.steam_user_data_folder)
         .join("config")
         .join("grid");
+    let image_type = if big_picture_mode {
+        ImageType::BigPicture
+    } else {
+        ImageType::Icon
+    };
+
     for shortcut in shortcuts {
         #[cfg(not(target_family = "unix"))]
         let replace_icon = shortcut.icon.trim().eq("");
@@ -100,11 +114,10 @@ fn fix_shortcut_icons(user: &SteamUsersInfo, shortcuts: &mut Vec<ShortcutOwned>)
                 &shortcut.exe,
                 &shortcut.app_name,
             );
-            let new_icon = image_folder
-                .join(format!("{}_bigpicture.png", app_id))
-                .to_string_lossy()
-                .to_string();
-            shortcut.icon = new_icon;
+            let new_icon_path = image_folder.join(image_type.file_name(app_id));
+            if new_icon_path.exists() {
+                shortcut.icon = new_icon_path.to_string_lossy().to_string();
+            }
         }
     }
 }
@@ -144,7 +157,6 @@ fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned
         update_platform_shortcuts(&LutrisPlatform {
             settings: settings.lutris.clone(),
         }),
-        
     ];
     #[cfg(target_family = "unix")]
     {

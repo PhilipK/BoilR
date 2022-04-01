@@ -45,6 +45,8 @@ wine_c_drive="/home/username/Games/gog-galaxy/drive_c" #Only for Linux, Is manda
 
 [steam]
 location="C:\\Program Files (x86)\\Steam\\" #If this value is not defined, the tool will try to find it automatically. If it can't find it, it will fail and tell you.
+optimize_for_big_picture=false #Set icons to wide images, that big picture mode will use. This will make the icons have a wrong ratio in desktop mode, but will improve the look in big picture mode
+create_collections=false #Will try to create a steam collection for each platform
 
 [steamgrid_db]
 enabled = true #If false, the whole download of custom art will be skipped.
