@@ -62,6 +62,7 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
             .iter()
             .filter_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok())
             .flatten()
+            .filter(|s| s.is_installed())
             .collect();
 
         shortcuts.sort_by_key(|m| format!("{}-{}-{}",m.launch_parameters,m.executable,&m.app_name));

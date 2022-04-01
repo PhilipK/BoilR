@@ -13,6 +13,12 @@ pub struct HeroicGame {
     pub launch_parameters: String,
 }
 
+impl HeroicGame{
+    fn is_installed(&self) -> bool{
+        Path::new(&self.install_path).join(&self.executable).exists()
+    }
+}
+
 impl From<HeroicGame> for ShortcutOwned {
     fn from(game: HeroicGame) -> Self {
         let target_path = Path::new(&game.install_path).join(game.executable);
