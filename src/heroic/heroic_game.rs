@@ -14,7 +14,7 @@ pub struct HeroicGame {
 }
 
 impl HeroicGame{
-    fn is_installed(&self) -> bool{
+    pub fn is_installed(&self) -> bool{
         Path::new(&self.install_path).join(&self.executable).exists()
     }
 }
