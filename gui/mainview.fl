@@ -46,9 +46,9 @@ class UserInterface {open
         xywh {175 125 300 25} align 5
       }
 
-      # ----- Legendary -----
+      # ----- Legendary/Rare -----
       Fl_Check_Button enable_legendary_checkbox {
-          label {Legendary}
+          label {Legendary / Rare}
           xywh {25 175 155 25} down_box DOWN_BOX
         }
         Fl_Input legendary_executable_input {
