@@ -13,6 +13,8 @@ pub struct HeroicGame {
     pub launch_parameters: String,
 }
 
+
+
 impl HeroicGame{
     pub fn is_installed(&self) -> bool{
         Path::new(&self.install_path).join(&self.executable).exists()

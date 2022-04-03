@@ -28,7 +28,7 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 - [x] [Lutris](https://github.com/lutris/lutris)
 - [x] [Legendary](https://github.com/derrod/legendary)
 - [x] [Rare](https://github.com/Dummerle/Rare/releases)
-- [x] [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) (Only Linux & Epic Games for now)
+- [x] [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) (Linux Only)
 - [ ] XBox/Microsoft Store integration
 
 

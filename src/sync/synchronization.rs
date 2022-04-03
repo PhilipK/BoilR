@@ -106,9 +106,9 @@ fn fix_shortcut_icons(
 
     for shortcut in shortcuts {
         #[cfg(not(target_family = "unix"))]
-        let replace_icon = shortcut.icon.trim().eq("");
+        let replace_icon = shortcut.icon.trim().eq("") || !Path::new(shortcut.icon.trim()).exists();
         #[cfg(target_family = "unix")]
-        let replace_icon = shortcut.icon.trim().eq("") || shortcut.icon.eq(&shortcut.exe);
+        let replace_icon = shortcut.icon.trim().eq("") ||  !Path::new(shortcut.icon.trim()).exists() ||shortcut.icon.eq(&shortcut.exe);
         if replace_icon {
             let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
                 &shortcut.exe,
