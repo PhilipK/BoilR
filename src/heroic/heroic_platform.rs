@@ -1,4 +1,7 @@
-use super::{HeroicGame, HeroicSettings};
+use serde::{Deserialize};
+
+use super::{HeroicGame, HeroicGameType, HeroicSettings};
+use crate::gog::{ get_shortcuts_from_game_folders};
 use crate::platform::{Platform, SettingsValidity};
 use std::collections::HashMap;
 use std::error::Error;
@@ -12,7 +15,19 @@ pub struct HeroicPlatform {
 
 enum InstallationMode {
     FlatPak,
-    UserBin,    
+    UserBin,
+}
+
+#[derive(Deserialize)]
+struct HeroicGogConfig {
+    installed: Vec<HeroicGogPath>,
+}
+
+#[derive(Deserialize)]
+struct HeroicGogPath {
+    platform: String,
+    appName: String,
+    install_path: String,
 }
 
 fn get_installed_json_location(install_mode: &InstallationMode) -> PathBuf {
@@ -25,7 +40,17 @@ fn get_installed_json_location(install_mode: &InstallationMode) -> PathBuf {
     .to_path_buf()
 }
 
-
+fn get_gog_installed_location(install_mode: &InstallationMode) -> PathBuf {
+    let home_dir = std::env::var("HOME").unwrap_or("".to_string());
+    match install_mode {
+        InstallationMode::FlatPak => Path::new(&home_dir)
+            .join(".var/app/com.heroicgameslauncher.hgl/config/gog_store/installed.json"),
+        InstallationMode::UserBin => {
+            Path::new(&home_dir).join(".config/heroic/gog_store/installed.json")
+        }
+    }
+    .to_path_buf()
+}
 
 fn get_shortcuts_from_install_mode(
     install_mode: &InstallationMode,
@@ -48,7 +73,7 @@ fn get_shortcuts_from_location<P: AsRef<Path>>(path: P) -> Result<Vec<HeroicGame
     return Ok(vec![]);
 }
 
-impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
+impl Platform<HeroicGameType, Box<dyn Error>> for HeroicPlatform {
     fn enabled(&self) -> bool {
         self.settings.enabled
     }
@@ -56,19 +81,16 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
     fn name(&self) -> &str {
         "Heroic"
     }
-    fn get_shortcuts(&self) -> Result<Vec<HeroicGame>, Box<dyn Error>> {        
+    fn get_shortcuts(&self) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
         let install_modes = vec![InstallationMode::FlatPak, InstallationMode::UserBin];
-        let mut shortcuts :Vec<HeroicGame> = install_modes
-            .iter()
-            .filter_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok())
-            .flatten()
-            .filter(|s| s.is_installed())
-            .collect();
 
-        shortcuts.sort_by_key(|m| format!("{}-{}-{}",m.launch_parameters,m.executable,&m.app_name));
-        shortcuts.dedup_by_key(|m| format!("{}-{}-{}",m.launch_parameters,m.executable,&m.app_name));
-
-        Ok(shortcuts)
+        let mut heroic_games = get_epic_games(&install_modes)?;
+        if let Ok(gog_games) = get_gog_games(&install_modes) {
+            heroic_games.extend(gog_games);
+        } else {
+            println!("Did not find any GOG games in heroic")
+        }
+        Ok(heroic_games)
     }
 
     #[cfg(target_family = "unix")]
@@ -86,7 +108,75 @@ impl Platform<HeroicGame, Box<dyn Error>> for HeroicPlatform {
         }
     }
 
-    fn needs_proton(&self, _input: &HeroicGame) -> bool {  
-        return true;
+    fn needs_proton(&self, input: &HeroicGameType) -> bool {
+        match input{
+            HeroicGameType::Epic(_) => true,
+            HeroicGameType::Gog(_, is_windows) => *is_windows,
+        }
     }
+}
+
+fn get_epic_games(
+    install_modes: &[InstallationMode],
+) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
+    let mut shortcuts: Vec<HeroicGame> = install_modes
+        .iter()
+        .filter_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok())
+        .flatten()
+        .filter(|s| s.is_installed())
+        .collect();
+
+    shortcuts.sort_by_key(|m| format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name));
+    shortcuts.dedup_by_key(|m| format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name));
+    let mut epic_shortcuts = vec![];
+    for shortcut in shortcuts {
+        epic_shortcuts.push(HeroicGameType::Epic(shortcut));
+    }
+    Ok(epic_shortcuts)
+}
+
+fn get_gog_games(
+    install_modes: &[InstallationMode],
+) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
+    let gog_paths: Vec<HeroicGogPath> = install_modes
+        .iter()
+        .filter_map(|install_mode| {
+            let config = get_gog_installed_location(install_mode);
+            if config.exists() {
+                Some(config)
+            } else {
+                None
+            }
+        })
+        .filter_map(|config_path| std::fs::read_to_string(config_path).ok())
+        .filter_map(|config_string| serde_json::from_str::<HeroicGogConfig>(&config_string).ok())
+        .map(|config| config.installed)
+        .flatten()
+        .collect();
+
+    let mut is_windows_map = HashMap::new();
+
+    for path in gog_paths.iter() {
+        is_windows_map.insert(path.appName.clone(), path.platform == "windows");
+    }
+
+    let game_folders = gog_paths
+        .iter()
+        .filter_map(|p| {
+            let path = Path::new(&p.install_path);
+            if path.exists() {
+                Some(path.to_path_buf())
+            } else {
+                None
+            }
+        })
+        .collect();
+    let  shortcuts = get_shortcuts_from_game_folders(game_folders);
+    let mut gog_shortcuts = vec![];
+    for shortcut in shortcuts {        
+        let is_windows = is_windows_map.get(&shortcut.game_id).unwrap_or(&false);
+        gog_shortcuts.push(HeroicGameType::Gog(shortcut, *is_windows));
+    }
+
+    Ok(gog_shortcuts)
 }

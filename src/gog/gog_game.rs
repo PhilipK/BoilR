@@ -23,15 +23,18 @@ pub(crate) struct PlayTask {
     pub task_type: String,
     #[serde(alias = "workingDir")]
     pub working_dir: Option<String>,
+    pub arguments: Option<String>,
+    
 }
 
 #[derive(Clone)]
-pub(crate) struct GogShortcut {
+pub struct GogShortcut {
     pub name: String,
     pub game_folder: String,
     pub path: String,
     pub working_dir: String,
     pub game_id: String,
+    pub arguments: String,
 }
 
 impl From<GogShortcut> for ShortcutOwned {
@@ -44,14 +47,24 @@ impl From<GogShortcut> for ShortcutOwned {
         } else {
             exe.to_str().unwrap_or("").to_string()
         };
+        let mut exe_string = exe.to_string_lossy().to_string();
+        if exe_string.contains(" ") && !exe_string.starts_with("\""){
+            exe_string = format!("\"{}\"",exe_string);
+        }
+
+        let mut working_dir_string = gogs.working_dir;
+        if working_dir_string.contains(" ") && !working_dir_string.starts_with("\""){
+            working_dir_string = format!("\"{}\"",working_dir_string);
+        }
+
         let shortcut = Shortcut::new(
             "0",
             gogs.name.as_str(),
-            exe.to_str().unwrap(),
-            gogs.working_dir.as_str(),
+            &exe_string,
+            &working_dir_string,
             icon.as_str(),
             "",
-            "",
+            &gogs.arguments,
         );
         let mut owned_shortcut = shortcut.to_owned();
         owned_shortcut.tags.push("Gog".to_owned());

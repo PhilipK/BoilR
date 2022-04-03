@@ -5,3 +5,4 @@ mod gog_settings;
 
 pub use gog_platform::*;
 pub use gog_settings::*;
+pub use gog_game::GogShortcut;
