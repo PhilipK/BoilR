@@ -51,6 +51,7 @@ pub fn get_shortcuts_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<GogSho
 fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> {
     let mut shortcuts = vec![];
     for (game, game_folder) in games {
+       
         if let Some(folder_path) = game_folder.to_str() {
             if let Some(tasks) = &game.play_tasks {
                 if let Some(primary_task) = tasks.iter().find(|t| {
@@ -101,6 +102,11 @@ fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> 
 fn get_games_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<(GogGame, PathBuf)> {
     let mut games = vec![];
     for game_folder in &game_folders {
+        let mut game_folder = game_folder;
+        let deep_game_folder = Path::new(&game_folder).join("game").to_path_buf();
+        if deep_game_folder.exists() {
+            game_folder = &deep_game_folder;
+        }
         if let Ok(files) = game_folder.read_dir() {
             for file in files.flatten() {
                 if let Some(file_name) = file.file_name().to_str() {

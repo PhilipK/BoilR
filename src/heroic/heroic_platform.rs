@@ -44,7 +44,7 @@ fn get_gog_installed_location(install_mode: &InstallationMode) -> PathBuf {
     let home_dir = std::env::var("HOME").unwrap_or("".to_string());
     match install_mode {
         InstallationMode::FlatPak => Path::new(&home_dir)
-            .join(".var/app/com.heroicgameslauncher.hgl/config/gog_store/installed.json"),
+            .join(".var/app/com.heroicgameslauncher.hgl/config/heroic/gog_store/installed.json"),
         InstallationMode::UserBin => {
             Path::new(&home_dir).join(".config/heroic/gog_store/installed.json")
         }
