@@ -26,7 +26,8 @@ struct HeroicGogConfig {
 #[derive(Deserialize)]
 struct HeroicGogPath {
     platform: String,
-    appName: String,
+    #[serde(alias = "appName")]
+    app_name: String,
     install_path: String,
 }
 
@@ -157,7 +158,7 @@ fn get_gog_games(
     let mut is_windows_map = HashMap::new();
 
     for path in gog_paths.iter() {
-        is_windows_map.insert(path.appName.clone(), path.platform == "windows");
+        is_windows_map.insert(path.app_name.clone(), path.platform == "windows");
     }
 
     let game_folders = gog_paths
