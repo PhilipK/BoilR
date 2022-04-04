@@ -55,7 +55,7 @@ impl From<HeroicGame> for ShortcutOwned {
             &install_path,
             &target,
             "",
-            &game.launch_parameters.as_str(),
+            game.launch_parameters.as_str(),
         );
         let mut owned_shortcut = shortcut.to_owned();
         owned_shortcut.tags.push("Heroic".to_owned());

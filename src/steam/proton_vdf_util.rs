@@ -42,9 +42,9 @@ fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]
             .map(|game_id| {
                 let res = proton_replace_string.to_string();
                 let res = res.replace("\"X\"", &format!("\"{}\"", game_id.as_ref()));
-                let res = res.replace("=", &base_indent_string);
-                let res = res.replace("+", &field_indent_string);
-                res
+                let res = res.replace('=', &base_indent_string);
+                res.replace('+', &field_indent_string)
+                
             });
         let mut new_section = section_str.to_string();
         for game_string in games_strings_to_add {
@@ -59,7 +59,7 @@ fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]
         //TODO make this an error instead?
         println!("Could not find proton section in steam, try to manually set proton on at least one game and then rerun");
     }
-    return vdf_content.to_string();
+    vdf_content.to_string()
 }
 
 struct SectionInfo {

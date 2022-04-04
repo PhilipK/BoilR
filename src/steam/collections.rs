@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use rusty_leveldb::{LdbIterator, Options, WriteBatch, DB};
 
-const BOILR_TAG: &'static str = "boilr";
+const BOILR_TAG: &str = "boilr";
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
@@ -77,13 +77,13 @@ struct ValueCollection {
 }
 
 impl ValueCollection {
-    fn new<S: AsRef<str>>(name: S, game_ids: &Vec<usize>) -> Self {
+    fn new<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Self {
         let name = name.as_ref();
         let id = name_to_key(name);
         let value = ValueCollection {
             id,
             name: name.to_string(),
-            added: game_ids.clone(),
+            added: game_ids.to_vec(),
             removed: vec![],
         };
         value
@@ -275,7 +275,7 @@ fn get_namespaces(db: &mut DB, key_bytes: &[u8]) -> Option<Vec<(i32, String)>> {
     match db.get(key_bytes) {
         Some(got) => {
             let collection_bytes = got.as_slice();
-            let collectin_str = String::from_utf8_lossy(&collection_bytes)[1..].to_string();
+            let collectin_str = String::from_utf8_lossy(collection_bytes)[1..].to_string();
             let collection = serde_json::from_str(&collectin_str).unwrap_or_default();
             Some(collection)
         }
@@ -313,18 +313,18 @@ fn get_level_db_location() -> Option<PathBuf> {
                 .join("Local Storage")
                 .join("leveldb");
             if path.exists() {
-                return Some(path.to_path_buf());
+                Some(path)
+            }else{
+                None
             }
-            return None;
         }
-        Err(_e) => return None,
+        Err(_e) => None,
     }
 }
 
-fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &Vec<usize>) -> String {
+fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> String {
     let value = ValueCollection::new(name, game_ids);
-    let value_json = serde_json::to_string(&value).expect("Should be able to serialize known type");
-    value_json
+    serde_json::to_string(&value).expect("Should be able to serialize known type")    
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
@@ -338,11 +338,7 @@ fn parse_steam_collections<S: AsRef<str>>(
     input: S,
 ) -> Result<Vec<(String, SteamCollection)>, Box<dyn Error>> {
     let input = input.as_ref();
-    let input = if input.starts_with("\u{1}") {
-        input[1..].to_string()
-    } else {
-        input.to_string()
-    };
+    let input = input.strip_prefix('\u{1}').unwrap_or(input);
     let res = serde_json::from_str::<Vec<(String, SteamCollection)>>(&input)?;
     Ok(res)
 }
@@ -366,17 +362,17 @@ pub fn write_vdf_collection_to_string<S: AsRef<str>>(
 ) -> Option<String> {
     let input = input.as_ref();
     let str = serde_json::to_string(vdf).expect("Should be able to serialize known type");
-    let encoded_json = format!("\"{}\"", str.replace("\"", "\\\""));
+    let encoded_json = format!("\"{}\"", str.replace('\\', "\\\""));
     let key = "\t\"user-collections\"\t\t";
     if let Some(start_index) = input.find_substring(key) {
         let start_index_plus_key = start_index + key.len();
-        if let Some(line_index) = input[start_index_plus_key..].find("\n") {
+        if let Some(line_index) = input[start_index_plus_key..].find('\n') {
             let end_index_in_full = line_index + start_index_plus_key;
             let result = format!(
                 "{}{}{}",
-                input[..start_index_plus_key].to_string(),
+                &input[..start_index_plus_key],
                 encoded_json,
-                input[end_index_in_full..].to_string()
+                &input[end_index_in_full..]
             );
             return Some(result);
         }

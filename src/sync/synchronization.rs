@@ -122,7 +122,7 @@ fn fix_shortcut_icons(
 
 fn write_shortcut_collections<S: AsRef<str>>(
     steam_id: S,
-    platform_results: &Vec<(String, Vec<ShortcutOwned>)>,
+    platform_results: &[(String, Vec<ShortcutOwned>)],
 ) -> Result<(), Box<dyn Error>> {
     let mut collections = vec![];
 
@@ -250,7 +250,7 @@ where
                     }
                     current_shortcuts.push(shortcut_owned.clone());
                 }
-                if shortcuts_to_proton.len() > 0 {
+                if !shortcuts_to_proton.is_empty() {
                     setup_proton_games(shortcuts_to_proton.as_slice());
                 }
 

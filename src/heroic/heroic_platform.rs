@@ -32,25 +32,23 @@ struct HeroicGogPath {
 }
 
 fn get_installed_json_location(install_mode: &InstallationMode) -> PathBuf {
-    let home_dir = std::env::var("HOME").unwrap_or("".to_string());
+    let home_dir = std::env::var("HOME").unwrap_or_else(|_| "".to_string());
     match install_mode {
         InstallationMode::FlatPak => Path::new(&home_dir)
             .join(".var/app/com.heroicgameslauncher.hgl/config/legendary/installed.json"),
         InstallationMode::UserBin => Path::new(&home_dir).join(".config/legendary/installed.json"),
     }
-    .to_path_buf()
 }
 
 fn get_gog_installed_location(install_mode: &InstallationMode) -> PathBuf {
-    let home_dir = std::env::var("HOME").unwrap_or("".to_string());
+    let home_dir = std::env::var("HOME").unwrap_or_else(|_| "".to_string());
     match install_mode {
         InstallationMode::FlatPak => Path::new(&home_dir)
             .join(".var/app/com.heroicgameslauncher.hgl/config/heroic/gog_store/installed.json"),
         InstallationMode::UserBin => {
             Path::new(&home_dir).join(".config/heroic/gog_store/installed.json")
         }
-    }
-    .to_path_buf()
+    }    
 }
 
 fn get_shortcuts_from_install_mode(
@@ -69,9 +67,10 @@ fn get_shortcuts_from_location<P: AsRef<Path>>(path: P) -> Result<Vec<HeroicGame
         for game in games_map.values() {
             games.push(game.clone());
         }
-        return Ok(games);
+        Ok(games)
+    }else{
+        Ok(vec![])
     }
-    return Ok(vec![]);
 }
 
 impl Platform<HeroicGameType, Box<dyn Error>> for HeroicPlatform {
@@ -151,8 +150,7 @@ fn get_gog_games(
         })
         .filter_map(|config_path| std::fs::read_to_string(config_path).ok())
         .filter_map(|config_string| serde_json::from_str::<HeroicGogConfig>(&config_string).ok())
-        .map(|config| config.installed)
-        .flatten()
+        .flat_map(|config| config.installed)        
         .collect();
 
     let mut is_windows_map = HashMap::new();

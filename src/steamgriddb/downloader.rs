@@ -129,7 +129,11 @@ async fn search_fo_to_download(
 
     let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
         // if we are missing any of the images we need to search for them
-        types.iter().map(|t| t.file_name(s.app_id)).any(|image| !known_images.contains(&image)) && !s.app_name.is_empty()
+        types
+            .iter()
+            .map(|t| t.file_name(s.app_id))
+            .any(|image| !known_images.contains(&image))
+            && !s.app_name.is_empty()
     });
     let shortcuts_to_search_for: Vec<&ShortcutOwned> = shortcuts_to_search_for.collect();
     if shortcuts_to_search_for.is_empty() {
@@ -153,7 +157,7 @@ async fn search_fo_to_download(
     for (app_id, search) in search_results_a.into_iter().flatten() {
         search_results.insert(app_id, search);
     }
- 
+
     let mut to_download = vec![];
     let grid_folder = Path::new(user_data_folder).join("config").join("grid");
     for image_type in types {
@@ -168,22 +172,19 @@ async fn search_fo_to_download(
             .collect();
 
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
-        
 
         if let ImageType::Icon = image_type {
-            let mut index = 0;
-            for image_id in image_ids{
+            for (index,image_id) in image_ids.iter().enumerate() {
                 let shortcut = shortcuts[index];
-                if let Some(url) = get_steam_icon_url(image_id).await{
+                if let Some(url) = get_steam_icon_url(*image_id).await {
                     let path = grid_folder.join(image_type.file_name(shortcut.app_id));
                     to_download.push(ToDownload {
                         path,
                         url,
                         app_name: shortcut.app_name.clone(),
-                        image_type: image_type.clone(),
+                        image_type,
                     });
                 }
-                index = index + 1;
             }
         } else {
             let image_search_result =
@@ -202,16 +203,12 @@ async fn search_fo_to_download(
                                     Ok(img) => Some(img.url.clone()),
                                     Err(_) => get_steam_image_url(game_id, &image_type).await,
                                 };
-                                if let Some(url) = image_url {
-                                    Some(ToDownload {
-                                        path,
-                                        url,
-                                        app_name: shortcut.app_name.clone(),
-                                        image_type: image_type.clone(),
-                                    })
-                                } else {
-                                    None
-                                }
+                                image_url.map(|url| ToDownload {
+                                    path,
+                                    url,
+                                    app_name: shortcut.app_name.clone(),
+                                    image_type,
+                                })
                             }
                         })
                         .collect::<Vec<ToDownload>>()
@@ -285,61 +282,49 @@ async fn get_images_for_ids(
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {
     let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
     let response = reqwest::get(steamgriddb_page_url).await;
-    match response {
-        Ok(response) => {
-            let text_response = response.json::<PublicGameResponse>().await;
-            match text_response {
-                Ok(response) => {
-                    let game_id = response
-                        .data
-                        .clone()
-                        .map(|d| d.platforms.map(|p| p.steam.map(|s| s.id)));
-                    let mtime = response.data.map(|d| {
-                        d.platforms
-                            .map(|p| p.steam.map(|s| s.metadata.map(|m| m.store_asset_mtime)))
-                    });
-                    if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(Some(mtime)))))) =
-                        (game_id, mtime)
-                    {
-                        return Some(image_type.steam_url(steam_app_id, mtime));
-                    }
-                }
-                Err(_) => (),
+    if let Ok(response) = response {
+        let text_response = response.json::<PublicGameResponse>().await;
+        if let Ok(response) = text_response {
+            let game_id = response
+                .data
+                .clone()
+                .map(|d| d.platforms.map(|p| p.steam.map(|s| s.id)));
+            let mtime = response.data.map(|d| {
+                d.platforms
+                    .map(|p| p.steam.map(|s| s.metadata.map(|m| m.store_asset_mtime)))
+            });
+            if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(Some(mtime)))))) =
+                (game_id, mtime)
+            {
+                return Some(image_type.steam_url(steam_app_id, mtime));
             }
         }
-        Err(_) => (),
     }
-    return None;
+    None
 }
 
 async fn get_steam_icon_url(game_id: usize) -> Option<String> {
     let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
     let response = reqwest::get(steamgriddb_page_url).await;
-    match response {
-        Ok(response) => {
-            let text_response = response.json::<PublicGameResponse>().await;
-            match text_response {
-                Ok(response) => {
-                    let game_id = response
-                        .data
-                        .clone()
-                        .map(|d| d.platforms.map(|p| p.steam.map(|s| s.id)));
-                    let mtime = response.data.map(|d| {
-                        d.platforms
-                            .map(|p| p.steam.map(|s| s.metadata.map(|m| m.clienticon)))
-                    });
-                    if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(Some(mtime)))))) =
-                        (game_id, mtime)
-                    {
-                        return Some(icon_url(&steam_app_id, &mtime));
-                    }
-                }
-                Err(_) => (),
+    if let Ok(response) = response {
+        let text_response = response.json::<PublicGameResponse>().await;
+        if let Ok(response) = text_response {
+            let game_id = response
+                .data
+                .clone()
+                .map(|d| d.platforms.map(|p| p.steam.map(|s| s.id)));
+            let mtime = response.data.map(|d| {
+                d.platforms
+                    .map(|p| p.steam.map(|s| s.metadata.map(|m| m.clienticon)))
+            });
+            if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(Some(mtime)))))) =
+                (game_id, mtime)
+            {
+                return Some(icon_url(&steam_app_id, &mtime));
             }
         }
-        Err(_) => (),
     }
-    return None;
+    None
 }
 
 fn icon_url(steam_app_id: &str, icon_id: &str) -> String {
