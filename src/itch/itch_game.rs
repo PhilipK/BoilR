@@ -20,7 +20,7 @@ impl From<ItchGame> for ShortcutOwned {
             game.title.as_str(),
             exe.as_str(),
             &game.install_path,
-            exe.as_str(),
+            "",
             "",
             "",
         );
