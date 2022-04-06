@@ -3,9 +3,11 @@ Version=1.0
 Type=Application
 
 Name=BoilR
-Comment=This little tool will show games from other games platforms in your Steam library.
+Comment=Add non-steam games to your steam library
 Categories=Utility;Amusement;
+Keywords=Steam;Heroic;Lutris;Itch;Origin;GOG;UPlay;Icons;Images;Non-Steam;Games;
 
 Icon=io.github.philipk.boilr
 Exec=boilr
 Terminal=false
+StartupNotify=true
