@@ -27,24 +27,19 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<OriginGame>, OriginErrors> {
-        let origin_folder = Path::new(
-            &self
-                .settings
-                .path
-                .clone()
-                .unwrap_or_else(get_default_location),
-        )
-        .join("LocalContent");
-        if !origin_folder.exists() {
-            return Err(OriginErrors::PathNotFound {
-                path: origin_folder.to_str().unwrap().to_string(),
-            });
+       
+        let origin_folder = get_default_location();
+        if  origin_folder.is_none(){
+            return Err(OriginErrors::PathNotFound { path: "Default path".to_string() });
         }
+        let origin_folder = origin_folder.unwrap();
+        let origin_exe = origin_folder.join("Origin.exe");
         let game_folders =
             origin_folder
+            .join("LocalContent")
                 .read_dir()
                 .map_err(|e| OriginErrors::CouldNotReadGameDir {
-                    path: origin_folder,
+                    path: origin_folder.join("LocalContent"),
                     error: format!("{:?}", e),
                 })?;
         let games = game_folders
@@ -61,6 +56,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
                 id.map(|id| OriginGame {
                     id,
                     title: game_title,
+                    origin_location:Some(origin_exe.clone())
                 })
             });
         Ok(games.collect())
@@ -86,6 +82,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         }
     }
 }
+
 
 fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {
     let game_folder_files = game_folder_path.read_dir();
@@ -116,29 +113,48 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
     take_until("&")(i)
 }
 
-#[cfg(target_family = "unix")]
-pub fn get_default_location() -> String {
-    //TODO implement this for linux:
-    // https://www.toptensoftware.com/blog/running-ea-origin-games-under-linux-via-steam-and-proton/
 
-    //If we don't have a home drive we have to just die
-    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
-    Path::new(&home)
-        .join("Games/origin/drive_c/ProgramData/Origin/")
-        .to_str()
-        .unwrap()
-        .to_string()
+//~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Origin/Origin.exe
+#[cfg(target_family = "unix")]
+pub fn get_default_location() -> Option<PathBuf> {
+
+    if let Ok(home)  = std::env::var("HOME"){
+        let compat_folder_path = Path::new(&home)
+        .join(".steam")
+        .join("steam")
+        .join("steamapps")
+        .join("compatdata");
+        if let Ok(compat_folder) = std::fs::read_dir(compat_folder_path){
+            for game_folder in compat_folder {
+                if let Ok(dir) = game_folder{
+                   let origin_path=  dir.path()
+                    .join("pfx")
+                    .join("drive_c")
+                    .join("Program Files (x86)")
+                    .join("Origin");
+                    let origin_exe = origin_path.join("Origin.exe");
+                    if origin_exe.exists(){
+                        return Some(origin_path.to_owned());
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 #[cfg(target_os = "windows")]
-pub fn get_default_location() -> String {
+pub fn get_default_location() -> Option<PathBuf> {
     let key = "PROGRAMDATA";
-    let program_data = std::env::var(key).expect("Expected a APPDATA variable to be defined");
-    Path::new(&program_data)
-        .join("Origin")
-        .to_str()
-        .unwrap()
-        .to_string()
+    let program_data = std::env::var(key);
+    if let Ok(program_data) =program_data {
+        let origin_folder = Path::new(&program_data)
+        .join("Origin");
+        if origin_folder.exsits(){
+            return Some(origin_folder.to_owned());
+        }
+    }
+    None
 }
 
 #[derive(Debug, Fail)]
