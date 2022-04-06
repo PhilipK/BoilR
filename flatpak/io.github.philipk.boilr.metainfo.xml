@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.philipk.boilr</id>
+
+  <name>BoilR</name>
+  <summary>This little tool will show games from other games platforms in your Steam library</summary>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT or Apache-2.0</project_license>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
+  <description>
+    <p>
+      This little tool will show games from other games platforms in your Steam library.
+    </p>
+    <p>
+      It uses the Steam 3rd party shortcuts feature and does not require you to set up anything. The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available. Optionally you can set BoilR up to automatically download artwork from [SteamGridDB](https://www.steamgriddb.com/).
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.philipk.boilr.desktop</launchable>
+</component>

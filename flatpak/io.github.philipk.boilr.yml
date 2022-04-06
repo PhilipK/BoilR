@@ -1,0 +1,49 @@
+app-id: io.github.philipk.boilr
+command: boilr
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  # FIXME: fltk-rs downloads junk from the internet,
+  # it probably has to be forced to use the system version instead.
+  # This probably is not acceptable for flathub.
+  build-args:
+    - --share=network
+  env:
+    # To pick up vendored deps
+    CARGO_HOME: /run/build/boilr/cargo
+    RUSTFLAGS: "-L /app/lib/"
+
+command: boilr
+finish-args:
+  # TODO: Tighten permissions
+  # TODO: Heroic (flatpak), lutris (flatpak)
+  - --filesystem=xdg-data/Steam:rw
+  - --filesystem=~/.steam:rw # Steam (Non-flatpak)
+  - --filesystem=~/.var/app/com.valvesoftware.Steam:rw # Steam (Flatpak)
+  - --filesystem=xdg-data/lutris:rw # Lutris (non-flatpak)
+  - --filesystem=~/Games/Heroic:rw # Heroic (non-flatpak)
+
+  - --share=network
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+
+  - --env=PATH=/app/bin:/usr/bin
+
+modules:
+  - shared-modules/glu/glu-9.json
+  - name: boilr
+    buildsystem: simple
+    sources:
+      - type: dir
+        path: ../
+      - cargo-lock.json
+    build-commands:
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - cargo --offline build --release --verbose --features ui
+      - install -Dm755 ./target/release/boilr -t /app/bin/

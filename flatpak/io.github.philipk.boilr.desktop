@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+Name=BoilR
+Comment=This little tool will show games from other games platforms in your Steam library.
+Categories=Utility;Amusement;
+
+Icon=io.github.philipk.boilr
+Exec=boilr
+Terminal=false
