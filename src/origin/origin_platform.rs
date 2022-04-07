@@ -166,7 +166,7 @@ struct OriginPathData{
 
 
 #[cfg(target_os = "windows")]
-pub fn get_default_locations() -> OriginPathData {
+fn get_default_locations() -> OriginPathData {
     let mut res = OriginPathData::default();
 
     let key = "PROGRAMDATA";
