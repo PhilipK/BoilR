@@ -11,10 +11,10 @@ pub struct OriginGame {
 
 impl From<OriginGame> for ShortcutOwned {
     fn from(game: OriginGame) -> Self {
-        let launch = format!("origin2://game/launch?offerIds={}&autoDownload=1", game.id);
+        let launch = format!("\"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"", game.id);
         
         let mut owned_shortcut = if let Some(origin_location)  = game.origin_location{
-            let origin_location = origin_location.to_string_lossy();
+            let origin_location = format!("\"{}\"",origin_location.to_string_lossy());
             Shortcut::new(
                 "0", 
                 game.title.as_str(), 
