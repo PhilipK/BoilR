@@ -73,7 +73,6 @@ fn update_settings_with_ui_values(settings: &mut Settings, ui: &UserInterface) {
 
     // Origin
     settings.origin.enabled = ui.enable_origin_checkbox.value();
-    settings.origin.path = empty_or_whitespace(ui.origin_folder_input.value());
 
     // Epic
     settings.epic_games.enabled = ui.enable_egs_checkbox.value();
@@ -107,7 +106,7 @@ fn save_settings_to_file(settings: &Settings) {
 fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
     use std::path::Path;
 
-    use crate::{gog, itch, origin, steam};
+    use crate::{gog, itch, steam};
 
     ui.steam_location_input.set_value(
         &settings
@@ -167,18 +166,6 @@ fn update_ui_with_settings(ui: &mut UserInterface, settings: &Settings) {
             .unwrap_or(default_itch_location),
     );
     ui.enable_origin_checkbox.set_value(settings.origin.enabled);
-    let mut default_origin_location = origin::get_default_location();
-    if !Path::new(&default_origin_location).exists() {
-        default_origin_location = String::from("");
-    }
-    ui.origin_folder_input.set_value(
-        &settings
-            .origin
-            .path
-            .clone()
-            .unwrap_or(default_origin_location),
-    );
-
     ui.enable_gog_checkbox.set_value(settings.gog.enabled);
     let default_gog_location = gog::default_location();
     let default_gog_location = if !default_gog_location.exists() {

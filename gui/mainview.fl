@@ -75,10 +75,6 @@ class UserInterface {open
           label Origin
           xywh {25 275 155 25} down_box DOWN_BOX
         }
-        Fl_Input origin_folder_input {
-          label {Origin Data Folder}
-          xywh {175 275 300 25} align 5
-        }
       }    
             
       # ----- GOG -----
