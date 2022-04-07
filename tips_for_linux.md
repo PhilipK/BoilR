@@ -23,4 +23,7 @@ I recommend you just use [Legendary](https://github.com/derrod/legendary). But i
 
 ### Origin
 
-Here I just suggest you use [Lutris](https://lutris.net/games/origin/)
+- Download the origin installer
+- Run the installer by adding it to steam via the "add a non-steam game" option
+- Remember to set "compatability" to a newer proton version
+- After the install, BoilR can find and add the games
