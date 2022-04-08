@@ -52,7 +52,7 @@ pub struct SteamUsersInfo {
 /// Get the paths to the steam users shortcuts (one for each user)
 pub fn get_shortcuts_paths(
     settings: &SteamSettings,
-) -> Result<Vec<SteamUsersInfo>, Box<dyn Error>> {
+) -> Result<Vec<SteamUsersInfo>, Box<dyn Error + Sync + Send>> {
     let user_location = settings.location.clone();
     let steam_path_str = match user_location {
         Some(location) => location,
@@ -107,7 +107,7 @@ pub fn get_shortcuts_paths(
     Ok(users_info)
 }
 
-pub fn get_default_location() -> Result<String, Box<dyn Error>> {
+pub fn get_default_location() -> Result<String, Box<dyn Error + Sync + Send>> {
     #[cfg(target_os = "windows")]
     let path_string = {
         let key = "PROGRAMFILES(X86)";
