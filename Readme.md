@@ -2,7 +2,9 @@
 
 ## Description
 
-This little tool will show games from other games platforms in your Steam library.
+BoilR automatically adds (almost) all your games to your Steam library.
+
+![BoilR Screenshot](screenshot_1.png)
 
 It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
 The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
@@ -14,8 +16,8 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 - [x] Automatically download art from [SteamGridDB](https://www.steamgriddb.com/)
 - [x] Cross Platform (Windows, Linux, Mac, Steam Deck)
 - [x] Standalone / No install needed
-- [x] Small (~1.5mb on disk)
-- [x] Lightweight (~2mb ram)
+- [x] Small (~3mb on disk)
+- [x] Lightweight (~30mb ram)
 - [x] Fast synchronization (~1 second)
 
 ## Integrations
@@ -44,8 +46,7 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 ## Getting cover art for your shortcuts
 
 - Get a [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api)
-- Run BoilR put the auth key in the input.
-- Click Save
+- Run BoilR put the auth key in the input (in the settings section).
 - Click Syncrhonize
 
 

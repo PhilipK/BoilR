@@ -1,5 +1,5 @@
-use eframe::{egui, epi,};
-use egui::{ScrollArea, TextureHandle, ImageButton, Stroke, Rounding};
+use eframe::{egui, epi::{self, IconData},};
+use egui::{ScrollArea, TextureHandle,  Stroke, Rounding, Image};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 
 use crate::{settings::Settings, sync::{download_images, self}, sync::run_sync};
 
-use super::{ui_images::{get_import_image, get_logo}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR, FG_STROKE_COLOR}};
+use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE}};
 
 
 #[derive(Default)]
@@ -58,7 +58,6 @@ impl MyEguiApp {
 #[derive(PartialEq)]
 enum Menues {
     Import, 
-    Art,
     Settings,    
 }
 
@@ -75,35 +74,7 @@ impl epi::App for MyEguiApp {
 
     fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
         let mut style: egui::Style = (*ctx.style()).clone();
-        style.spacing.item_spacing = egui::vec2(15.0, 15.0);
-        style.visuals.dark_mode = true;
-        style.visuals.override_text_color = Some(TEXT_COLOR);
-        style.visuals.widgets.noninteractive.rounding = Rounding{
-            ne:0.0,
-            nw:0.0,
-            se:0.0,
-            sw:0.0
-        };
-        style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
-        style.visuals.widgets.active.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
-        style.visuals.widgets.active.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
-
-
-        style.visuals.widgets.noninteractive.bg_fill = BACKGROUND_COLOR;
-        style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
-        style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
-        
-        style.visuals.widgets.inactive.bg_fill = BACKGROUND_COLOR;
-        style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
-        style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
-        
-
-        style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
-        style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
-        style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
-        
-
-
+        create_style(&mut style);
         ctx.set_style(style);
 
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
@@ -117,32 +88,29 @@ impl epi::App for MyEguiApp {
                 // ui.selectable_value(&mut self.selected_menu, Menues::Art, "Art");
                 ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings");
             });
-            if let Menues::Import = self.selected_menu{
-          
-            }
-        egui::TopBottomPanel::bottom("ActionsPanel").show(ctx, |ui|{
             if  self.games_to_sync.is_some(){
-                let texture = self.get_import_image(ui);
-                let size = texture.size_vec2();
-                let image_button = ImageButton::new(texture, size);
-                if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
-                    self.run_sync();
-                }
-            }
-        });            
+        
+            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
+            .show(ctx,|ui|{
+                    let texture = self.get_import_image(ui);
+                    let size = texture.size_vec2();
+                    let image_button = Image::new(texture, size);
+                    if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
+                        self.run_sync();
+                    }
+            });
+        }
+
         egui::CentralPanel::default()
             .show(ctx, |ui| {
-                
                 if let Menues::Import = self.selected_menu{                    
                 }else{
                     self.games_to_sync = None;
                 }
                 match self.selected_menu {
                 Menues::Import => {          
-                    self.render_import_games(ui)
-                }
-                Menues::Art => {
-                    ui.label("In a future update you will be able to specify which art you want for each game");
+                    self.render_import_games(ui);
+                   
                 },
                 Menues::Settings => {
                    self.render_settings(ui);
@@ -151,6 +119,36 @@ impl epi::App for MyEguiApp {
         
     });
 }
+}
+
+fn create_style(style: &mut egui::Style) {
+    style.spacing.item_spacing = egui::vec2(15.0, 15.0);
+    style.visuals.button_frame = false;
+    style.visuals.dark_mode = true;
+    style.visuals.override_text_color = Some(TEXT_COLOR);
+    style.visuals.widgets.noninteractive.rounding = Rounding{
+        ne:0.0,
+        nw:0.0,
+        se:0.0,
+        sw:0.0
+    };
+    style.visuals.faint_bg_color = PURLPLE;
+    style.visuals.extreme_bg_color = BACKGROUND_COLOR;
+    style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
+    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+    style.visuals.widgets.active.fg_stroke = Stroke::new(2.0,LIGHT_ORANGE);
+    style.visuals.widgets.open.bg_fill = BACKGROUND_COLOR;
+    style.visuals.widgets.open.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+    style.visuals.widgets.open.fg_stroke = Stroke::new(2.0,LIGHT_ORANGE);
+    style.visuals.widgets.noninteractive.bg_fill = BACKGROUND_COLOR;
+    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0,ORANGE);
+    style.visuals.widgets.inactive.bg_fill = BACKGROUND_COLOR;
+    style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+    style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0,ORANGE);
+    style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
+    style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+    style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0,LIGHT_ORANGE);
 }
 
 impl MyEguiApp{
@@ -295,7 +293,6 @@ impl MyEguiApp{
     fn render_import_games(&mut self, ui: &mut egui::Ui){
         ui.heading("Import Games");
         ui.label("Select the games you want to import into steam");
-        ui.label("Check the settings if BoilR didn't find the game you where looking for");
         ScrollArea::vertical().show(ui,|ui| {         
             match &self.games_to_sync{
                 Some(games_to_sync) => {
@@ -318,7 +315,9 @@ impl MyEguiApp{
                 None => {
                     self.games_to_sync = Some(sync::get_platform_shortcuts(&self.settings));
                 },
-            };                    
+            };   
+        ui.label("Check the settings if BoilR didn't find the game you where looking for");
+
                         });
                     }
 }
@@ -328,7 +327,11 @@ impl MyEguiApp{
 pub fn run_ui() -> Result<(), Box<dyn Error>> {
     let app = MyEguiApp::new();
 
-    let native_options = eframe::NativeOptions::default();
-
+    let mut native_options = eframe::NativeOptions::default();
+    native_options.initial_window_size = Some(egui::Vec2{
+        x:500.,
+        y:500.
+    });
+    native_options.icon_data = Some(get_logo_icon());
     eframe::run_native(Box::new(app), native_options);
 }
