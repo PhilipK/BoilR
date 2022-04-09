@@ -184,6 +184,14 @@ impl MyEguiApp{
 
             ui.separator();
 
+            #[cfg(target_family = "unix")]
+            {
+                ui.heading("Heroic");
+                ui.checkbox(&mut self.settings.heroic.enabled, "Import form Heroic");
+    
+                ui.separator();
+            }
+
             ui.heading("Legendary & Rare");
             ui.checkbox(&mut self.settings.legendary.enabled, "Import form Legendary & Rare");
             ui.horizontal(|ui| {
