@@ -72,13 +72,13 @@ jobs:
             asset_name: macos_x86_64_ui_BoilR
             args: -9
             strip: false
-            ui: false
+            ui: true
           - os: macos-latest
             file: target/aarch64-apple-darwin/release/boilr
             asset_name: macos_darwin_ui_BoilR
             args: -9
             strip: false
-            ui: false
+            ui: true
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v1
