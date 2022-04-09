@@ -1,4 +1,5 @@
 debug= false
+blacklisted_games = []
 
 [steamgrid_db]
 auth_key = "Write your authentication key between these quotes"
@@ -35,3 +36,4 @@ enabled = true
 [steam]
 create_collections = false
 optimize_for_big_picture = false
+

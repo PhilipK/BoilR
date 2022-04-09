@@ -1,5 +1,5 @@
-use eframe::{egui, epi, epaint::TextureManager};
-use egui::{Color32, Visuals, Widget, ScrollArea, TextStyle, TextureId, ImageData, ColorImage, Vec2, TextureHandle, ImageButton};
+use eframe::{egui, epi,};
+use egui::{ScrollArea, TextureHandle, ImageButton};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
@@ -27,24 +27,30 @@ struct MyEguiApp {
 impl MyEguiApp {
     pub fn new() -> Self {
         let runtime = Runtime::new().unwrap();
-    
         Self {
             selected_menu: Menues::Import,
             settings: Settings::new().expect("We must be able to load our settings"),
             rt: runtime,
             games_to_sync:None,
-            ui_images: UiImages::default()
-            
+            ui_images: UiImages::default(),            
         }
     }
     pub fn run_sync(&self) {
         let settings = self.settings.clone();
         self.rt.spawn_blocking(move || {
+            
+            MyEguiApp::save_settings_to_file(&settings);
             //TODO get status back to ui
             let usersinfo = run_sync(&settings).unwrap();
             let task = download_images(&settings, &usersinfo);
             block_on(task);
         });
+    }
+
+    
+    fn save_settings_to_file(settings: &Settings) {
+        let toml = toml::to_string(&settings).unwrap();
+        std::fs::write("config.toml", toml).unwrap();
     }
 }
 
@@ -66,7 +72,7 @@ impl epi::App for MyEguiApp {
         "BoilR"
     } 
 
-    fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
         let mut style: egui::Style = (*ctx.style()).clone();
         style.spacing.item_spacing = egui::vec2(15.0, 15.0);
         style.visuals.dark_mode = true;
@@ -127,14 +133,23 @@ impl MyEguiApp{
 
     fn render_import_games(&mut self, ui: &mut egui::Ui){
         ui.heading("Import Games");
-        ui.label("The following games will be imported to steam");
+        ui.label("Select the games you want to import into steam");
         ScrollArea::vertical().show(ui,|ui| {         
             match &self.games_to_sync{
                 Some(games_to_sync) => {
                     for (platform_name, shortcuts) in games_to_sync{
                         ui.heading(platform_name);
                         for shortcut in shortcuts {
-                            ui.label(&shortcut.app_name);
+                            let mut import_game = !self.settings.blacklisted_games.contains(&shortcut.app_id);
+                            let checkbox = egui::Checkbox::new(&mut import_game,&shortcut.app_name);
+                            let response = ui.add(checkbox);                            
+                            if response.clicked(){
+                                if !self.settings.blacklisted_games.contains(&shortcut.app_id){
+                                    self.settings.blacklisted_games.push(shortcut.app_id);
+                                }else{
+                                    self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
+                                }
+                            }
                         }
                     }
                 },

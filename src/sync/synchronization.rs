@@ -32,6 +32,7 @@ pub fn run_sync(settings: &Settings) -> Result<Vec<SteamUsersInfo>, String> {
     let all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
+        .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
     for shortcut in &all_shortcuts {
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
