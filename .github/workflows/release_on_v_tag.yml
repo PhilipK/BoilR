@@ -91,7 +91,7 @@ jobs:
           sudo apt-get update 
           sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
       - name: Build Release Version UI 
-        if: ${{ matrix.target != 'aarch64-apple-darwin && matrix.ui == true}}
+        if: ${{ matrix.target != 'aarch64-apple-darwin' && matrix.ui == true}}
         run: cargo build --release --features ui     
       - name: Build Release Version CLI 
         if: ${{ matrix.target != 'aarch64-apple-darwin'  && matrix.ui == false}}
