@@ -236,7 +236,6 @@ dependencies = [
  "eframe",
  "egui",
  "failure",
- "fl2rust",
  "flate2",
  "futures",
  "image",
@@ -970,12 +969,6 @@ checksum = "c3fcf0cee53519c866c09b5de1f6c56ff9d647101f81c1964fa632e148896cdf"
 dependencies = [
  "instant",
 ]
-
-[[package]]
-name = "fl2rust"
-version = "0.4.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e87510450efb16b2add50ad4074470ea7ff15d45060ff64767b8da3cf316e10"
 
 [[package]]
 name = "flate2"
