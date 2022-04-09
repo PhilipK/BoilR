@@ -128,7 +128,27 @@ impl MyEguiApp{
 
     fn render_settings(&mut self, ui: &mut egui::Ui){
         ui.heading("Settings");
+        ui.label("Here you can change your settings");
 
+        ui.heading("Steamgriddb");
+        
+        ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
+
+        ui.horizontal(|ui| {
+            let mut empty_string ="".to_string();
+            let auth_key = self.settings.steamgrid_db.auth_key.as_mut().unwrap_or(&mut empty_string);
+            ui.label("Authentication key: ");
+            if ui.text_edit_singleline(auth_key).changed(){
+                self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("To download images you need an API Key from SteamGridDB, you can find yours");
+            ui.hyperlink_to("here", "https://www.steamgriddb.com/profile/preferences/api")
+        });
+        ui.checkbox(&mut self.settings.steamgrid_db.prefer_animated, "Prefer animated images").on_hover_text("Prefer animated images over static images (this can slow Steam down but looks neat)");
+
+        
     }
 
     fn render_import_games(&mut self, ui: &mut egui::Ui){
