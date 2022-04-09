@@ -3,7 +3,8 @@ pub mod ui_colors{
 
     pub const TEXT_COLOR:Color32 = Color32::from_rgb(255, 212, 163);
     pub const BACKGROUND_COLOR:Color32 = Color32::from_rgb(13, 43, 69);
-    pub const STROKE_COLOR:Color32 = Color32::from_rgb(32, 60, 86);
+    pub const BG_STROKE_COLOR:Color32 = Color32::from_rgb(32, 60, 86);
+    pub const FG_STROKE_COLOR:Color32 = Color32::from_rgb(32, 60, 86);
 
 }
 
