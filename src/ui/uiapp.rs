@@ -1,25 +1,40 @@
-use eframe::{egui, epi};
-use egui::{Color32, Visuals, Widget};
+use eframe::{egui, epi, epaint::TextureManager};
+use egui::{Color32, Visuals, Widget, ScrollArea, TextStyle, TextureId, ImageData, ColorImage, Vec2, TextureHandle, ImageButton};
 use futures::executor::block_on;
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
 use tokio::runtime::Runtime;
 
-use crate::{settings::Settings, sync::download_images, sync::run_sync};
+use crate::{settings::Settings, sync::{download_images, self}, sync::run_sync};
+
+use super::ui_images::get_import_image;
+
+
+#[derive(Default)]
+struct UiImages{
+    import_button: Option<egui::TextureHandle>,
+}
+
 
 struct MyEguiApp {
     selected_menu: Menues,
     settings: Settings,
-    rt: Runtime,
+    rt: Runtime,    
+    ui_images: UiImages,
+    games_to_sync:Option<Vec<(String, Vec<ShortcutOwned>)>>
 }
 
 impl MyEguiApp {
     pub fn new() -> Self {
         let runtime = Runtime::new().unwrap();
-
+    
         Self {
-            selected_menu: Menues::Sync,
+            selected_menu: Menues::Import,
             settings: Settings::new().expect("We must be able to load our settings"),
             rt: runtime,
+            games_to_sync:None,
+            ui_images: UiImages::default()
+            
         }
     }
     pub fn run_sync(&self) {
@@ -35,41 +50,27 @@ impl MyEguiApp {
 
 #[derive(PartialEq)]
 enum Menues {
-    Sync,
-    Steam,
-    Images,
-    Legendary,
-    Origin,
-    Epic,
-    Itch,
-    Gog,
-    Uplay,
-    Lutris,
-    Heroic,
+    Import, 
+    Art,
+    Settings,    
 }
 
 impl Default for Menues {
     fn default() -> Menues {
-        Menues::Sync
+        Menues::Import
     }
 }
 
 impl epi::App for MyEguiApp {
     fn name(&self) -> &str {
         "BoilR"
-    }
+    } 
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
         let mut style: egui::Style = (*ctx.style()).clone();
         style.spacing.item_spacing = egui::vec2(15.0, 15.0);
-
-        // style.visuals.extreme_bg_color = Color32::from_rgb(13, 43, 69);
-        // style.visuals.faint_bg_color = Color32::from_rgb(84, 78, 104);
-        // let my_frame = egui::containers::Frame {
-        //     fill: Color32::from_rgb(32, 60, 86),
-        //     stroke: egui::Stroke::new(2.0, Color32::from_rgb(84, 78, 104)),
-        //     ..Default::default()
-        // };
+        style.visuals.dark_mode = true;
+        
 
         ctx.set_style(style);
 
@@ -78,44 +79,76 @@ impl epi::App for MyEguiApp {
             .show(ctx, |ui| {
                 ui.heading("BoilR");
                 ui.separator();
-                ui.selectable_value(&mut self.selected_menu, Menues::Sync, "Sync");
-                ui.selectable_value(&mut self.selected_menu, Menues::Steam, "Steam");
-                ui.selectable_value(&mut self.selected_menu, Menues::Images, "Images");
-                ui.separator();
-                ui.selectable_value(&mut self.selected_menu, Menues::Epic, "Epic");
-                ui.selectable_value(&mut self.selected_menu, Menues::Itch, "Itch");
-                ui.selectable_value(&mut self.selected_menu, Menues::Gog, "Gog");
-                ui.selectable_value(&mut self.selected_menu, Menues::Origin, "Origin");
-                ui.selectable_value(&mut self.selected_menu, Menues::Uplay, "Uplay");
-                ui.selectable_value(&mut self.selected_menu, Menues::Lutris, "Lutris");
-                ui.selectable_value(&mut self.selected_menu, Menues::Legendary, "Legendary");
-                ui.selectable_value(&mut self.selected_menu, Menues::Heroic, "Heroic");
+                ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games");
+                ui.selectable_value(&mut self.selected_menu, Menues::Art, "Art");
+                ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings");
             });
-
+            
+            egui::TopBottomPanel::bottom("ActionsPanel").show(ctx, |ui|{
+                let texture = self.get_import_image(ui);
+                let size = texture.size_vec2();
+                let image_button = ImageButton::new(texture, size);
+                if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
+                    self.run_sync();
+                }
+            });            
         egui::CentralPanel::default()
             // .frame(my_frame)
-            .show(ctx, |ui| match self.selected_menu {
-                Menues::Sync => {
-                    if ui.button("Synchronize").clicked() {
-                        self.run_sync();
-                    }
+            .show(ctx, |ui| {
+                match self.selected_menu {
+                Menues::Import => {           
+                    self.render_import_games(ui)
                 }
-                Menues::Steam => todo!(),
-                Menues::Images => todo!(),
-                Menues::Legendary => todo!(),
-                Menues::Origin => todo!(),
-                Menues::Epic => todo!(),
-                Menues::Itch => todo!(),
-                Menues::Gog => todo!(),
-                Menues::Uplay => todo!(),
-                Menues::Lutris => todo!(),
-                Menues::Heroic => todo!(),
-            });
-    }
+                Menues::Art => {
+                    ui.label("In the future you will be able to specify which art you want for each game");
+                },
+                Menues::Settings => {
+                   self.render_settings(ui);
+                },
+            };
+        
+    });
+}
 }
 
+impl MyEguiApp{
+
+    fn get_import_image(&mut self, ui:&mut egui::Ui) -> &mut TextureHandle {
+    self.ui_images.import_button.get_or_insert_with(|| {
+        // Load the texture only once.
+        ui.ctx().load_texture("import_image", get_import_image())
+    })
+}
+
+    fn render_settings(&mut self, ui: &mut egui::Ui){
+        ui.heading("Settings");
+
+    }
+
+    fn render_import_games(&mut self, ui: &mut egui::Ui){
+        ui.heading("Import Games");
+        ui.label("The following games will be imported to steam");
+        ScrollArea::vertical().show(ui,|ui| {         
+            match &self.games_to_sync{
+                Some(games_to_sync) => {
+                    for (platform_name, shortcuts) in games_to_sync{
+                        ui.heading(platform_name);
+                        for shortcut in shortcuts {
+                            ui.label(&shortcut.app_name);
+                        }
+                    }
+                },
+                None => {
+                    self.games_to_sync = Some(sync::get_platform_shortcuts(&self.settings));
+                },
+            };                    
+                        });
+                    }
+}
+
+
+
 pub fn run_ui() -> Result<(), Box<dyn Error>> {
-    let settings = Settings::new();
     let app = MyEguiApp::new();
 
     let native_options = eframe::NativeOptions::default();

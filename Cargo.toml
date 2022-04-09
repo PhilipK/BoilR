@@ -23,12 +23,13 @@ rusty-leveldb = "^0.3.6"
 base64 = "^0.13.0"
 eframe = { version = "0.17.0", optional = true }
 egui = { version = "0.17.0", optional = true }
+image = { version = "0.24.1", features = ["png"] }
 
 [build-dependencies]
 fl2rust = { version = "^0.4", optional = true }
 
 [features]
-#default = ["ui"]
+default = ["ui"]
 ui = ["eframe", "egui"]
 
 
