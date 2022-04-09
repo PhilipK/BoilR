@@ -28,7 +28,7 @@ enabled = true
 create_symlinks = true
 
 [lutris]
-enabled = true
+enabled = false
 
 [heroic]
 enabled = true
