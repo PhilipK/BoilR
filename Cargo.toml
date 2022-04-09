@@ -26,7 +26,7 @@ image = { version = "0.24.1", optional = true, features = ["png"] }
 toml = { version = "^0.5.8", optional = true }
 
 [features]
-default = ["ui"]
+#default = ["ui"]
 ui = ["eframe", "egui","toml","image"]
 
 
