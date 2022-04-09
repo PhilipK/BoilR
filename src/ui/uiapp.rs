@@ -81,32 +81,40 @@ impl epi::App for MyEguiApp {
         ctx.set_style(style);
 
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
-            // .frame(my_frame.clone())
             .show(ctx, |ui| {
                 ui.heading("BoilR");
                 ui.separator();
                 ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games");
-                ui.selectable_value(&mut self.selected_menu, Menues::Art, "Art");
+                // ui.selectable_value(&mut self.selected_menu, Menues::Art, "Art");
                 ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings");
             });
-            
-            egui::TopBottomPanel::bottom("ActionsPanel").show(ctx, |ui|{
+            if let Menues::Import = self.selected_menu{
+          
+            }
+        egui::TopBottomPanel::bottom("ActionsPanel").show(ctx, |ui|{
+            if  self.games_to_sync.is_some(){
                 let texture = self.get_import_image(ui);
                 let size = texture.size_vec2();
                 let image_button = ImageButton::new(texture, size);
                 if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
                     self.run_sync();
                 }
-            });            
+            }
+        });            
         egui::CentralPanel::default()
-            // .frame(my_frame)
             .show(ctx, |ui| {
+                
+                if let Menues::Import = self.selected_menu{                    
+                }else{
+                    self.games_to_sync = None;
+                }
                 match self.selected_menu {
-                Menues::Import => {           
+                Menues::Import => {          
+                 
                     self.render_import_games(ui)
                 }
                 Menues::Art => {
-                    ui.label("In the future you will be able to specify which art you want for each game");
+                    ui.label("In a future update you will be able to specify which art you want for each game");
                 },
                 Menues::Settings => {
                    self.render_settings(ui);
@@ -130,25 +138,113 @@ impl MyEguiApp{
         ui.heading("Settings");
         ui.label("Here you can change your settings");
 
-        ui.heading("Steamgriddb");
-        
-        ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
+        ScrollArea::vertical().show(ui,|ui| {         
+            ui.heading("SteamGridDB");
+            ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let auth_key = self.settings.steamgrid_db.auth_key.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Authentication key: ");
+                if ui.text_edit_singleline(auth_key).changed(){
+                    self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
+                }
+            });
+            ui.horizontal(|ui| {
+                ui.label("To download images you need an API Key from SteamGridDB, you can find yours");
+                ui.hyperlink_to("here", "https://www.steamgriddb.com/profile/preferences/api")
+            });
+            ui.checkbox(&mut self.settings.steamgrid_db.prefer_animated, "Prefer animated images").on_hover_text("Prefer downloading animated images over static images (this can slow Steam down but looks neat)");
 
-        ui.horizontal(|ui| {
-            let mut empty_string ="".to_string();
-            let auth_key = self.settings.steamgrid_db.auth_key.as_mut().unwrap_or(&mut empty_string);
-            ui.label("Authentication key: ");
-            if ui.text_edit_singleline(auth_key).changed(){
-                self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
-            }
-        });
-        ui.horizontal(|ui| {
-            ui.label("To download images you need an API Key from SteamGridDB, you can find yours");
-            ui.hyperlink_to("here", "https://www.steamgriddb.com/profile/preferences/api")
-        });
-        ui.checkbox(&mut self.settings.steamgrid_db.prefer_animated, "Prefer animated images").on_hover_text("Prefer animated images over static images (this can slow Steam down but looks neat)");
+            ui.separator();
 
-        
+            ui.heading("Steam");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let steam_location = self.settings.steam.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Steam Location: ");
+                if ui.text_edit_singleline(steam_location).changed(){
+                    self.settings.steam.location = Some(steam_location.to_string());
+                }
+            });
+            ui.checkbox(&mut self.settings.steam.create_collections, "Create collections").on_hover_text("Tries to create a games collection for each platform");
+            ui.checkbox(&mut self.settings.steam.optimize_for_big_picture, "Optimize for big picture").on_hover_text("Set icons to be larger horizontal images, this looks nice in steam big picture mode, but a bit off in desktop mode");
+
+            ui.separator();
+
+            ui.heading("Epic Games");
+            ui.checkbox(&mut self.settings.epic_games.enabled, "Import form Epic Games");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let epic_location = self.settings.epic_games.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Epic Manifests Location: ").on_hover_text("The location where Epic stores its manifest files that BoilR needs to read");
+                if ui.text_edit_singleline(epic_location).changed(){
+                    self.settings.epic_games.location = Some(epic_location.to_string());
+                }
+            });
+
+            ui.separator();
+
+            ui.heading("Legendary & Rare");
+            ui.checkbox(&mut self.settings.legendary.enabled, "Import form Legendary & Rare");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let legendary_location = self.settings.legendary.executable.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Legendary Executable: ").on_hover_text("The location of the legendary executable to use");
+                if ui.text_edit_singleline(legendary_location).changed(){
+                    self.settings.legendary.executable = Some(legendary_location.to_string());
+                }
+            });
+
+            ui.separator();
+
+            ui.heading("Itch.io");
+            ui.checkbox(&mut self.settings.itch.enabled, "Import form Itch.io");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let itch_location = self.settings.itch.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Itch.io Folder: ");
+                if ui.text_edit_singleline(itch_location).changed(){
+                    self.settings.itch.location = Some(itch_location.to_string());
+                }
+            });
+
+            ui.separator();
+
+            ui.heading("Origin");
+            ui.checkbox(&mut self.settings.origin.enabled, "Import from Origin");            
+
+            ui.separator();
+
+            ui.heading("GoG Galaxy");
+            ui.checkbox(&mut self.settings.gog.enabled, "Import form GoG Galaxy");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let itch_location = self.settings.gog.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("GoG Galaxy Folder: ");
+                if ui.text_edit_singleline(itch_location).changed(){
+                    self.settings.gog.location = Some(itch_location.to_string());
+                }
+            });
+
+            ui.separator();
+
+            ui.heading("Uplay");
+            ui.checkbox(&mut self.settings.uplay.enabled, "Import form Uplay");
+
+            ui.separator();
+
+            ui.heading("Lutris");
+            ui.checkbox(&mut self.settings.lutris.enabled, "Import form Uplay");
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let lutris_location = self.settings.lutris.executable.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Lutris Location: ");
+                if ui.text_edit_singleline(lutris_location).changed(){
+                    self.settings.lutris.executable = Some(lutris_location.to_string());
+                }
+            });
+         
+        });
     }
 
     fn render_import_games(&mut self, ui: &mut egui::Ui){
