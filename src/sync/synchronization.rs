@@ -24,13 +24,15 @@ use std::{fs::File, io::Write, path::Path};
 
 const BOILR_TAG: &str = "boilr";
 
-pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
-    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
+pub fn run_sync(settings: &Settings) -> Result<Vec<SteamUsersInfo>, String> {
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
+    .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
 
     let platform_shortcuts = get_platform_shortcuts(settings);
     let all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
+        .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
     for shortcut in &all_shortcuts {
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
@@ -69,15 +71,17 @@ pub async fn run_sync(settings: &Settings) -> Result<(), Box<dyn Error>> {
         println!("Finished synchronizing games in: {:?}", duration);
     }
 
+    Ok(userinfo_shortcuts)
+}
+
+pub async fn download_images(settings: &Settings, userinfo_shortcuts: &Vec<SteamUsersInfo>) {
     if settings.steamgrid_db.enabled {
         if settings.steamgrid_db.prefer_animated {
             println!("downloading animated images");
-            download_images_for_users(settings, &userinfo_shortcuts, true).await;
+            download_images_for_users(settings, userinfo_shortcuts, true).await;
         }
-        download_images_for_users(settings, &userinfo_shortcuts, false).await;
+        download_images_for_users(settings, userinfo_shortcuts, false).await;
     }
-
-    Ok(())
 }
 
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
@@ -138,7 +142,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
     Ok(())
 }
 
-fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
+pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut platform_results = vec![
         update_platform_shortcuts(&EpicPlatform::new(settings.epic_games.clone())),
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),

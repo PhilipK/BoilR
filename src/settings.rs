@@ -11,6 +11,7 @@ use std::env;
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub debug: bool,
+    pub blacklisted_games: Vec<u32>,
     pub epic_games: EpicGamesLauncherSettings,
     pub legendary: LegendarySettings,
     pub itch: ItchSettings,

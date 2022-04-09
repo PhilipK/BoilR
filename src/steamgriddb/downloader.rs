@@ -230,7 +230,7 @@ async fn get_images_for_ids(
     download_animated: bool,
 ) -> Result<
     Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>,
-    Box<dyn std::error::Error>,
+    String,
 > {
     use steamgriddb_api::query_parameters::AnimtionType;
     use steamgriddb_api::query_parameters::QueryType::*;
@@ -276,7 +276,7 @@ async fn get_images_for_ids(
 
     let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
 
-    image_search_result
+    image_search_result.map_err(|e| format!("Image search failed {:?}",e))
 }
 
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {

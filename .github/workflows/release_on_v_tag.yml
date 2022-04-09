@@ -67,6 +67,19 @@ jobs:
             strip: false
             ui: false
             target: aarch64-apple-darwin
+          - os: macos-latest
+            file: target/release/boilr
+            asset_name: macos_x86_64_ui_BoilR
+            args: -9
+            strip: false
+            ui: true
+          - os: macos-latest
+            file: target/aarch64-apple-darwin/release/boilr
+            asset_name: macos_darwin_ui_BoilR
+            args: -9
+            strip: false
+            ui: true
+            target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v1
       - name: Rust Cache
@@ -76,26 +89,25 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.ui}}
         run: |
           sudo apt-get update 
-          sudo apt-get install -y libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpango1.0-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
       - name: Build Release Version UI 
-        if: ${{ matrix.ui}}
+        if: ${{ matrix.target != 'aarch64-apple-darwin' && matrix.ui == true}}
         run: cargo build --release --features ui     
       - name: Build Release Version CLI 
-        if: ${{ matrix.ui == false && matrix.target != 'aarch64-apple-darwin'}}
+        if: ${{ matrix.target != 'aarch64-apple-darwin'  && matrix.ui == false}}
         run: cargo build --release       
       - name: Build aarch64 Release Version CLI 
-        if: ${{ matrix.ui == false && matrix.target == 'aarch64-apple-darwin'}}
+        if: ${{matrix.target == 'aarch64-apple-darwin' && matrix.ui == false}}
         run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin
+      - name: Build aarch64 Release Version UI 
+        if: ${{matrix.target == 'aarch64-apple-darwin' && matrix.ui == true}}
+        run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin --features ui
       - name: Compress binaries
-        if: ${{ (matrix.os == 'windows-latest' || matrix.ui == false) && matrix.os != 'macos-latest' }}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
           args: ${{ matrix.args }}
           strip: ${{ matrix.strip }}
-      - name: Strip binaries
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.ui == true}}
-        run: strip ${{ matrix.file }}
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
