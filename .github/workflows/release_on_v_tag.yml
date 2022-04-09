@@ -100,7 +100,7 @@ jobs:
         if: ${{ matrix.ui == false && matrix.target == 'aarch64-apple-darwin'}}
         run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin
       - name: Compress binaries
-        if: ${{ (matrix.os == 'windows-latest' || matrix.ui == false) && matrix.os != 'macos-latest' }}
+        # if: ${{ (matrix.os == 'windows-latest' || matrix.ui == false) && matrix.os != 'macos-latest' }}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
