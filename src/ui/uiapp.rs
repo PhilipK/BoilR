@@ -1,5 +1,5 @@
 use eframe::{egui, epi,};
-use egui::{ScrollArea, TextureHandle, ImageButton, Stroke};
+use egui::{ScrollArea, TextureHandle, ImageButton, Stroke, Rounding};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 
 use crate::{settings::Settings, sync::{download_images, self}, sync::run_sync};
 
-use super::{ui_images::{get_import_image, get_logo}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, STROKE_COLOR}};
+use super::{ui_images::{get_import_image, get_logo}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR, FG_STROKE_COLOR}};
 
 
 #[derive(Default)]
@@ -78,8 +78,32 @@ impl epi::App for MyEguiApp {
         style.spacing.item_spacing = egui::vec2(15.0, 15.0);
         style.visuals.dark_mode = true;
         style.visuals.override_text_color = Some(TEXT_COLOR);
+        style.visuals.widgets.noninteractive.rounding = Rounding{
+            ne:0.0,
+            nw:0.0,
+            se:0.0,
+            sw:0.0
+        };
+        style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
+        style.visuals.widgets.active.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+        style.visuals.widgets.active.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
+
+
         style.visuals.widgets.noninteractive.bg_fill = BACKGROUND_COLOR;
-        style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0,STROKE_COLOR);
+        style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+        style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
+        
+        style.visuals.widgets.inactive.bg_fill = BACKGROUND_COLOR;
+        style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+        style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
+        
+
+        style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
+        style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
+        style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0,FG_STROKE_COLOR);
+        
+
+
         ctx.set_style(style);
 
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
