@@ -1,5 +1,5 @@
 use eframe::{egui, epi,};
-use egui::{ScrollArea, TextureHandle, ImageButton};
+use egui::{ScrollArea, TextureHandle, ImageButton, Stroke};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
@@ -7,12 +7,13 @@ use tokio::runtime::Runtime;
 
 use crate::{settings::Settings, sync::{download_images, self}, sync::run_sync};
 
-use super::ui_images::get_import_image;
+use super::{ui_images::{get_import_image, get_logo}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, STROKE_COLOR}};
 
 
 #[derive(Default)]
 struct UiImages{
     import_button: Option<egui::TextureHandle>,
+    logo_32: Option<egui::TextureHandle>,
 }
 
 
@@ -76,13 +77,17 @@ impl epi::App for MyEguiApp {
         let mut style: egui::Style = (*ctx.style()).clone();
         style.spacing.item_spacing = egui::vec2(15.0, 15.0);
         style.visuals.dark_mode = true;
-        
-
+        style.visuals.override_text_color = Some(TEXT_COLOR);
+        style.visuals.widgets.noninteractive.bg_fill = BACKGROUND_COLOR;
+        style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0,STROKE_COLOR);
         ctx.set_style(style);
 
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
+            .default_width(40.0)
             .show(ctx, |ui| {
-                ui.heading("BoilR");
+                let texture = self.get_logo_image(ui);
+                let size = texture.size_vec2();
+                ui.image(texture, size);
                 ui.separator();
                 ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games");
                 // ui.selectable_value(&mut self.selected_menu, Menues::Art, "Art");
@@ -110,7 +115,6 @@ impl epi::App for MyEguiApp {
                 }
                 match self.selected_menu {
                 Menues::Import => {          
-                 
                     self.render_import_games(ui)
                 }
                 Menues::Art => {
@@ -132,7 +136,16 @@ impl MyEguiApp{
         // Load the texture only once.
         ui.ctx().load_texture("import_image", get_import_image())
     })
-}
+
+    }
+
+    fn get_logo_image(&mut self, ui:&mut egui::Ui) -> &mut TextureHandle {
+        self.ui_images.logo_32.get_or_insert_with(|| {
+            // Load the texture only once.
+            ui.ctx().load_texture("logo32", get_logo())
+        })
+    
+        }
 
     fn render_settings(&mut self, ui: &mut egui::Ui){
         ui.heading("Settings");
@@ -258,6 +271,7 @@ impl MyEguiApp{
     fn render_import_games(&mut self, ui: &mut egui::Ui){
         ui.heading("Import Games");
         ui.label("Select the games you want to import into steam");
+        ui.label("Check the settings if BoilR didn't find the game you where looking for");
         ScrollArea::vertical().show(ui,|ui| {         
             match &self.games_to_sync{
                 Some(games_to_sync) => {
