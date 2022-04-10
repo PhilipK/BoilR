@@ -1,5 +1,5 @@
 use eframe::{egui, epi::{self, IconData},};
-use egui::{ScrollArea, TextureHandle,  Stroke, Rounding, Image};
+use egui::{ScrollArea, TextureHandle,  Stroke, Rounding, Image, ImageButton};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
@@ -95,7 +95,7 @@ impl epi::App for MyEguiApp {
             .show(ctx,|ui|{
                     let texture = self.get_import_image(ui);
                     let size = texture.size_vec2();
-                    let image_button = Image::new(texture, size);
+                    let image_button = ImageButton::new(texture, size);
                     if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
                         self.run_sync();
                     }
