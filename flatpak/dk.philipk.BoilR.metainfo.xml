@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Philip Kristoffersen 2022 <philipkristoffersen@gmail.com> -->
+<component type="desktop-application">
+  <id>dk.philipk.BoilR</id>
+  <metadata_license>CC0</metadata_license>
+  <project_license>MIT/APACHE</project_license>
+  <name>BoilR</name>
+  <summary>Add non-steam games to your steam library</summary>
+  <description>
+    <p>This little tool will show games from other games platforms in your Steam library.
+        It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
+        The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
+      Optionally you can set BoilR up to automatically download artwork from SteamGridDB.</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://gitlab.gnome.org/World/design/contrast/raw/master/data/resources/screenshots/screenshot1.png</image>
+      <caption>Main Window</caption>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/PhilipK/BoilR</url>
+<!--
+Open Age Rating Service
+https://hughsie.github.io/oars/index.html
+-->
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.9.19" date="2022-03-27">
+      <description>
+        <p>First Flatpak Release of BoilR</p>
+      </description>
+    </release>
+  </releases>
+  <kudos>
+    <!--
+    GNOME Software kudos:
+    https://gitlab.gnome.org/GNOME/gnome-software/blob/master/doc/kudos.md
+    -->
+    <!-- <kudo>ModernToolkit</kudo> -->
+    <!-- <kudo>HiDpiIcon</kudo> -->
+  </kudos>
+  <developer_name>Philip Kristoffersen</developer_name>
+  <update_contact>philipkristoffersen@gmail.com</update_contact>
+
+  <launchable type="desktop-id">dk.philipk.BoilR.desktop</launchable>
+</component>

@@ -1,4 +1,4 @@
-app-id: io.github.philipk.boilr
+app-id: dk.philipk.BoilR
 command: boilr
 runtime: org.freedesktop.Platform
 runtime-version: '21.08'
