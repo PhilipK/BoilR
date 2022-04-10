@@ -4,6 +4,7 @@ If you are on Linux, and want to use one of the launchers that is not available 
 If you want to avoid launching into Lutris, here are a few ways that you can do that.
 
 ### GOG
+I recommend you just use Heroic. But if you really really want to use EGS you can:
 
 - Install [Lutris](https://lutris.net/)
 - Install GOG from Lutris [here](https://lutris.net/games/gog-galaxy/)
@@ -13,7 +14,7 @@ If you want to avoid launching into Lutris, here are a few ways that you can do 
 
 ### Epic
 
-I recommend you just use [Legendary](https://github.com/derrod/legendary). But if you really really want to use EGS you can:
+I recommend you just use Heroic, Rare or [Legendary](https://github.com/derrod/legendary). But if you really really want to use EGS you can:
 
 - Install [Lutris](https://lutris.net/)
 - Install EGS from Lutris [here](https://lutris.net/games/epic-games-store/)
@@ -27,3 +28,4 @@ I recommend you just use [Legendary](https://github.com/derrod/legendary). But i
 - Run the installer by adding it to steam via the "add a non-steam game" option
 - Remember to set "compatability" to a newer proton version
 - After the install, BoilR can find and add the games
+- Validate that the found games have the correct Proton version
