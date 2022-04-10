@@ -1,11 +1,11 @@
-use eframe::{egui, epi::{self, IconData},};
-use egui::{ScrollArea, TextureHandle,  Stroke, Rounding, Image, ImageButton};
+use eframe::{egui, epi::{self},};
+use egui::{ScrollArea, TextureHandle,  Stroke, Rounding, ImageButton};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
-use std::error::Error;
-use tokio::runtime::Runtime;
+use std::{error::Error};
+use tokio::{runtime::Runtime, sync::watch::{Receiver, self}};
 
-use crate::{settings::Settings, sync::{download_images, self}, sync::run_sync};
+use crate::{settings::Settings, sync::{download_images, self, SyncProgress}, sync::run_sync};
 
 use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE}};
 
@@ -22,8 +22,11 @@ struct MyEguiApp {
     settings: Settings,
     rt: Runtime,    
     ui_images: UiImages,
-    games_to_sync:Option<Vec<(String, Vec<ShortcutOwned>)>>
+    games_to_sync:Option<Vec<(String, Vec<ShortcutOwned>)>>,
+    status_reciever: Receiver<SyncProgress>,    
 }
+
+
 
 impl MyEguiApp {
     pub fn new() -> Self {
@@ -34,17 +37,24 @@ impl MyEguiApp {
             rt: runtime,
             games_to_sync:None,
             ui_images: UiImages::default(),            
+            status_reciever: watch::channel(SyncProgress::NotStarted).1,
         }
     }
-    pub fn run_sync(&self) {
-        let settings = self.settings.clone();
-        self.rt.spawn_blocking(move || {
-            
+    pub fn run_sync(&mut self) {
+        let (sender,mut reciever ) = watch::channel(SyncProgress::NotStarted);        
+        let settings = self.settings.clone();        
+        self.status_reciever   = reciever;
+        self.rt.spawn_blocking(move || {                        
+
             MyEguiApp::save_settings_to_file(&settings);
             //TODO get status back to ui
-            let usersinfo = run_sync(&settings).unwrap();
-            let task = download_images(&settings, &usersinfo);
+            let mut some_sender =Some(sender);
+            let usersinfo = run_sync(&settings,&mut some_sender).unwrap();                        
+            let task = download_images(&settings, &usersinfo,&mut some_sender);
             block_on(task);
+            if let Some(sender) = some_sender{
+                let _ = sender.send(SyncProgress::Done);
+            }
         });
     }
 
@@ -93,6 +103,28 @@ impl epi::App for MyEguiApp {
         
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
             .show(ctx,|ui|{
+                {
+                let status = &*self.status_reciever.borrow();
+                    match status{
+                        SyncProgress::NotStarted => {},
+                        SyncProgress::Starting => {
+                            ui.label("Starting Import");
+                        },
+                        SyncProgress::FoundGames { games_found } => {
+                            ui.label(format!("Found {} games to  import",games_found));
+                        },
+                        SyncProgress::FindingImages => {
+                            ui.label(format!("Searching for images"));
+                        },
+                        SyncProgress::DownloadingImages {  to_download } => {
+                            ui.label(format!("Downloading {} images ",to_download));
+                        },
+                        SyncProgress::Done  =>{
+                            ui.label(format!("Done importing games"));
+                        },
+                    };
+                }    
+                
                     let texture = self.get_import_image(ui);
                     let size = texture.size_vec2();
                     let image_button = ImageButton::new(texture, size);

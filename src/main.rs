@@ -22,8 +22,8 @@ use std::error::Error;
 async fn main() -> Result<(), Box<dyn Error>> {
     let settings = settings::Settings::new()?;
     settings::Settings::write_config_if_missing();
-    let usersinfo = sync::run_sync(&settings).unwrap();
-    sync::download_images(&settings,&usersinfo).await;
+    let usersinfo = sync::run_sync(&settings,&mut None).unwrap();
+    sync::download_images(&settings,&usersinfo,&mut None).await;
     Ok(())
 }
 

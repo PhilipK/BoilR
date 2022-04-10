@@ -1,4 +1,5 @@
 use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
+use tokio::sync::watch::Sender;
 
 use crate::{
     egs::EpicPlatform,
@@ -11,7 +12,7 @@ use crate::{
         Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
-    uplay::Uplay,
+    uplay::Uplay, 
 };
 
 #[cfg(target_family = "unix")]
@@ -24,7 +25,25 @@ use std::{fs::File, io::Write, path::Path};
 
 const BOILR_TAG: &str = "boilr";
 
-pub fn run_sync(settings: &Settings) -> Result<Vec<SteamUsersInfo>, String> {
+
+pub enum SyncProgress{
+    NotStarted,
+    Starting,
+    FoundGames{
+        games_found:usize
+    },
+    FindingImages,
+    DownloadingImages{
+        to_download:usize,        
+    },
+    Done
+}
+
+
+pub fn run_sync(settings: &Settings, sender: &mut Option<Sender<SyncProgress>>) -> Result<Vec<SteamUsersInfo>, String> {
+    if let Some(sender) = &sender{
+        let _ = sender.send(SyncProgress::Starting);
+    }
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
     .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
 
@@ -34,6 +53,9 @@ pub fn run_sync(settings: &Settings) -> Result<Vec<SteamUsersInfo>, String> {
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
+    if let Some(sender) = &sender{
+        let _ = sender.send(SyncProgress::FoundGames { games_found: all_shortcuts.len() });
+    }
     for shortcut in &all_shortcuts {
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
@@ -69,18 +91,18 @@ pub fn run_sync(settings: &Settings) -> Result<Vec<SteamUsersInfo>, String> {
 
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
-    }
+    }    
 
     Ok(userinfo_shortcuts)
 }
 
-pub async fn download_images(settings: &Settings, userinfo_shortcuts: &Vec<SteamUsersInfo>) {
+pub async fn download_images(settings: &Settings, userinfo_shortcuts: &Vec<SteamUsersInfo>,sender: &mut Option<Sender<SyncProgress>>) {
     if settings.steamgrid_db.enabled {
         if settings.steamgrid_db.prefer_animated {
             println!("downloading animated images");
-            download_images_for_users(settings, userinfo_shortcuts, true).await;
+            download_images_for_users(settings, userinfo_shortcuts, true,sender).await;
         }
-        download_images_for_users(settings, userinfo_shortcuts, false).await;
+        download_images_for_users(settings, userinfo_shortcuts, false,sender).await;
     }
 }
 
