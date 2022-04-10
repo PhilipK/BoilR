@@ -73,6 +73,7 @@ impl epi::App for MyEguiApp {
     } 
 
     fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
+        ctx.set_pixels_per_point(1.0);
         let mut style: egui::Style = (*ctx.style()).clone();
         create_style(&mut style);
         ctx.set_style(style);
