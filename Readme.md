@@ -78,7 +78,12 @@ If not, create a new issue and I will have a look at it (remember to write which
 ## I have a great idea / I would like support for a specific platform, what do I do?
 Check out the [discussions](https://github.com/PhilipK/BoilR/discussions) and feel free to create new discussions for your idea.
 
+## How can I help/contribute?
+If you are a coder, you can fork this repo and then create a pull request, they are very welcome!
+If you are not a developer (or you don't like to code in Rust) spread the work and create issues/discussions for anything.
+
+## Can I donate to support BoilR?
+Nope, please don't, donate it to your favorite charity instead, and if you don't have one of those may I suggest something like [GiveWell}(https://www.givewell.org/).
 
 ## License
-
 This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
