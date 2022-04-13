@@ -5,6 +5,7 @@ use std::{collections::HashMap, path::Path};
 
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
+use tokio::sync::watch::Sender;
 use std::error::Error;
 use steamgriddb_api::query_parameters::{GridDimentions, Nsfw}; // 0.3.1
 
@@ -14,6 +15,7 @@ use steamgriddb_api::Client;
 use crate::settings::Settings;
 use crate::steam::{get_shortcuts_for_user, get_users_images, SteamUsersInfo};
 use crate::steamgriddb::ImageType;
+use crate::sync::SyncProgress;
 
 use super::CachedSearch;
 
@@ -23,6 +25,7 @@ pub async fn download_images_for_users<'b>(
     settings: &Settings,
     users: &[SteamUsersInfo],
     download_animated: bool,
+    sender:&mut Option<Sender<SyncProgress>>
 ) {
     let auth_key = &settings.steamgrid_db.auth_key;
     if let Some(auth_key) = auth_key {
@@ -32,6 +35,9 @@ pub async fn download_images_for_users<'b>(
         let search = CachedSearch::new(&client);
         let search = &search;
         let client = &client;
+        if let Some(sender) = sender{
+            let _ = sender.send(SyncProgress::FindingImages);
+        }
         let to_downloads = stream::iter(users)
             .map(|user| {
                 let shortcut_info = get_shortcuts_for_user(user);
@@ -54,9 +60,12 @@ pub async fn download_images_for_users<'b>(
             .collect::<Vec<Vec<ToDownload>>>()
             .await;
         let to_downloads = to_downloads.iter().flatten().collect::<Vec<&ToDownload>>();
+        let total = to_downloads.len();
         if !to_downloads.is_empty() {
+            if let Some(sender) = sender{
+                let _ = sender.send(SyncProgress::DownloadingImages { to_download: total });
+            }
             search.save();
-
             stream::iter(to_downloads)
                 .map(|to_download| async move {
                     if let Err(e) = download_to_download(to_download).await {
@@ -73,7 +82,7 @@ pub async fn download_images_for_users<'b>(
         }
     } else {
         println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
-    }
+    }    
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
