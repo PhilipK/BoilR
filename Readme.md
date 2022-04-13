@@ -59,7 +59,7 @@ If you have a problem that a game wont launch, try to manually set a proton vers
 
 ## Tips for linux
 
-If you are running linux and are running into problems check [tips for linux seciton](tips_for_linux.md)
+If you are running linux (this includes Steam Dekc) and are running into problems check [tips for linux seciton](tips_for_linux.md)
 
 ## Configuration
 
@@ -69,6 +69,15 @@ Most people will not have to configure anything, just open BoilR and click Synch
 ## What is up with the name BoilR?
 
 This tool turns things into Steam, therefor boiler, And it is written in **R**ust so therefor: BoilR
+
+
+## I found a bug, what do it do?
+Check that there is not already an issue for it [here](https://github.com/PhilipK/BoilR/issues)
+If not, create a new issue and I will have a look at it (remember to write which OS you are using).
+
+## I have a great idea / I would like support for a specific platform, what do I do?
+Check out the [discussions](https://github.com/PhilipK/BoilR/discussions) and feel free to create new discussions for your idea.
+
 
 ## License
 
