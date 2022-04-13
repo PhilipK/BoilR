@@ -130,18 +130,14 @@ fn fix_shortcut_icons(
         ImageType::Icon
     };
 
-    for shortcut in shortcuts {
-        #[cfg(not(target_family = "unix"))]
-        let replace_icon = shortcut.icon.trim().eq("") || !Path::new(shortcut.icon.trim()).exists();
-        #[cfg(target_family = "unix")]
-        let replace_icon = shortcut.icon.trim().eq("") ||  !Path::new(shortcut.icon.trim()).exists() ||shortcut.icon.eq(&shortcut.exe);
+    for shortcut in shortcuts {        
+        let replace_icon = shortcut.icon.trim().eq("") ||  !Path::new(shortcut.icon.trim()).exists() || shortcut.icon.eq(&shortcut.exe);
         if replace_icon {
             let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
                 &shortcut.exe,
                 &shortcut.app_name,
             );
-            let new_icon_path = image_folder.join(image_type.file_name(app_id));
-                shortcut.icon = new_icon_path.to_string_lossy().to_string();
+            shortcut.icon = image_folder.join(image_type.file_name(app_id)).to_string_lossy().to_string();
         }
     }
 }
