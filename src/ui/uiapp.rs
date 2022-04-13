@@ -5,7 +5,7 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::error::Error;
 use tokio::runtime::Runtime;
 
-use crate::{settings::Settings, sync::{download_images, self}, sync::run_sync};
+use crate::{settings::Settings, sync::{download_images, self}, };
 
 use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE}};
 
@@ -42,7 +42,7 @@ impl MyEguiApp {
             
             MyEguiApp::save_settings_to_file(&settings);
             //TODO get status back to ui
-            let usersinfo = run_sync(&settings).unwrap();
+            let usersinfo = sync::run_sync(&settings).unwrap();
             let task = download_images(&settings, &usersinfo);
             block_on(task);
         });
@@ -323,6 +323,11 @@ impl MyEguiApp{
                     }
 }
 
+
+pub fn run_sync() {
+    let app = MyEguiApp::new();
+    app.run_sync();
+}
 
 
 pub fn run_ui() -> Result<(), Box<dyn Error>> {

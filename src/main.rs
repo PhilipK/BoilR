@@ -29,5 +29,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(feature = "ui")]
 fn main() -> Result<(), Box<dyn Error>> {
-    ui::run_ui()
+
+    let mut args = std::env::args();
+    if args.len() > 1 && args.nth(1).unwrap_or_default() == "--no-ui" {
+        ui::run_sync();
+        Ok(())
+    }else{
+        ui::run_ui()
+
+    }
 }
