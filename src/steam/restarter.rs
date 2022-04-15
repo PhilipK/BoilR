@@ -41,7 +41,7 @@ pub fn ensure_steam_started(settings: &super::SteamSettings) {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 pub fn ensure_steam_started(_settings: &super::SteamSettings) {
     let steam_name = "steam";
     let s = System::new_all();
