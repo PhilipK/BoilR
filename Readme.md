@@ -70,7 +70,7 @@ Most people will not have to configure anything, just open BoilR and click Synch
 ### Run as CLI
 
 In previous releases there was both a CLI and UI version of BoilR, now there is only a UI version.
-But you can add the commandling argument ``--no-ui`` and then the UI version will act like the old CLI version.
+But you can add the commandline argument ``--no-ui`` and then the UI version will act like the old CLI version.
 This saves some CO2 from not having to build 2 versions of BoilR for each platform, and it also makes development easier.
 
 ## Contributions 
