@@ -41,7 +41,7 @@ impl MyEguiApp {
         }
     }
     pub fn run_sync(&mut self) {
-        let (sender,mut reciever ) = watch::channel(SyncProgress::NotStarted);        
+        let (sender,reciever ) = watch::channel(SyncProgress::NotStarted);        
         let settings = self.settings.clone();        
         if settings.steam.stop_steam{
             crate::steam::ensure_steam_stopped();
@@ -376,7 +376,7 @@ pub fn run_ui() -> Result<(), Box<dyn Error>> {
 
     let mut native_options = eframe::NativeOptions::default();
     native_options.initial_window_size = Some(egui::Vec2{
-        x:500.,
+        x:800.,
         y:500.
     });
     native_options.icon_data = Some(get_logo_icon());

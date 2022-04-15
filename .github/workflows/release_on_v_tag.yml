@@ -3,7 +3,7 @@ name: Create Release Builds
 on:
   push:
     tags:
-      - "v*" # matches v1.0.1, v1.2, v2, etc
+      - "v.*.*.*" # matches v.1.0.1 etc
 
 jobs:
   once:
@@ -35,73 +35,38 @@ jobs:
             asset_name: linux_BoilR
             args: --best --lzma
             strip: true
-            ui: false
-          - os: ubuntu-latest
-            file: target/release/boilr
-            asset_name: linux_ui_BoilR
-            args: --best --lzma
-            strip: true
-            ui: true
           - os: windows-latest
             file: target/release/boilr.exe
             asset_name: windows_BoilR.exe
             args: -9
             strip: false      
-            ui: false
-          - os: windows-latest
-            file: target/release/boilr.exe
-            asset_name: windows_ui_BoilR.exe
-            args: -9
-            strip: false     
-            ui: true   
           - os: macos-latest
             file: target/release/boilr
             asset_name: macos_x86_64_BoilR
             args: -9
             strip: false
-            ui: false
           - os: macos-latest
             file: target/aarch64-apple-darwin/release/boilr
             asset_name: macos_darwin_BoilR
             args: -9
             strip: false
-            ui: false
-            target: aarch64-apple-darwin
-          - os: macos-latest
-            file: target/release/boilr
-            asset_name: macos_x86_64_ui_BoilR
-            args: -9
-            strip: false
-            ui: true
-          - os: macos-latest
-            file: target/aarch64-apple-darwin/release/boilr
-            asset_name: macos_darwin_ui_BoilR
-            args: -9
-            strip: false
-            ui: true
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v1
+      - name: Install dependencies
+        if: ${{ matrix.os == 'ubuntu-latest'}}
+        run: |
+          sudo apt-get update 
+          sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v1.3.0
-      - name: Install dependencies
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.ui}}
-        run: |
-          sudo apt-get update 
-          sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
-      - name: Build Release Version UI 
-        if: ${{ matrix.target != 'aarch64-apple-darwin' && matrix.ui == true}}
-        run: cargo build --release --features ui     
-      - name: Build Release Version CLI 
-        if: ${{ matrix.target != 'aarch64-apple-darwin'  && matrix.ui == false}}
-        run: cargo build --release       
-      - name: Build aarch64 Release Version CLI 
-        if: ${{matrix.target == 'aarch64-apple-darwin' && matrix.ui == false}}
+      - name: Build Release Version
+        if: ${{ matrix.target != 'aarch64-apple-darwin' }}
+        run: cargo build --release     
+      - name: Build aarch64 Release Version 
+        if: ${{matrix.target == 'aarch64-apple-darwin' }}
         run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin
-      - name: Build aarch64 Release Version UI 
-        if: ${{matrix.target == 'aarch64-apple-darwin' && matrix.ui == true}}
-        run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin --features ui
       - name: Compress binaries
         uses: svenstaro/upx-action@v2
         with:

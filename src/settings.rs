@@ -54,20 +54,6 @@ impl Settings {
 
         result
     }
-
-    pub fn write_config_if_missing() {
-        let config_path = std::path::Path::new("config.toml");
-        if !config_path.exists() {
-            let worked = std::fs::write(config_path, include_str!("defaultconfig.toml"));
-            match worked {
-                Ok(_) => println!("Create configuration file at {:?}", &config_path),
-                Err(err) => println!(
-                    "Could not create configuration file at {:?}, reason: {:?}",
-                    &config_path, err
-                ),
-            }
-        }
-    }
 }
 
 fn sanitize_auth_key(result: &mut Result<Settings, ConfigError>) {

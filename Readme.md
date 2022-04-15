@@ -39,7 +39,7 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 
 - Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
 - Run the executable.
-- Click Synchronize.
+- Click Import Games.
 - Restart Steam to see your new shortcuts.
 
 
@@ -50,20 +50,28 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 - Click Syncrhonize
 
 
-## Tips for steam deck
+## Tips 
+
+### Tips for steam deck
 
 I currently don't have a steam deck, which slows down development for it a bit.
 There might still be problems specific to the deck, so if you run into one please check the issues.
 
 If you have a problem that a game wont launch, try to manually set a proton version for it.
 
-## Tips for linux
+### Tips for linux
 
 If you are running linux (this includes Steam Dekc) and are running into problems check [tips for linux seciton](tips_for_linux.md)
 
-## Configuration
+### Configuration
 
 Most people will not have to configure anything, just open BoilR and click Synchronize, but it is possible to configure a lot, see the [configuration section](configuration.md)
+
+### Run as CLI
+
+In previous releases there was both a CLI and UI version of BoilR, now there is only a UI version.
+But you can add the commandling argument ``--no-ui`` and then the UI version will act like the old CLI version.
+This saves some CO2 from not having to build 2 versions of BoilR for each platform, and it also makes development easier.
 
 
 ## What is up with the name BoilR?
@@ -80,10 +88,19 @@ Check out the [discussions](https://github.com/PhilipK/BoilR/discussions) and fe
 
 ## How can I help/contribute?
 If you are a coder, you can fork this repo and then create a pull request, they are very welcome!
+To run BoilR just write:
+
+```shell
+cargo run
+```
+
 If you are not a developer (or you don't like to code in Rust) spread the work and create issues/discussions for anything.
 
 ## Can I donate to support BoilR?
 Nope, please don't, donate it to your favorite charity instead, and if you don't have one of those may I suggest something like [GiveWell](https://www.givewell.org/).
+
+
+
 
 ## License
 This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
