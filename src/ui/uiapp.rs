@@ -7,7 +7,7 @@ use tokio::{runtime::Runtime, sync::watch::{Receiver, self}};
 
 use crate::{settings::Settings, sync::{download_images, self, SyncProgress}};
 
-use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE}};
+use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE, EXTRA_BACKGROUND_COLOR}};
 
 
 #[derive(Default)]
@@ -173,7 +173,7 @@ fn create_style(style: &mut egui::Style) {
         sw:0.0
     };
     style.visuals.faint_bg_color = PURLPLE;
-    style.visuals.extreme_bg_color = BACKGROUND_COLOR;
+    style.visuals.extreme_bg_color = EXTRA_BACKGROUND_COLOR;
     style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
     style.visuals.widgets.active.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
     style.visuals.widgets.active.fg_stroke = Stroke::new(2.0,LIGHT_ORANGE);
