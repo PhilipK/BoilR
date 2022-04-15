@@ -43,6 +43,10 @@ impl MyEguiApp {
     pub fn run_sync(&mut self) {
         let (sender,mut reciever ) = watch::channel(SyncProgress::NotStarted);        
         let settings = self.settings.clone();        
+        if settings.steam.stop_steam{
+            crate::steam::ensure_steam_stopped();
+        }
+
         self.status_reciever   = reciever;
         self.rt.spawn_blocking(move || {                        
 
@@ -54,6 +58,9 @@ impl MyEguiApp {
             block_on(task);
             if let Some(sender) = some_sender{
                 let _ = sender.send(SyncProgress::Done);
+            }
+            if settings.steam.start_steam{
+                crate::steam::ensure_steam_started(&settings.steam);
             }
         });
     }
@@ -236,6 +243,8 @@ impl MyEguiApp{
             });
             ui.checkbox(&mut self.settings.steam.create_collections, "Create collections").on_hover_text("Tries to create a games collection for each platform");
             ui.checkbox(&mut self.settings.steam.optimize_for_big_picture, "Optimize for big picture").on_hover_text("Set icons to be larger horizontal images, this looks nice in steam big picture mode, but a bit off in desktop mode");
+            ui.checkbox(&mut self.settings.steam.stop_steam, "Stop Steam before import").on_hover_text("Stops Steam if it is running when import starts");
+            ui.checkbox(&mut self.settings.steam.start_steam, "Start Steam after import").on_hover_text("Starts Steam is it is not running after the import");
 
             ui.separator();
 

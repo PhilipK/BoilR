@@ -53,11 +53,7 @@ pub struct SteamUsersInfo {
 pub fn get_shortcuts_paths(
     settings: &SteamSettings,
 ) -> Result<Vec<SteamUsersInfo>, Box<dyn Error + Sync + Send>> {
-    let user_location = settings.location.clone();
-    let steam_path_str = match user_location {
-        Some(location) => location,
-        None => get_default_location()?,
-    };
+    let steam_path_str = get_steam_path(settings)?;
     let steam_path = Path::new(&steam_path_str);
     if !steam_path.exists() {
         return Result::Err(Box::new(SteamFolderNotFound {
@@ -105,6 +101,15 @@ pub fn get_shortcuts_paths(
         })
         .collect();
     Ok(users_info)
+}
+
+pub fn get_steam_path(settings: &SteamSettings) -> Result<String, Box<dyn Error + Sync + Send>> {
+    let user_location = settings.location.clone();
+    let steam_path_str = match user_location {
+        Some(location) => location,
+        None => get_default_location()?,
+    };
+    Ok(steam_path_str)
 }
 
 pub fn get_default_location() -> Result<String, Box<dyn Error + Sync + Send>> {
@@ -198,3 +203,6 @@ pub fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Er
         .collect();
     Ok(file_names)
 }
+
+
+
