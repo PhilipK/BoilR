@@ -89,12 +89,20 @@ impl epi::App for MyEguiApp {
         "BoilR"
     } 
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
+    fn setup(
+        &mut self, 
+        ctx: &egui::Context, 
+        _frame: &epi::Frame, 
+        _storage: Option<&dyn epi::Storage>
+    ) { 
         ctx.set_pixels_per_point(1.0);
         let mut style: egui::Style = (*ctx.style()).clone();
         create_style(&mut style);
         ctx.set_style(style);
+     }
 
+    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
+      
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
             .default_width(40.0)
             .show(ctx, |ui| {
@@ -103,7 +111,6 @@ impl epi::App for MyEguiApp {
                 ui.image(texture, size);
                 ui.separator();
                 ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games");
-                // ui.selectable_value(&mut self.selected_menu, Menues::Art, "Art");
                 ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings");
             });
             if  self.games_to_sync.is_some(){
@@ -359,7 +366,6 @@ impl MyEguiApp{
                 },
             };   
         ui.label("Check the settings if BoilR didn't find the game you where looking for");
-
                         });
                     }
 }
@@ -378,7 +384,7 @@ pub fn run_ui() -> Result<(), Box<dyn Error>> {
     native_options.initial_window_size = Some(egui::Vec2{
         x:800.,
         y:500.
-    });
+    });    
     native_options.icon_data = Some(get_logo_icon());
     eframe::run_native(Box::new(app), native_options);
 }
