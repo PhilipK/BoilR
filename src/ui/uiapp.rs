@@ -135,6 +135,7 @@ impl epi::App for MyEguiApp {
                 let size = texture.size_vec2();
                 ui.image(texture, size);
                 ui.add_space(SECTION_SPACING);                
+                
                 let changed = ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games").changed();
                 let changed = changed || ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings").changed();
                 if changed{
@@ -222,6 +223,7 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
     style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0,BG_STROKE_COLOR);
     style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0,LIGHT_ORANGE);
+    style.visuals.selection.bg_fill = PURLPLE;
 }
 
 impl MyEguiApp{
