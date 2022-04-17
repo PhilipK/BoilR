@@ -126,9 +126,10 @@ impl epi::App for MyEguiApp {
      }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
-      
+        let frame = egui::Frame::default().stroke(Stroke::new(0., BACKGROUND_COLOR)).fill(BACKGROUND_COLOR);
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
             .default_width(40.0)
+            .frame(frame)
             .show(ctx, |ui| {
                 let texture = self.get_logo_image(ui);
                 let size = texture.size_vec2();
@@ -144,6 +145,7 @@ impl epi::App for MyEguiApp {
             if  self.games_to_sync.borrow().is_some(){
         
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
+            .frame(frame)
             .show(ctx,|ui|{
                 {
                 let status = &*self.status_reciever.borrow();
