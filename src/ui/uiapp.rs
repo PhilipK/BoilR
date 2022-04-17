@@ -367,7 +367,7 @@ impl MyEguiApp{
             ui.add_space(SECTION_SPACING);
 
             ui.heading("Lutris");
-            ui.checkbox(&mut self.settings.lutris.enabled, "Import form Uplay");
+            ui.checkbox(&mut self.settings.lutris.enabled, "Import form Lutris");
             ui.horizontal(|ui| {
                 let mut empty_string ="".to_string();
                 let lutris_location = self.settings.lutris.executable.as_mut().unwrap_or(&mut empty_string);
