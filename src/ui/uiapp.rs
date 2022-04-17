@@ -172,7 +172,7 @@ impl epi::App for MyEguiApp {
                 
                     let texture = self.get_import_image(ui);
                     let size = texture.size_vec2();
-                    let image_button = ImageButton::new(texture, size);
+                    let image_button = ImageButton::new(texture, size * 0.5);
                     if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
                         self.run_sync();
                     }
