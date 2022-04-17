@@ -248,7 +248,20 @@ impl MyEguiApp{
         ui.heading("Settings");
         ui.label("Here you can change your settings");
 
-        ScrollArea::vertical().show(ui,|ui| {         
+                
+        let mut scroll_style = ui.style_mut();
+        scroll_style.visuals.extreme_bg_color = BACKGROUND_COLOR;
+        scroll_style.visuals.widgets.inactive.bg_fill = EXTRA_BACKGROUND_COLOR;
+        scroll_style.visuals.widgets.active.bg_fill = EXTRA_BACKGROUND_COLOR;
+        scroll_style.visuals.selection.bg_fill = EXTRA_BACKGROUND_COLOR;
+        scroll_style.visuals.widgets.hovered.bg_fill = EXTRA_BACKGROUND_COLOR;
+
+        ScrollArea::vertical()
+        .stick_to_right()
+        .auto_shrink([false,true])
+        .show(ui,|ui| {         
+            ui.reset_style();
+
             ui.heading("SteamGridDB");
             ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
             ui.horizontal(|ui| {
@@ -382,7 +395,20 @@ impl MyEguiApp{
             });
         }
         
-        ScrollArea::vertical().show(ui,|ui| {         
+        let mut scroll_style = ui.style_mut();
+        scroll_style.visuals.extreme_bg_color = BACKGROUND_COLOR;
+        scroll_style.visuals.widgets.inactive.bg_fill = EXTRA_BACKGROUND_COLOR;
+        scroll_style.visuals.widgets.active.bg_fill = EXTRA_BACKGROUND_COLOR;
+        scroll_style.visuals.selection.bg_fill = EXTRA_BACKGROUND_COLOR;
+        scroll_style.visuals.widgets.hovered.bg_fill = EXTRA_BACKGROUND_COLOR;
+
+
+        ScrollArea::vertical()        
+        .stick_to_right()
+        .auto_shrink([false,true])
+        .show(ui,|ui| {         
+            ui.reset_style();
+
             let borrowed_games = &*self.games_to_sync.borrow();
             match borrowed_games{                
                 FetchGameStatus::Fetched(games_to_sync) => {
