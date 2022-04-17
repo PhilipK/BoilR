@@ -1,7 +1,5 @@
 # BoilR
 
-## Description
-
 BoilR automatically adds (almost) all your games to your Steam library.
 
 ![BoilR Screenshot](screenshot_1.png)
@@ -9,6 +7,27 @@ BoilR automatically adds (almost) all your games to your Steam library.
 It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
 The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
 Optionally you can set BoilR up to automatically download artwork from [SteamGridDB](https://www.steamgriddb.com/).
+
+## Index
+- [BoilR](#boilr)
+  - [Index](#index)
+  - [Features](#features)
+  - [Integrations](#integrations)
+  - [Getting started](#getting-started)
+  - [Getting cover art for your shortcuts](#getting-cover-art-for-your-shortcuts)
+  - [Tips](#tips)
+    - [Tips for steam deck](#tips-for-steam-deck)
+    - [Tips for linux](#tips-for-linux)
+    - [Configuration](#configuration)
+    - [Run as CLI](#run-as-cli)
+  - [Contributions](#contributions)
+    - [How can I help/contribute?](#how-can-i-helpcontribute)
+    - [I found a bug, what do it do?](#i-found-a-bug-what-do-it-do)
+    - [I have a great idea / I would like support for a specific platform, what do I do?](#i-have-a-great-idea--i-would-like-support-for-a-specific-platform-what-do-i-do)
+    - [Can I donate to support BoilR?](#can-i-donate-to-support-boilr)
+    - [License](#license)
+  - [What is up with the name BoilR?](#what-is-up-with-the-name-boilr)
+
 
 ## Features
 
