@@ -9,6 +9,7 @@ use crate::{settings::Settings, sync::{download_images, self, SyncProgress}};
 
 use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE, EXTRA_BACKGROUND_COLOR}};
 
+const SECTION_SPACING : f32 = 25.0;
 
 #[derive(Default)]
 struct UiImages{
@@ -17,12 +18,36 @@ struct UiImages{
 }
 
 
+enum FetchGameStatus{
+    NeedsFetched,
+    Fetching,
+    Fetched(Vec<(String, Vec<ShortcutOwned>)>)
+}
+
+impl FetchGameStatus{
+    pub fn is_some(&self) -> bool{
+        match self{
+            FetchGameStatus::NeedsFetched => false,
+            FetchGameStatus::Fetching => false,
+            FetchGameStatus::Fetched(_) => true,
+        }
+    }
+
+    pub fn needs_fetching(&self) -> bool{
+        match self{
+            FetchGameStatus::NeedsFetched => true,
+            FetchGameStatus::Fetching => false,
+            FetchGameStatus::Fetched(_) => false,
+        }
+    }
+}
+
 struct MyEguiApp {
     selected_menu: Menues,
     settings: Settings,
     rt: Runtime,    
-    ui_images: UiImages,
-    games_to_sync:Option<Vec<(String, Vec<ShortcutOwned>)>>,
+    ui_images: UiImages,    
+    games_to_sync: Receiver<FetchGameStatus>,    
     status_reciever: Receiver<SyncProgress>,    
 }
 
@@ -35,7 +60,7 @@ impl MyEguiApp {
             selected_menu: Menues::Import,
             settings: Settings::new().expect("We must be able to load our settings"),
             rt: runtime,
-            games_to_sync:None,
+            games_to_sync:watch::channel(FetchGameStatus::NeedsFetched).1,
             ui_images: UiImages::default(),            
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
         }
@@ -51,7 +76,6 @@ impl MyEguiApp {
         self.rt.spawn_blocking(move || {                        
 
             MyEguiApp::save_settings_to_file(&settings);
-            //TODO get status back to ui
             let mut some_sender =Some(sender);
             let usersinfo = sync::run_sync(&settings,&mut some_sender).unwrap();                        
             let task = download_images(&settings, &usersinfo,&mut some_sender);
@@ -109,11 +133,15 @@ impl epi::App for MyEguiApp {
                 let texture = self.get_logo_image(ui);
                 let size = texture.size_vec2();
                 ui.image(texture, size);
-                ui.separator();
-                ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games");
-                ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings");
+                ui.add_space(SECTION_SPACING);                
+                let changed = ui.selectable_value(&mut self.selected_menu, Menues::Import, "Import Games").changed();
+                let changed = changed || ui.selectable_value(&mut self.selected_menu, Menues::Settings, "Settings").changed();
+                if changed{
+                    self.games_to_sync =watch::channel(FetchGameStatus::NeedsFetched).1;
+                }
+                
             });
-            if  self.games_to_sync.is_some(){
+            if  self.games_to_sync.borrow().is_some(){
         
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
             .show(ctx,|ui|{
@@ -150,10 +178,6 @@ impl epi::App for MyEguiApp {
 
         egui::CentralPanel::default()
             .show(ctx, |ui| {
-                if let Menues::Import = self.selected_menu{                    
-                }else{
-                    self.games_to_sync = None;
-                }
                 match self.selected_menu {
                 Menues::Import => {          
                     self.render_import_games(ui);
@@ -237,7 +261,7 @@ impl MyEguiApp{
             });
             ui.checkbox(&mut self.settings.steamgrid_db.prefer_animated, "Prefer animated images").on_hover_text("Prefer downloading animated images over static images (this can slow Steam down but looks neat)");
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("Steam");
             ui.horizontal(|ui| {
@@ -253,7 +277,7 @@ impl MyEguiApp{
             ui.checkbox(&mut self.settings.steam.stop_steam, "Stop Steam before import").on_hover_text("Stops Steam if it is running when import starts");
             ui.checkbox(&mut self.settings.steam.start_steam, "Start Steam after import").on_hover_text("Starts Steam is it is not running after the import");
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("Epic Games");
             ui.checkbox(&mut self.settings.epic_games.enabled, "Import form Epic Games");
@@ -266,14 +290,14 @@ impl MyEguiApp{
                 }
             });
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             #[cfg(target_family = "unix")]
             {
                 ui.heading("Heroic");
                 ui.checkbox(&mut self.settings.heroic.enabled, "Import form Heroic");
     
-                ui.separator();
+                ui.add_space(SECTION_SPACING);
             }
 
             ui.heading("Legendary & Rare");
@@ -287,7 +311,7 @@ impl MyEguiApp{
                 }
             });
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("Itch.io");
             ui.checkbox(&mut self.settings.itch.enabled, "Import form Itch.io");
@@ -300,12 +324,12 @@ impl MyEguiApp{
                 }
             });
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("Origin");
             ui.checkbox(&mut self.settings.origin.enabled, "Import from Origin");            
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("GoG Galaxy");
             ui.checkbox(&mut self.settings.gog.enabled, "Import form GoG Galaxy");
@@ -318,12 +342,12 @@ impl MyEguiApp{
                 }
             });
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("Uplay");
             ui.checkbox(&mut self.settings.uplay.enabled, "Import form Uplay");
 
-            ui.separator();
+            ui.add_space(SECTION_SPACING);
 
             ui.heading("Lutris");
             ui.checkbox(&mut self.settings.lutris.enabled, "Import form Uplay");
@@ -340,11 +364,25 @@ impl MyEguiApp{
     }
 
     fn render_import_games(&mut self, ui: &mut egui::Ui){
+        
         ui.heading("Import Games");
-        ui.label("Select the games you want to import into steam");
+
+        if self.games_to_sync.borrow().needs_fetching(){
+            let (tx, rx) = watch::channel(FetchGameStatus::NeedsFetched);
+            self.games_to_sync = rx;
+            let settings = self.settings.clone();
+            self.rt.spawn_blocking(move || {                        
+                let _= tx.send(FetchGameStatus::Fetching);
+                let games_to_sync = sync::get_platform_shortcuts(&settings);
+                let _= tx.send(FetchGameStatus::Fetched(games_to_sync));
+            });
+        }
+        
         ScrollArea::vertical().show(ui,|ui| {         
-            match &self.games_to_sync{
-                Some(games_to_sync) => {
+            let borrowed_games = &*self.games_to_sync.borrow();
+            match borrowed_games{                
+                FetchGameStatus::Fetched(games_to_sync) => {
+                    ui.label("Select the games you want to import into steam");
                     for (platform_name, shortcuts) in games_to_sync{
                         ui.heading(platform_name);
                         for shortcut in shortcuts {
@@ -360,12 +398,14 @@ impl MyEguiApp{
                             }
                         }
                     }
+                    ui.add_space(SECTION_SPACING);
+                    ui.label("Check the settings if BoilR didn't find the game you where looking for");
                 },
-                None => {
-                    self.games_to_sync = Some(sync::get_platform_shortcuts(&self.settings));
+                _=> {
+                    ui.label("Finding installed games");
                 },
             };   
-        ui.label("Check the settings if BoilR didn't find the game you where looking for");
+        
                         });
                     }
 }
