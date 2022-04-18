@@ -248,8 +248,6 @@ impl MyEguiApp{
 
     fn render_settings(&mut self, ui: &mut egui::Ui){
         ui.heading("Settings");
-        ui.label("Here you can change your settings");
-
                 
         let mut scroll_style = ui.style_mut();
         scroll_style.visuals.extreme_bg_color = BACKGROUND_COLOR;
@@ -264,8 +262,111 @@ impl MyEguiApp{
         .show(ui,|ui| {         
             ui.reset_style();
 
-            ui.heading("SteamGridDB");
-            ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
+            self.render_steamgriddb_settings(ui);
+
+            self.render_steam_settings(ui);
+
+            self.render_epic_settings(ui);
+
+
+            #[cfg(target_family = "unix")]
+            {
+                ui.heading("Heroic");
+                ui.checkbox(&mut self.settings.heroic.enabled, "Import form Heroic");
+    
+                ui.add_space(SECTION_SPACING);
+            }
+
+            self.render_legendary_settings(ui);
+            self.render_itch_settings(ui);
+            self.render_origin_settings(ui);
+            self.render_gog_settings(ui);
+            self.render_uplay_settings(ui);
+            self.render_lutris_settings(ui);
+         
+        });
+    }
+
+    fn render_lutris_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Lutris");
+        ui.checkbox(&mut self.settings.lutris.enabled, "Import form Lutris");
+        if self.settings.lutris.enabled{
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let lutris_location = self.settings.lutris.executable.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Lutris Location: ");
+                if ui.text_edit_singleline(lutris_location).changed(){
+                    self.settings.lutris.executable = Some(lutris_location.to_string());
+                }
+            });
+        }
+    }
+
+    fn render_uplay_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Uplay");
+        ui.checkbox(&mut self.settings.uplay.enabled, "Import form Uplay");
+        ui.add_space(SECTION_SPACING);
+    }
+
+    fn render_gog_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("GoG Galaxy");
+        ui.checkbox(&mut self.settings.gog.enabled, "Import form GoG Galaxy");
+        if self.settings.gog.enabled {
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let itch_location = self.settings.gog.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("GoG Galaxy Folder: ");
+                if ui.text_edit_singleline(itch_location).changed(){
+                    self.settings.gog.location = Some(itch_location.to_string());
+                }
+            });
+        }
+        ui.add_space(SECTION_SPACING);
+    }
+
+    fn render_origin_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Origin");
+        ui.checkbox(&mut self.settings.origin.enabled, "Import from Origin");
+        ui.add_space(SECTION_SPACING);
+    }
+
+    fn render_itch_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Itch.io");
+        ui.checkbox(&mut self.settings.itch.enabled, "Import form Itch.io");
+        if self.settings.itch.enabled {
+            ui.horizontal(|ui| {
+                let mut empty_string ="".to_string();
+                let itch_location = self.settings.itch.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("Itch.io Folder: ");
+                if ui.text_edit_singleline(itch_location).changed(){
+                    self.settings.itch.location = Some(itch_location.to_string());
+                }
+            });
+        }
+        ui.add_space(SECTION_SPACING);
+    }
+
+    fn render_steam_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Steam");
+        ui.horizontal(|ui| {
+            let mut empty_string ="".to_string();
+            let steam_location = self.settings.steam.location.as_mut().unwrap_or(&mut empty_string);
+            ui.label("Steam Location: ");
+            if ui.text_edit_singleline(steam_location).changed(){
+                self.settings.steam.location = Some(steam_location.to_string());
+            }
+        });
+        ui.checkbox(&mut self.settings.steam.create_collections, "Create collections").on_hover_text("Tries to create a games collection for each platform");
+        ui.checkbox(&mut self.settings.steam.optimize_for_big_picture, "Optimize for big picture").on_hover_text("Set icons to be larger horizontal images, this looks nice in steam big picture mode, but a bit off in desktop mode");
+        ui.checkbox(&mut self.settings.steam.stop_steam, "Stop Steam before import").on_hover_text("Stops Steam if it is running when import starts");
+        ui.checkbox(&mut self.settings.steam.start_steam, "Start Steam after import").on_hover_text("Starts Steam is it is not running after the import");
+        ui.add_space(SECTION_SPACING);
+    }
+
+    fn render_steamgriddb_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("SteamGridDB");
+        ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
+        if self.settings.steamgrid_db.enabled{
             ui.horizontal(|ui| {
                 let mut empty_string ="".to_string();
                 let auth_key = self.settings.steamgrid_db.auth_key.as_mut().unwrap_or(&mut empty_string);
@@ -279,39 +380,14 @@ impl MyEguiApp{
                 ui.hyperlink_to("here", "https://www.steamgriddb.com/profile/preferences/api")
             });
             ui.checkbox(&mut self.settings.steamgrid_db.prefer_animated, "Prefer animated images").on_hover_text("Prefer downloading animated images over static images (this can slow Steam down but looks neat)");
+        }
+        ui.add_space(SECTION_SPACING);
+    }
 
-            ui.add_space(SECTION_SPACING);
-
-            ui.heading("Steam");
-            ui.horizontal(|ui| {
-                let mut empty_string ="".to_string();
-                let steam_location = self.settings.steam.location.as_mut().unwrap_or(&mut empty_string);
-                ui.label("Steam Location: ");
-                if ui.text_edit_singleline(steam_location).changed(){
-                    self.settings.steam.location = Some(steam_location.to_string());
-                }
-            });
-            ui.checkbox(&mut self.settings.steam.create_collections, "Create collections").on_hover_text("Tries to create a games collection for each platform");
-            ui.checkbox(&mut self.settings.steam.optimize_for_big_picture, "Optimize for big picture").on_hover_text("Set icons to be larger horizontal images, this looks nice in steam big picture mode, but a bit off in desktop mode");
-            ui.checkbox(&mut self.settings.steam.stop_steam, "Stop Steam before import").on_hover_text("Stops Steam if it is running when import starts");
-            ui.checkbox(&mut self.settings.steam.start_steam, "Start Steam after import").on_hover_text("Starts Steam is it is not running after the import");
-
-            ui.add_space(SECTION_SPACING);
-
-            self.render_epic_settings(ui);
-
-            ui.add_space(SECTION_SPACING);
-
-            #[cfg(target_family = "unix")]
-            {
-                ui.heading("Heroic");
-                ui.checkbox(&mut self.settings.heroic.enabled, "Import form Heroic");
-    
-                ui.add_space(SECTION_SPACING);
-            }
-
-            ui.heading("Legendary & Rare");
-            ui.checkbox(&mut self.settings.legendary.enabled, "Import form Legendary & Rare");
+    fn render_legendary_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Legendary & Rare");
+        ui.checkbox(&mut self.settings.legendary.enabled, "Import form Legendary & Rare");
+        if self.settings.legendary.enabled{
             ui.horizontal(|ui| {
                 let mut empty_string ="".to_string();
                 let legendary_location = self.settings.legendary.executable.as_mut().unwrap_or(&mut empty_string);
@@ -320,57 +396,8 @@ impl MyEguiApp{
                     self.settings.legendary.executable = Some(legendary_location.to_string());
                 }
             });
-
-            ui.add_space(SECTION_SPACING);
-
-            ui.heading("Itch.io");
-            ui.checkbox(&mut self.settings.itch.enabled, "Import form Itch.io");
-            ui.horizontal(|ui| {
-                let mut empty_string ="".to_string();
-                let itch_location = self.settings.itch.location.as_mut().unwrap_or(&mut empty_string);
-                ui.label("Itch.io Folder: ");
-                if ui.text_edit_singleline(itch_location).changed(){
-                    self.settings.itch.location = Some(itch_location.to_string());
-                }
-            });
-
-            ui.add_space(SECTION_SPACING);
-
-            ui.heading("Origin");
-            ui.checkbox(&mut self.settings.origin.enabled, "Import from Origin");            
-
-            ui.add_space(SECTION_SPACING);
-
-            ui.heading("GoG Galaxy");
-            ui.checkbox(&mut self.settings.gog.enabled, "Import form GoG Galaxy");
-            ui.horizontal(|ui| {
-                let mut empty_string ="".to_string();
-                let itch_location = self.settings.gog.location.as_mut().unwrap_or(&mut empty_string);
-                ui.label("GoG Galaxy Folder: ");
-                if ui.text_edit_singleline(itch_location).changed(){
-                    self.settings.gog.location = Some(itch_location.to_string());
-                }
-            });
-
-            ui.add_space(SECTION_SPACING);
-
-            ui.heading("Uplay");
-            ui.checkbox(&mut self.settings.uplay.enabled, "Import form Uplay");
-
-            ui.add_space(SECTION_SPACING);
-
-            ui.heading("Lutris");
-            ui.checkbox(&mut self.settings.lutris.enabled, "Import form Lutris");
-            ui.horizontal(|ui| {
-                let mut empty_string ="".to_string();
-                let lutris_location = self.settings.lutris.executable.as_mut().unwrap_or(&mut empty_string);
-                ui.label("Lutris Location: ");
-                if ui.text_edit_singleline(lutris_location).changed(){
-                    self.settings.lutris.executable = Some(lutris_location.to_string());
-                }
-            });
-         
-        });
+        }
+        ui.add_space(SECTION_SPACING);
     }
 
     fn render_epic_settings(&mut self, ui: &mut egui::Ui) {
@@ -418,6 +445,7 @@ impl MyEguiApp{
             }
             epic_settings.safe_launch = safe_open_games;
         })        ;
+        ui.add_space(SECTION_SPACING);
     }
 }
 
