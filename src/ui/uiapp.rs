@@ -5,7 +5,7 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 use std::{error::Error};
 use tokio::{runtime::Runtime, sync::watch::{Receiver, self}};
 
-use crate::{settings::Settings, sync::{download_images, self, SyncProgress}};
+use crate::{settings::Settings, sync::{download_images, self, SyncProgress}, egs::{EpicPlatform, ManifestItem}};
 
 use super::{ui_images::{get_import_image, get_logo, get_logo_icon}, ui_colors::{TEXT_COLOR, BACKGROUND_COLOR, BG_STROKE_COLOR,  ORANGE, PURLPLE, LIGHT_ORANGE, EXTRA_BACKGROUND_COLOR}};
 
@@ -48,7 +48,8 @@ struct MyEguiApp {
     rt: Runtime,    
     ui_images: UiImages,    
     games_to_sync: Receiver<FetchGameStatus>,    
-    status_reciever: Receiver<SyncProgress>,    
+    status_reciever: Receiver<SyncProgress>,
+    epic_manifests: Option<Vec<ManifestItem>>,
 }
 
 
@@ -63,6 +64,7 @@ impl MyEguiApp {
             games_to_sync:watch::channel(FetchGameStatus::NeedsFetched).1,
             ui_images: UiImages::default(),            
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
+            epic_manifests : None,
         }
     }
     pub fn run_sync(&mut self) {
@@ -296,16 +298,7 @@ impl MyEguiApp{
 
             ui.add_space(SECTION_SPACING);
 
-            ui.heading("Epic Games");
-            ui.checkbox(&mut self.settings.epic_games.enabled, "Import form Epic Games");
-            ui.horizontal(|ui| {
-                let mut empty_string ="".to_string();
-                let epic_location = self.settings.epic_games.location.as_mut().unwrap_or(&mut empty_string);
-                ui.label("Epic Manifests Location: ").on_hover_text("The location where Epic stores its manifest files that BoilR needs to read");
-                if ui.text_edit_singleline(epic_location).changed(){
-                    self.settings.epic_games.location = Some(epic_location.to_string());
-                }
-            });
+            self.render_epic_settings(ui);
 
             ui.add_space(SECTION_SPACING);
 
@@ -379,6 +372,54 @@ impl MyEguiApp{
          
         });
     }
+
+    fn render_epic_settings(&mut self, ui: &mut egui::Ui) {
+        let epic_settings  = &mut self.settings.epic_games;
+        ui.heading("Epic Games");
+        ui.checkbox(&mut epic_settings.enabled, "Import form Epic Games");
+        if epic_settings.enabled{
+        ui.horizontal(|ui| {
+            let mut empty_string ="".to_string();
+            let epic_location = epic_settings.location.as_mut().unwrap_or(&mut empty_string);
+            ui.label("Epic Manifests Location: ").on_hover_text("The location where Epic stores its manifest files that BoilR needs to read");
+            if ui.text_edit_singleline(epic_location).changed(){
+                epic_settings.location = Some(epic_location.to_string());
+            }
+        });
+
+        let safe_mode_header = match epic_settings.safe_launch.len(){
+            0 => "Force games to launch through Epic Launcher".to_string(),
+            1 => "One game forced to launch through Epic Launcher".to_string(),
+            x => format!("{} games forced to launch through Epic Launcher",x)
+        };             
+        
+        egui::CollapsingHeader::new(safe_mode_header)        
+        .id_source("Epic_Launcher_safe_launch")
+        .show(ui, |ui| {            
+            ui.label("Some games must be started from the Epic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Epic Launcher.");
+            let manifests =self.epic_manifests.get_or_insert_with(||{
+                let epic_platform = EpicPlatform::new(epic_settings);
+                let manifests = crate::platform::Platform::get_shortcuts(&epic_platform);
+                manifests.unwrap_or_default()
+            });
+            
+            let mut safe_open_games = epic_settings.safe_launch.clone();
+            for manifest in manifests{
+                let key = manifest.get_key();
+                let display_name = &manifest.display_name;                    
+                let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(&key);
+                if ui.checkbox(&mut safe_open, display_name).clicked(){
+                    if safe_open{
+                        safe_open_games.push(key);
+                    }else{
+                        safe_open_games.retain(|m| m!= display_name && m!= &key);
+                    }
+                }
+            }
+            epic_settings.safe_launch = safe_open_games;
+        })        ;
+    }
+}
 
     fn render_import_games(&mut self, ui: &mut egui::Ui){
         
