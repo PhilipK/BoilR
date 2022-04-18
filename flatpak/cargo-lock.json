@@ -1,11 +1,5 @@
 [
     {
-        "type": "git",
-        "url": "https://github.com/philipk/steam_shortcuts_util",
-        "commit": "c8953ecfc9c612be49c537fb3add683cd83f9379",
-        "dest": "flatpak-cargo/git/steam_shortcuts_util-c8953ec"
-    },
-    {
         "type": "archive",
         "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/ab_glyph/ab_glyph-0.2.15.crate",
@@ -3581,15 +3575,16 @@
         "dest-filename": ".cargo-checksum.json"
     },
     {
-        "type": "shell",
-        "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/steam_shortcuts_util-c8953ec/.\" \"cargo/vendor/steam_shortcuts_util\""
-        ]
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/steam_shortcuts_util/steam_shortcuts_util-1.1.7.crate",
+        "sha256": "67248b9d183120bbc68813546d1aa0ed17230da95674f4fbae6e1060d97c0af8",
+        "dest": "cargo/vendor/steam_shortcuts_util-1.1.7"
     },
     {
         "type": "file",
-        "url": "data:%7B%22package%22%3A%20null%2C%20%22files%22%3A%20%7B%7D%7D",
-        "dest": "cargo/vendor/steam_shortcuts_util",
+        "url": "data:%7B%22package%22%3A%20%2267248b9d183120bbc68813546d1aa0ed17230da95674f4fbae6e1060d97c0af8%22%2C%20%22files%22%3A%20%7B%7D%7D",
+        "dest": "cargo/vendor/steam_shortcuts_util-1.1.7",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -3642,6 +3637,19 @@
         "type": "file",
         "url": "data:%7B%22package%22%3A%20%22f36bdaa60a83aca3921b5259d5400cbf5e90fc51931376a9bd4a0eb79aa7210f%22%2C%20%22files%22%3A%20%7B%7D%7D",
         "dest": "cargo/vendor/synstructure-0.12.6",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/sysinfo/sysinfo-0.23.10.crate",
+        "sha256": "4eea2ed6847da2e0c7289f72cb4f285f0bd704694ca067d32be811b2a45ea858",
+        "dest": "cargo/vendor/sysinfo-0.23.10"
+    },
+    {
+        "type": "file",
+        "url": "data:%7B%22package%22%3A%20%224eea2ed6847da2e0c7289f72cb4f285f0bd704694ca067d32be811b2a45ea858%22%2C%20%22files%22%3A%20%7B%7D%7D",
+        "dest": "cargo/vendor/sysinfo-0.23.10",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4453,6 +4461,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/winres/winres-0.1.12.crate",
+        "sha256": "b68db261ef59e9e52806f688020631e987592bd83619edccda9c47d42cde4f6c",
+        "dest": "cargo/vendor/winres-0.1.12"
+    },
+    {
+        "type": "file",
+        "url": "data:%7B%22package%22%3A%20%22b68db261ef59e9e52806f688020631e987592bd83619edccda9c47d42cde4f6c%22%2C%20%22files%22%3A%20%7B%7D%7D",
+        "dest": "cargo/vendor/winres-0.1.12",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/x11-clipboard/x11-clipboard-0.5.3.crate",
         "sha256": "473068b7b80ac86a18328824f1054e5e007898c47b5bbc281bd7abe32bc3653c",
         "dest": "cargo/vendor/x11-clipboard-0.5.3"
@@ -4595,7 +4616,7 @@
     },
     {
         "type": "file",
-        "url": "data:%5Bsource.vendored-sources%5D%0Adirectory%20%3D%20%22cargo/vendor%22%0A%0A%5Bsource.crates-io%5D%0Areplace-with%20%3D%20%22vendored-sources%22%0A%0A%5Bsource.%22https%3A//github.com/philipk/steam_shortcuts_util%22%5D%0Agit%20%3D%20%22https%3A//github.com/philipk/steam_shortcuts_util%22%0Areplace-with%20%3D%20%22vendored-sources%22%0Arev%20%3D%20%22c8953ecfc9c612be49c537fb3add683cd83f9379%22%0A",
+        "url": "data:%5Bsource.vendored-sources%5D%0Adirectory%20%3D%20%22cargo/vendor%22%0A%0A%5Bsource.crates-io%5D%0Areplace-with%20%3D%20%22vendored-sources%22%0A",
         "dest": "cargo",
         "dest-filename": "config"
     }

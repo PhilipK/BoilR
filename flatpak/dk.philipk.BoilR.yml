@@ -45,5 +45,5 @@ modules:
       - cargo-lock.json
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
-      - cargo --offline build --release --verbose --features ui
+      - cargo --offline build --release --verbose
       - install -Dm755 ./target/release/boilr -t /app/bin/
