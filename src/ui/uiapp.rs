@@ -150,34 +150,37 @@ impl epi::App for MyEguiApp {
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
             .frame(frame)
             .show(ctx,|ui|{
-                {
-                let status = &*self.status_reciever.borrow();
-                    match status{
-                        SyncProgress::NotStarted => {},
+                let (status_string,syncing) =  match &*self.status_reciever.borrow(){
+                        SyncProgress::NotStarted => {
+                            ("".to_string(),false)
+                        },
                         SyncProgress::Starting => {
-                            ui.label("Starting Import");
+                           ("Starting Import".to_string(),true)
                         },
                         SyncProgress::FoundGames { games_found } => {
-                            ui.label(format!("Found {} games to  import",games_found));
+                            (format!("Found {} games to  import",games_found),true)
                         },
                         SyncProgress::FindingImages => {
-                            ui.label(format!("Searching for images"));
+                            (format!("Searching for images"),true)
                         },
                         SyncProgress::DownloadingImages {  to_download } => {
-                            ui.label(format!("Downloading {} images ",to_download));
+                            (format!("Downloading {} images ",to_download),true)
                         },
-                        SyncProgress::Done  =>{
-                            ui.label(format!("Done importing games"));
+                        SyncProgress::Done => {
+                            (format!("Done importing games"),false)
                         },
-                    };
-                }    
+                };
+                if status_string != "" {
+                    ui.label(status_string);
+                }
                 
-                    let texture = self.get_import_image(ui);
-                    let size = texture.size_vec2();
-                    let image_button = ImageButton::new(texture, size * 0.5);
-                    if ui.add(image_button).on_hover_text("Import your games into steam").clicked() {
+                let texture = self.get_import_image(ui);
+                let size = texture.size_vec2();
+                let image_button = ImageButton::new(texture, size * 0.5);
+                if ui.add(image_button).on_hover_text("Import your games into steam")                                
+                    .clicked() && !syncing{                    
                         self.run_sync();
-                    }
+                }
             });
         }
 
