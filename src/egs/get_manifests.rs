@@ -44,6 +44,11 @@ pub(crate) fn get_egs_manifests(
             let mut manifests : Vec<ManifestItem> = manifests.collect();
             manifests.sort_by_key(|m| format!("{}-{}-{}",m.install_location,m.launch_executable,m.is_managed));
             manifests.dedup_by_key(|m| format!("{}-{}-{}",m.install_location,m.launch_executable,m.is_managed));
+            for mut manifest in &mut manifests{
+                if settings.safe_launch.contains(&manifest.display_name) || settings.safe_launch.contains(&manifest.get_key()){
+                    manifest.safe_launch = true;
+                }
+            }
             Ok(manifests)
         }
         Err(err) => Err(ReadDirError {
