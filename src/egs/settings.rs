@@ -7,4 +7,6 @@ pub struct EpicGamesLauncherSettings {
 
     #[cfg(target_family = "unix")]
     pub create_symlinks: bool,
+
+    pub safe_launch : Vec<String>
 }

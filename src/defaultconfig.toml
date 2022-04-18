@@ -16,6 +16,7 @@ create_symlinks = true
 [epic_games]
 enabled = true
 create_symlinks = true
+safe_launch = []
 
 [uplay]
 enabled = true

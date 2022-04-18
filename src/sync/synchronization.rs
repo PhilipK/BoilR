@@ -162,7 +162,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
 
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut platform_results = vec![
-        update_platform_shortcuts(&EpicPlatform::new(settings.epic_games.clone())),
+        update_platform_shortcuts(&EpicPlatform::new(&settings.epic_games)),
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
         update_platform_shortcuts(&ItchPlatform::new(settings.itch.clone())),
         update_platform_shortcuts(&OriginPlatform {
