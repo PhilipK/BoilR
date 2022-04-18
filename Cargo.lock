@@ -2703,8 +2703,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "steam_shortcuts_util"
-version = "1.1.6"
-source = "git+https://github.com/PhilipK/steam_shortcuts_util?rev=c8953ecfc9c612be49c537fb3add683cd83f9379#c8953ecfc9c612be49c537fb3add683cd83f9379"
+version = "1.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67248b9d183120bbc68813546d1aa0ed17230da95674f4fbae6e1060d97c0af8"
 dependencies = [
  "ascii",
  "crc32fast",
