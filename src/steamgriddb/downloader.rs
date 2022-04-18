@@ -43,7 +43,7 @@ pub async fn download_images_for_users<'b>(
                 let shortcut_info = get_shortcuts_for_user(user);
                 async move {
                     let known_images = get_users_images(user).unwrap_or_default();
-                    let res = search_fo_to_download(
+                    let res = search_for_images_to_download(
                         known_images,
                         user.steam_user_data_folder.as_str(),
                         &shortcut_info.shortcuts,
@@ -113,7 +113,7 @@ pub struct PublicGameResponse {
     data: Option<PublicGameResponseData>,
 }
 
-async fn search_fo_to_download(
+async fn search_for_images_to_download(
     known_images: Vec<String>,
     user_data_folder: &str,
     shortcuts: &[ShortcutOwned],
@@ -196,36 +196,38 @@ async fn search_fo_to_download(
                 }
             }
         } else {
-            let image_search_result =
-                get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
-            match image_search_result {
-                Ok(images) => {
-                    let images = images
-                        .iter()
-                        .enumerate()
-                        .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
-                    let download_for_this_type = stream::iter(images)
-                        .filter_map(|(image, shortcut, game_id)| {
-                            let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                            async move {
-                                let image_url = match image {
-                                    Ok(img) => Some(img.url.clone()),
-                                    Err(_) => get_steam_image_url(game_id, &image_type).await,
-                                };
-                                image_url.map(|url| ToDownload {
-                                    path,
-                                    url,
-                                    app_name: shortcut.app_name.clone(),
-                                    image_type,
-                                })
-                            }
-                        })
-                        .collect::<Vec<ToDownload>>()
-                        .await;
+            for image_ids in image_ids.chunks(99){
+                let image_search_result =
+                    get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
+                match image_search_result {
+                    Ok(images) => {
+                        let images = images
+                            .iter()
+                            .enumerate()
+                            .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
+                        let download_for_this_type = stream::iter(images)
+                            .filter_map(|(image, shortcut, game_id)| {
+                                let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                                async move {
+                                    let image_url = match image {
+                                        Ok(img) => Some(img.url.clone()),
+                                        Err(_) => get_steam_image_url(game_id, &image_type).await,
+                                    };
+                                    image_url.map(|url| ToDownload {
+                                        path,
+                                        url,
+                                        app_name: shortcut.app_name.clone(),
+                                        image_type,
+                                    })
+                                }
+                            })
+                            .collect::<Vec<ToDownload>>()
+                            .await;
 
-                    to_download.extend(download_for_this_type);
+                        to_download.extend(download_for_this_type);
+                    }
+                    Err(err) => println!("Error getting images: {}", err),
                 }
-                Err(err) => println!("Error getting images: {}", err),
             }
         }
     }
