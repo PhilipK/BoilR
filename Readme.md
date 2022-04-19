@@ -50,6 +50,7 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 - [x] [Legendary](https://github.com/derrod/legendary)
 - [x] [Rare](https://github.com/Dummerle/Rare/releases)
 - [x] [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) (Linux Only)
+- [x] [Amazon Games](https://gaming.amazon.com) (Windows Only)
 - [ ] XBox/Microsoft Store integration
 
 
