@@ -106,14 +106,22 @@ pub async fn download_images(settings: &Settings, userinfo_shortcuts: &Vec<Steam
     }
 }
 
+trait IsBoilRShortcut{
+    fn is_boilr_tag(&self) -> bool; 
+}
+
+impl IsBoilRShortcut for ShortcutOwned{
+    fn is_boilr_tag(&self) -> bool {
+        let boilr_tag = BOILR_TAG.to_string();
+        self.tags.contains(&boilr_tag) || self.dev_kit_game_id.starts_with(&boilr_tag)
+    }
+}
+
+
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
-    let boilr_tag = BOILR_TAG.to_string();
     shortcut_info
         .shortcuts
-        .retain(|shortcut| !shortcut.tags.contains(&boilr_tag));
-    shortcut_info
-        .shortcuts
-        .retain(|shortcut| !shortcut.dev_kit_game_id.starts_with(&boilr_tag));
+        .retain(|shortcut| !shortcut.is_boilr_tag());
 }
 
 fn fix_shortcut_icons(
@@ -130,14 +138,16 @@ fn fix_shortcut_icons(
         ImageType::Icon
     };
 
-    for shortcut in shortcuts {        
-        let replace_icon = shortcut.icon.trim().eq("") ||  !Path::new(shortcut.icon.trim()).exists() || shortcut.icon.eq(&shortcut.exe);
-        if replace_icon {
-            let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
-                &shortcut.exe,
-                &shortcut.app_name,
-            );
-            shortcut.icon = image_folder.join(image_type.file_name(app_id)).to_string_lossy().to_string();
+    for shortcut in shortcuts {     
+        if shortcut.is_boilr_tag(){   
+            let replace_icon = shortcut.icon.trim().eq("") ||  !Path::new(shortcut.icon.trim()).exists() || shortcut.icon.eq(&shortcut.exe);
+            if replace_icon {
+                let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
+                    &shortcut.exe,
+                    &shortcut.app_name,
+                );
+                shortcut.icon = image_folder.join(image_type.file_name(app_id)).to_string_lossy().to_string();
+            }
         }
     }
 }
