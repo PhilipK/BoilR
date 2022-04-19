@@ -286,6 +286,10 @@ impl MyEguiApp{
             self.render_gog_settings(ui);
             self.render_uplay_settings(ui);
             self.render_lutris_settings(ui);
+            #[cfg(windows)]
+            {
+                self.render_amazon_settings(ui);
+            }
          
         });
     }
@@ -303,6 +307,13 @@ impl MyEguiApp{
                 }
             });
         }
+        ui.add_space(SECTION_SPACING);
+    }
+
+    fn render_amazon_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Amazon");
+        ui.checkbox(&mut self.settings.amazon.enabled, "Import form Amazon");
+        ui.add_space(SECTION_SPACING);
     }
 
     fn render_uplay_settings(&mut self, ui: &mut egui::Ui) {

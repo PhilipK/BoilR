@@ -12,6 +12,7 @@ mod steamgriddb;
 mod sync;
 mod uplay;
 mod ui;
+mod amazon;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
