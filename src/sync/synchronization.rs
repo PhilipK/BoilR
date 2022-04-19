@@ -195,12 +195,12 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
         }));
     }
     
-    // #[cfg(windows)]
-    // {
+    #[cfg(windows)]
+    {
         platform_results.push(update_platform_shortcuts(&crate::amazon::AmazonPlatform {
             settings: settings.amazon.clone(),
         }));
-    // }
+    }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }
 

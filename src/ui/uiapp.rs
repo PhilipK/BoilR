@@ -286,7 +286,10 @@ impl MyEguiApp{
             self.render_gog_settings(ui);
             self.render_uplay_settings(ui);
             self.render_lutris_settings(ui);
-            self.render_amazon_settings(ui);
+            #[cfg(windows)]
+            {
+                self.render_amazon_settings(ui);
+            }
          
         });
     }
