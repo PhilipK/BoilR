@@ -12,8 +12,14 @@ pub struct AmazonPlatform{
 }
 
 impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform{
-    fn enabled(&self) -> bool {
+    #[cfg(windows)]
+    fn enabled(&self) -> bool {       
         self.settings.enabled
+    }
+    
+    #[cfg(target_family="unix")]
+    fn enabled(&self) -> bool {
+        false
     }
 
     fn name(&self) -> &str {
