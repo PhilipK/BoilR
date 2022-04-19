@@ -66,8 +66,9 @@ Optionally you can set BoilR up to automatically download artwork from [SteamGri
 ## Getting cover art for your shortcuts
 
 - Get a [SteamGridDB API key](https://www.steamgriddb.com/profile/preferences/api)
-- Run BoilR put the auth key in the input (in the settings section).
-- Click Syncrhonize
+- Run BoilR
+- Put the auth key in the input in the settings
+- Click "Import games"
 
 
 ## Tips 
