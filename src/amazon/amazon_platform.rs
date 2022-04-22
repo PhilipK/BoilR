@@ -51,7 +51,7 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
             crate::platform::SettingsValidity::Valid
         } else {
             crate::platform::SettingsValidity::Invalid {
-                reason: format!("Could not find Amazon Games installation"),
+                reason: "Could not find Amazon Games installation".to_string(),
             }
         }
     }

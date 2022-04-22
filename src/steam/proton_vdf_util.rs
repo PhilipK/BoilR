@@ -117,7 +117,7 @@ mod tests {
     #[test]
     pub fn enable_proton_test() {
         let input = include_str!("../testdata/vdf/testconfig.vdf");
-        let output = enable_proton_games(input, &vec!["42", "43", "44"]);
+        let output = enable_proton_games(input, &["42", "43", "44"]);
         let expected = include_str!("../testdata/vdf/testconfig_expected.vdf");
         assert_eq!(expected, output);
     }
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     pub fn enable_proton_test_empty() {
         let input = include_str!("../testdata/vdf/testconfig.vdf");
-        let output = enable_proton_games(input, &vec!["2719403116"]);
+        let output = enable_proton_games(input, &["2719403116"]);
         let expected = include_str!("../testdata/vdf/testconfig.vdf");
         assert_eq!(expected, output);
     }

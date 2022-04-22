@@ -77,7 +77,7 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
     #[cfg(target_family = "unix")]
     fn needs_proton(&self, input: &ItchGame) -> bool {
         //We can only really guess here
-        return input.executable.ends_with("exe");
+        input.executable.ends_with("exe")
     }
 }
 

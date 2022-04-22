@@ -47,12 +47,12 @@ impl From<GogShortcut> for ShortcutOwned {
             exe.to_str().unwrap_or("").to_string()
         };
         let mut exe_string = exe.to_string_lossy().to_string();
-        if exe_string.contains(" ") && !exe_string.starts_with("\"") {
+        if exe_string.contains(' ') && !exe_string.starts_with('\"') {
             exe_string = format!("\"{}\"", exe_string);
         }
 
         let mut working_dir_string = gogs.working_dir;
-        if working_dir_string.contains(" ") && !working_dir_string.starts_with("\"") {
+        if working_dir_string.contains(' ') && !working_dir_string.starts_with('\"') {
             working_dir_string = format!("\"{}\"", working_dir_string);
         }
 

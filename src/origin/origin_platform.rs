@@ -78,7 +78,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         #[cfg(target_family = "unix")]
         {
             //TODO Update this when origin gets support on linux
-            return true;
+            true
         }
     }
 }

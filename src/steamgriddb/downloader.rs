@@ -198,7 +198,7 @@ async fn search_for_images_to_download(
         } else {
             for image_ids in image_ids.chunks(99) {
                 let image_search_result =
-                    get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
+                    get_images_for_ids(client, image_ids, &image_type, download_animated).await;
                 match image_search_result {
                     Ok(images) => {
                         let images = images

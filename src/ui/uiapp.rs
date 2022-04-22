@@ -145,13 +145,13 @@ impl epi::App for MyEguiApp {
                         SyncProgress::FoundGames { games_found } => {
                             (format!("Found {} games to  import", games_found), true)
                         }
-                        SyncProgress::FindingImages => (format!("Searching for images"), true),
+                        SyncProgress::FindingImages => ("Searching for images".to_string(), true),
                         SyncProgress::DownloadingImages { to_download } => {
                             (format!("Downloading {} images ", to_download), true)
                         }
-                        SyncProgress::Done => (format!("Done importing games"), false),
+                        SyncProgress::Done => ("Done importing games".to_string(), false),
                     };
-                    if status_string != "" {
+                    if !status_string.is_empty() {
                         ui.label(status_string);
                     }
 

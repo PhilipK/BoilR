@@ -53,6 +53,6 @@ impl Platform<LutrisGame, Box<dyn Error>> for LutrisPlatform {
     }
 
     fn needs_proton(&self, _input: &LutrisGame) -> bool {
-        return false;
+        false
     }
 }

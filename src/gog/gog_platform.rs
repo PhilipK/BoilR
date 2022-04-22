@@ -45,8 +45,8 @@ pub fn get_shortcuts_from_config(
 
 pub fn get_shortcuts_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<GogShortcut> {
     let games = get_games_from_game_folders(game_folders);
-    let shortcuts = get_shortcuts_from_games(games);
-    shortcuts
+    
+    get_shortcuts_from_games(games)
 }
 
 fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> {
@@ -67,19 +67,18 @@ fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> 
                             let working_dir = match &primary_task.working_dir {
                                 Some(working_dir) => game_folder
                                     .join(working_dir)
-                                    .to_str()
-                                    .unwrap_or_else(|| folder_path.as_str())
+                                    .to_str().unwrap_or(folder_path.as_str())
                                     .to_string(),
                                 None => folder_path.to_string(),
                             };
 
                             #[cfg(target_family = "unix")]
-                            let working_dir = working_dir.replace("\\", "/");
+                            let working_dir = working_dir.replace('\\', "/");
 
                             let full_path_string = full_path.to_string();
 
                             #[cfg(target_family = "unix")]
-                            let full_path_string = full_path_string.replace("\\", "/");
+                            let full_path_string = full_path_string.replace('\\', "/");
                             let arguments = primary_task
                                 .arguments
                                 .as_ref()
@@ -194,7 +193,7 @@ fn fix_paths(wine_c_drive: &str, paths: Vec<String>) -> Vec<String> {
         .flat_map(|path| {
             if let Some(stripped) = path.strip_prefix("C:\\") {
                 let path_buf = Path::new(wine_c_drive).join(stripped);
-                path_buf.to_str().map(|s| s.to_string().replace("\\", "/"))
+                path_buf.to_str().map(|s| s.to_string().replace('\\', "/"))
             } else {
                 None
             }

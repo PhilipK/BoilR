@@ -49,7 +49,7 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
     }
 
     fn needs_proton(&self, _input: &LegendaryGame) -> bool {
-        return false;
+        false
     }
 }
 

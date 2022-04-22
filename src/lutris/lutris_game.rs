@@ -18,7 +18,7 @@ impl From<LutrisGame> for ShortcutOwned {
             "",
             "",
             "",
-            &options.as_str(),
+            options.as_str(),
         )
         .to_owned()
     }

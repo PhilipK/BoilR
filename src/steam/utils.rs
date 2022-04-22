@@ -92,11 +92,11 @@ pub fn get_shortcuts_paths(
                     user_id,
                 };
             } else {
-                return SteamUsersInfo {
+                SteamUsersInfo {
                     steam_user_data_folder: folder_string,
                     shortcut_path: None,
                     user_id,
-                };
+                }
             }
         })
         .collect();

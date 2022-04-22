@@ -34,7 +34,7 @@ fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, candidates_json) = take_until(suffix)(i)?;
-    let candidates_json = format!("[{}]", String::from_utf8_lossy(candidates_json).to_string());
+    let candidates_json = format!("[{}]", String::from_utf8_lossy(candidates_json));
 
     let candidates = serde_json::from_str::<Vec<Candidate>>(&candidates_json);
     match candidates {
@@ -49,13 +49,13 @@ fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
         }
         Err(_err) => {
             //we found a basepath, but no executables
-            return IResult::Ok((
+            IResult::Ok((
                 i,
                 DbPaths {
                     base_path,
                     paths: vec![],
                 },
-            ));
+            ))
         }
     }
 }

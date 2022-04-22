@@ -80,13 +80,13 @@ impl ValueCollection {
     fn new<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Self {
         let name = name.as_ref();
         let id = name_to_key(name);
-        let value = ValueCollection {
+        
+        ValueCollection {
             id,
             name: name.to_string(),
             added: game_ids.to_vec(),
             removed: vec![],
-        };
-        value
+        }
     }
 }
 
@@ -133,8 +133,7 @@ pub fn write_collections<S: AsRef<str>>(
             if let Some(mut vdf_collections) = parse_vdf_collection(content) {
                 let boilr_keys: Vec<String> = vdf_collections
                     .keys()
-                    .filter(|k| k.contains(BOILR_TAG))
-                    .map(|k| k.clone())
+                    .filter(|k| k.contains(BOILR_TAG)).cloned()
                     .collect();
                 for key in boilr_keys {
                     vdf_collections.remove(&key);
@@ -142,12 +141,12 @@ pub fn write_collections<S: AsRef<str>>(
 
                 let new_vdfs = collections_to_add.iter().map(|collection| {
                     let key = name_to_key(&collection.name);
-                    let vd_collection = VdfCollection {
+                    
+                    VdfCollection {
                         id: key,
                         added: collection.game_ids.clone(),
                         removed: vec![],
-                    };
-                    vd_collection
+                    }
                 });
                 for new_vdf in new_vdfs {
                     vdf_collections.insert(new_vdf.id.clone(), new_vdf.clone());
@@ -181,11 +180,11 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
                 .join("config")
                 .join("localconfig.vdf");
             if path.exists() {
-                return Some(path.to_path_buf());
+                return Some(path);
             }
-            return None;
+            None
         }
-        Err(_e) => return None,
+        Err(_e) => None,
     }
 }
 
@@ -295,11 +294,11 @@ fn get_level_db_location() -> Option<PathBuf> {
                 .join("Local Storage")
                 .join("leveldb");
             if path.exists() {
-                return Some(path.to_path_buf());
+                return Some(path);
             }
-            return None;
+            None
         }
-        Err(_e) => return None,
+        Err(_e) => None,
     }
 }
 
@@ -339,7 +338,7 @@ fn parse_steam_collections<S: AsRef<str>>(
 ) -> Result<Vec<(String, SteamCollection)>, Box<dyn Error>> {
     let input = input.as_ref();
     let input = input.strip_prefix('\u{1}').unwrap_or(input);
-    let res = serde_json::from_str::<Vec<(String, SteamCollection)>>(&input)?;
+    let res = serde_json::from_str::<Vec<(String, SteamCollection)>>(input)?;
     Ok(res)
 }
 
