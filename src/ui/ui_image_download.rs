@@ -50,7 +50,7 @@ impl MyEguiApp {
                                                 .on_hover_text("Import your games into steam");
                                            
                                         },
-                                        None => {ui.label("No image");},
+                                        None => {let _ = ui.button("Pick an image");},
                                     }
                                 },
                                 None => {
@@ -77,16 +77,13 @@ impl MyEguiApp {
                             if un_select{
                                 self.image_selected_state.selected_image= None;
                             }
-                            
                         },
                         _ => {
                             ui.label("Finding installed games");
         
                         },
                     }
-        
                 });
-        
             },
             None => {
                 let users = self.image_selected_state.steam_users.get_or_insert_with(||{
@@ -99,10 +96,5 @@ impl MyEguiApp {
                 }
             }
         }
-     
-
-
-
-      
     }
 }
