@@ -97,7 +97,7 @@ pub fn run_sync(
 
 pub async fn download_images(
     settings: &Settings,
-    userinfo_shortcuts: &Vec<SteamUsersInfo>,
+    userinfo_shortcuts: &[SteamUsersInfo],
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     if settings.steamgrid_db.enabled {

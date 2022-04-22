@@ -17,11 +17,11 @@ struct Candidate {
     pub path: String,
 }
 
-pub(crate) fn parse_butler_db<'a>(content: &'a [u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
+pub(crate) fn parse_butler_db(content: &[u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
     many0(parse_path)(content)
 }
 
-fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
+fn parse_path(i: &[u8]) -> nom::IResult<&[u8], DbPaths> {
     let prefix = "{\"basePath\":\"";
     let suffix = "\",\"totalSize\"";
     let (i, _taken) = take_until(prefix)(i)?;

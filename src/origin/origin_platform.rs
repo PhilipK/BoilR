@@ -131,8 +131,7 @@ fn get_default_locations() -> OriginPathData {
             .join("compatdata");
 
         if let Ok(compat_folder) = std::fs::read_dir(&compat_folder_path) {
-            for game_folder in compat_folder {
-                if let Ok(dir) = game_folder {
+            for dir in compat_folder.flatten() {
                     let origin_exe_path = dir
                         .path()
                         .join("pfx")
@@ -153,7 +152,6 @@ fn get_default_locations() -> OriginPathData {
                         res.local_content_path = Some(origin_local_content);
                     }
                 }
-            }
         }
     }
     res

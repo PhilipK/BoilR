@@ -1,6 +1,6 @@
 use super::lutris_game::LutrisGame;
 
-pub fn parse_lutris_games<'a>(input: &'a str) -> Vec<LutrisGame> {
+pub fn parse_lutris_games(input: &str) -> Vec<LutrisGame> {
     input
         .split('\n')
         .into_iter()
@@ -9,7 +9,7 @@ pub fn parse_lutris_games<'a>(input: &'a str) -> Vec<LutrisGame> {
         .collect()
 }
 
-fn parse_line<'a>(input: &'a str) -> Option<LutrisGame> {
+fn parse_line(input: &str) -> Option<LutrisGame> {
     let mut sections = input.split('|');
     if sections.clone().count() < 4 {
         return None;

@@ -42,7 +42,7 @@ struct ActualSteamCollection {
 }
 
 impl ActualSteamCollection {
-    fn new<B: AsRef<str>>(name: B, ids: &Vec<usize>) -> Self {
+    fn new<B: AsRef<str>>(name: B, ids: &[usize]) -> Self {
         let name = name.as_ref();
         let key = format!("user-collections.{}", name_to_key(name));
         let value = serialize_collection_value(name, ids);
@@ -106,7 +106,7 @@ pub struct Collection {
 
 pub fn write_collections<S: AsRef<str>>(
     steam_user_id: S,
-    collections_to_add: &Vec<Collection>,
+    collections_to_add: &[Collection],
 ) -> Result<(), Box<dyn Error>> {
     let steam_user_id = steam_user_id.as_ref();
     let new_collections: Vec<(String, SteamCollection)> = collections_to_add
@@ -219,10 +219,13 @@ fn save_category<S: AsRef<str>>(
     Ok(())
 }
 
+
+type CollectionCategories = HashMap<String, Vec<(String, SteamCollection)>>;
+
 fn get_categories<S: AsRef<str>>(
     steamid: S,
     db: &mut DB,
-) -> Result<HashMap<String, Vec<(String, SteamCollection)>>, Box<dyn Error>> {
+) -> Result<CollectionCategories, Box<dyn Error>> {
     let namespace_keys = get_namespace_keys(steamid, db);
     let mut db_iter = db.new_iter()?;
     let mut res = HashMap::new();

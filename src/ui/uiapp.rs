@@ -237,8 +237,10 @@ pub fn run_sync() {
 pub fn run_ui() -> Result<(), Box<dyn Error>> {
     let app = MyEguiApp::new();
 
-    let mut native_options = eframe::NativeOptions::default();
-    native_options.initial_window_size = Some(egui::Vec2 { x: 800., y: 500. });
-    native_options.icon_data = Some(get_logo_icon());
+    let native_options = eframe::NativeOptions{
+        initial_window_size : Some(egui::Vec2 { x: 800., y: 500. }),
+        icon_data: Some(get_logo_icon()),
+        ..Default::default()
+    };
     eframe::run_native(Box::new(app), native_options);
 }
