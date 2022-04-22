@@ -28,7 +28,7 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
             .settings
             .executable
             .clone()
-            .unwrap_or_else(|| {"legendary".to_string()});
+            .unwrap_or_else(|| "legendary".to_string());
         let legendary = legendary_string.as_str();
         execute_legendary_command(legendary)
     }

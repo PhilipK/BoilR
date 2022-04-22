@@ -80,7 +80,7 @@ impl ValueCollection {
     fn new<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Self {
         let name = name.as_ref();
         let id = name_to_key(name);
-        
+
         ValueCollection {
             id,
             name: name.to_string(),
@@ -133,7 +133,8 @@ pub fn write_collections<S: AsRef<str>>(
             if let Some(mut vdf_collections) = parse_vdf_collection(content) {
                 let boilr_keys: Vec<String> = vdf_collections
                     .keys()
-                    .filter(|k| k.contains(BOILR_TAG)).cloned()
+                    .filter(|k| k.contains(BOILR_TAG))
+                    .cloned()
                     .collect();
                 for key in boilr_keys {
                     vdf_collections.remove(&key);
@@ -141,7 +142,7 @@ pub fn write_collections<S: AsRef<str>>(
 
                 let new_vdfs = collections_to_add.iter().map(|collection| {
                     let key = name_to_key(&collection.name);
-                    
+
                     VdfCollection {
                         id: key,
                         added: collection.game_ids.clone(),
@@ -218,7 +219,6 @@ fn save_category<S: AsRef<str>>(
     batch.put(category_key.as_ref().as_bytes(), prefixed.as_bytes());
     Ok(())
 }
-
 
 type CollectionCategories = HashMap<String, Vec<(String, SteamCollection)>>;
 

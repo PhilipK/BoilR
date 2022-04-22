@@ -1,17 +1,11 @@
 use eframe::{egui, epi};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
-use futures::executor::block_on;
-use std::error::Error;
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
 };
 
-use crate::{
-    egs::ManifestItem,
-    settings::Settings,
-    sync::{self, download_images, SyncProgress},
-};
+use crate::{egs::ManifestItem, settings::Settings, sync::SyncProgress};
 
 use super::{
     ui_colors::{
@@ -52,33 +46,6 @@ impl MyEguiApp {
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
         }
-    }
-    pub fn run_sync(&mut self) {
-        let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
-        let settings = self.settings.clone();
-        if settings.steam.stop_steam {
-            crate::steam::ensure_steam_stopped();
-        }
-
-        self.status_reciever = reciever;
-        self.rt.spawn_blocking(move || {
-            MyEguiApp::save_settings_to_file(&settings);
-            let mut some_sender = Some(sender);
-            let usersinfo = sync::run_sync(&settings, &mut some_sender).unwrap();
-            let task = download_images(&settings, &usersinfo, &mut some_sender);
-            block_on(task);
-            if let Some(sender) = some_sender {
-                let _ = sender.send(SyncProgress::Done);
-            }
-            if settings.steam.start_steam {
-                crate::steam::ensure_steam_started(&settings.steam);
-            }
-        });
-    }
-
-    fn save_settings_to_file(settings: &Settings) {
-        let toml = toml::to_string(&settings).unwrap();
-        std::fs::write("config.toml", toml).unwrap();
     }
 }
 
@@ -237,8 +204,8 @@ pub fn run_sync() {
 pub fn run_ui() -> Result<(), Box<dyn Error>> {
     let app = MyEguiApp::new();
 
-    let native_options = eframe::NativeOptions{
-        initial_window_size : Some(egui::Vec2 { x: 800., y: 500. }),
+    let native_options = eframe::NativeOptions {
+        initial_window_size: Some(egui::Vec2 { x: 800., y: 500. }),
         icon_data: Some(get_logo_icon()),
         ..Default::default()
     };

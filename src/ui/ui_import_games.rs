@@ -1,9 +1,12 @@
 use eframe::egui;
 use egui::ScrollArea;
+use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
 use crate::sync;
+
+use crate::sync::{download_images, SyncProgress};
 
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
@@ -91,5 +94,33 @@ impl MyEguiApp {
                 },
             };
         });
+    }
+
+    pub fn run_sync(&mut self) {
+        let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
+        let settings = self.settings.clone();
+        if settings.steam.stop_steam {
+            crate::steam::ensure_steam_stopped();
+        }
+
+        self.status_reciever = reciever;
+        self.rt.spawn_blocking(move || {
+            MyEguiApp::save_settings_to_file(&settings);
+            let mut some_sender = Some(sender);
+            let usersinfo = sync::run_sync(&settings, &mut some_sender).unwrap();
+            let task = download_images(&settings, &usersinfo, &mut some_sender);
+            block_on(task);
+            if let Some(sender) = some_sender {
+                let _ = sender.send(SyncProgress::Done);
+            }
+            if settings.steam.start_steam {
+                crate::steam::ensure_steam_started(&settings.steam);
+            }
+        });
+    }
+
+    fn save_settings_to_file(settings: &Settings) {
+        let toml = toml::to_string(&settings).unwrap();
+        std::fs::write("config.toml", toml).unwrap();
     }
 }

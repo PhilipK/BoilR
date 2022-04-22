@@ -45,7 +45,7 @@ pub fn get_shortcuts_from_config(
 
 pub fn get_shortcuts_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<GogShortcut> {
     let games = get_games_from_game_folders(game_folders);
-    
+
     get_shortcuts_from_games(games)
 }
 
@@ -67,7 +67,8 @@ fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> 
                             let working_dir = match &primary_task.working_dir {
                                 Some(working_dir) => game_folder
                                     .join(working_dir)
-                                    .to_str().unwrap_or(folder_path.as_str())
+                                    .to_str()
+                                    .unwrap_or(folder_path.as_str())
                                     .to_string(),
                                 None => folder_path.to_string(),
                             };

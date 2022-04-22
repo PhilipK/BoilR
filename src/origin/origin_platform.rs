@@ -132,26 +132,26 @@ fn get_default_locations() -> OriginPathData {
 
         if let Ok(compat_folder) = std::fs::read_dir(&compat_folder_path) {
             for dir in compat_folder.flatten() {
-                    let origin_exe_path = dir
-                        .path()
-                        .join("pfx")
-                        .join("drive_c")
-                        .join("Program Files (x86)")
-                        .join("Origin")
-                        .join("Origin.exe");
+                let origin_exe_path = dir
+                    .path()
+                    .join("pfx")
+                    .join("drive_c")
+                    .join("Program Files (x86)")
+                    .join("Origin")
+                    .join("Origin.exe");
 
-                    let origin_local_content = dir
-                        .path()
-                        .join("pfx")
-                        .join("drive_c")
-                        .join("ProgramData")
-                        .join("Origin");
+                let origin_local_content = dir
+                    .path()
+                    .join("pfx")
+                    .join("drive_c")
+                    .join("ProgramData")
+                    .join("Origin");
 
-                    if origin_exe_path.exists() && origin_local_content.exists() {
-                        res.exe_path = Some(origin_exe_path);
-                        res.local_content_path = Some(origin_local_content);
-                    }
+                if origin_exe_path.exists() && origin_local_content.exists() {
+                    res.exe_path = Some(origin_exe_path);
+                    res.local_content_path = Some(origin_local_content);
                 }
+            }
         }
     }
     res
