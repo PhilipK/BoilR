@@ -11,6 +11,8 @@ pub mod ui_colors {
 }
 
 pub mod ui_images {
+    use std::path::Path;
+
     use eframe::epi::IconData;
     use egui::{ColorImage, ImageData};
 
@@ -35,6 +37,14 @@ pub mod ui_images {
             width: image.width() as u32,
             rgba: pixels.as_slice().to_vec(),
         }
+    }
+    pub fn load_image_from_path(path:&Path) -> Option<ColorImage> {
+        if path.exists(){
+            if let Ok(data) = std::fs::read(path){
+                 return load_image_from_memory(&data).ok();
+            }
+        }
+        None
     }
 
     fn load_image_from_memory(image_data: &[u8]) -> Result<ColorImage, image::ImageError> {

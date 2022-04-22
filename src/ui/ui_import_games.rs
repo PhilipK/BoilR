@@ -4,10 +4,12 @@ use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
+use crate::settings::Settings;
 use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
 
+use super::ImageSelectState;
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,
@@ -43,16 +45,7 @@ impl MyEguiApp {
     pub(crate) fn render_import_games(&mut self, ui: &mut egui::Ui) {
         ui.heading("Import Games");
 
-        if self.games_to_sync.borrow().needs_fetching() {
-            let (tx, rx) = watch::channel(FetchGameStatus::NeedsFetched);
-            self.games_to_sync = rx;
-            let settings = self.settings.clone();
-            self.rt.spawn_blocking(move || {
-                let _ = tx.send(FetchGameStatus::Fetching);
-                let games_to_sync = sync::get_platform_shortcuts(&settings);
-                let _ = tx.send(FetchGameStatus::Fetched(games_to_sync));
-            });
-        }
+        self.ensure_games_loaded();
 
         let mut scroll_style = ui.style_mut();
         scroll_style.visuals.extreme_bg_color = BACKGROUND_COLOR;
@@ -94,6 +87,20 @@ impl MyEguiApp {
                 },
             };
         });
+    }
+
+    pub fn ensure_games_loaded(&mut self) {
+        if self.games_to_sync.borrow().needs_fetching() {
+            self.image_selected_state = ImageSelectState::default();
+            let (tx, rx) = watch::channel(FetchGameStatus::NeedsFetched);
+            self.games_to_sync = rx;
+            let settings = self.settings.clone();
+            self.rt.spawn_blocking(move || {
+                let _ = tx.send(FetchGameStatus::Fetching);
+                let games_to_sync = sync::get_platform_shortcuts(&settings);
+                let _ = tx.send(FetchGameStatus::Fetched(games_to_sync));
+            });
+        }
     }
 
     pub fn run_sync(&mut self) {
