@@ -7,7 +7,7 @@ pub fn ensure_steam_stopped() {
     let steam_name = "steam.exe";
     #[cfg(target_family = "unix")]
     let steam_name = "steam";
-    
+
     let s = System::new_all();
     let processes = s.processes_by_name(&steam_name);
     for process in processes {

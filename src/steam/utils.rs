@@ -46,7 +46,7 @@ pub struct ShortcutInfo {
 pub struct SteamUsersInfo {
     pub steam_user_data_folder: String,
     pub shortcut_path: Option<String>,
-    pub user_id : String,
+    pub user_id: String,
 }
 
 /// Get the paths to the steam users shortcuts (one for each user)
@@ -89,13 +89,13 @@ pub fn get_shortcuts_paths(
                 return SteamUsersInfo {
                     steam_user_data_folder: folder_string,
                     shortcut_path: Some(shortcuts_path.to_str().unwrap().to_string()),
-                    user_id
+                    user_id,
                 };
             } else {
                 return SteamUsersInfo {
                     steam_user_data_folder: folder_string,
                     shortcut_path: None,
-                    user_id
+                    user_id,
                 };
             }
         })
@@ -203,6 +203,3 @@ pub fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Er
         .collect();
     Ok(file_names)
 }
-
-
-

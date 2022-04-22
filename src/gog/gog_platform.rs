@@ -12,9 +12,10 @@ pub struct GogPlatform {
     pub settings: GogSettings,
 }
 
-
-
-pub fn get_shortcuts_from_config(wine_c_drive : Option<String>, config_path: PathBuf) -> Result<Vec<GogShortcut>, GogErrors> {
+pub fn get_shortcuts_from_config(
+    wine_c_drive: Option<String>,
+    config_path: PathBuf,
+) -> Result<Vec<GogShortcut>, GogErrors> {
     let install_locations = get_install_locations(config_path)?;
     #[cfg(target_family = "unix")]
     let install_locations = if let Some(wine_c_drive) = &wine_c_drive {
@@ -51,7 +52,6 @@ pub fn get_shortcuts_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<GogSho
 fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> {
     let mut shortcuts = vec![];
     for (game, game_folder) in games {
-       
         if let Some(folder_path) = game_folder.to_str() {
             if let Some(tasks) = &game.play_tasks {
                 if let Some(primary_task) = tasks.iter().find(|t| {
@@ -80,7 +80,11 @@ fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> 
 
                             #[cfg(target_family = "unix")]
                             let full_path_string = full_path_string.replace("\\", "/");
-                            let arguments = primary_task.arguments.as_ref().unwrap_or(&"".to_string()).clone();
+                            let arguments = primary_task
+                                .arguments
+                                .as_ref()
+                                .unwrap_or(&"".to_string())
+                                .clone();
                             let shortcut = GogShortcut {
                                 name: game.name,
                                 game_folder: folder_path,
@@ -133,7 +137,6 @@ fn get_games_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<(GogGame, Path
     games
 }
 
-
 impl Platform<GogShortcut, GogErrors> for GogPlatform {
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -162,7 +165,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         if !config_path.exists() {
             return Err(GogErrors::ConfigFileNotFound { path: config_path });
         }
-        get_shortcuts_from_config(self.settings.wine_c_drive.clone(),config_path)
+        get_shortcuts_from_config(self.settings.wine_c_drive.clone(), config_path)
     }
 
     fn settings_valid(&self) -> crate::platform::SettingsValidity {
@@ -177,10 +180,10 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
     }
 
     fn needs_proton(&self, _input: &GogShortcut) -> bool {
-            #[cfg(target_family = "unix")]
-            return true;
-            #[cfg(target_os = "windows")]
-            return false;
+        #[cfg(target_family = "unix")]
+        return true;
+        #[cfg(target_os = "windows")]
+        return false;
     }
 }
 

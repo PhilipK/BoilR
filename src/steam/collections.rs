@@ -314,7 +314,7 @@ fn get_level_db_location() -> Option<PathBuf> {
                 .join("leveldb");
             if path.exists() {
                 Some(path)
-            }else{
+            } else {
                 None
             }
         }
@@ -324,7 +324,7 @@ fn get_level_db_location() -> Option<PathBuf> {
 
 fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> String {
     let value = ValueCollection::new(name, game_ids);
-    serde_json::to_string(&value).expect("Should be able to serialize known type")    
+    serde_json::to_string(&value).expect("Should be able to serialize known type")
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {

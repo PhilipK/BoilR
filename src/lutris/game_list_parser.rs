@@ -20,10 +20,10 @@ fn parse_line<'a>(input: &'a str) -> Option<LutrisGame> {
     let platform = sections.next().unwrap().trim();
 
     Some(LutrisGame {
-        id:id.to_string(),
-        index:index.to_string(),
-        name:name.to_string(),
-        platform:platform.to_string(),
+        id: id.to_string(),
+        index: index.to_string(),
+        name: name.to_string(),
+        platform: platform.to_string(),
     })
 }
 

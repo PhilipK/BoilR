@@ -5,9 +5,9 @@ use std::{collections::HashMap, path::Path};
 
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
-use tokio::sync::watch::Sender;
 use std::error::Error;
-use steamgriddb_api::query_parameters::{GridDimentions, Nsfw}; // 0.3.1
+use steamgriddb_api::query_parameters::{GridDimentions, Nsfw};
+use tokio::sync::watch::Sender; // 0.3.1
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::Client;
@@ -25,7 +25,7 @@ pub async fn download_images_for_users<'b>(
     settings: &Settings,
     users: &[SteamUsersInfo],
     download_animated: bool,
-    sender:&mut Option<Sender<SyncProgress>>
+    sender: &mut Option<Sender<SyncProgress>>,
 ) {
     let auth_key = &settings.steamgrid_db.auth_key;
     if let Some(auth_key) = auth_key {
@@ -35,7 +35,7 @@ pub async fn download_images_for_users<'b>(
         let search = CachedSearch::new(&client);
         let search = &search;
         let client = &client;
-        if let Some(sender) = sender{
+        if let Some(sender) = sender {
             let _ = sender.send(SyncProgress::FindingImages);
         }
         let to_downloads = stream::iter(users)
@@ -62,7 +62,7 @@ pub async fn download_images_for_users<'b>(
         let to_downloads = to_downloads.iter().flatten().collect::<Vec<&ToDownload>>();
         let total = to_downloads.len();
         if !to_downloads.is_empty() {
-            if let Some(sender) = sender{
+            if let Some(sender) = sender {
                 let _ = sender.send(SyncProgress::DownloadingImages { to_download: total });
             }
             search.save();
@@ -82,7 +82,7 @@ pub async fn download_images_for_users<'b>(
         }
     } else {
         println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
-    }    
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -183,7 +183,7 @@ async fn search_for_images_to_download(
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
 
         if let ImageType::Icon = image_type {
-            for (index,image_id) in image_ids.iter().enumerate() {
+            for (index, image_id) in image_ids.iter().enumerate() {
                 let shortcut = shortcuts[index];
                 if let Some(url) = get_steam_icon_url(*image_id).await {
                     let path = grid_folder.join(image_type.file_name(shortcut.app_id));
@@ -196,7 +196,7 @@ async fn search_for_images_to_download(
                 }
             }
         } else {
-            for image_ids in image_ids.chunks(99){
+            for image_ids in image_ids.chunks(99) {
                 let image_search_result =
                     get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
                 match image_search_result {
@@ -239,10 +239,8 @@ async fn get_images_for_ids(
     image_ids: &[usize],
     image_type: &ImageType,
     download_animated: bool,
-) -> Result<
-    Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>,
-    String,
-> {
+) -> Result<Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>, String>
+{
     use steamgriddb_api::query_parameters::AnimtionType;
     use steamgriddb_api::query_parameters::QueryType::*;
     let anymation_type = if download_animated {
@@ -287,7 +285,7 @@ async fn get_images_for_ids(
 
     let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
 
-    image_search_result.map_err(|e| format!("Image search failed {:?}",e))
+    image_search_result.map_err(|e| format!("Image search failed {:?}", e))
 }
 
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {

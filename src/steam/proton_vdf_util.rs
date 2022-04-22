@@ -2,19 +2,16 @@ use std::path::Path;
 
 use nom::FindSubstring;
 
-
-pub fn setup_proton_games<B: AsRef<str>>(games: &[B]){ 
-    if let Ok(home) = std::env::var("HOME"){
+pub fn setup_proton_games<B: AsRef<str>>(games: &[B]) {
+    if let Ok(home) = std::env::var("HOME") {
         let config_file = Path::new(&home).join(".local/share/Steam/config/config.vdf");
-        if config_file.exists(){
-            if let Ok(config_content) = std::fs::read_to_string(&config_file){
+        if config_file.exists() {
+            if let Ok(config_content) = std::fs::read_to_string(&config_file) {
                 let new_string = enable_proton_games(config_content, games);
                 std::fs::write(config_file, new_string).unwrap();
             }
         }
     }
-    
-    
 }
 
 fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]) -> String {
@@ -44,7 +41,6 @@ fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]
                 let res = res.replace("\"X\"", &format!("\"{}\"", game_id.as_ref()));
                 let res = res.replace('=', &base_indent_string);
                 res.replace('+', &field_indent_string)
-                
             });
         let mut new_section = section_str.to_string();
         for game_string in games_strings_to_add {
@@ -116,7 +112,6 @@ mod tests {
         let expected = include_str!("../testdata/vdf/compatmappingsection.vdf");
         assert_eq!(expected, actual);
         assert_eq!(4, base_indentation);
-        
     }
 
     #[test]
@@ -124,7 +119,7 @@ mod tests {
         let input = include_str!("../testdata/vdf/testconfig.vdf");
         let output = enable_proton_games(input, &vec!["42", "43", "44"]);
         let expected = include_str!("../testdata/vdf/testconfig_expected.vdf");
-        assert_eq!(expected,output );
+        assert_eq!(expected, output);
     }
 
     #[test]
@@ -132,6 +127,6 @@ mod tests {
         let input = include_str!("../testdata/vdf/testconfig.vdf");
         let output = enable_proton_games(input, &vec!["2719403116"]);
         let expected = include_str!("../testdata/vdf/testconfig.vdf");
-        assert_eq!(expected,output );
+        assert_eq!(expected, output);
     }
 }

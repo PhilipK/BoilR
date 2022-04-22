@@ -100,7 +100,7 @@ impl ManifestItem {
         )
     }
 
-    pub fn get_key(&self) -> String{
+    pub fn get_key(&self) -> String {
         format!(
             "{}-{}-{}",
             self.catalog_namespace, self.catalog_item_id, self.app_name
@@ -108,7 +108,7 @@ impl ManifestItem {
     }
 
     fn needs_launcher(&self) -> bool {
-        if self.safe_launch{
+        if self.safe_launch {
             return true;
         }
         match (&self.is_managed, &self.expected_dlc) {

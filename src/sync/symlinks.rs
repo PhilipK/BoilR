@@ -43,7 +43,7 @@ pub fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
             );
             let mut new_shortcut = new_shortcut.to_owned();
             new_shortcut.tags = shortcut.tags.clone();
-            new_shortcut.dev_kit_game_id = shortcut.dev_kit_game_id.clone(); 
+            new_shortcut.dev_kit_game_id = shortcut.dev_kit_game_id.clone();
             new_shortcut
         }
         _ => {
