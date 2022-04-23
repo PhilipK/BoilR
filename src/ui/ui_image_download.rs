@@ -10,7 +10,13 @@ use super::{MyEguiApp, ui_images::load_image_from_path};
 #[derive(Default, PartialEq)]
 pub struct ImageSelectState{
     pub selected_image : Option<ShortcutOwned>,
+    
     pub hero_image: Option<egui::TextureHandle>,
+    pub grid_image: Option<egui::TextureHandle>,
+    pub logo_image: Option<egui::TextureHandle>,
+    pub icon_image: Option<egui::TextureHandle>,
+    pub wide_image: Option<egui::TextureHandle>,
+
     pub steam_user: Option<SteamUsersInfo>,
     pub steam_users: Option<Vec<SteamUsersInfo>>
 }
@@ -33,14 +39,15 @@ impl MyEguiApp {
                     let borrowed_games = &*self.games_to_sync.borrow();
                     match borrowed_games{
                         super::FetchGameStatus::Fetched(games_to_sync) => {
-                            let mut un_select = false;
                             match &self.image_selected_state.selected_image{
                                 Some(selected_image) => {
+                                    let mut un_select = false;
                                     if ui.button("Back").clicked(){
                                         un_select=true;
                                     }
                                     ui.heading(&selected_image.app_name);
-                                    ui.label("Hero Image");
+                                    
+                                    ui.label("Hero");
                                     match &mut self.image_selected_state.hero_image{
                                         Some(texture) => {
                                             let size = texture.size_vec2();
@@ -51,6 +58,64 @@ impl MyEguiApp {
                                            
                                         },
                                         None => {let _ = ui.button("Pick an image");},
+                                    }
+
+                                    ui.label("Grid");
+                                    match &mut self.image_selected_state.grid_image{
+                                        Some(texture) => {
+                                            let size = texture.size_vec2();
+                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                             ui
+                                                .add(image_button)
+                                                .on_hover_text("Import your games into steam");
+                                           
+                                        },
+                                        None => {let _ = ui.button("Pick an image");},
+                                    }
+
+
+                                    ui.label("Icon");
+                                    match &mut self.image_selected_state.icon_image{
+                                        Some(texture) => {
+                                            let size = texture.size_vec2();
+                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                             ui
+                                                .add(image_button)
+                                                .on_hover_text("Import your games into steam");
+                                           
+                                        },
+                                        None => {let _ = ui.button("Pick an image");},
+                                    }
+
+                                    ui.label("Logo");
+                                    match &mut self.image_selected_state.logo_image{
+                                        Some(texture) => {
+                                            let size = texture.size_vec2();
+                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                             ui
+                                                .add(image_button)
+                                                .on_hover_text("Import your games into steam");
+                                           
+                                        },
+                                        None => {let _ = ui.button("Pick an image");},
+                                    }
+
+                                    
+                                    ui.label("Wide");
+                                    match &mut self.image_selected_state.wide_image{
+                                        Some(texture) => {
+                                            let size = texture.size_vec2();
+                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                             ui
+                                                .add(image_button)
+                                                .on_hover_text("Import your games into steam");
+                                           
+                                        },
+                                        None => {let _ = ui.button("Pick an image");},
+                                    }
+
+                                    if un_select{
+                                        self.image_selected_state.selected_image= None;
                                     }
                                 },
                                 None => {
@@ -63,19 +128,40 @@ impl MyEguiApp {
                                                 let folder = Path::new(&user.steam_user_data_folder).join("config").join("grid");
                                                 //TODO put this in seperate thread
                                                 let file_name = ImageType::file_name(&ImageType::Hero, shortcut.app_id);
-                                                //TODO get this for real
-                                                let hero_file = folder.join(file_name);
-                                                dbg!(&hero_file);
-                                                if let Some(img_data) =load_image_from_path(hero_file.as_path()){
-                                                    self.image_selected_state.hero_image= Some(ui.ctx().load_texture(format!("hero_{}",shortcut.app_id), img_data));
-                                                }
+                                                let file_path = folder.join(file_name);
+                                                self.image_selected_state.hero_image= load_image_from_path(file_path.as_path()).map(|img_data|{
+                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
+                                                });
+
+
+                                                let file_name = ImageType::file_name(&ImageType::Grid, shortcut.app_id);
+                                                let file_path = folder.join(file_name);
+                                                self.image_selected_state.grid_image= load_image_from_path(file_path.as_path()).map(|img_data|{
+                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
+                                                });
+
+
+                                                let file_name = ImageType::file_name(&ImageType::Icon, shortcut.app_id);
+                                                let file_path = folder.join(file_name);
+                                                self.image_selected_state.icon_image= load_image_from_path(file_path.as_path()).map(|img_data|{
+                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
+                                                });
+
+                                                let file_name = ImageType::file_name(&ImageType::Logo, shortcut.app_id);
+                                                let file_path = folder.join(file_name);
+                                                self.image_selected_state.logo_image= load_image_from_path(file_path.as_path()).map(|img_data|{
+                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
+                                                });
+
+                                                let file_name = ImageType::file_name(&ImageType::WideGrid, shortcut.app_id);
+                                                let file_path = folder.join(file_name);
+                                                self.image_selected_state.wide_image= load_image_from_path(file_path.as_path()).map(|img_data|{
+                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
+                                                });
                                             };
                                         }
                                     }
                                 },
-                            }
-                            if un_select{
-                                self.image_selected_state.selected_image= None;
                             }
                         },
                         _ => {
