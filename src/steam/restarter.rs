@@ -32,7 +32,7 @@ pub fn ensure_steam_started(settings: &super::SteamSettings) {
         println!("Starting steam");
         let folder = super::get_steam_path(settings);
         if let Ok(folder) = folder {
-            let path = Path::new(&folder).join(steam_name);
+            let path = std::path::Path::new(&folder).join(steam_name);
             let mut command = Command::new(&path);
             if let Err(e) = command.spawn() {
                 println!("Failed to start steam: {:?}", e);
