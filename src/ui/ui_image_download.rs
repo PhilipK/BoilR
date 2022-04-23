@@ -75,7 +75,11 @@ impl MyEguiApp {
                                 match &self.image_selected_state.selected_image {
                                     Some(selected_image) => {
                                         if ui.button("Back").clicked() {
-                                            self.image_selected_state.selected_image = None;
+                                            if self.image_selected_state.image_to_replace.is_some(){
+                                                self.image_selected_state.image_to_replace = None;
+                                            }else{
+                                                self.image_selected_state.selected_image = None;
+                                            }
                                             return;
                                         }
                                         ui.heading(&selected_image.app_name);
@@ -240,7 +244,7 @@ impl MyEguiApp {
                                                                                 image_type: image_type.clone()
                                                                             };
                                                                             //TODO make this actually parallel
-                                                                            crate::steamgriddb::download_to_download(&to_download);
+                                                                            block_on(crate::steamgriddb::download_to_download(&to_download));
                                                                         }
                                                                         result.push(PossibleImage { thumbnail_path: path, full_url: possible_image.url.clone() });
                                                                         let _ = tx.send(FetcStatus::Fetched(result.clone()));
@@ -254,6 +258,7 @@ impl MyEguiApp {
                                         }
                                         if reset {
                                             self.image_selected_state.image_to_replace = None;
+                                            self.image_selected_state.image_options =  watch::channel(FetcStatus::NeedsFetched).1;
                                         }
                                     }
                                     None => {
