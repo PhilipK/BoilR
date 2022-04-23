@@ -26,9 +26,15 @@ pub struct ImageSelectState {
     pub steam_users: Option<Vec<SteamUsersInfo>>,
 
     pub image_to_replace: Option<ImageType>,
-    pub image_options: Receiver<FetcStatus<Vec<PathBuf>>>,
+    pub image_options: Receiver<FetcStatus<Vec<PossibleImage>>>,
 
     pub image_handles: DashMap<String,egui::TextureHandle>,
+}
+
+#[derive(Clone)]
+pub struct PossibleImage{
+    thumbnail_path: PathBuf,
+    full_url: String
 }
 
 impl Default for ImageSelectState {
@@ -82,10 +88,10 @@ impl MyEguiApp {
                                             match borrowed_images {
                                                 FetcStatus::Fetched(images) => {
                                                     for image in images{
-                                                        let image_key = image.as_path().to_string_lossy().to_string();
+                                                        let image_key = image.thumbnail_path.as_path().to_string_lossy().to_string();
                                                         if ! self.image_selected_state.image_handles.contains_key(&image_key){
                                                             //TODO remove this unwrap
-                                                            let image_data = load_image_from_path(&image).unwrap();
+                                                            let image_data = load_image_from_path(&image.thumbnail_path).unwrap();
                                                             let handle = ui.ctx().load_texture(&image_key, image_data);
                                                             self.image_selected_state.image_handles.insert(image_key.clone(),handle);
                                                         }
@@ -98,7 +104,41 @@ impl MyEguiApp {
                                                                 .join("config")
                                                                 .join("grid")
                                                                 .join(selected_image_type.file_name(selected_image.app_id));                                                            
-                                                                let _ = std::fs::copy(image, to);
+                                                                let app_name = selected_image.app_name.clone();
+                                                                
+
+                                                                let to_download = ToDownload{
+                                                                    path: to,
+                                                                    url: image.full_url.clone(),
+                                                                    app_name: app_name.clone(),
+                                                                    image_type: selected_image_type.clone()
+                                                                };
+                                                                //TODO make this actually parallel
+                                                                self.rt.spawn_blocking(move ||{
+                                                                    block_on(crate::steamgriddb::download_to_download(&to_download));
+                                                                });
+
+                                                                let image_ref = match selected_image_type {
+                                                                    ImageType::Hero => {
+                                                                        &mut self.image_selected_state.hero_image
+                                                                    }
+                                                                    ImageType::Grid => {
+                                                                        &mut self.image_selected_state.grid_image
+                                                                    }
+                                                                    ImageType::WideGrid => {
+                                                                        &mut self.image_selected_state.wide_image
+                                                                    }
+                                                                    ImageType::Logo => {
+                                                                        &mut self.image_selected_state.logo_image
+                                                                    }
+                                                                    ImageType::BigPicture => {
+                                                                        &mut self.image_selected_state.wide_image
+                                                                    }
+                                                                    ImageType::Icon => {
+                                                                        &mut self.image_selected_state.icon_image
+                                                                    }
+                                                                };
+                                                                *image_ref = Some(texture_handle.clone());
                                                                 reset = true;
                                                             }
                                                         }
@@ -180,7 +220,7 @@ impl MyEguiApp {
                                                             let auth_key = auth_key.clone();
                                                             let image_type = image_type.clone();
                                                             let app_name = selected_image.app_name.clone();
-                                                            self.rt.spawn_blocking( move || {
+                                                            self.rt.spawn_blocking( move|| {
                                                                 //Find somewhere else to put this
                                                                 std::fs::create_dir_all(".thumbnails");
                                                                 let thumbnails_folder = Path::new(".thumbnails");
@@ -192,6 +232,7 @@ impl MyEguiApp {
                                                                     let mut result = vec![];
                                                                     for possible_image in &possible_images{
                                                                         let path = thumbnails_folder.join(format!("{}.png",possible_image.id));
+                                                                        
                                                                         if !&path.exists(){
                                                                             let to_download = ToDownload{
                                                                                 path: path.clone(),
@@ -200,11 +241,11 @@ impl MyEguiApp {
                                                                                 image_type: image_type.clone()
                                                                             };
                                                                             //TODO make this actually parallel
-                                                                            block_on(crate::steamgriddb::download_to_download(&to_download));
+                                                                            crate::steamgriddb::download_to_download(&to_download);
                                                                         }
-                                                                        result.push(path);                                                                        
+                                                                        result.push(PossibleImage { thumbnail_path: path, full_url: possible_image.url.clone() });       
+                                                                        let _ = tx.send(FetcStatus::Fetched(result.clone()));
                                                                     }
-                                                                    let _ = tx.send(FetcStatus::Fetched(result));
                                                                 }
                                                             });
                                                         }
