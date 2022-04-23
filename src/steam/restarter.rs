@@ -26,7 +26,7 @@ pub fn ensure_steam_stopped() {
 pub fn ensure_steam_started(settings: &super::SteamSettings) {
     let steam_name = "steam.exe";
     let s = System::new_all();
-    let mut processes = s.processes_by_name(&steam_name);
+    let mut processes = s.processes_by_name(steam_name);
     if processes.next().is_none() {
         //no steam, we need to start it
         println!("Starting steam");

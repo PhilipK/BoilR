@@ -200,7 +200,7 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
                 .join("config")
                 .join("localconfig.vdf");
             if path.exists() {
-                Some(path.to_path_buf())
+                Some(path)
             } else {
                 None
             }

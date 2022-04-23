@@ -202,7 +202,7 @@ impl MyEguiApp {
 fn get_image(
     ui: &mut egui::Ui,
     shortcut: &ShortcutOwned,
-    folder: &std::path::PathBuf,
+    folder: &std::path::Path,
     image_type: &ImageType,
 ) -> Option<egui::TextureHandle> {
     let file_name = ImageType::file_name(image_type, shortcut.app_id);

@@ -13,7 +13,7 @@ pub struct GogPlatform {
 }
 
 pub fn get_shortcuts_from_config(
-    wine_c_drive: Option<String>,
+    _wine_c_drive: Option<String>,
     config_path: PathBuf,
 ) -> Result<Vec<GogShortcut>, GogErrors> {
     let install_locations = get_install_locations(config_path)?;

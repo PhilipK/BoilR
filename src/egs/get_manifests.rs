@@ -124,7 +124,7 @@ fn location_from_registry() -> Option<PathBuf> {
         if let Ok(path_string) = path_string {
             let path = Path::new(&path_string).join("Manifests");
             if path.exists() {
-                return Some(path.to_path_buf());
+                return Some(path);
             }
         }
     }
@@ -143,7 +143,7 @@ fn guess_default_location() -> PathBuf {
         .join("EpicGamesLauncher")
         .join("Data")
         .join("Manifests");
-    path.to_path_buf()
+    path
 }
 
 fn is_game_installed(manifest: &ManifestItem) -> bool {

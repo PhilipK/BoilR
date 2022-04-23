@@ -166,7 +166,7 @@ fn get_default_locations() -> OriginPathData {
     if let Ok(program_data) = program_data {
         let origin_folder = Path::new(&program_data).join("Origin");
         if origin_folder.exists() {
-            res.local_content_path = Some(origin_folder.to_owned());
+            res.local_content_path = Some(origin_folder);
         }
     }
     res
