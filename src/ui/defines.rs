@@ -38,10 +38,10 @@ pub mod ui_images {
             rgba: pixels.as_slice().to_vec(),
         }
     }
-    pub fn load_image_from_path(path:&Path) -> Option<ColorImage> {
-        if path.exists(){
-            if let Ok(data) = std::fs::read(path){
-                 return load_image_from_memory(&data).ok();
+    pub fn load_image_from_path(path: &Path) -> Option<ColorImage> {
+        if path.exists() {
+            if let Ok(data) = std::fs::read(path) {
+                return load_image_from_memory(&data).ok();
             }
         }
         None

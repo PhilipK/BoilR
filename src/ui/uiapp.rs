@@ -15,7 +15,8 @@ use super::{
         TEXT_COLOR,
     },
     ui_images::{get_import_image, get_logo, get_logo_icon},
-    ui_import_games::FetchGameStatus, ImageSelectState,
+    ui_import_games::FetchGameStatus,
+    ImageSelectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -34,7 +35,7 @@ pub struct MyEguiApp {
     pub(crate) games_to_sync: Receiver<FetchGameStatus>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
-    pub(crate) image_selected_state : ImageSelectState
+    pub(crate) image_selected_state: ImageSelectState,
 }
 
 impl MyEguiApp {
@@ -48,7 +49,7 @@ impl MyEguiApp {
             ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
-            image_selected_state:ImageSelectState::default(),
+            image_selected_state: ImageSelectState::default(),
         }
     }
 }
@@ -104,9 +105,9 @@ impl epi::App for MyEguiApp {
                         .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
                         .changed();
                 let changed = changed
-                || ui
-                    .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
-                    .changed();
+                    || ui
+                        .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
+                        .changed();
                 if changed && self.selected_menu == Menues::Settings {
                     //We reset games here, since user might change settings
                     self.games_to_sync = watch::channel(FetchGameStatus::NeedsFetched).1;
@@ -156,7 +157,7 @@ impl epi::App for MyEguiApp {
                 }
                 Menues::Images => {
                     self.render_ui_images(ui);
-                },
+                }
             };
         });
     }
