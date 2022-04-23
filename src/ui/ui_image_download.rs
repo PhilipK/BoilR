@@ -103,9 +103,8 @@ impl MyEguiApp {
                                                                     Path::new(&user.steam_user_data_folder)
                                                                 .join("config")
                                                                 .join("grid")
-                                                                .join(selected_image_type.file_name(selected_image.app_id));                                                            
+                                                                .join(selected_image_type.file_name(selected_image.app_id));
                                                                 let app_name = selected_image.app_name.clone();
-                                                                
 
                                                                 let to_download = ToDownload{
                                                                     path: to,
@@ -147,7 +146,7 @@ impl MyEguiApp {
                                                 _ => {
                                                     ui.label("Finding possible images");
                                                 },
-                                                
+
                                             }
                                         } else {
                                             if let Some(grid_id) = self.image_selected_state.grid_id
@@ -232,7 +231,7 @@ impl MyEguiApp {
                                                                     let mut result = vec![];
                                                                     for possible_image in &possible_images{
                                                                         let path = thumbnails_folder.join(format!("{}.png",possible_image.id));
-                                                                        
+
                                                                         if !&path.exists(){
                                                                             let to_download = ToDownload{
                                                                                 path: path.clone(),
@@ -243,7 +242,7 @@ impl MyEguiApp {
                                                                             //TODO make this actually parallel
                                                                             crate::steamgriddb::download_to_download(&to_download);
                                                                         }
-                                                                        result.push(PossibleImage { thumbnail_path: path, full_url: possible_image.url.clone() });       
+                                                                        result.push(PossibleImage { thumbnail_path: path, full_url: possible_image.url.clone() });
                                                                         let _ = tx.send(FetcStatus::Fetched(result.clone()));
                                                                     }
                                                                 }
@@ -352,11 +351,23 @@ impl MyEguiApp {
     }
 }
 
+// const MAX_HEIGHT:f32 = 300.;
+const MAX_WIDTH:f32 = 300.;
+
 fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) -> bool {
     match image {
         Some(texture) => {
-            let size = texture.size_vec2();
-            let image_button = ImageButton::new(texture, size * 0.1);
+            let mut size = texture.size_vec2();
+            let mut x = size.x;
+            let mut y = size.y;
+            if size.x > MAX_WIDTH{
+                let ratio = size.y / size.x;
+                x = MAX_WIDTH;
+                y = x * ratio;
+            }
+            size.x = x;
+            size.y = y;
+            let image_button = ImageButton::new(texture, size);
             ui.add(image_button)
                 .on_hover_text("Click to change image")
                 .clicked()
