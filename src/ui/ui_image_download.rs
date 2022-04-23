@@ -64,6 +64,17 @@ impl MyEguiApp {
 
         match &self.image_selected_state.steam_user {
             Some(user) => {
+                if self.image_selected_state.selected_image.is_some(){
+                    if ui.button("Back").clicked() {
+                        if self.image_selected_state.image_to_replace.is_some(){
+                            self.image_selected_state.image_to_replace = None;
+                        }else{
+                            self.image_selected_state.selected_image = None;
+                        }
+                        return;
+                    }
+                }
+                
                 ScrollArea::vertical()
                     .stick_to_right()
                     .auto_shrink([false, true])
@@ -74,14 +85,7 @@ impl MyEguiApp {
                             super::FetcStatus::Fetched(games_to_sync) => {
                                 match &self.image_selected_state.selected_image {
                                     Some(selected_image) => {
-                                        if ui.button("Back").clicked() {
-                                            if self.image_selected_state.image_to_replace.is_some(){
-                                                self.image_selected_state.image_to_replace = None;
-                                            }else{
-                                                self.image_selected_state.selected_image = None;
-                                            }
-                                            return;
-                                        }
+                                       
                                         ui.heading(&selected_image.app_name);
                                         let mut reset = false;
                                         if let Some(selected_image_type) =
@@ -119,7 +123,7 @@ impl MyEguiApp {
                                                                 };
                                                                 //TODO make this actually parallel
                                                                 self.rt.spawn_blocking(move ||{
-                                                                    block_on(crate::steamgriddb::download_to_download(&to_download));
+                                                                    let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
                                                                 });
 
                                                                 let image_ref = match selected_image_type {
@@ -260,6 +264,7 @@ impl MyEguiApp {
                                         if reset {
                                             self.image_selected_state.image_to_replace = None;
                                             self.image_selected_state.image_options =  watch::channel(FetcStatus::NeedsFetched).1;
+                                            self.image_selected_state.image_handles.clear();
                                         }
                                     }
                                     None => {
@@ -347,6 +352,9 @@ impl MyEguiApp {
                     .get_or_insert_with(|| {
                         get_shortcuts_paths(&self.settings.steam).expect("Should have steam user")
                     });
+                if users.len() == 1{
+                    self.image_selected_state.steam_user = Some(users[0].clone())
+                }
                 for user in users {
                     if ui.button(&user.user_id).clicked() {
                         self.image_selected_state.steam_user = Some(user.clone());
@@ -357,7 +365,6 @@ impl MyEguiApp {
     }
 }
 
-// const MAX_HEIGHT:f32 = 300.;
 const MAX_WIDTH:f32 = 300.;
 
 fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) -> bool {
