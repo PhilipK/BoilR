@@ -64,7 +64,7 @@ impl MyEguiApp {
                                     match &mut self.image_selected_state.grid_image{
                                         Some(texture) => {
                                             let size = texture.size_vec2();
-                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                            let image_button = ImageButton::new(texture, size * 0.5);
                                              ui
                                                 .add(image_button)
                                                 .on_hover_text("Import your games into steam");
@@ -78,7 +78,7 @@ impl MyEguiApp {
                                     match &mut self.image_selected_state.icon_image{
                                         Some(texture) => {
                                             let size = texture.size_vec2();
-                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                            let image_button = ImageButton::new(texture, size);
                                              ui
                                                 .add(image_button)
                                                 .on_hover_text("Import your games into steam");
@@ -91,7 +91,7 @@ impl MyEguiApp {
                                     match &mut self.image_selected_state.logo_image{
                                         Some(texture) => {
                                             let size = texture.size_vec2();
-                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                            let image_button = ImageButton::new(texture, size * 0.3);
                                              ui
                                                 .add(image_button)
                                                 .on_hover_text("Import your games into steam");
@@ -105,7 +105,7 @@ impl MyEguiApp {
                                     match &mut self.image_selected_state.wide_image{
                                         Some(texture) => {
                                             let size = texture.size_vec2();
-                                            let image_button = ImageButton::new(texture, size * 0.1);
+                                            let image_button = ImageButton::new(texture, size * 0.3);
                                              ui
                                                 .add(image_button)
                                                 .on_hover_text("Import your games into steam");
@@ -126,38 +126,14 @@ impl MyEguiApp {
                                                 self.image_selected_state.selected_image = Some(shortcut.clone());
         
                                                 let folder = Path::new(&user.steam_user_data_folder).join("config").join("grid");
+                                                
+                                                
                                                 //TODO put this in seperate thread
-                                                let file_name = ImageType::file_name(&ImageType::Hero, shortcut.app_id);
-                                                let file_path = folder.join(file_name);
-                                                self.image_selected_state.hero_image= load_image_from_path(file_path.as_path()).map(|img_data|{
-                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
-                                                });
-
-
-                                                let file_name = ImageType::file_name(&ImageType::Grid, shortcut.app_id);
-                                                let file_path = folder.join(file_name);
-                                                self.image_selected_state.grid_image= load_image_from_path(file_path.as_path()).map(|img_data|{
-                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
-                                                });
-
-
-                                                let file_name = ImageType::file_name(&ImageType::Icon, shortcut.app_id);
-                                                let file_path = folder.join(file_name);
-                                                self.image_selected_state.icon_image= load_image_from_path(file_path.as_path()).map(|img_data|{
-                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
-                                                });
-
-                                                let file_name = ImageType::file_name(&ImageType::Logo, shortcut.app_id);
-                                                let file_path = folder.join(file_name);
-                                                self.image_selected_state.logo_image= load_image_from_path(file_path.as_path()).map(|img_data|{
-                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
-                                                });
-
-                                                let file_name = ImageType::file_name(&ImageType::WideGrid, shortcut.app_id);
-                                                let file_path = folder.join(file_name);
-                                                self.image_selected_state.wide_image= load_image_from_path(file_path.as_path()).map(|img_data|{
-                                                    ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
-                                                });
+                                                self.image_selected_state.hero_image= get_image(ui,shortcut, &folder,&ImageType::Hero);
+                                                self.image_selected_state.grid_image= get_image(ui,shortcut, &folder,&ImageType::Grid);
+                                                self.image_selected_state.icon_image = get_image(ui,shortcut, &folder, &ImageType::Icon);
+                                                self.image_selected_state.logo_image = get_image(ui,shortcut, &folder, &ImageType::Logo);
+                                                self.image_selected_state.wide_image = get_image(ui,shortcut, &folder, &ImageType::WideGrid);
                                             };
                                         }
                                     }
@@ -183,4 +159,13 @@ impl MyEguiApp {
             }
         }
     }
+}
+
+fn get_image( ui: &mut egui::Ui, shortcut: &ShortcutOwned, folder: &std::path::PathBuf, image_type : &ImageType) -> Option<egui::TextureHandle> {
+    let file_name = ImageType::file_name(image_type , shortcut.app_id);
+    let file_path = folder.join(file_name);
+    let image = load_image_from_path(file_path.as_path()).map(|img_data|{
+        ui.ctx().load_texture(file_path.to_string_lossy().to_string(), img_data)
+    });
+    image
 }
