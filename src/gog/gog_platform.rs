@@ -18,7 +18,7 @@ pub fn get_shortcuts_from_config(
 ) -> Result<Vec<GogShortcut>, GogErrors> {
     let install_locations = get_install_locations(config_path)?;
     #[cfg(target_family = "unix")]
-    let install_locations = if let Some(wine_c_drive) = &wine_c_drive {
+    let install_locations = if let Some(wine_c_drive) = &_wine_c_drive {
         fix_paths(wine_c_drive, install_locations)
     } else {
         install_locations

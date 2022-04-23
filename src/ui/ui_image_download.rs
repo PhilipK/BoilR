@@ -4,7 +4,9 @@ use crate::{
     steam::{get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{CachedSearch, ImageType, get_query_type, ToDownload},
 };
+use dashmap::DashMap;
 use egui::{ImageButton, ScrollArea};
+use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch::{self, Receiver};
 
@@ -24,7 +26,9 @@ pub struct ImageSelectState {
     pub steam_users: Option<Vec<SteamUsersInfo>>,
 
     pub image_to_replace: Option<ImageType>,
-    pub image_options: Receiver<FetcStatus<Vec<PossibleImage>>>,
+    pub image_options: Receiver<FetcStatus<Vec<PathBuf>>>,
+
+    pub image_handles: DashMap<String,egui::TextureHandle>,
 }
 
 impl Default for ImageSelectState {
@@ -41,14 +45,9 @@ impl Default for ImageSelectState {
             steam_users: Default::default(),
             image_to_replace: Default::default(),
             image_options: watch::channel(FetcStatus::NeedsFetched).1,
+            image_handles: DashMap::new()
         }
     }
-}
-
-pub struct PossibleImage {
-    temp_path: PathBuf,
-    texture_handle: egui::TextureHandle,
-    download_url: String,
 }
 
 impl MyEguiApp {
@@ -83,18 +82,26 @@ impl MyEguiApp {
                                             match borrowed_images {
                                                 FetcStatus::Fetched(images) => {
                                                     for image in images{
-                                                        let size = image.texture_handle.size_vec2();
-                                                        let image_button = ImageButton::new(&image.texture_handle, size * 0.1);
-                                                        if ui.add(image_button).clicked(){
-                                                             let to =
-                                                                Path::new(&user.steam_user_data_folder)
-                                                            .join("config")
-                                                            .join("grid")
-                                                            .join(selected_image_type.file_name(selected_image.app_id));                                                            
-                                                            let _ = std::fs::copy(image.temp_path.as_path(), to);
-                                                            reset = true;
+                                                        let image_key = image.as_path().to_string_lossy().to_string();
+                                                        if ! self.image_selected_state.image_handles.contains_key(&image_key){
+                                                            //TODO remove this unwrap
+                                                            let image_data = load_image_from_path(&image).unwrap();
+                                                            let handle = ui.ctx().load_texture(&image_key, image_data);
+                                                            self.image_selected_state.image_handles.insert(image_key.clone(),handle);
                                                         }
-                                                        
+                                                        if let Some(texture_handle) = self.image_selected_state.image_handles.get(&image_key){
+                                                            let size = texture_handle.size_vec2();
+                                                            let image_button = ImageButton::new(texture_handle.value(), size);
+                                                            if ui.add(image_button).clicked(){
+                                                                 let to =
+                                                                    Path::new(&user.steam_user_data_folder)
+                                                                .join("config")
+                                                                .join("grid")
+                                                                .join(selected_image_type.file_name(selected_image.app_id));                                                            
+                                                                let _ = std::fs::copy(image, to);
+                                                                reset = true;
+                                                            }
+                                                        }
                                                     }
                                                 },
                                                 _ => {
@@ -173,24 +180,31 @@ impl MyEguiApp {
                                                             let auth_key = auth_key.clone();
                                                             let image_type = image_type.clone();
                                                             let app_name = selected_image.app_name.clone();
-                                                            self.rt.spawn(async move {
+                                                            self.rt.spawn_blocking( move || {
+                                                                //Find somewhere else to put this
+                                                                std::fs::create_dir_all(".thumbnails");
+                                                                let thumbnails_folder = Path::new(".thumbnails");
                                                                 let client =steamgriddb_api::Client::new(auth_key);
                                                                 let query = get_query_type(false,&image_type);
-                                                                let possible_images= client.get_images_for_id(grid_id, &query).await;
-                                                                let mut result:Vec<PossibleImage> = vec![];
-                                                                if let Ok(possible_images ) = possible_images {
-                                                                    for possible_image in possible_images{
-                                                                        let temp_file = tempfile().unwrap();
-                                                                        let to_download = ToDownload{
-                                                                            path: temp_file,
-                                                                            url: possible_image.thumb,
-                                                                            app_name,
-                                                                            image_type: image_type.clone()
-                                                                        };
-                                                                        //TODO make this actually parallel
-                                                                        download_to_download(to_download).await;
-                                                                        
+                                                                let search_res = block_on(client.get_images_for_id(grid_id, &query));
+
+                                                                if let Ok(possible_images) = search_res{
+                                                                    let mut result = vec![];
+                                                                    for possible_image in &possible_images{
+                                                                        let path = thumbnails_folder.join(format!("{}.png",possible_image.id));
+                                                                        if !&path.exists(){
+                                                                            let to_download = ToDownload{
+                                                                                path: path.clone(),
+                                                                                url: possible_image.thumb.clone(),
+                                                                                app_name: app_name.clone(),
+                                                                                image_type: image_type.clone()
+                                                                            };
+                                                                            //TODO make this actually parallel
+                                                                            block_on(crate::steamgriddb::download_to_download(&to_download));
+                                                                        }
+                                                                        result.push(path);                                                                        
                                                                     }
+                                                                    let _ = tx.send(FetcStatus::Fetched(result));
                                                                 }
                                                             });
                                                         }

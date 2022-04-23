@@ -346,7 +346,7 @@ fn icon_url(steam_app_id: &str, icon_id: &str) -> String {
     )
 }
 
-async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {
+pub async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {
     println!(
         "Downloading {:?} for {} to {:?}",
         to_download.image_type, to_download.app_name, to_download.path
@@ -361,8 +361,11 @@ async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Er
 }
 
 pub struct ToDownload {
-    path: PathBuf,
-    url: String,
-    app_name: String,
-    image_type: ImageType,
+    pub path: PathBuf,
+    pub url: String,
+    pub app_name: String,
+    pub image_type: ImageType,
+}
+
+unsafe impl Send for ToDownload {
 }
