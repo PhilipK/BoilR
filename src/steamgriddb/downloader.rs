@@ -241,17 +241,24 @@ async fn get_images_for_ids(
     download_animated: bool,
 ) -> Result<Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>, String>
 {
-    use steamgriddb_api::query_parameters::AnimtionType;
-    use steamgriddb_api::query_parameters::QueryType::*;
+    let query_type = get_query_type(download_animated, image_type);
+
+    let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
+
+    image_search_result.map_err(|e| format!("Image search failed {:?}", e))
+}
+
+const BIG_PICTURE_DIMS : [GridDimentions;2] = [GridDimentions::D920x430, GridDimentions::D460x215];
+
+pub fn get_query_type(download_animated: bool, image_type: &ImageType) -> steamgriddb_api::QueryType {
     let anymation_type = if download_animated {
-        Some(&[AnimtionType::Animated][..])
+        Some(&[steamgriddb_api::query_parameters::AnimtionType::Animated][..])
     } else {
         None
     };
-    let big_picture_dims = [GridDimentions::D920x430, GridDimentions::D460x215];
     use steamgriddb_api::query_parameters::GridQueryParameters;
     let big_picture_parameters = GridQueryParameters {
-        dimentions: Some(&big_picture_dims),
+        dimentions: Some(&BIG_PICTURE_DIMS),
         types: anymation_type,
         nsfw: Some(&Nsfw::False),
         ..Default::default()
@@ -273,19 +280,15 @@ async fn get_images_for_ids(
         nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
-
     let query_type = match image_type {
-        ImageType::Hero => Hero(Some(hero_parameters)),
-        ImageType::BigPicture => Grid(Some(big_picture_parameters)),
-        ImageType::Grid => Grid(Some(grid_parameters)),
-        ImageType::WideGrid => Grid(Some(big_picture_parameters)),
-        ImageType::Logo => Logo(Some(logo_parameters)),
+        ImageType::Hero => steamgriddb_api::QueryType::Hero(Some(hero_parameters)),
+        ImageType::BigPicture => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
+        ImageType::Grid => steamgriddb_api::QueryType::Grid(Some(grid_parameters)),
+        ImageType::WideGrid => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
+        ImageType::Logo => steamgriddb_api::QueryType::Logo(Some(logo_parameters)),
         _ => panic!("Unsupported image type"),
     };
-
-    let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
-
-    image_search_result.map_err(|e| format!("Image search failed {:?}", e))
+    query_type
 }
 
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {

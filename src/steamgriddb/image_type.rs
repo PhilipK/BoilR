@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy,PartialEq)]
 pub enum ImageType {
     Hero,
     Grid,
@@ -8,7 +8,26 @@ pub enum ImageType {
     Icon,
 }
 
+pub const ALL_TYPES : [ImageType;6] =
+ [ImageType::Hero,ImageType::Grid,ImageType::WideGrid,ImageType::Logo,ImageType::BigPicture,ImageType::Icon];
+
 impl ImageType {
+
+    pub fn all() -> &'static [ImageType;6]{
+        &ALL_TYPES
+    }
+
+    pub fn name(&self) -> &str{
+        match self {
+            ImageType::Hero => "Hero",
+            ImageType::Grid => "Grid",
+            ImageType::WideGrid => "Wide Grid",
+            ImageType::Logo => "Logo",
+            ImageType::BigPicture => "Big Picture",
+            ImageType::Icon => "Icon",
+        }
+    }
+
     pub fn file_name(&self, app_id: u32) -> String {
         match self {
             ImageType::Hero => format!("{}_hero.png", app_id),

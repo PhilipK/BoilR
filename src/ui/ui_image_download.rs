@@ -1,16 +1,15 @@
-use std::path::Path;
-
-use egui::{ImageButton, ScrollArea};
-use steam_shortcuts_util::shortcut::ShortcutOwned;
+use std::path::{Path, PathBuf};
 
 use crate::{
     steam::{get_shortcuts_paths, SteamUsersInfo},
-    steamgriddb::{ImageType, CachedSearch},
+    steamgriddb::{CachedSearch, ImageType, get_query_type, ToDownload},
 };
+use egui::{ImageButton, ScrollArea};
+use steam_shortcuts_util::shortcut::ShortcutOwned;
+use tokio::sync::watch::{self, Receiver};
 
-use super::{ui_images::load_image_from_path, MyEguiApp};
+use super::{ui_images::load_image_from_path, FetcStatus, MyEguiApp};
 
-#[derive(Default, PartialEq)]
 pub struct ImageSelectState {
     pub selected_image: Option<ShortcutOwned>,
     pub grid_id: Option<usize>,
@@ -23,10 +22,33 @@ pub struct ImageSelectState {
 
     pub steam_user: Option<SteamUsersInfo>,
     pub steam_users: Option<Vec<SteamUsersInfo>>,
-    
-    
 
-    
+    pub image_to_replace: Option<ImageType>,
+    pub image_options: Receiver<FetcStatus<Vec<PossibleImage>>>,
+}
+
+impl Default for ImageSelectState {
+    fn default() -> Self {
+        Self {
+            selected_image: Default::default(),
+            grid_id: Default::default(),
+            hero_image: Default::default(),
+            grid_image: Default::default(),
+            logo_image: Default::default(),
+            icon_image: Default::default(),
+            wide_image: Default::default(),
+            steam_user: Default::default(),
+            steam_users: Default::default(),
+            image_to_replace: Default::default(),
+            image_options: watch::channel(FetcStatus::NeedsFetched).1,
+        }
+    }
+}
+
+pub struct PossibleImage {
+    temp_path: PathBuf,
+    texture_handle: egui::TextureHandle,
+    download_url: String,
 }
 
 impl MyEguiApp {
@@ -52,50 +74,154 @@ impl MyEguiApp {
                                             return;
                                         }
                                         ui.heading(&selected_image.app_name);
-
-                                        if let Some(grid_id) = self.image_selected_state.grid_id{
-                                            ui.horizontal(|ui|{
-                                                ui.label("Grid id:");
-                                                let mut text_id = format!("{}",grid_id);
-                                                if ui.text_edit_singleline(&mut text_id).changed(){
-                                                    if let Ok(grid_id) = text_id.parse::<usize>(){
-                                                        if let Some(auth_key ) = &self.settings.steamgrid_db.auth_key{
-                                                            let client = steamgriddb_api::Client::new(auth_key);
-                                                            let mut search = CachedSearch::new(&client);
-                                                            search.set_cache(selected_image.app_id, selected_image.app_name.to_string(), grid_id);
+                                        let mut reset = false;
+                                        if let Some(selected_image_type) =
+                                            &self.image_selected_state.image_to_replace
+                                        {
+                                            let borrowed_images =
+                                                &*self.image_selected_state.image_options.borrow();
+                                            match borrowed_images {
+                                                FetcStatus::Fetched(images) => {
+                                                    for image in images{
+                                                        let size = image.texture_handle.size_vec2();
+                                                        let image_button = ImageButton::new(&image.texture_handle, size * 0.1);
+                                                        if ui.add(image_button).clicked(){
+                                                             let to =
+                                                                Path::new(&user.steam_user_data_folder)
+                                                            .join("config")
+                                                            .join("grid")
+                                                            .join(selected_image_type.file_name(selected_image.app_id));                                                            
+                                                            let _ = std::fs::copy(image.temp_path.as_path(), to);
+                                                            reset = true;
                                                         }
-                                                        self.image_selected_state.grid_id = Some(grid_id);
+                                                        
+                                                    }
+                                                },
+                                                _ => {
+                                                    ui.label("Finding possible images");
+                                                },
+                                                
+                                            }
+                                        } else {
+                                            if let Some(grid_id) = self.image_selected_state.grid_id
+                                            {
+                                                ui.horizontal(|ui| {
+                                                    ui.label("Grid id:");
+                                                    let mut text_id = format!("{}", grid_id);
+                                                    if ui
+                                                        .text_edit_singleline(&mut text_id)
+                                                        .changed()
+                                                    {
+                                                        if let Ok(grid_id) =
+                                                            text_id.parse::<usize>()
+                                                        {
+                                                            if let Some(auth_key) =
+                                                                &self.settings.steamgrid_db.auth_key
+                                                            {
+                                                                let client =
+                                                                    steamgriddb_api::Client::new(
+                                                                        auth_key,
+                                                                    );
+                                                                let mut search =
+                                                                    CachedSearch::new(&client);
+                                                                search.set_cache(
+                                                                    selected_image.app_id,
+                                                                    selected_image
+                                                                        .app_name
+                                                                        .to_string(),
+                                                                    grid_id,
+                                                                );
+                                                            }
+                                                            self.image_selected_state.grid_id =
+                                                                Some(grid_id);
+                                                        }
+                                                    };
+                                                });
+                                            }
+
+                                            for image_type in ImageType::all() {
+                                                ui.label(image_type.name());
+
+                                                let image_ref = match image_type {
+                                                    ImageType::Hero => {
+                                                        &mut self.image_selected_state.hero_image
+                                                    }
+                                                    ImageType::Grid => {
+                                                        &mut self.image_selected_state.grid_image
+                                                    }
+                                                    ImageType::WideGrid => {
+                                                        &mut self.image_selected_state.wide_image
+                                                    }
+                                                    ImageType::Logo => {
+                                                        &mut self.image_selected_state.logo_image
+                                                    }
+                                                    ImageType::BigPicture => {
+                                                        &mut self.image_selected_state.wide_image
+                                                    }
+                                                    ImageType::Icon => {
+                                                        &mut self.image_selected_state.icon_image
                                                     }
                                                 };
-                                            });
+                                                if render_image(ui, image_ref) {
+                                                    self.image_selected_state.image_to_replace =
+                                                        Some(image_type.clone());
+                                                    let (mut tx,rx)=  watch::channel(FetcStatus::Fetching);
+                                                    self.image_selected_state.image_options = rx;
+                                                    let settings = self.settings.clone();
+                                                    if let Some(auth_key) = settings.steamgrid_db.auth_key{
+                                                        if let Some(grid_id) = self.image_selected_state.grid_id{
+                                                            let auth_key = auth_key.clone();
+                                                            let image_type = image_type.clone();
+                                                            let app_name = selected_image.app_name.clone();
+                                                            self.rt.spawn(async move {
+                                                                let client =steamgriddb_api::Client::new(auth_key);
+                                                                let query = get_query_type(false,&image_type);
+                                                                let possible_images= client.get_images_for_id(grid_id, &query).await;
+                                                                let mut result:Vec<PossibleImage> = vec![];
+                                                                if let Ok(possible_images ) = possible_images {
+                                                                    for possible_image in possible_images{
+                                                                        let temp_file = tempfile().unwrap();
+                                                                        let to_download = ToDownload{
+                                                                            path: temp_file,
+                                                                            url: possible_image.thumb,
+                                                                            app_name,
+                                                                            image_type: image_type.clone()
+                                                                        };
+                                                                        //TODO make this actually parallel
+                                                                        download_to_download(to_download).await;
+                                                                        
+                                                                    }
+                                                                }
+                                                            });
+                                                        }
+                                                    };
+                                                }
+                                            }
                                         }
-
-                                        ui.label("Hero");
-                                        render_image(ui,&mut self.image_selected_state.hero_image);
-
-                                        ui.label("Grid");
-                                        render_image(ui,&mut self.image_selected_state.grid_image);
-
-                                        ui.label("Icon");
-                                        render_image(ui,&mut self.image_selected_state.icon_image);
-
-                                        ui.label("Logo");
-                                        render_image(ui,&mut self.image_selected_state.logo_image);                                      
-
-                                        ui.label("Wide");
-                                        render_image(ui,&mut self.image_selected_state.wide_image);
+                                        if reset {
+                                            self.image_selected_state.image_to_replace = None;
+                                        }
                                     }
                                     None => {
                                         for (platform_name, shortcuts) in games_to_sync {
                                             ui.heading(platform_name);
                                             for shortcut in shortcuts {
                                                 if ui.button(&shortcut.app_name).clicked() {
-
-                                                    if let Some(auth_key ) = &self.settings.steamgrid_db.auth_key{
-                                                        let client = steamgriddb_api::Client::new(auth_key);
+                                                    if let Some(auth_key) =
+                                                        &self.settings.steamgrid_db.auth_key
+                                                    {
+                                                        let client =
+                                                            steamgriddb_api::Client::new(auth_key);
                                                         let search = CachedSearch::new(&client);
                                                         //TODO make this multithreaded
-                                                        self.image_selected_state.grid_id = self.rt.block_on(search.search(shortcut.app_id, &shortcut.app_name)).ok().flatten();
+                                                        self.image_selected_state.grid_id = self
+                                                            .rt
+                                                            .block_on(search.search(
+                                                                shortcut.app_id,
+                                                                &shortcut.app_name,
+                                                            ))
+                                                            .ok()
+                                                            .flatten();
                                                     }
 
                                                     self.image_selected_state.selected_image =
@@ -169,22 +295,18 @@ impl MyEguiApp {
             }
         }
     }
-
-
 }
 
 fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) -> bool {
     match image {
         Some(texture) => {
             let size = texture.size_vec2();
-            let image_button =
-                ImageButton::new(texture, size * 0.1);
+            let image_button = ImageButton::new(texture, size * 0.1);
             ui.add(image_button)
-                .on_hover_text("Click to change image").clicked()
+                .on_hover_text("Click to change image")
+                .clicked()
         }
-        None => {
-            ui.button("Pick an image").clicked()
-        }
+        None => ui.button("Pick an image").clicked(),
     }
 }
 
