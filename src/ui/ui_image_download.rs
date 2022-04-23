@@ -42,84 +42,26 @@ impl MyEguiApp {
                             super::FetchGameStatus::Fetched(games_to_sync) => {
                                 match &self.image_selected_state.selected_image {
                                     Some(selected_image) => {
-                                        let mut un_select = false;
                                         if ui.button("Back").clicked() {
-                                            un_select = true;
+                                            self.image_selected_state.selected_image = None;
+                                            return;
                                         }
                                         ui.heading(&selected_image.app_name);
 
                                         ui.label("Hero");
-                                        match &mut self.image_selected_state.hero_image {
-                                            Some(texture) => {
-                                                let size = texture.size_vec2();
-                                                let image_button =
-                                                    ImageButton::new(texture, size * 0.1);
-                                                ui.add(image_button)
-                                                    .on_hover_text("Import your games into steam");
-                                            }
-                                            None => {
-                                                let _ = ui.button("Pick an image");
-                                            }
-                                        }
+                                        render_image(ui,&mut self.image_selected_state.hero_image);
 
                                         ui.label("Grid");
-                                        match &mut self.image_selected_state.grid_image {
-                                            Some(texture) => {
-                                                let size = texture.size_vec2();
-                                                let image_button =
-                                                    ImageButton::new(texture, size * 0.5);
-                                                ui.add(image_button)
-                                                    .on_hover_text("Import your games into steam");
-                                            }
-                                            None => {
-                                                let _ = ui.button("Pick an image");
-                                            }
-                                        }
+                                        render_image(ui,&mut self.image_selected_state.grid_image);
 
                                         ui.label("Icon");
-                                        match &mut self.image_selected_state.icon_image {
-                                            Some(texture) => {
-                                                let size = texture.size_vec2();
-                                                let image_button = ImageButton::new(texture, size);
-                                                ui.add(image_button)
-                                                    .on_hover_text("Import your games into steam");
-                                            }
-                                            None => {
-                                                let _ = ui.button("Pick an image");
-                                            }
-                                        }
+                                        render_image(ui,&mut self.image_selected_state.icon_image);
 
                                         ui.label("Logo");
-                                        match &mut self.image_selected_state.logo_image {
-                                            Some(texture) => {
-                                                let size = texture.size_vec2();
-                                                let image_button =
-                                                    ImageButton::new(texture, size * 0.3);
-                                                ui.add(image_button)
-                                                    .on_hover_text("Import your games into steam");
-                                            }
-                                            None => {
-                                                let _ = ui.button("Pick an image");
-                                            }
-                                        }
+                                        render_image(ui,&mut self.image_selected_state.logo_image);                                      
 
                                         ui.label("Wide");
-                                        match &mut self.image_selected_state.wide_image {
-                                            Some(texture) => {
-                                                let size = texture.size_vec2();
-                                                let image_button =
-                                                    ImageButton::new(texture, size * 0.3);
-                                                ui.add(image_button)
-                                                    .on_hover_text("Import your games into steam");
-                                            }
-                                            None => {
-                                                let _ = ui.button("Pick an image");
-                                            }
-                                        }
-
-                                        if un_select {
-                                            self.image_selected_state.selected_image = None;
-                                        }
+                                        render_image(ui,&mut self.image_selected_state.wide_image);
                                     }
                                     None => {
                                         for (platform_name, shortcuts) in games_to_sync {
@@ -195,6 +137,23 @@ impl MyEguiApp {
                     }
                 }
             }
+        }
+    }
+
+
+}
+
+fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) {
+    match image {
+        Some(texture) => {
+            let size = texture.size_vec2();
+            let image_button =
+                ImageButton::new(texture, size * 0.1);
+            ui.add(image_button)
+                .on_hover_text("Import your games into steam");
+        }
+        None => {
+            let _ = ui.button("Pick an image");
         }
     }
 }
