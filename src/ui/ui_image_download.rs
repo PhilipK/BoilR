@@ -100,7 +100,8 @@ impl MyEguiApp {
                                                             self.image_selected_state.image_handles.insert(image_key.clone(),handle);
                                                         }
                                                         if let Some(texture_handle) = self.image_selected_state.image_handles.get(&image_key){
-                                                            let size = texture_handle.size_vec2();
+                                                            let mut size = texture_handle.size_vec2();
+                                                            clamp_to_width(&mut size,MAX_WIDTH);
                                                             let image_button = ImageButton::new(texture_handle.value(), size);
                                                             if ui.add(image_button).clicked(){
                                                                  let to =
@@ -363,15 +364,7 @@ fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) -> b
     match image {
         Some(texture) => {
             let mut size = texture.size_vec2();
-            let mut x = size.x;
-            let mut y = size.y;
-            if size.x > MAX_WIDTH{
-                let ratio = size.y / size.x;
-                x = MAX_WIDTH;
-                y = x * ratio;
-            }
-            size.x = x;
-            size.y = y;
+            clamp_to_width(&mut size,MAX_WIDTH);
             let image_button = ImageButton::new(texture, size);
             ui.add(image_button)
                 .on_hover_text("Click to change image")
@@ -379,6 +372,18 @@ fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) -> b
         }
         None => ui.button("Pick an image").clicked(),
     }
+}
+
+fn clamp_to_width(size: &mut egui::Vec2, max_width :f32) {
+    let mut x = size.x;
+    let mut y = size.y;
+    if size.x > max_width{
+        let ratio = size.y / size.x;
+        x = max_width;
+        y = x * ratio;
+    }
+    size.x = x;
+    size.y = y;
 }
 
 fn get_image(
