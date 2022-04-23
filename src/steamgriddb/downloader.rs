@@ -5,9 +5,9 @@ use std::{collections::HashMap, path::Path};
 
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
-use tokio::sync::watch::Sender;
 use std::error::Error;
-use steamgriddb_api::query_parameters::{GridDimentions, Nsfw}; // 0.3.1
+use steamgriddb_api::query_parameters::{GridDimentions, Nsfw};
+use tokio::sync::watch::Sender; // 0.3.1
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::Client;
@@ -25,7 +25,7 @@ pub async fn download_images_for_users<'b>(
     settings: &Settings,
     users: &[SteamUsersInfo],
     download_animated: bool,
-    sender:&mut Option<Sender<SyncProgress>>
+    sender: &mut Option<Sender<SyncProgress>>,
 ) {
     let auth_key = &settings.steamgrid_db.auth_key;
     if let Some(auth_key) = auth_key {
@@ -35,7 +35,7 @@ pub async fn download_images_for_users<'b>(
         let search = CachedSearch::new(&client);
         let search = &search;
         let client = &client;
-        if let Some(sender) = sender{
+        if let Some(sender) = sender {
             let _ = sender.send(SyncProgress::FindingImages);
         }
         let to_downloads = stream::iter(users)
@@ -62,7 +62,7 @@ pub async fn download_images_for_users<'b>(
         let to_downloads = to_downloads.iter().flatten().collect::<Vec<&ToDownload>>();
         let total = to_downloads.len();
         if !to_downloads.is_empty() {
-            if let Some(sender) = sender{
+            if let Some(sender) = sender {
                 let _ = sender.send(SyncProgress::DownloadingImages { to_download: total });
             }
             search.save();
@@ -82,7 +82,7 @@ pub async fn download_images_for_users<'b>(
         }
     } else {
         println!("Steamgrid DB Auth Key not found, please add one as described here:  https://github.com/PhilipK/steam_shortcuts_sync#configuration");
-    }    
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -183,7 +183,7 @@ async fn search_for_images_to_download(
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
 
         if let ImageType::Icon = image_type {
-            for (index,image_id) in image_ids.iter().enumerate() {
+            for (index, image_id) in image_ids.iter().enumerate() {
                 let shortcut = shortcuts[index];
                 if let Some(url) = get_steam_icon_url(*image_id).await {
                     let path = grid_folder.join(image_type.file_name(shortcut.app_id));
@@ -196,9 +196,9 @@ async fn search_for_images_to_download(
                 }
             }
         } else {
-            for image_ids in image_ids.chunks(99){
+            for image_ids in image_ids.chunks(99) {
                 let image_search_result =
-                    get_images_for_ids(client, &image_ids, &image_type, download_animated).await;
+                    get_images_for_ids(client, image_ids, &image_type, download_animated).await;
                 match image_search_result {
                     Ok(images) => {
                         let images = images
@@ -239,21 +239,26 @@ async fn get_images_for_ids(
     image_ids: &[usize],
     image_type: &ImageType,
     download_animated: bool,
-) -> Result<
-    Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>,
-    String,
-> {
-    use steamgriddb_api::query_parameters::AnimtionType;
-    use steamgriddb_api::query_parameters::QueryType::*;
+) -> Result<Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>, String>
+{
+    let query_type = get_query_type(download_animated, image_type);
+
+    let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
+
+    image_search_result.map_err(|e| format!("Image search failed {:?}", e))
+}
+
+const BIG_PICTURE_DIMS : [GridDimentions;2] = [GridDimentions::D920x430, GridDimentions::D460x215];
+
+pub fn get_query_type(download_animated: bool, image_type: &ImageType) -> steamgriddb_api::QueryType {
     let anymation_type = if download_animated {
-        Some(&[AnimtionType::Animated][..])
+        Some(&[steamgriddb_api::query_parameters::AnimtionType::Animated][..])
     } else {
         None
     };
-    let big_picture_dims = [GridDimentions::D920x430, GridDimentions::D460x215];
     use steamgriddb_api::query_parameters::GridQueryParameters;
     let big_picture_parameters = GridQueryParameters {
-        dimentions: Some(&big_picture_dims),
+        dimentions: Some(&BIG_PICTURE_DIMS),
         types: anymation_type,
         nsfw: Some(&Nsfw::False),
         ..Default::default()
@@ -275,19 +280,15 @@ async fn get_images_for_ids(
         nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
-
     let query_type = match image_type {
-        ImageType::Hero => Hero(Some(hero_parameters)),
-        ImageType::BigPicture => Grid(Some(big_picture_parameters)),
-        ImageType::Grid => Grid(Some(grid_parameters)),
-        ImageType::WideGrid => Grid(Some(big_picture_parameters)),
-        ImageType::Logo => Logo(Some(logo_parameters)),
+        ImageType::Hero => steamgriddb_api::QueryType::Hero(Some(hero_parameters)),
+        ImageType::BigPicture => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
+        ImageType::Grid => steamgriddb_api::QueryType::Grid(Some(grid_parameters)),
+        ImageType::WideGrid => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
+        ImageType::Logo => steamgriddb_api::QueryType::Logo(Some(logo_parameters)),
         _ => panic!("Unsupported image type"),
     };
-
-    let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
-
-    image_search_result.map_err(|e| format!("Image search failed {:?}",e))
+    query_type
 }
 
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {
@@ -345,7 +346,7 @@ fn icon_url(steam_app_id: &str, icon_id: &str) -> String {
     )
 }
 
-async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {
+pub async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {
     println!(
         "Downloading {:?} for {} to {:?}",
         to_download.image_type, to_download.app_name, to_download.path
@@ -360,8 +361,11 @@ async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Er
 }
 
 pub struct ToDownload {
-    path: PathBuf,
-    url: String,
-    app_name: String,
-    image_type: ImageType,
+    pub path: PathBuf,
+    pub url: String,
+    pub app_name: String,
+    pub image_type: ImageType,
+}
+
+unsafe impl Send for ToDownload {
 }

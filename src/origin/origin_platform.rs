@@ -27,22 +27,21 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<OriginGame>, OriginErrors> {
-       
-        let origin_folders   = get_default_locations();
-        if  origin_folders.local_content_path.is_none(){
-            return Err(OriginErrors::PathNotFound { path: "Default path".to_string() });
+        let origin_folders = get_default_locations();
+        if origin_folders.local_content_path.is_none() {
+            return Err(OriginErrors::PathNotFound {
+                path: "Default path".to_string(),
+            });
         }
-        
+
         let origin_folder = origin_folders.local_content_path.unwrap();
         let origin_exe = origin_folders.exe_path;
-        let game_folders =
-            origin_folder
-            .join("LocalContent")
-                .read_dir()
-                .map_err(|e| OriginErrors::CouldNotReadGameDir {
-                    path: origin_folder.join("LocalContent"),
-                    error: format!("{:?}", e),
-                })?;
+        let game_folders = origin_folder.join("LocalContent").read_dir().map_err(|e| {
+            OriginErrors::CouldNotReadGameDir {
+                path: origin_folder.join("LocalContent"),
+                error: format!("{:?}", e),
+            }
+        })?;
         let games = game_folders
             .filter_map(|folder| folder.ok())
             .filter_map(|game_folder| {
@@ -57,7 +56,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
                 id.map(|id| OriginGame {
                     id,
                     title: game_title,
-                    origin_location:origin_exe.clone()
+                    origin_location: origin_exe.clone(),
                 })
             });
         Ok(games.collect())
@@ -79,11 +78,10 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         #[cfg(target_family = "unix")]
         {
             //TODO Update this when origin gets support on linux
-            return true;
+            true
         }
     }
 }
-
 
 fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {
     let game_folder_files = game_folder_path.read_dir();
@@ -114,47 +112,44 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
     take_until("&")(i)
 }
 
-
 #[derive(Default)]
-struct OriginPathData{
+struct OriginPathData {
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Origin/Origin.exe
-    exe_path:Option<PathBuf>,
+    exe_path: Option<PathBuf>,
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/ProgramData/Origin/LocalContent
-    local_content_path:Option<PathBuf>
+    local_content_path: Option<PathBuf>,
 }
 
-
-
 #[cfg(target_family = "unix")]
- fn get_default_locations() -> OriginPathData {
+fn get_default_locations() -> OriginPathData {
     let mut res = OriginPathData::default();
-    if let Ok(home)  = std::env::var("HOME"){
+    if let Ok(home) = std::env::var("HOME") {
         let compat_folder_path = Path::new(&home)
-        .join(".steam")
-        .join("steam")
-        .join("steamapps")
-        .join("compatdata");
+            .join(".steam")
+            .join("steam")
+            .join("steamapps")
+            .join("compatdata");
 
-        if let Ok(compat_folder) = std::fs::read_dir(&compat_folder_path){
-            for game_folder in compat_folder {
-                if let Ok(dir) = game_folder{
-                    let origin_exe_path=  dir.path()
+        if let Ok(compat_folder) = std::fs::read_dir(&compat_folder_path) {
+            for dir in compat_folder.flatten() {
+                let origin_exe_path = dir
+                    .path()
                     .join("pfx")
                     .join("drive_c")
                     .join("Program Files (x86)")
                     .join("Origin")
                     .join("Origin.exe");
 
-                    let origin_local_content=  dir.path()
+                let origin_local_content = dir
+                    .path()
                     .join("pfx")
                     .join("drive_c")
                     .join("ProgramData")
                     .join("Origin");
-                
-                    if origin_exe_path.exists() &&  origin_local_content.exists(){
-                        res.exe_path = Some(origin_exe_path);
-                        res.local_content_path = Some(origin_local_content);
-                    }                    
+
+                if origin_exe_path.exists() && origin_local_content.exists() {
+                    res.exe_path = Some(origin_exe_path);
+                    res.local_content_path = Some(origin_local_content);
                 }
             }
         }
@@ -162,20 +157,16 @@ struct OriginPathData{
     res
 }
 
-
-
-
 #[cfg(target_os = "windows")]
 fn get_default_locations() -> OriginPathData {
     let mut res = OriginPathData::default();
 
     let key = "PROGRAMDATA";
     let program_data = std::env::var(key);
-    if let Ok(program_data) =program_data {
-        let origin_folder = Path::new(&program_data)
-        .join("Origin");
-        if origin_folder.exists(){
-            res.local_content_path = Some(origin_folder.to_owned());
+    if let Ok(program_data) = program_data {
+        let origin_folder = Path::new(&program_data).join("Origin");
+        if origin_folder.exists() {
+            res.local_content_path = Some(origin_folder);
         }
     }
     res

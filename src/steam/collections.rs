@@ -42,7 +42,7 @@ struct ActualSteamCollection {
 }
 
 impl ActualSteamCollection {
-    fn new<B: AsRef<str>>(name: B, ids: &Vec<usize>) -> Self {
+    fn new<B: AsRef<str>>(name: B, ids: &[usize]) -> Self {
         let name = name.as_ref();
         let key = format!("user-collections.{}", name_to_key(name));
         let value = serialize_collection_value(name, ids);
@@ -80,13 +80,13 @@ impl ValueCollection {
     fn new<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Self {
         let name = name.as_ref();
         let id = name_to_key(name);
-        let value = ValueCollection {
+
+        ValueCollection {
             id,
             name: name.to_string(),
             added: game_ids.to_vec(),
             removed: vec![],
-        };
-        value
+        }
     }
 }
 
@@ -106,7 +106,7 @@ pub struct Collection {
 
 pub fn write_collections<S: AsRef<str>>(
     steam_user_id: S,
-    collections_to_add: &Vec<Collection>,
+    collections_to_add: &[Collection],
 ) -> Result<(), Box<dyn Error>> {
     let steam_user_id = steam_user_id.as_ref();
     let new_collections: Vec<(String, SteamCollection)> = collections_to_add
@@ -134,7 +134,7 @@ pub fn write_collections<S: AsRef<str>>(
                 let boilr_keys: Vec<String> = vdf_collections
                     .keys()
                     .filter(|k| k.contains(BOILR_TAG))
-                    .map(|k| k.clone())
+                    .cloned()
                     .collect();
                 for key in boilr_keys {
                     vdf_collections.remove(&key);
@@ -142,12 +142,12 @@ pub fn write_collections<S: AsRef<str>>(
 
                 let new_vdfs = collections_to_add.iter().map(|collection| {
                     let key = name_to_key(&collection.name);
-                    let vd_collection = VdfCollection {
+
+                    VdfCollection {
                         id: key,
                         added: collection.game_ids.clone(),
                         removed: vec![],
-                    };
-                    vd_collection
+                    }
                 });
                 for new_vdf in new_vdfs {
                     vdf_collections.insert(new_vdf.id.clone(), new_vdf.clone());
@@ -181,11 +181,11 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
                 .join("config")
                 .join("localconfig.vdf");
             if path.exists() {
-                return Some(path.to_path_buf());
+                return Some(path);
             }
-            return None;
+            None
         }
-        Err(_e) => return None,
+        Err(_e) => None,
     }
 }
 
@@ -200,7 +200,7 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
                 .join("config")
                 .join("localconfig.vdf");
             if path.exists() {
-                Some(path.to_path_buf())
+                Some(path)
             } else {
                 None
             }
@@ -220,10 +220,12 @@ fn save_category<S: AsRef<str>>(
     Ok(())
 }
 
+type CollectionCategories = HashMap<String, Vec<(String, SteamCollection)>>;
+
 fn get_categories<S: AsRef<str>>(
     steamid: S,
     db: &mut DB,
-) -> Result<HashMap<String, Vec<(String, SteamCollection)>>, Box<dyn Error>> {
+) -> Result<CollectionCategories, Box<dyn Error>> {
     let namespace_keys = get_namespace_keys(steamid, db);
     let mut db_iter = db.new_iter()?;
     let mut res = HashMap::new();
@@ -295,11 +297,11 @@ fn get_level_db_location() -> Option<PathBuf> {
                 .join("Local Storage")
                 .join("leveldb");
             if path.exists() {
-                return Some(path.to_path_buf());
+                return Some(path);
             }
-            return None;
+            None
         }
-        Err(_e) => return None,
+        Err(_e) => None,
     }
 }
 
@@ -314,7 +316,7 @@ fn get_level_db_location() -> Option<PathBuf> {
                 .join("leveldb");
             if path.exists() {
                 Some(path)
-            }else{
+            } else {
                 None
             }
         }
@@ -324,7 +326,7 @@ fn get_level_db_location() -> Option<PathBuf> {
 
 fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> String {
     let value = ValueCollection::new(name, game_ids);
-    serde_json::to_string(&value).expect("Should be able to serialize known type")    
+    serde_json::to_string(&value).expect("Should be able to serialize known type")
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
@@ -339,7 +341,7 @@ fn parse_steam_collections<S: AsRef<str>>(
 ) -> Result<Vec<(String, SteamCollection)>, Box<dyn Error>> {
     let input = input.as_ref();
     let input = input.strip_prefix('\u{1}').unwrap_or(input);
-    let res = serde_json::from_str::<Vec<(String, SteamCollection)>>(&input)?;
+    let res = serde_json::from_str::<Vec<(String, SteamCollection)>>(input)?;
     Ok(res)
 }
 

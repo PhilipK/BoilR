@@ -100,7 +100,7 @@ impl ManifestItem {
         )
     }
 
-    pub fn get_key(&self) -> String{
+    pub fn get_key(&self) -> String {
         format!(
             "{}-{}-{}",
             self.catalog_namespace, self.catalog_item_id, self.app_name
@@ -108,7 +108,7 @@ impl ManifestItem {
     }
 
     fn needs_launcher(&self) -> bool {
-        if self.safe_launch{
+        if self.safe_launch {
             return true;
         }
         match (&self.is_managed, &self.expected_dlc) {
@@ -157,7 +157,7 @@ mod tests {
         let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
         manifest.is_managed = false;
         manifest.expected_dlc = None;
-        let shortcut: ShortcutOwned = manifest.clone().into();
+        let shortcut: ShortcutOwned = manifest.into();
 
         #[cfg(target_os = "windows")]
         assert_eq!(shortcut.exe, "C:\\Games\\MarvelGOTG\\retail/gotg.exe");
@@ -172,7 +172,7 @@ mod tests {
         let json = include_str!("example_item.json");
         let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
         manifest.is_managed = false;
-        let shortcut: ShortcutOwned = manifest.clone().into();
+        let shortcut: ShortcutOwned = manifest.into();
 
         let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
         let actual = shortcut.exe;

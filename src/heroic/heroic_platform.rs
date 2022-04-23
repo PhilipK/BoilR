@@ -1,7 +1,7 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 
 use super::{HeroicGame, HeroicGameType, HeroicSettings};
-use crate::gog::{ get_shortcuts_from_game_folders};
+use crate::gog::get_shortcuts_from_game_folders;
 use crate::platform::{Platform, SettingsValidity};
 use std::collections::HashMap;
 use std::error::Error;
@@ -48,7 +48,7 @@ fn get_gog_installed_location(install_mode: &InstallationMode) -> PathBuf {
         InstallationMode::UserBin => {
             Path::new(&home_dir).join(".config/heroic/gog_store/installed.json")
         }
-    }    
+    }
 }
 
 fn get_shortcuts_from_install_mode(
@@ -68,7 +68,7 @@ fn get_shortcuts_from_location<P: AsRef<Path>>(path: P) -> Result<Vec<HeroicGame
             games.push(game.clone());
         }
         Ok(games)
-    }else{
+    } else {
         Ok(vec![])
     }
 }
@@ -109,7 +109,7 @@ impl Platform<HeroicGameType, Box<dyn Error>> for HeroicPlatform {
     }
 
     fn needs_proton(&self, input: &HeroicGameType) -> bool {
-        match input{
+        match input {
             HeroicGameType::Epic(_) => true,
             HeroicGameType::Gog(_, is_windows) => *is_windows,
         }
@@ -150,7 +150,7 @@ fn get_gog_games(
         })
         .filter_map(|config_path| std::fs::read_to_string(config_path).ok())
         .filter_map(|config_string| serde_json::from_str::<HeroicGogConfig>(&config_string).ok())
-        .flat_map(|config| config.installed)        
+        .flat_map(|config| config.installed)
         .collect();
 
     let mut is_windows_map = HashMap::new();
@@ -170,9 +170,9 @@ fn get_gog_games(
             }
         })
         .collect();
-    let  shortcuts = get_shortcuts_from_game_folders(game_folders);
+    let shortcuts = get_shortcuts_from_game_folders(game_folders);
     let mut gog_shortcuts = vec![];
-    for shortcut in shortcuts {        
+    for shortcut in shortcuts {
         let is_windows = is_windows_map.get(&shortcut.game_id).unwrap_or(&false);
         gog_shortcuts.push(HeroicGameType::Gog(shortcut, *is_windows));
     }

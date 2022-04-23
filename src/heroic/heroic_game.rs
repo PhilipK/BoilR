@@ -13,23 +13,23 @@ pub struct HeroicGame {
     pub launch_parameters: String,
 }
 
-
-
-impl HeroicGame{
-    pub fn is_installed(&self) -> bool{
-        Path::new(&self.install_path).join(&self.executable).exists()
+impl HeroicGame {
+    pub fn is_installed(&self) -> bool {
+        Path::new(&self.install_path)
+            .join(&self.executable)
+            .exists()
     }
 }
 
 impl From<HeroicGame> for ShortcutOwned {
     fn from(game: HeroicGame) -> Self {
         let target_path = Path::new(&game.install_path).join(game.executable);
-        
+
         #[cfg(target_family = "unix")]
         let mut target = target_path.to_string_lossy().to_string();
         #[cfg(target_family = "unix")]
         {
-            if !target.starts_with("\"") && !target.ends_with("\"") {
+            if !target.starts_with('\"') && !target.ends_with('\"') {
                 target = format!("\"{}\"", target);
             }
         }
@@ -38,12 +38,12 @@ impl From<HeroicGame> for ShortcutOwned {
         let mut install_path = game.install_path.to_string();
         #[cfg(target_family = "unix")]
         {
-            if !install_path.starts_with("\"") && !install_path.ends_with("\"") {
+            if !install_path.starts_with('\"') && !install_path.ends_with('\"') {
                 install_path = format!("\"{}\"", install_path);
             }
         }
         #[cfg(target_os = "windows")]
-        let  install_path = game.install_path.to_string();
+        let install_path = game.install_path.to_string();
 
         #[cfg(target_os = "windows")]
         let target = target_path.to_string_lossy().to_string();

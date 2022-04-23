@@ -1,3 +1,4 @@
+mod amazon;
 mod egs;
 mod gog;
 mod heroic;
@@ -10,9 +11,8 @@ mod settings;
 mod steam;
 mod steamgriddb;
 mod sync;
-mod uplay;
 mod ui;
-mod amazon;
+mod uplay;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if args.len() > 1 && args.nth(1).unwrap_or_default() == "--no-ui" {
         ui::run_sync();
         Ok(())
-    }else{
+    } else {
         ui::run_ui()
     }
 }

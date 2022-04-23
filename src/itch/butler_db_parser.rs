@@ -4,8 +4,7 @@ use nom::{
     IResult,
 };
 
-use serde::{Deserialize};
-
+use serde::Deserialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct DbPaths {
@@ -14,31 +13,31 @@ pub(crate) struct DbPaths {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-struct Candidate{
-    pub path:String,
+struct Candidate {
+    pub path: String,
 }
 
-pub(crate) fn parse_butler_db<'a>(content: &'a [u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
+pub(crate) fn parse_butler_db(content: &[u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
     many0(parse_path)(content)
 }
 
-fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
+fn parse_path(i: &[u8]) -> nom::IResult<&[u8], DbPaths> {
     let prefix = "{\"basePath\":\"";
     let suffix = "\",\"totalSize\"";
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, base_path) = take_until(suffix)(i)?;
     let base_path = String::from_utf8_lossy(base_path).to_string();
-    
+
     let prefix = "\"candidates\":[";
     let suffix = "]}";
     let (i, _taken) = take_until(prefix)(i)?;
     let (i, _taken) = tag(prefix)(i)?;
     let (i, candidates_json) = take_until(suffix)(i)?;
-    let candidates_json = format!("[{}]",String::from_utf8_lossy(candidates_json).to_string());
+    let candidates_json = format!("[{}]", String::from_utf8_lossy(candidates_json));
 
     let candidates = serde_json::from_str::<Vec<Candidate>>(&candidates_json);
-    match candidates{
+    match candidates {
         Ok(candidates) => {
             return IResult::Ok((
                 i,
@@ -47,17 +46,17 @@ fn parse_path<'a>(i: &'a [u8]) -> nom::IResult<&[u8], DbPaths> {
                     paths: candidates.iter().map(|c| c.path.clone()).collect(),
                 },
             ))
-        },
+        }
         Err(_err) => {
             //we found a basepath, but no executables
-            return IResult::Ok((
+            IResult::Ok((
                 i,
                 DbPaths {
                     base_path,
                     paths: vec![],
                 },
             ))
-        },
+        }
     }
 }
 
@@ -105,12 +104,13 @@ mod tests {
         let (_r, paths) = result.unwrap();
         assert_eq!(paths.len(), 94);
 
-        assert_eq!(paths[0].base_path, "/home/deck/.config/itch/apps/risetoruins");
+        assert_eq!(
+            paths[0].base_path,
+            "/home/deck/.config/itch/apps/risetoruins"
+        );
         assert_eq!(paths[0].paths[0], "Core.jar");
-        //The parser finds douplicates 
+        //The parser finds douplicates
         assert_eq!(paths[0], paths[1]);
         assert_eq!(paths[1], paths[2]);
-
-        
     }
 }

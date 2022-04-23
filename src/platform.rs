@@ -1,4 +1,4 @@
-    use steam_shortcuts_util::shortcut::ShortcutOwned;
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 pub trait Platform<T, E>
 where

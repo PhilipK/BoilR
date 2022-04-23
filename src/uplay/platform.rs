@@ -49,7 +49,7 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         #[cfg(target_family = "unix")]
         {
             //TODO update this when uplay gets proton support on linux
-            return true;
+            true
         }
     }
 }

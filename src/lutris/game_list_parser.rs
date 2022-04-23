@@ -1,16 +1,16 @@
 use super::lutris_game::LutrisGame;
 
-pub fn parse_lutris_games<'a>(input: &'a str) -> Vec<LutrisGame> {
+pub fn parse_lutris_games(input: &str) -> Vec<LutrisGame> {
     input
-        .split("\n")
+        .split('\n')
         .into_iter()
         .filter(|s| !s.is_empty())
         .filter_map(parse_line)
         .collect()
 }
 
-fn parse_line<'a>(input: &'a str) -> Option<LutrisGame> {
-    let mut sections = input.split("|");
+fn parse_line(input: &str) -> Option<LutrisGame> {
+    let mut sections = input.split('|');
     if sections.clone().count() < 4 {
         return None;
     }
@@ -20,10 +20,10 @@ fn parse_line<'a>(input: &'a str) -> Option<LutrisGame> {
     let platform = sections.next().unwrap().trim();
 
     Some(LutrisGame {
-        id:id.to_string(),
-        index:index.to_string(),
-        name:name.to_string(),
-        platform:platform.to_string(),
+        id: id.to_string(),
+        index: index.to_string(),
+        name: name.to_string(),
+        platform: platform.to_string(),
     })
 }
 

@@ -20,6 +20,13 @@ impl<'a> CachedSearch<'a> {
         save_search_map(&self.search_map);
     }
 
+    pub fn set_cache<S>(&mut self, app_id: u32, name:S, new_grid_id:usize) 
+    where
+        S: Into<String>{
+        self.search_map.insert(app_id,(name.into(),new_grid_id));
+        self.save();
+    }
+
     pub async fn search<S>(
         &self,
         app_id: u32,

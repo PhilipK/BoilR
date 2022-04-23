@@ -11,7 +11,9 @@ pub struct EpicPlatform {
 
 impl EpicPlatform {
     pub fn new(settings: &EpicGamesLauncherSettings) -> Self {
-        EpicPlatform { settings: settings.clone() }
+        EpicPlatform {
+            settings: settings.clone(),
+        }
     }
 }
 

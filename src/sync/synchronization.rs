@@ -12,7 +12,7 @@ use crate::{
         Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
-    uplay::Uplay, 
+    uplay::Uplay,
 };
 
 #[cfg(target_family = "unix")]
@@ -25,27 +25,24 @@ use std::{fs::File, io::Write, path::Path};
 
 const BOILR_TAG: &str = "boilr";
 
-
-pub enum SyncProgress{
+pub enum SyncProgress {
     NotStarted,
     Starting,
-    FoundGames{
-        games_found:usize
-    },
+    FoundGames { games_found: usize },
     FindingImages,
-    DownloadingImages{
-        to_download:usize,        
-    },
-    Done
+    DownloadingImages { to_download: usize },
+    Done,
 }
 
-
-pub fn run_sync(settings: &Settings, sender: &mut Option<Sender<SyncProgress>>) -> Result<Vec<SteamUsersInfo>, String> {
-    if let Some(sender) = &sender{
+pub fn run_sync(
+    settings: &Settings,
+    sender: &mut Option<Sender<SyncProgress>>,
+) -> Result<Vec<SteamUsersInfo>, String> {
+    if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
     }
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
-    .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
+        .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
 
     let platform_shortcuts = get_platform_shortcuts(settings);
     let all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
@@ -53,8 +50,10 @@ pub fn run_sync(settings: &Settings, sender: &mut Option<Sender<SyncProgress>>) 
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
-    if let Some(sender) = &sender{
-        let _ = sender.send(SyncProgress::FoundGames { games_found: all_shortcuts.len() });
+    if let Some(sender) = &sender {
+        let _ = sender.send(SyncProgress::FoundGames {
+            games_found: all_shortcuts.len(),
+        });
     }
     for shortcut in &all_shortcuts {
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
@@ -91,32 +90,35 @@ pub fn run_sync(settings: &Settings, sender: &mut Option<Sender<SyncProgress>>) 
 
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
-    }    
+    }
 
     Ok(userinfo_shortcuts)
 }
 
-pub async fn download_images(settings: &Settings, userinfo_shortcuts: &Vec<SteamUsersInfo>,sender: &mut Option<Sender<SyncProgress>>) {
+pub async fn download_images(
+    settings: &Settings,
+    userinfo_shortcuts: &[SteamUsersInfo],
+    sender: &mut Option<Sender<SyncProgress>>,
+) {
     if settings.steamgrid_db.enabled {
         if settings.steamgrid_db.prefer_animated {
             println!("downloading animated images");
-            download_images_for_users(settings, userinfo_shortcuts, true,sender).await;
+            download_images_for_users(settings, userinfo_shortcuts, true, sender).await;
         }
-        download_images_for_users(settings, userinfo_shortcuts, false,sender).await;
+        download_images_for_users(settings, userinfo_shortcuts, false, sender).await;
     }
 }
 
-trait IsBoilRShortcut{
-    fn is_boilr_tag(&self) -> bool; 
+trait IsBoilRShortcut {
+    fn is_boilr_tag(&self) -> bool;
 }
 
-impl IsBoilRShortcut for ShortcutOwned{
+impl IsBoilRShortcut for ShortcutOwned {
     fn is_boilr_tag(&self) -> bool {
         let boilr_tag = BOILR_TAG.to_string();
         self.tags.contains(&boilr_tag) || self.dev_kit_game_id.starts_with(&boilr_tag)
     }
 }
-
 
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
     shortcut_info
@@ -138,15 +140,20 @@ fn fix_shortcut_icons(
         ImageType::Icon
     };
 
-    for shortcut in shortcuts {     
-        if shortcut.is_boilr_tag(){   
-            let replace_icon = shortcut.icon.trim().eq("") ||  !Path::new(shortcut.icon.trim()).exists() || shortcut.icon.eq(&shortcut.exe);
+    for shortcut in shortcuts {
+        if shortcut.is_boilr_tag() {
+            let replace_icon = shortcut.icon.trim().eq("")
+                || !Path::new(shortcut.icon.trim()).exists()
+                || shortcut.icon.eq(&shortcut.exe);
             if replace_icon {
                 let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
                     &shortcut.exe,
                     &shortcut.app_name,
                 );
-                shortcut.icon = image_folder.join(image_type.file_name(app_id)).to_string_lossy().to_string();
+                shortcut.icon = image_folder
+                    .join(image_type.file_name(app_id))
+                    .to_string_lossy()
+                    .to_string();
             }
         }
     }
@@ -194,7 +201,7 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
             settings: settings.heroic.clone(),
         }));
     }
-    
+
     #[cfg(windows)]
     {
         platform_results.push(update_platform_shortcuts(&crate::amazon::AmazonPlatform {

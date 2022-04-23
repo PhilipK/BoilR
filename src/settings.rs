@@ -1,7 +1,8 @@
 use crate::{
-    egs::EpicGamesLauncherSettings, gog::GogSettings, itch::ItchSettings,
-    legendary::LegendarySettings, lutris::settings::LutrisSettings, origin::OriginSettings,
-    steam::SteamSettings, steamgriddb::SteamGridDbSettings, uplay::UplaySettings, heroic::HeroicSettings, amazon::AmazonSettings,
+    amazon::AmazonSettings, egs::EpicGamesLauncherSettings, gog::GogSettings,
+    heroic::HeroicSettings, itch::ItchSettings, legendary::LegendarySettings,
+    lutris::settings::LutrisSettings, origin::OriginSettings, steam::SteamSettings,
+    steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
 };
 
 use config::{Config, ConfigError, Environment, File};
