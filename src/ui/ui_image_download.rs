@@ -5,7 +5,7 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{
     steam::{get_shortcuts_paths, SteamUsersInfo},
-    steamgriddb::ImageType,
+    steamgriddb::{ImageType, CachedSearch},
 };
 
 use super::{ui_images::load_image_from_path, MyEguiApp};
@@ -13,6 +13,7 @@ use super::{ui_images::load_image_from_path, MyEguiApp};
 #[derive(Default, PartialEq)]
 pub struct ImageSelectState {
     pub selected_image: Option<ShortcutOwned>,
+    pub grid_id: Option<usize>,
 
     pub hero_image: Option<egui::TextureHandle>,
     pub grid_image: Option<egui::TextureHandle>,
@@ -22,6 +23,10 @@ pub struct ImageSelectState {
 
     pub steam_user: Option<SteamUsersInfo>,
     pub steam_users: Option<Vec<SteamUsersInfo>>,
+    
+    
+
+    
 }
 
 impl MyEguiApp {
@@ -39,7 +44,7 @@ impl MyEguiApp {
                         ui.reset_style();
                         let borrowed_games = &*self.games_to_sync.borrow();
                         match borrowed_games {
-                            super::FetchGameStatus::Fetched(games_to_sync) => {
+                            super::FetcStatus::Fetched(games_to_sync) => {
                                 match &self.image_selected_state.selected_image {
                                     Some(selected_image) => {
                                         if ui.button("Back").clicked() {
@@ -47,6 +52,23 @@ impl MyEguiApp {
                                             return;
                                         }
                                         ui.heading(&selected_image.app_name);
+
+                                        if let Some(grid_id) = self.image_selected_state.grid_id{
+                                            ui.horizontal(|ui|{
+                                                ui.label("Grid id:");
+                                                let mut text_id = format!("{}",grid_id);
+                                                if ui.text_edit_singleline(&mut text_id).changed(){
+                                                    if let Ok(grid_id) = text_id.parse::<usize>(){
+                                                        if let Some(auth_key ) = &self.settings.steamgrid_db.auth_key{
+                                                            let client = steamgriddb_api::Client::new(auth_key);
+                                                            let mut search = CachedSearch::new(&client);
+                                                            search.set_cache(selected_image.app_id, selected_image.app_name.to_string(), grid_id);
+                                                        }
+                                                        self.image_selected_state.grid_id = Some(grid_id);
+                                                    }
+                                                };
+                                            });
+                                        }
 
                                         ui.label("Hero");
                                         render_image(ui,&mut self.image_selected_state.hero_image);
@@ -68,6 +90,14 @@ impl MyEguiApp {
                                             ui.heading(platform_name);
                                             for shortcut in shortcuts {
                                                 if ui.button(&shortcut.app_name).clicked() {
+
+                                                    if let Some(auth_key ) = &self.settings.steamgrid_db.auth_key{
+                                                        let client = steamgriddb_api::Client::new(auth_key);
+                                                        let search = CachedSearch::new(&client);
+                                                        //TODO make this multithreaded
+                                                        self.image_selected_state.grid_id = self.rt.block_on(search.search(shortcut.app_id, &shortcut.app_name)).ok().flatten();
+                                                    }
+
                                                     self.image_selected_state.selected_image =
                                                         Some(shortcut.clone());
 
@@ -143,17 +173,17 @@ impl MyEguiApp {
 
 }
 
-fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) {
+fn render_image(ui: &mut egui::Ui, image: &mut Option<egui::TextureHandle>) -> bool {
     match image {
         Some(texture) => {
             let size = texture.size_vec2();
             let image_button =
                 ImageButton::new(texture, size * 0.1);
             ui.add(image_button)
-                .on_hover_text("Import your games into steam");
+                .on_hover_text("Click to change image").clicked()
         }
         None => {
-            let _ = ui.button("Pick an image");
+            ui.button("Pick an image").clicked()
         }
     }
 }

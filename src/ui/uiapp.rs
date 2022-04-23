@@ -2,6 +2,7 @@ use std::error::Error;
 
 use eframe::{egui, epi};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
@@ -15,7 +16,7 @@ use super::{
         TEXT_COLOR,
     },
     ui_images::{get_import_image, get_logo, get_logo_icon},
-    ui_import_games::FetchGameStatus,
+    ui_import_games::FetcStatus,
     ImageSelectState,
 };
 
@@ -32,7 +33,7 @@ pub struct MyEguiApp {
     pub(crate) settings: Settings,
     pub(crate) rt: Runtime,
     ui_images: UiImages,
-    pub(crate) games_to_sync: Receiver<FetchGameStatus>,
+    pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
     pub(crate) image_selected_state: ImageSelectState,
@@ -45,7 +46,7 @@ impl MyEguiApp {
             selected_menu: Menues::Import,
             settings: Settings::new().expect("We must be able to load our settings"),
             rt: runtime,
-            games_to_sync: watch::channel(FetchGameStatus::NeedsFetched).1,
+            games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
             ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
@@ -110,7 +111,7 @@ impl epi::App for MyEguiApp {
                         .changed();
                 if changed && self.selected_menu == Menues::Settings {
                     //We reset games here, since user might change settings
-                    self.games_to_sync = watch::channel(FetchGameStatus::NeedsFetched).1;
+                    self.games_to_sync = watch::channel(FetcStatus::NeedsFetched).1;
                 }
             });
         if self.games_to_sync.borrow().is_some() {

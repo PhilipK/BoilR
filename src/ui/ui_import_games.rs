@@ -1,7 +1,7 @@
 use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
-use steam_shortcuts_util::shortcut::ShortcutOwned;
+
 use tokio::sync::watch;
 
 use crate::settings::Settings;
@@ -17,26 +17,26 @@ use super::{
 
 const SECTION_SPACING: f32 = 25.0;
 
-pub enum FetchGameStatus {
+pub enum FetcStatus<T> {
     NeedsFetched,
     Fetching,
-    Fetched(Vec<(String, Vec<ShortcutOwned>)>),
+    Fetched(T),
 }
 
-impl FetchGameStatus {
+impl<T> FetcStatus<T> {
     pub fn is_some(&self) -> bool {
         match self {
-            FetchGameStatus::NeedsFetched => false,
-            FetchGameStatus::Fetching => false,
-            FetchGameStatus::Fetched(_) => true,
+            FetcStatus::NeedsFetched => false,
+            FetcStatus::Fetching => false,
+            FetcStatus::Fetched(_) => true,
         }
     }
 
     pub fn needs_fetching(&self) -> bool {
         match self {
-            FetchGameStatus::NeedsFetched => true,
-            FetchGameStatus::Fetching => false,
-            FetchGameStatus::Fetched(_) => false,
+            FetcStatus::NeedsFetched => true,
+            FetcStatus::Fetching => false,
+            FetcStatus::Fetched(_) => false,
         }
     }
 }
@@ -62,7 +62,7 @@ impl MyEguiApp {
 
             let borrowed_games = &*self.games_to_sync.borrow();
             match borrowed_games{
-                FetchGameStatus::Fetched(games_to_sync) => {
+                FetcStatus::Fetched(games_to_sync) => {
                     ui.label("Select the games you want to import into steam");
                     for (platform_name, shortcuts) in games_to_sync{
                         ui.heading(platform_name);
@@ -92,13 +92,13 @@ impl MyEguiApp {
     pub fn ensure_games_loaded(&mut self) {
         if self.games_to_sync.borrow().needs_fetching() {
             self.image_selected_state = ImageSelectState::default();
-            let (tx, rx) = watch::channel(FetchGameStatus::NeedsFetched);
+            let (tx, rx) = watch::channel(FetcStatus::NeedsFetched);
             self.games_to_sync = rx;
             let settings = self.settings.clone();
             self.rt.spawn_blocking(move || {
-                let _ = tx.send(FetchGameStatus::Fetching);
+                let _ = tx.send(FetcStatus::Fetching);
                 let games_to_sync = sync::get_platform_shortcuts(&settings);
-                let _ = tx.send(FetchGameStatus::Fetched(games_to_sync));
+                let _ = tx.send(FetcStatus::Fetched(games_to_sync));
             });
         }
     }
