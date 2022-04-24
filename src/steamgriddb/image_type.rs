@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy,PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ImageType {
     Hero,
     Grid,
@@ -8,16 +8,21 @@ pub enum ImageType {
     Icon,
 }
 
-pub const ALL_TYPES : [ImageType;6] =
- [ImageType::Hero,ImageType::Grid,ImageType::WideGrid,ImageType::Logo,ImageType::BigPicture,ImageType::Icon];
+pub const ALL_TYPES: [ImageType; 6] = [
+    ImageType::Hero,
+    ImageType::Grid,
+    ImageType::WideGrid,
+    ImageType::Logo,
+    ImageType::BigPicture,
+    ImageType::Icon,
+];
 
 impl ImageType {
-
-    pub fn all() -> &'static [ImageType;6]{
+    pub fn all() -> &'static [ImageType; 6] {
         &ALL_TYPES
     }
 
-    pub fn name(&self) -> &str{
+    pub fn name(&self) -> &str {
         match self {
             ImageType::Hero => "Hero",
             ImageType::Grid => "Grid",

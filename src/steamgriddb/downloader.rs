@@ -248,9 +248,12 @@ async fn get_images_for_ids(
     image_search_result.map_err(|e| format!("Image search failed {:?}", e))
 }
 
-const BIG_PICTURE_DIMS : [GridDimentions;2] = [GridDimentions::D920x430, GridDimentions::D460x215];
+const BIG_PICTURE_DIMS: [GridDimentions; 2] = [GridDimentions::D920x430, GridDimentions::D460x215];
 
-pub fn get_query_type(download_animated: bool, image_type: &ImageType) -> steamgriddb_api::QueryType {
+pub fn get_query_type(
+    download_animated: bool,
+    image_type: &ImageType,
+) -> steamgriddb_api::QueryType {
     let anymation_type = if download_animated {
         Some(&[steamgriddb_api::query_parameters::AnimtionType::Animated][..])
     } else {
@@ -365,7 +368,4 @@ pub struct ToDownload {
     pub url: String,
     pub app_name: String,
     pub image_type: ImageType,
-}
-
-unsafe impl Send for ToDownload {
 }
