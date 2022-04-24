@@ -91,7 +91,9 @@ impl MyEguiApp {
     fn render_ui_image_action(&self, ui: &mut egui::Ui) -> UserAction {
         let state = &self.image_selected_state;
         ui.heading("Images");
-        if (state.selected_shortcut.is_some() || state.has_multiple_users()) && ui.button("Back").clicked() {
+        if (state.selected_shortcut.is_some() || state.has_multiple_users())
+            && ui.button("Back").clicked()
+        {
             return UserAction::BackButton;
         }
         if state.steam_user.is_none() {
@@ -139,7 +141,6 @@ impl MyEguiApp {
         state: &ImageSelectState,
     ) -> Option<UserAction> {
         ui.heading(image_type.name());
-        
 
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {

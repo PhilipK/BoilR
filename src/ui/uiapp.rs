@@ -130,7 +130,7 @@ impl epi::App for MyEguiApp {
                         }
                         SyncProgress::Done => ("Done importing games".to_string(), false),
                     };
-                    if syncing{
+                    if syncing {
                         ui.ctx().request_repaint();
                     }
                     if !status_string.is_empty() {

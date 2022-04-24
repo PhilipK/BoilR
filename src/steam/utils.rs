@@ -43,7 +43,7 @@ pub struct ShortcutInfo {
     pub shortcuts: Vec<ShortcutOwned>,
 }
 
-#[derive(Default, PartialEq, Clone,Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub struct SteamUsersInfo {
     pub steam_user_data_folder: String,
     pub shortcut_path: Option<String>,
