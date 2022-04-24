@@ -91,10 +91,8 @@ impl MyEguiApp {
     fn render_ui_image_action(&self, ui: &mut egui::Ui) -> UserAction {
         let state = &self.image_selected_state;
         ui.heading("Images");
-        if state.selected_shortcut.is_some() || state.has_multiple_users() {
-            if ui.button("Back").clicked() {
-                return UserAction::BackButton;
-            }
+        if (state.selected_shortcut.is_some() || state.has_multiple_users()) && ui.button("Back").clicked() {
+            return UserAction::BackButton;
         }
         if state.steam_user.is_none() {
             return render_user_select(state, ui);
@@ -105,15 +103,11 @@ impl MyEguiApp {
                 if let Some(action) = self.render_possible_images(ui, image_type, state) {
                     return action;
                 }
-            } else {
-                if let Some(action) = render_shortcut_images(ui, state) {
-                    return action;
-                }
-            }
-        } else {
-            if let Some(action) = self.render_shortcut_select(ui) {
+            } else if let Some(action) = render_shortcut_images(ui, state) {
                 return action;
             }
+        } else if let Some(action) = self.render_shortcut_select(ui) {
+            return action;
         }
         UserAction::NoAction
     }
@@ -190,7 +184,7 @@ impl MyEguiApp {
                                     path: path.clone(),
                                     url: image.thumbnail_url.clone(),
                                     app_name: "Thumbnail".to_string(),
-                                    image_type: image_type.clone(),
+                                    image_type: *image_type,
                                 };
                                 let image_handles = image_handles.clone();
                                 let image_key = image_key.clone();
@@ -286,8 +280,8 @@ impl MyEguiApp {
         let settings = self.settings.clone();
         if let Some(auth_key) = settings.steamgrid_db.auth_key {
             if let Some(grid_id) = self.image_selected_state.grid_id {
-                let auth_key = auth_key.clone();
-                let image_type = image_type.clone();
+                let auth_key = auth_key;
+                let image_type = image_type;
                 self.rt.spawn_blocking(move || {
                     //Find somewhere else to put this
                     let _ = std::fs::create_dir_all(".thumbnails");
@@ -334,8 +328,8 @@ impl MyEguiApp {
         let to_download = ToDownload {
             path: to,
             url: image.full_url.clone(),
-            app_name: app_name.clone(),
-            image_type: selected_image_type.clone(),
+            app_name,
+            image_type: *selected_image_type,
         };
         //TODO make this actually parallel
         self.rt.spawn_blocking(move || {
@@ -401,7 +395,7 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
         ui.label(image_type.name());
         let image_ref = get_image_ref(image_type, state);
         if render_thumbnail(ui, image_ref) {
-            return Some(UserAction::ImageTypeSelected(image_type.clone()));
+            return Some(UserAction::ImageTypeSelected(*image_type));
         }
     }
     None
@@ -423,12 +417,10 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction
 fn handle_back_button_action(state: &mut ImageSelectState) {
     if state.image_type_selected.is_some() {
         state.image_type_selected = None;
+    } else if state.selected_shortcut.is_some() {
+        state.selected_shortcut = None;
     } else {
-        if state.selected_shortcut.is_some() {
-            state.selected_shortcut = None;
-        } else {
-            state.steam_user = None;
-        }
+        state.steam_user = None;
     }
 }
 
