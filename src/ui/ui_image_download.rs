@@ -73,6 +73,7 @@ enum UserAction {
     ShortcutSelected(ShortcutOwned),
     ImageTypeSelected(ImageType),
     ImageSelected(PossibleImage),
+    GridIdChanged(usize),
     BackButton,
     NoAction,
 }
@@ -197,7 +198,19 @@ impl MyEguiApp {
             UserAction::BackButton => {
                 let state = &mut self.image_selected_state;
                 handle_back_button_action(state);
-            }
+            },
+            UserAction::GridIdChanged(grid_id) => {
+                self.image_selected_state.grid_id = Some(grid_id);
+                if let Some(auth_key) =&self.settings.steamgrid_db.auth_key{
+                    let client = steamgriddb_api::Client::new(auth_key);
+                    let mut cache = CachedSearch::new(&client);
+                    if let Some(shortcut) =&self.image_selected_state.selected_shortcut{
+                        cache.set_cache(shortcut.app_id, shortcut.app_name.clone(), grid_id);
+                        cache.save();
+                    }
+                }
+            },
+
             UserAction::NoAction => {}
         };
     }
@@ -336,6 +349,12 @@ impl MyEguiApp {
 }
 
 fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option<UserAction> {
+    let mut grid_id_text = state.grid_id.map(|id| id.to_string()).unwrap_or_default();
+    if ui.text_edit_singleline(&mut grid_id_text).changed(){
+        if let Ok(grid_id) = grid_id_text.parse::<usize>(){
+            return Some(UserAction::GridIdChanged(grid_id));
+        }
+    };
     for image_type in ImageType::all() {
         ui.label(image_type.name());
         let image_ref = get_image_ref(image_type, state);
