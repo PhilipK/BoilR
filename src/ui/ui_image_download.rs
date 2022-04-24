@@ -1,5 +1,6 @@
 use std::{
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use crate::{
@@ -30,7 +31,13 @@ pub struct ImageSelectState {
     pub image_type_selected: Option<ImageType>,
     pub image_options: Receiver<FetcStatus<Vec<PossibleImage>>>,
 
-    pub image_handles: DashMap<String, egui::TextureHandle>,
+    pub image_handles: std::sync::Arc<DashMap<String, TextureState>>,
+}
+
+pub enum TextureState {
+    Downloading,
+    Downloaded,
+    Loaded(egui::TextureHandle),
 }
 
 impl ImageSelectState {
@@ -42,10 +49,12 @@ impl ImageSelectState {
     }
 }
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct PossibleImage {
     thumbnail_path: PathBuf,
+    thumbnail_url: String,
     full_url: String,
+    id: u32,
 }
 
 impl Default for ImageSelectState {
@@ -62,7 +71,7 @@ impl Default for ImageSelectState {
             steam_users: Default::default(),
             image_type_selected: Default::default(),
             image_options: watch::channel(FetcStatus::NeedsFetched).1,
-            image_handles: DashMap::new(),
+            image_handles: Arc::new(DashMap::new()),
         }
     }
 }
@@ -88,7 +97,7 @@ impl MyEguiApp {
             }
         }
         if state.steam_user.is_none() {
-            return  render_user_select(state, ui);
+            return render_user_select(state, ui);
         }
         if let Some(shortcut) = state.selected_shortcut.as_ref() {
             ui.heading(&shortcut.app_name);
@@ -128,29 +137,68 @@ impl MyEguiApp {
         None
     }
 
-    fn render_possible_images(&self, ui: &mut egui::Ui, image_type: &ImageType, state: &ImageSelectState) -> Option<UserAction> {
+    fn render_possible_images(
+        &self,
+        ui: &mut egui::Ui,
+        image_type: &ImageType,
+        state: &ImageSelectState,
+    ) -> Option<UserAction> {
         ui.heading(image_type.name());
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {
                 for image in images {
-                    let image_key =
-                        image.thumbnail_path.as_path().to_string_lossy().to_string();
-                    if !state.image_handles.contains_key(&image_key) {
-                        //TODO remove this unwrap
-                        //TODO make this multithreaded instead
-                        let image_data =
-                            load_image_from_path(&image.thumbnail_path).unwrap();
-                        let handle = ui.ctx().load_texture(&image_key, image_data);
-                        self.image_selected_state
-                            .image_handles
-                            .insert(image_key.clone(), handle);
-                    }
-                    if let Some(texture_handle) = state.image_handles.get(&image_key) {
-                        let mut size = texture_handle.size_vec2();
-                        clamp_to_width(&mut size, MAX_WIDTH);
-                        let image_button = ImageButton::new(texture_handle.value(), size);
-                        if ui.add(image_button).clicked() {
-                            return Some(UserAction::ImageSelected(image.clone()));
+                    let image_key = image.thumbnail_path.as_path().to_string_lossy().to_string();
+
+                    match state.image_handles.get_mut(&image_key) {
+                        Some(mut state) => {
+                            match state.value() {
+                                TextureState::Downloading => {
+                                    //nothing to do,just wait
+                                    ui.label(format!("Downloading id {}", image.id));
+                                }
+                                TextureState::Downloaded => {
+                                    //Need to load
+                                    let image_data =
+                                        load_image_from_path(&image.thumbnail_path).unwrap();
+                                    let handle = ui.ctx().load_texture(&image_key, image_data);
+                                    *state.value_mut() = TextureState::Loaded(handle);
+                                    ui.label("Loading");
+                                }
+                                TextureState::Loaded(texture_handle) => {
+                                    //need to show
+                                    let mut size = texture_handle.size_vec2();
+                                    clamp_to_width(&mut size, MAX_WIDTH);
+                                    let image_button = ImageButton::new(texture_handle, size);
+                                    if ui.add(image_button).clicked() {
+                                        return Some(UserAction::ImageSelected(image.clone()));
+                                    }
+                                }
+                            }
+                        }
+                        None => {
+                            //We need to start a download
+                            let image_handles = &self.image_selected_state.image_handles;
+                            let path = &image.thumbnail_path;
+                            if !path.exists() {
+                                image_handles.insert(image_key.clone(), TextureState::Downloading);
+                                let to_download = ToDownload {
+                                    path: path.clone(),
+                                    url: image.thumbnail_url.clone(),
+                                    app_name: "Thumbnail".to_string(),
+                                    image_type: image_type.clone(),
+                                };
+                                let image_handles = image_handles.clone();
+                                let image_key = image_key.clone();
+                                self.rt.spawn_blocking(move || {
+                                    block_on(crate::steamgriddb::download_to_download(
+                                        &to_download,
+                                    ))
+                                    .unwrap();
+                                    image_handles.insert(image_key, TextureState::Downloaded);
+                                });
+                            } else {
+                                image_handles.insert(image_key.clone(), TextureState::Downloaded);
+                            }
                         }
                     }
                 }
@@ -198,21 +246,25 @@ impl MyEguiApp {
             UserAction::BackButton => {
                 let state = &mut self.image_selected_state;
                 handle_back_button_action(state);
-            },
+            }
             UserAction::GridIdChanged(grid_id) => {
-                self.image_selected_state.grid_id = Some(grid_id);
-                if let Some(auth_key) =&self.settings.steamgrid_db.auth_key{
-                    let client = steamgriddb_api::Client::new(auth_key);
-                    let mut cache = CachedSearch::new(&client);
-                    if let Some(shortcut) =&self.image_selected_state.selected_shortcut{
-                        cache.set_cache(shortcut.app_id, shortcut.app_name.clone(), grid_id);
-                        cache.save();
-                    }
-                }
-            },
+                self.handle_grid_change(grid_id);
+            }
 
             UserAction::NoAction => {}
         };
+    }
+
+    fn handle_grid_change(&mut self, grid_id: usize) {
+        self.image_selected_state.grid_id = Some(grid_id);
+        if let Some(auth_key) = &self.settings.steamgrid_db.auth_key {
+            let client = steamgriddb_api::Client::new(auth_key);
+            let mut cache = CachedSearch::new(&client);
+            if let Some(shortcut) = &self.image_selected_state.selected_shortcut {
+                cache.set_cache(shortcut.app_id, shortcut.app_name.clone(), grid_id);
+                cache.save();
+            }
+        }
     }
 
     fn handle_user_selected(&mut self, user: SteamUsersInfo) {
@@ -246,24 +298,12 @@ impl MyEguiApp {
                     if let Ok(possible_images) = search_res {
                         let mut result = vec![];
                         for possible_image in &possible_images {
-                            let path = thumbnails_folder
-                                .join(format!("{}.png", possible_image.id));
-
-                            if !&path.exists() {
-                                let to_download = ToDownload {
-                                    path: path.clone(),
-                                    url: possible_image.thumb.clone(),
-                                    app_name: app_name.clone(),
-                                    image_type: image_type.clone(),
-                                };
-                                //TODO make this actually parallel
-                                block_on(crate::steamgriddb::download_to_download(
-                                    &to_download,
-                                ));
-                            }
+                            let path = thumbnails_folder.join(format!("{}.png", possible_image.id));
                             result.push(PossibleImage {
                                 thumbnail_path: path,
+                                thumbnail_url: possible_image.thumb.clone(),
                                 full_url: possible_image.url.clone(),
+                                id: possible_image.id,
                             });
                             let _ = tx.send(FetcStatus::Fetched(result.clone()));
                         }
@@ -315,7 +355,9 @@ impl MyEguiApp {
             .image_handles
             .get(&image_key)
             .unwrap();
-        *image_ref = Some(texture_handle.clone());
+        if let TextureState::Loaded(texture_handle) = texture_handle.value() {
+            *image_ref = Some(texture_handle.clone());
+        }
         self.image_selected_state.image_type_selected = None;
         self.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
     }
@@ -350,8 +392,8 @@ impl MyEguiApp {
 
 fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option<UserAction> {
     let mut grid_id_text = state.grid_id.map(|id| id.to_string()).unwrap_or_default();
-    if ui.text_edit_singleline(&mut grid_id_text).changed(){
-        if let Ok(grid_id) = grid_id_text.parse::<usize>(){
+    if ui.text_edit_singleline(&mut grid_id_text).changed() {
+        if let Ok(grid_id) = grid_id_text.parse::<usize>() {
             return Some(UserAction::GridIdChanged(grid_id));
         }
     };

@@ -367,5 +367,5 @@ pub struct ToDownload {
     pub image_type: ImageType,
 }
 
-unsafe impl Send for ToDownload {
-}
+// unsafe impl Send for ToDownload {
+// }
