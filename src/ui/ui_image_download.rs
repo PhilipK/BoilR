@@ -281,22 +281,16 @@ impl MyEguiApp {
     fn handle_image_type_selected(&mut self, image_type: ImageType) {
         let state = &mut self.image_selected_state;
         state.image_type_selected = Some(image_type);
-        let (mut tx, rx) = watch::channel(FetcStatus::Fetching);
+        let (tx, rx) = watch::channel(FetcStatus::Fetching);
         self.image_selected_state.image_options = rx;
         let settings = self.settings.clone();
-        let selected_image = self
-            .image_selected_state
-            .selected_shortcut
-            .as_ref()
-            .unwrap();
         if let Some(auth_key) = settings.steamgrid_db.auth_key {
             if let Some(grid_id) = self.image_selected_state.grid_id {
                 let auth_key = auth_key.clone();
                 let image_type = image_type.clone();
-                let app_name = selected_image.app_name.clone();
                 self.rt.spawn_blocking(move || {
                     //Find somewhere else to put this
-                    std::fs::create_dir_all(".thumbnails");
+                    let _ = std::fs::create_dir_all(".thumbnails");
                     let thumbnails_folder = Path::new(".thumbnails");
                     let client = steamgriddb_api::Client::new(auth_key);
                     let query = get_query_type(false, &image_type);
