@@ -83,6 +83,7 @@ impl MyEguiApp {
                     ui.label("Check the settings if BoilR didn't find the game you where looking for");
                 },
                 _=> {
+                    ui.ctx().request_repaint();
                     ui.label("Finding installed games");
                 },
             };

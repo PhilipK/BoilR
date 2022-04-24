@@ -131,6 +131,7 @@ impl MyEguiApp {
                 }
             }
             _ => {
+                ui.ctx().request_repaint();
                 ui.label("Finding installed games");
             }
         }
@@ -165,6 +166,7 @@ impl MyEguiApp {
                                         load_image_from_path(&image.thumbnail_path).unwrap();
                                     let handle = ui.ctx().load_texture(&image_key, image_data);
                                     *state.value_mut() = TextureState::Loaded(handle);
+                                    ui.ctx().request_repaint();
                                     ui.label("Loading");
                                 }
                                 TextureState::Loaded(texture_handle) => {
