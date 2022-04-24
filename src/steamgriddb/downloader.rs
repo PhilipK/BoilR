@@ -369,6 +369,3 @@ pub struct ToDownload {
     pub app_name: String,
     pub image_type: ImageType,
 }
-
-// unsafe impl Send for ToDownload {
-// }
