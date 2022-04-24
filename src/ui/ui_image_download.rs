@@ -144,6 +144,8 @@ impl MyEguiApp {
         state: &ImageSelectState,
     ) -> Option<UserAction> {
         ui.heading(image_type.name());
+        
+
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {
                 for image in images {
@@ -153,6 +155,7 @@ impl MyEguiApp {
                         Some(mut state) => {
                             match state.value() {
                                 TextureState::Downloading => {
+                                    ui.ctx().request_repaint();
                                     //nothing to do,just wait
                                     ui.label(format!("Downloading id {}", image.id));
                                 }
@@ -205,6 +208,7 @@ impl MyEguiApp {
             }
             _ => {
                 ui.label("Finding possible images");
+                ui.ctx().request_repaint();
             }
         }
         None
