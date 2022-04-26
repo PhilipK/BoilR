@@ -232,6 +232,7 @@ version = "1.2.0"
 dependencies = [
  "base64",
  "config",
+ "copypasta",
  "dashmap",
  "eframe",
  "egui",
