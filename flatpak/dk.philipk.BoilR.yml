@@ -7,11 +7,6 @@ sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 build-options:
   append-path: /usr/lib/sdk/rust-stable/bin
-  # FIXME: fltk-rs downloads junk from the internet,
-  # it probably has to be forced to use the system version instead.
-  # This probably is not acceptable for flathub.
-  build-args:
-    - --share=network
   env:
     # To pick up vendored deps
     CARGO_HOME: /run/build/boilr/cargo
@@ -25,7 +20,9 @@ finish-args:
   - --filesystem=~/.steam:rw # Steam (Non-flatpak)
   - --filesystem=~/.var/app/com.valvesoftware.Steam:rw # Steam (Flatpak)
   - --filesystem=xdg-data/lutris:rw # Lutris (non-flatpak)
+  - --filesystem=~/.var/app/net.lutris.Lutris:rw # Lutris (Flatpak)
   - --filesystem=~/Games/Heroic:rw # Heroic (non-flatpak)
+  - --filesystem=~/.var/app/com.heroicgameslauncher.hgl:rw # Heroic (Flatpak)
 
   - --share=network
   - --share=ipc
@@ -37,6 +34,7 @@ finish-args:
 
 modules:
   - shared-modules/glu/glu-9.json
+
   - name: boilr
     buildsystem: simple
     sources:
@@ -47,3 +45,27 @@ modules:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
       - cargo --offline build --release --verbose
       - install -Dm755 ./target/release/boilr -t /app/bin/
+
+  - name: boilr-icon
+    buildsystem: simple
+    sources:
+      - type: file
+        path: ../resources/logo_small.png
+    build-commands:
+      - install -Dm644 logo_small.png -t /app/share/icons/hicolor/32x32/apps/dk.philipk.BoilR.png
+
+  - name: boilr-desktop
+    buildsystem: simple
+    sources:
+      - type: file
+        path: dk.philipk.BoilR.desktop
+    build-commands:
+      - install -Dm644 dk.philipk.BoilR.desktop -t /app/share/applications/
+
+  - name: boilr-appinfo
+    buildsystem: simple
+    sources:
+      - type: file
+        path: dk.philipk.BoilR.appdata.xml
+    build-commands:
+      - install -Dm644 dk.philipk.BoilR.appdata.xml -t /app/share/metainfo/

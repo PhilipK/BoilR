@@ -3564,6 +3564,45 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/sqlite/sqlite-0.26.0.crate",
+        "sha256": "3fb1a534c07ec276fbbe0e55a1c00814d8563da3a2f4d9d9d4c802bd1278db6a",
+        "dest": "cargo/vendor/sqlite-0.26.0"
+    },
+    {
+        "type": "file",
+        "url": "data:%7B%22package%22%3A%20%223fb1a534c07ec276fbbe0e55a1c00814d8563da3a2f4d9d9d4c802bd1278db6a%22%2C%20%22files%22%3A%20%7B%7D%7D",
+        "dest": "cargo/vendor/sqlite-0.26.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/sqlite3-src/sqlite3-src-0.3.0.crate",
+        "sha256": "a260b07ce75a0644c6f5891f34f46db9869e731838e95293469ab17999abcfa3",
+        "dest": "cargo/vendor/sqlite3-src-0.3.0"
+    },
+    {
+        "type": "file",
+        "url": "data:%7B%22package%22%3A%20%22a260b07ce75a0644c6f5891f34f46db9869e731838e95293469ab17999abcfa3%22%2C%20%22files%22%3A%20%7B%7D%7D",
+        "dest": "cargo/vendor/sqlite3-src-0.3.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/sqlite3-sys/sqlite3-sys-0.13.0.crate",
+        "sha256": "04d2f028faeb14352df7934b4771806f60d61ce61be1928ec92396d7492e2e54",
+        "dest": "cargo/vendor/sqlite3-sys-0.13.0"
+    },
+    {
+        "type": "file",
+        "url": "data:%7B%22package%22%3A%20%2204d2f028faeb14352df7934b4771806f60d61ce61be1928ec92396d7492e2e54%22%2C%20%22files%22%3A%20%7B%7D%7D",
+        "dest": "cargo/vendor/sqlite3-sys-0.13.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/static_assertions/static_assertions-1.1.0.crate",
         "sha256": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f",
         "dest": "cargo/vendor/static_assertions-1.1.0"

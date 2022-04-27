@@ -14,7 +14,7 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://gitlab.gnome.org/World/design/contrast/raw/master/data/resources/screenshots/screenshot1.png</image>
+      <image>https://raw.githubusercontent.com/PhilipK/BoilR/v.1.2.3/screenshot_1.png</image>
       <caption>Main Window</caption>
     </screenshot>
   </screenshots>
@@ -31,14 +31,6 @@ https://hughsie.github.io/oars/index.html
       </description>
     </release>
   </releases>
-  <kudos>
-    <!--
-    GNOME Software kudos:
-    https://gitlab.gnome.org/GNOME/gnome-software/blob/master/doc/kudos.md
-    -->
-    <!-- <kudo>ModernToolkit</kudo> -->
-    <!-- <kudo>HiDpiIcon</kudo> -->
-  </kudos>
   <developer_name>Philip Kristoffersen</developer_name>
   <update_contact>philipkristoffersen@gmail.com</update_contact>
 
