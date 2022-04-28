@@ -66,7 +66,7 @@ pub async fn download_images_for_users<'b>(
                 let _ = sender.send(SyncProgress::DownloadingImages { to_download: total });
             }
             search.save();
-            stream::iter(to_downloads)
+            stream::iter(&to_downloads)
                 .map(|to_download| async move {
                     if let Err(e) = download_to_download(to_download).await {
                         println!("Error downloading {:?}: {}", &to_download.path, e);
@@ -77,6 +77,16 @@ pub async fn download_images_for_users<'b>(
                 .await;
             let duration = start_time.elapsed();
             println!("Finished getting images in: {:?}", duration);
+
+            //Validate that the downloads where ok
+            for to_download in to_downloads{
+                let file_length = std::fs::metadata(&to_download.path).map(|m| m.len()).unwrap_or_default();
+                if file_length < 2{
+                    // Image is too small, something went wrong
+                    //Try to delete file again, don't care if it fails
+                    let _ = std::fs::remove_file(&to_download.path);
+                }
+            }
         } else {
             println!("No images needed");
         }
@@ -359,7 +369,7 @@ pub async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dy
     let mut file = File::create(path).unwrap();
     let response = reqwest::get(url).await?;
     let content = response.bytes().await?;
-    file.write_all(&content).unwrap();
+    file.write_all(&content).unwrap();    
     Ok(())
 }
 
