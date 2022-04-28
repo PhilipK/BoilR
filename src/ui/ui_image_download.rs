@@ -167,10 +167,11 @@ impl MyEguiApp {
                                 }
                                 TextureState::Downloaded => {
                                     //Need to load
-                                    let image_data =
-                                        load_image_from_path(&image.thumbnail_path).unwrap();
-                                    let handle = ui.ctx().load_texture(&image_key, image_data);
-                                    *state.value_mut() = TextureState::Loaded(handle);
+                                    let image_data =load_image_from_path(&image.thumbnail_path);
+                                    if let Some(image_data) = image_data{
+                                        let handle = ui.ctx().load_texture(&image_key, image_data);
+                                        *state.value_mut() = TextureState::Loaded(handle);
+                                    }
                                     ui.ctx().request_repaint();
                                     ui.label("Loading");
                                 }
@@ -189,7 +190,8 @@ impl MyEguiApp {
                             //We need to start a download
                             let image_handles = &self.image_selected_state.image_handles;
                             let path = &image.thumbnail_path;
-                            if !path.exists() {
+                            //Redownload if file is too small
+                            if !path.exists() || std::fs::metadata(path).map(|m| m.len()).unwrap_or_default() < 2{
                                 image_handles.insert(image_key.clone(), TextureState::Downloading);
                                 let to_download = ToDownload {
                                     path: path.clone(),
@@ -306,6 +308,8 @@ impl MyEguiApp {
     }
 
     fn handle_image_type_selected(&mut self, image_type: ImageType) {
+        let _ = std::fs::create_dir_all(".thumbnails");
+
         let state = &mut self.image_selected_state;
         state.image_type_selected = Some(image_type);
         let (tx, rx) = watch::channel(FetcStatus::Fetching);
@@ -316,8 +320,6 @@ impl MyEguiApp {
                 let auth_key = auth_key;
                 let image_type = image_type;
                 self.rt.spawn_blocking(move || {
-                    //Find somewhere else to put this
-                    let _ = std::fs::create_dir_all(".thumbnails");
                     let thumbnails_folder = Path::new(".thumbnails");
                     let client = steamgriddb_api::Client::new(auth_key);
                     let query = get_query_type(false, &image_type);
