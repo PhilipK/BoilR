@@ -303,7 +303,9 @@ impl MyEguiApp {
 
     fn handle_user_selected(&mut self, user: SteamUsersInfo) {
         let state = &mut self.image_selected_state;
-        state.user_shortcuts = Some(crate::steam::get_shortcuts_for_user(&user).shortcuts);
+        let mut shortcuts = crate::steam::get_shortcuts_for_user(&user).shortcuts;
+        shortcuts.sort_by_key(|s| s.app_name.clone());
+        state.user_shortcuts = Some(shortcuts);
         state.steam_user = Some(user);
     }
 
