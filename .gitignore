@@ -8,3 +8,4 @@ thumbnails
 flatpak/.flatpak-builder
 flatpak/build-dir
 flatpak/repo
+.flatpak-builder

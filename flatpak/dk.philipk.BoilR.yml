@@ -50,9 +50,9 @@ modules:
     buildsystem: simple
     sources:
       - type: file
-        path: ../resources/logo_small.png
+        path: ../resources/dk.philipk.BoilR.png
     build-commands:
-      - install -Dm644 logo_small.png -t /app/share/icons/hicolor/32x32/apps/dk.philipk.BoilR.png
+      - install -Dm644 dk.philipk.BoilR.png  -t /app/share/icons/hicolor/32x32/apps
 
   - name: boilr-desktop
     buildsystem: simple
