@@ -14,8 +14,6 @@ build-options:
 
 command: boilr
 finish-args:
-  # TODO: Tighten permissions
-  # TODO: Heroic (flatpak), lutris (flatpak)
   - --filesystem=xdg-data/Steam:rw
   - --filesystem=~/.steam:rw # Steam (Non-flatpak)
   - --filesystem=~/.var/app/com.valvesoftware.Steam:rw # Steam (Flatpak)
@@ -23,6 +21,7 @@ finish-args:
   - --filesystem=~/.var/app/net.lutris.Lutris:rw # Lutris (Flatpak)
   - --filesystem=~/Games/Heroic:rw # Heroic (non-flatpak)
   - --filesystem=~/.var/app/com.heroicgameslauncher.hgl:rw # Heroic (Flatpak)
+  - --filesystem=~/.config/itch:rw # Itch
 
   - --share=network
   - --share=ipc
