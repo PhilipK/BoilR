@@ -77,6 +77,7 @@ enum UserAction {
     UserSelected(SteamUsersInfo),
     ShortcutSelected(ShortcutOwned),
     ImageTypeSelected(ImageType),
+    ImageTypeCleared(ImageType),
     ImageSelected(PossibleImage),
     GridIdChanged(usize),
     BackButton,
@@ -164,6 +165,10 @@ impl MyEguiApp {
         state: &ImageSelectState,
     ) -> Option<UserAction> {
         ui.heading(image_type.name());
+
+        if ui.small_button("Clear image?").on_hover_text("Click here to clear the image").clicked(){
+            return Some(UserAction::ImageTypeCleared(image_type.clone()));
+        }
 
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {
@@ -282,7 +287,22 @@ impl MyEguiApp {
             UserAction::CorrectGridId => {
                 self.handle_correct_grid_request();
             }
+            UserAction::ImageTypeCleared(image_type) => {
+                self.handle_image_type_clear(image_type);
+            },
         };
+    }
+
+    fn handle_image_type_clear(&mut self, image_type: ImageType) {
+        let data_folder = &self.image_selected_state.steam_user.as_ref().unwrap().steam_user_data_folder;
+        let file_name = image_type.file_name(self.image_selected_state.selected_shortcut.as_ref().unwrap().app_id);
+        let path = Path::new(data_folder).join("config").join("grid").join(&file_name);
+        if path.exists(){
+            let _ = std::fs::remove_file(&path);
+        }
+        let key = path.to_string_lossy().to_string();
+        self.image_selected_state.image_handles.remove(&key);
+        self.image_selected_state.image_type_selected = None;
     }
 
     fn handle_correct_grid_request(&mut self) {
