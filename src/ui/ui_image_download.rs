@@ -19,12 +19,6 @@ pub struct ImageSelectState {
     pub selected_shortcut: Option<ShortcutOwned>,
     pub grid_id: Option<usize>,
 
-    pub hero_image: Option<egui::TextureHandle>,
-    pub grid_image: Option<egui::TextureHandle>,
-    pub logo_image: Option<egui::TextureHandle>,
-    pub icon_image: Option<egui::TextureHandle>,
-    pub wide_image: Option<egui::TextureHandle>,
-
     pub steam_user: Option<SteamUsersInfo>,
     pub steam_users: Option<Vec<SteamUsersInfo>>,
     pub user_shortcuts: Option<Vec<ShortcutOwned>>,
@@ -37,6 +31,7 @@ pub struct ImageSelectState {
     pub possible_names: Option<Vec<steamgriddb_api::search::SearchResult>>,
 }
 
+#[derive(Clone)]
 pub enum TextureState {
     Downloading,
     Downloaded,
@@ -65,11 +60,6 @@ impl Default for ImageSelectState {
         Self {
             selected_shortcut: Default::default(),
             grid_id: Default::default(),
-            hero_image: Default::default(),
-            grid_image: Default::default(),
-            logo_image: Default::default(),
-            icon_image: Default::default(),
-            wide_image: Default::default(),
             steam_user: Default::default(),
             steam_users: Default::default(),
             user_shortcuts: Default::default(),
@@ -129,10 +119,29 @@ impl MyEguiApp {
 
     fn render_shortcut_select(&self, ui: &mut egui::Ui) -> Option<UserAction> {
         let shortcuts = &self.image_selected_state.user_shortcuts;
+        
         match shortcuts {
             Some(shortcuts) => {
+                let user_info = &self.image_selected_state.steam_user.as_ref().unwrap();
                 for shortcut in shortcuts {
-                    if ui.button(&shortcut.app_name).clicked() {
+                    let (_,key) = shortcut.key(&ImageType::Grid, Path::new(&user_info.steam_user_data_folder));
+                    let texture = self.image_selected_state.image_handles.get(&key);
+                    let mut clicked = false;
+                    if let Some(texture) = texture{
+                        match &texture.value() {                            
+                            TextureState::Loaded(texture) => {
+                                let mut size = texture.size_vec2();
+                                clamp_to_width(&mut size, 100.);
+                                let image_button = ImageButton::new(texture,size);
+                                clicked = clicked || ui.add(image_button).clicked();
+                            },
+                            _=> {}
+                        }
+                    }
+                    
+                    let button = ui.button(&shortcut.app_name);
+                    clicked = clicked || button.clicked();
+                    if clicked{
                         return Some(UserAction::ShortcutSelected(shortcut.clone()));
                     }
                 }
@@ -245,7 +254,7 @@ impl MyEguiApp {
             });
         match action {
             UserAction::UserSelected(user) => {
-                self.handle_user_selected(user);
+                self.handle_user_selected(user, ui);
             }
             UserAction::ShortcutSelected(shortcut) => {
                 self.handle_shortcut_selected(shortcut, ui);
@@ -301,10 +310,28 @@ impl MyEguiApp {
         }
     }
 
-    fn handle_user_selected(&mut self, user: SteamUsersInfo) {
+    fn handle_user_selected(&mut self, user: SteamUsersInfo, ui: &mut egui::Ui) {
         let state = &mut self.image_selected_state;
-        let mut shortcuts = crate::steam::get_shortcuts_for_user(&user).shortcuts;
+        let user_info = crate::steam::get_shortcuts_for_user(&user);
+        let mut user_folder =user_info.path.clone();
+        user_folder.pop();
+        user_folder.pop();
+        let mut shortcuts = user_info.shortcuts;
         shortcuts.sort_by_key(|s| s.app_name.clone());
+        
+        let image_type = &ImageType::Grid;
+        for shortcut in &shortcuts {
+            let (path,key) = shortcut.key(image_type, &user_folder);
+            let loaded = state.image_handles.contains_key(&key);
+            if !loaded && path.exists(){
+                let image = load_image_from_path(&path);
+                if let Some(image) = image{
+                    let texture  =  ui.ctx().load_texture(&key, image);
+                    state.image_handles.insert(key, TextureState::Loaded(texture));
+                }
+            }
+        }
+
         state.user_shortcuts = Some(shortcuts);
         state.steam_user = Some(user);
     }
@@ -361,6 +388,24 @@ impl MyEguiApp {
             .join("config")
             .join("grid")
             .join(selected_image_type.file_name(selected_image.app_id));
+        
+        if to.exists(){
+            let old_key = to.to_string_lossy().to_string();
+            let new_key = image.thumbnail_path.to_string_lossy().to_string();
+            let _ = self.image_selected_state.image_handles.remove(&old_key);
+            let swap = self.image_selected_state.image_handles.get(&new_key);
+            if let Some(swp) = swap{
+                self.image_selected_state.image_handles.insert(old_key, swp.value().clone());
+            }
+            
+        }
+        
+        
+
+
+        
+
+
         let app_name = selected_image.app_name.clone();
         let to_download = ToDownload {
             path: to,
@@ -369,35 +414,27 @@ impl MyEguiApp {
             image_type: *selected_image_type,
         };
         self.rt.spawn_blocking(move || {
-            let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
+            let _ = block_on(crate::steamgriddb::download_to_download(&to_download));            
         });
-
+        
+        self.clear_loaded_images();
         {
-            let image_ref = match selected_image_type {
-                ImageType::Hero => &mut self.image_selected_state.hero_image,
-                ImageType::Grid => &mut self.image_selected_state.grid_image,
-                ImageType::WideGrid => &mut self.image_selected_state.wide_image,
-                ImageType::Logo => &mut self.image_selected_state.logo_image,
-                ImageType::BigPicture => &mut self.image_selected_state.wide_image,
-                ImageType::Icon => &mut self.image_selected_state.icon_image,
-            };
-            let image_key = image.thumbnail_path.as_path().to_string_lossy().to_string();
-            let texture_handle = self
-                .image_selected_state
-                .image_handles
-                .get(&image_key)
-                .unwrap();
-            if let TextureState::Loaded(texture_handle) = texture_handle.value() {
-                *image_ref = Some(texture_handle.clone());
-            }
             self.image_selected_state.image_type_selected = None;
             self.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
         }
-        self.clear_loaded_images();
     }
 
     fn clear_loaded_images(&mut self) {
-        self.image_selected_state.image_handles.clear();
+        
+        match &*self.image_selected_state.image_options.borrow(){
+            FetcStatus::Fetched(options) => {
+                for option in options{
+                    let key = option.thumbnail_path.to_string_lossy().to_string();
+                    self.image_selected_state.image_handles.remove(&key);
+                }
+            },
+            _ => {}
+        }        
     }
 
     fn handle_shortcut_selected(&mut self, shortcut: ShortcutOwned, ui: &mut egui::Ui) {
@@ -414,14 +451,16 @@ impl MyEguiApp {
                 .flatten();
         }
         state.selected_shortcut = Some(shortcut.clone());
-        let folder = Path::new(&user.steam_user_data_folder)
-            .join("config")
-            .join("grid");
-        state.hero_image = get_image(ui, &shortcut, &folder, &ImageType::Hero);
-        state.grid_image = get_image(ui, &shortcut, &folder, &ImageType::Grid);
-        state.icon_image = get_image(ui, &shortcut, &folder, &ImageType::Icon);
-        state.logo_image = get_image(ui, &shortcut, &folder, &ImageType::Logo);
-        state.wide_image = get_image(ui, &shortcut, &folder, &ImageType::WideGrid);
+  
+
+        for image_type in ImageType::all(){            
+            let (path,key) = shortcut.key(image_type, &Path::new(&user.steam_user_data_folder));
+            let image = load_image_from_path(&path);
+            if let Some(image) = image{
+                let texture = ui.ctx().load_texture(&key, image);
+                state.image_handles.insert(key,TextureState::Loaded(texture));
+            }
+        }
         state.selected_shortcut = Some(shortcut);
     }
 
@@ -430,16 +469,11 @@ impl MyEguiApp {
         if state.possible_names.is_some() {
             state.possible_names = None;
         } else if state.image_type_selected.is_some() {
-            state.image_type_selected = None;
-            state.image_handles.clear();
+            state.image_type_selected = None;            
         } else if state.selected_shortcut.is_some() {
             state.selected_shortcut = None;
-            state.hero_image = None;
-            state.grid_image = None;
-            state.icon_image = None;
-            state.logo_image = None;
-            state.wide_image = None;
         } else {
+            state.image_handles.clear();
             state.user_shortcuts = None;
             state.steam_user = None;
         }
@@ -471,12 +505,24 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
     {
         return Some(UserAction::CorrectGridId);
     }
+
+    let shortcut = state.selected_shortcut.as_ref().unwrap();
+    let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
     for image_type in ImageType::all() {
         ui.label(image_type.name());
-        let image_ref = get_image_ref(image_type, state);
-        if render_thumbnail(ui, image_ref, &image_type) {
+        let (_path,key) = shortcut.key(&image_type, Path::new(&user_path));
+        let texture = state.image_handles.get(&key).map(|k| {
+            match k.value(){                
+                TextureState::Loaded(texture) => Some(texture.clone()),
+                _ => {
+                    None
+                }
+            }
+        }).flatten();
+        if render_thumbnail(ui, texture, &image_type) {
             return Some(UserAction::ImageTypeSelected(*image_type));
         }
+        
     }
     None
 }
@@ -496,11 +542,11 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction
 
 const MAX_WIDTH: f32 = 300.;
 
-fn render_thumbnail(ui: &mut egui::Ui, image: &Option<egui::TextureHandle>, image_type:&ImageType) -> bool {
+fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>, image_type:&ImageType) -> bool {
     if let Some(texture) = image {
         let mut size = texture.size_vec2();
         clamp_to_width(&mut size, MAX_WIDTH);
-        let image_button = ImageButton::new(texture, size);
+        let image_button = ImageButton::new(&texture, size);
         let added =ui.add(image_button);
         match image_type{                
             ImageType::Icon => false,
@@ -545,16 +591,15 @@ fn get_image(
     image
 }
 
-fn get_image_ref<'a>(
-    image_type: &ImageType,
-    state: &'a ImageSelectState,
-) -> &'a Option<TextureHandle> {
-    match image_type {
-        ImageType::Hero => &state.hero_image,
-        ImageType::Grid => &state.grid_image,
-        ImageType::WideGrid => &state.wide_image,
-        ImageType::Logo => &state.logo_image,
-        ImageType::BigPicture => &state.wide_image,
-        ImageType::Icon => &state.icon_image,
+trait HasImageKey{
+    fn key(&self,image_type:&ImageType,user_path:&Path) -> (PathBuf,String);
+}
+
+impl HasImageKey for ShortcutOwned{
+    fn key(&self, image_type:&ImageType, user_path:&Path) -> (PathBuf,String) {
+        let file_name = image_type.file_name(self.app_id);
+        let path = user_path.join("config").join("grid").join(&file_name);
+        let key = path.to_string_lossy().to_string();
+        (path,key)
     }
 }
