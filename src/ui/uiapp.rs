@@ -101,14 +101,16 @@ impl epi::App for MyEguiApp {
                 let changed = ui
                     .selectable_value(&mut self.selected_menu, Menues::Import, "Import Games")
                     .changed();
-                let changed = changed
+                let mut changed = changed
                     || ui
                         .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
                         .changed();
-                let changed = changed
-                    || ui
-                        .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
-                        .changed();
+                if self.settings.steamgrid_db.auth_key.is_some() {
+                    changed = changed
+                        || ui
+                            .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
+                            .changed();
+                }
                 if changed && self.selected_menu == Menues::Settings {
                     //We reset games here, since user might change settings
                     self.games_to_sync = watch::channel(FetcStatus::NeedsFetched).1;
