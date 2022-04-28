@@ -83,6 +83,10 @@ impl epi::App for MyEguiApp {
         let mut style: egui::Style = (*ctx.style()).clone();
         create_style(&mut style);
         ctx.set_style(style);
+
+        //Clean up thumbnails
+
+        
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
