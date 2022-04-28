@@ -79,9 +79,11 @@ pub async fn download_images_for_users<'b>(
             println!("Finished getting images in: {:?}", duration);
 
             //Validate that the downloads where ok
-            for to_download in to_downloads{
-                let file_length = std::fs::metadata(&to_download.path).map(|m| m.len()).unwrap_or_default();
-                if file_length < 2{
+            for to_download in to_downloads {
+                let file_length = std::fs::metadata(&to_download.path)
+                    .map(|m| m.len())
+                    .unwrap_or_default();
+                if file_length < 2 {
                     // Image is too small, something went wrong
                     //Try to delete file again, don't care if it fails
                     let _ = std::fs::remove_file(&to_download.path);
@@ -369,7 +371,7 @@ pub async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dy
     let mut file = File::create(path).unwrap();
     let response = reqwest::get(url).await?;
     let content = response.bytes().await?;
-    file.write_all(&content).unwrap();    
+    file.write_all(&content).unwrap();
     Ok(())
 }
 
