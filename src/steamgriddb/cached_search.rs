@@ -1,5 +1,7 @@
 use dashmap::DashMap;
-use std::{fs::File, io::Write, path::Path};
+use std::{fs::File, io::Write};
+
+use crate::config::get_cache_file;
 
 type SearchMap = DashMap<u32, (String, usize)>;
 
@@ -54,7 +56,7 @@ impl<'a> CachedSearch<'a> {
 }
 
 fn get_search_map() -> SearchMap {
-    let path = Path::new("cache.json");
+    let path = get_cache_file();
     if path.exists() {
         let string = std::fs::read_to_string(path).unwrap();
         serde_json::from_str::<SearchMap>(&string).expect("Failed to parse cache.json")
@@ -65,6 +67,7 @@ fn get_search_map() -> SearchMap {
 
 fn save_search_map(search_map: &SearchMap) {
     let string = serde_json::to_string(search_map).unwrap();
-    let mut file = File::create("cache.json").unwrap();
+    let path = get_cache_file();
+    let mut file = File::create(&path).unwrap();
     file.write_all(string.as_bytes()).unwrap();
 }

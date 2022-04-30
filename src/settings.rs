@@ -1,6 +1,6 @@
 use crate::{
-    amazon::AmazonSettings, egs::EpicGamesLauncherSettings, gog::GogSettings,
-    heroic::HeroicSettings, itch::ItchSettings, legendary::LegendarySettings,
+    amazon::AmazonSettings, config::get_config_file, egs::EpicGamesLauncherSettings,
+    gog::GogSettings, heroic::HeroicSettings, itch::ItchSettings, legendary::LegendarySettings,
     lutris::settings::LutrisSettings, origin::OriginSettings, steam::SteamSettings,
     steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
 };
@@ -12,6 +12,7 @@ use std::env;
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub debug: bool,
+    pub config_version: usize,
     pub blacklisted_games: Vec<u32>,
     pub epic_games: EpicGamesLauncherSettings,
     pub legendary: LegendarySettings,
@@ -33,8 +34,11 @@ impl Settings {
         let default_str = include_str!("defaultconfig.toml");
         s.merge(File::from_str(default_str, config::FileFormat::Toml))?;
 
+        let config_file = get_config_file();
+        let config_file = config_file.to_string_lossy();
+
         // Start off by merging in the "default" configuration file
-        s.merge(File::with_name("config.toml").required(false))?;
+        s.merge(File::with_name(config_file.as_ref()).required(false))?;
 
         // Add in the current environment file
         // Default to 'development' env
@@ -48,7 +52,7 @@ impl Settings {
 
         // Add in settings from the environment (with a prefix of STEAMSYNC)
         // Eg.. `STEAMSYNC_DEBUG=1 ./target/app` would set the `debug` key
-        s.merge(Environment::with_prefix("steamsync").separator("-"))?;
+        s.merge(Environment::with_prefix("boilr").separator("-"))?;
 
         let mut result: Result<Self, ConfigError> = s.try_into();
 

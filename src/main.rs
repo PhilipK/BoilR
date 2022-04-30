@@ -1,4 +1,5 @@
 mod amazon;
+mod config;
 mod egs;
 mod gog;
 mod heroic;
