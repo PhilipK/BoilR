@@ -5,3 +5,4 @@ config.toml
 .thumbnails
 thumbnails
 .flatpak-builder
+flatpak/build-dir
