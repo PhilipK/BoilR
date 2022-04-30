@@ -51,6 +51,7 @@ pub async fn download_images_for_users<'b>(
                         client,
                         download_animated,
                         settings.steam.optimize_for_big_picture,
+                        settings,
                     )
                     .await;
                     res.unwrap_or_default()
@@ -133,6 +134,7 @@ async fn search_for_images_to_download(
     client: &Client,
     download_animated: bool,
     download_big_picture: bool,
+    settings: &Settings,
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let types = {
         let mut types = vec![
@@ -185,6 +187,7 @@ async fn search_for_images_to_download(
         let images_needed = shortcuts
             .iter()
             .filter(|s| search_results.contains_key(&s.app_id))
+            .filter(|s| !settings.steamgrid_db.is_image_banned(&image_type, s.app_id))
             .filter(|s| !known_images.contains(&image_type.file_name(s.app_id)));
         let image_ids: Vec<usize> = images_needed
             .clone()
