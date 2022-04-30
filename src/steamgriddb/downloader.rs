@@ -12,12 +12,12 @@ use tokio::sync::watch::Sender; // 0.3.1
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::Client;
 
+use super::CachedSearch;
 use crate::settings::Settings;
 use crate::steam::{get_shortcuts_for_user, get_users_images, SteamUsersInfo};
 use crate::steamgriddb::ImageType;
+use crate::sync::IsBoilRShortcut;
 use crate::sync::SyncProgress;
-
-use super::CachedSearch;
 
 const CONCURRENT_REQUESTS: usize = 10;
 
@@ -150,14 +150,17 @@ async fn search_for_images_to_download(
         types
     };
 
-    let shortcuts_to_search_for = shortcuts.iter().filter(|s| {
-        // if we are missing any of the images we need to search for them
-        types
-            .iter()
-            .map(|t| t.file_name(s.app_id))
-            .any(|image| !known_images.contains(&image))
-            && !s.app_name.is_empty()
-    });
+    let shortcuts_to_search_for = shortcuts
+        .iter()
+        .filter(|s| !settings.steamgrid_db.only_download_boilr_images || s.is_boilr_shortcut())
+        .filter(|s| {
+            // if we are missing any of the images we need to search for them
+            types
+                .iter()
+                .map(|t| t.file_name(s.app_id))
+                .any(|image| !known_images.contains(&image))
+                && !s.app_name.is_empty()
+        });
     let shortcuts_to_search_for: Vec<&ShortcutOwned> = shortcuts_to_search_for.collect();
     if shortcuts_to_search_for.is_empty() {
         return Ok(vec![]);

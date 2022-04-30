@@ -8,6 +8,7 @@ pub struct SteamGridDbSettings {
     pub auth_key: Option<String>,
     pub prefer_animated: bool,
     pub banned_images: Vec<String>,
+    pub only_download_boilr_images: bool,
 }
 
 impl SteamGridDbSettings {

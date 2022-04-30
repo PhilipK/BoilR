@@ -6,6 +6,7 @@ auth_key = "Write your authentication key between these quotes"
 enabled = true
 prefer_animated = false
 banned_images = []
+only_download_boilr_images = false
 
 [origin]
 enabled = true

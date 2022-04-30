@@ -211,6 +211,10 @@ impl MyEguiApp {
                 )
             });
             ui.checkbox(&mut self.settings.steamgrid_db.prefer_animated, "Prefer animated images").on_hover_text("Prefer downloading animated images over static images (this can slow Steam down but looks neat)");
+            ui.checkbox(
+                &mut self.settings.steamgrid_db.only_download_boilr_images,
+                "Only download images for BoilR shortcuts",
+            );
         }
         ui.add_space(SECTION_SPACING);
     }
