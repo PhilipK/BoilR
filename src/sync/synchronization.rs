@@ -109,12 +109,12 @@ pub async fn download_images(
     }
 }
 
-trait IsBoilRShortcut {
-    fn is_boilr_tag(&self) -> bool;
+pub trait IsBoilRShortcut {
+    fn is_boilr_shortcut(&self) -> bool;
 }
 
 impl IsBoilRShortcut for ShortcutOwned {
-    fn is_boilr_tag(&self) -> bool {
+    fn is_boilr_shortcut(&self) -> bool {
         let boilr_tag = BOILR_TAG.to_string();
         self.tags.contains(&boilr_tag) || self.dev_kit_game_id.starts_with(&boilr_tag)
     }
@@ -123,7 +123,7 @@ impl IsBoilRShortcut for ShortcutOwned {
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
     shortcut_info
         .shortcuts
-        .retain(|shortcut| !shortcut.is_boilr_tag());
+        .retain(|shortcut| !shortcut.is_boilr_shortcut());
 }
 
 fn fix_shortcut_icons(
@@ -141,7 +141,7 @@ fn fix_shortcut_icons(
     };
 
     for shortcut in shortcuts {
-        if shortcut.is_boilr_tag() {
+        if shortcut.is_boilr_shortcut() {
             let replace_icon = shortcut.icon.trim().eq("")
                 || !Path::new(shortcut.icon.trim()).exists()
                 || shortcut.icon.eq(&shortcut.exe);
