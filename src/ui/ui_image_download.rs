@@ -8,7 +8,7 @@ use crate::{
     steamgriddb::{get_query_type, CachedSearch, ImageType, ToDownload},
 };
 use dashmap::DashMap;
-use egui::{ImageButton, ScrollArea, TextureHandle};
+use egui::{ImageButton, ScrollArea};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch::{self, Receiver};
@@ -77,7 +77,7 @@ enum UserAction {
     UserSelected(SteamUsersInfo),
     ShortcutSelected(ShortcutOwned),
     ImageTypeSelected(ImageType),
-    ImageTypeCleared(ImageType),
+    ImageTypeCleared(ImageType, bool),
     ImageSelected(PossibleImage),
     GridIdChanged(usize),
     BackButton,
@@ -166,10 +166,21 @@ impl MyEguiApp {
     ) -> Option<UserAction> {
         ui.heading(image_type.name());
 
-        if ui.small_button("Clear image?").on_hover_text("Click here to clear the image").clicked(){
-            return Some(UserAction::ImageTypeCleared(image_type.clone()));
+        if ui
+            .small_button("Clear image?")
+            .on_hover_text("Click here to clear the image")
+            .clicked()
+        {
+            return Some(UserAction::ImageTypeCleared(image_type.clone(), false));
         }
 
+        if ui
+            .small_button("Stop downloading this image?")
+            .on_hover_text("Stop downloading this type of image for this shortcut at all")
+            .clicked()
+        {
+            return Some(UserAction::ImageTypeCleared(image_type.clone(), true));
+        }
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {
                 for image in images {
@@ -287,17 +298,40 @@ impl MyEguiApp {
             UserAction::CorrectGridId => {
                 self.handle_correct_grid_request();
             }
-            UserAction::ImageTypeCleared(image_type) => {
+            UserAction::ImageTypeCleared(image_type, should_ban) => {
+                let app_id = self
+                    .image_selected_state
+                    .selected_shortcut
+                    .as_ref()
+                    .unwrap()
+                    .app_id;
+                self.settings
+                    .steamgrid_db
+                    .set_image_banned(&image_type, app_id, should_ban);
                 self.handle_image_type_clear(image_type);
-            },
+            }
         };
     }
 
     fn handle_image_type_clear(&mut self, image_type: ImageType) {
-        let data_folder = &self.image_selected_state.steam_user.as_ref().unwrap().steam_user_data_folder;
-        let file_name = image_type.file_name(self.image_selected_state.selected_shortcut.as_ref().unwrap().app_id);
-        let path = Path::new(data_folder).join("config").join("grid").join(&file_name);
-        if path.exists(){
+        let data_folder = &self
+            .image_selected_state
+            .steam_user
+            .as_ref()
+            .unwrap()
+            .steam_user_data_folder;
+        let file_name = image_type.file_name(
+            self.image_selected_state
+                .selected_shortcut
+                .as_ref()
+                .unwrap()
+                .app_id,
+        );
+        let path = Path::new(data_folder)
+            .join("config")
+            .join("grid")
+            .join(&file_name);
+        if path.exists() {
             let _ = std::fs::remove_file(&path);
         }
         let key = path.to_string_lossy().to_string();
@@ -599,21 +633,6 @@ fn clamp_to_width(size: &mut egui::Vec2, max_width: f32) {
     }
     size.x = x;
     size.y = y;
-}
-
-fn get_image(
-    ui: &mut egui::Ui,
-    shortcut: &ShortcutOwned,
-    folder: &std::path::Path,
-    image_type: &ImageType,
-) -> Option<egui::TextureHandle> {
-    let file_name = ImageType::file_name(image_type, shortcut.app_id);
-    let file_path = folder.join(file_name);
-    let image = load_image_from_path(file_path.as_path()).map(|img_data| {
-        ui.ctx()
-            .load_texture(file_path.to_string_lossy().to_string(), img_data)
-    });
-    image
 }
 
 trait HasImageKey {

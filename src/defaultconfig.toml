@@ -5,6 +5,7 @@ blacklisted_games = []
 auth_key = "Write your authentication key between these quotes"
 enabled = true
 prefer_animated = false
+banned_images = []
 
 [origin]
 enabled = true
