@@ -1,5 +1,4 @@
 debug= false
-config_version = 0
 blacklisted_games = []
 
 [steamgrid_db]
