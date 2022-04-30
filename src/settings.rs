@@ -12,7 +12,7 @@ use std::env;
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub debug: bool,
-    pub config_version: usize,
+    pub config_version: Option<usize>,
     pub blacklisted_games: Vec<u32>,
     pub epic_games: EpicGamesLauncherSettings,
     pub legendary: LegendarySettings,
