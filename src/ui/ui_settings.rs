@@ -58,19 +58,20 @@ impl MyEguiApp {
         ui.heading("Lutris");
         ui.checkbox(&mut self.settings.lutris.enabled, "Import form Lutris");
         if self.settings.lutris.enabled {
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let lutris_location = self
-                    .settings
-                    .lutris
-                    .executable
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
-                ui.label("Lutris Location: ");
-                if ui.text_edit_singleline(lutris_location).changed() {
-                    self.settings.lutris.executable = Some(lutris_location.to_string());
-                }
-            });
+            ui.checkbox(&mut self.settings.lutris.flatpak, "Flatpak version");
+            if !self.settings.lutris.flatpak {
+                ui.horizontal(|ui| {
+                    let lutris_location = &mut self.settings.lutris.executable;
+                    ui.label("Lutris Location: ");
+                    ui.text_edit_singleline(lutris_location);
+                });
+            } else {
+                ui.horizontal(|ui| {
+                    let flatpak_image = &mut self.settings.lutris.flatpak_image;
+                    ui.label("Flatpak image");
+                    ui.text_edit_singleline(flatpak_image);
+                });
+            }
         }
         ui.add_space(SECTION_SPACING);
     }

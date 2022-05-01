@@ -32,6 +32,9 @@ create_symlinks = true
 
 [lutris]
 enabled = false
+executable = "lutris"
+flatpak_image = "net.lutris.Lutris//beta"
+flatpak = false
 
 [heroic]
 enabled = true

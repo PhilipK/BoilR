@@ -19,18 +19,12 @@ impl Platform<LutrisGame, Box<dyn Error>> for LutrisPlatform {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<LutrisGame>, Box<dyn Error>> {
-        let default_lutris_exe = "lutris".to_string();
-        let lutris_executable = self
-            .settings
-            .executable
-            .as_ref()
-            .unwrap_or(&default_lutris_exe);
-        let lutris_command = Command::new(lutris_executable).arg("-lo").output()?;
-        let output = String::from_utf8_lossy(&lutris_command.stdout).to_string();
+        let output = get_lutris_command_output(&self.settings)?;
         let games = parse_lutris_games(output.as_str());
         let mut res = vec![];
-        for game in games {
+        for mut game in games {
             if game.platform != "steam" {
+                game.settings = Some(self.settings.clone());
                 res.push(game);
             }
         }
@@ -55,4 +49,17 @@ impl Platform<LutrisGame, Box<dyn Error>> for LutrisPlatform {
     fn needs_proton(&self, _input: &LutrisGame) -> bool {
         false
     }
+}
+
+fn get_lutris_command_output(settings: &LutrisSettings) -> Result<String, Box<dyn Error>> {
+    let output = if settings.flatpak {
+        let flatpak_image = &settings.flatpak_image;
+        let mut command = Command::new("flatpak");
+        command.arg("run").arg(flatpak_image).arg("-lo").output()?
+    } else {
+        let mut command = Command::new(&settings.executable);
+        command.arg("-lo").output()?
+    };
+
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
