@@ -182,23 +182,18 @@ impl MyEguiApp {
                     .auth_key
                     .as_mut()
                     .unwrap_or(&mut empty_string);
-                let mut auth_key_clipboard = false;
                 ui.label("Authentication key: ");
-                if let Ok(mut clipboard_ctx) = copypasta::ClipboardContext::new() {
-                    if let Ok(content) = clipboard_ctx.get_contents() {
-                        if auth_key.is_empty() && looks_like_auth_key(&content) {
-                            *auth_key = content.clone();
-                            auth_key_clipboard = true;
-                        } else if content.eq(auth_key) {
-                            auth_key_clipboard = true;
+                if ui.text_edit_singleline(auth_key).changed() {
+                    *auth_key = auth_key.to_string();
+                }
+                if auth_key.is_empty() {
+                    if ui.button("Paste from clipboard").clicked() {
+                        if let Ok(mut clipboard_ctx) = copypasta::ClipboardContext::new() {
+                            if let Ok(content) = clipboard_ctx.get_contents() {
+                                self.settings.steamgrid_db.auth_key = Some(content.clone());
+                            }
                         }
                     }
-                }
-                if ui.text_edit_singleline(auth_key).changed() {
-                    self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
-                }
-                if auth_key_clipboard {
-                    ui.label("Found API Key in clipboard");
                 }
             });
             ui.horizontal(|ui| {
@@ -293,11 +288,4 @@ impl MyEguiApp {
             ui.add_space(SECTION_SPACING);
         }
     }
-}
-
-fn looks_like_auth_key(content: &String) -> bool {
-    content.len() == 32
-        && content.is_ascii()
-        && content.chars().all(char::is_alphanumeric)
-        && content.chars().all(char::is_lowercase)
 }
