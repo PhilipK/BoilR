@@ -15,14 +15,13 @@ mod steamgriddb;
 mod sync;
 mod ui;
 mod uplay;
-use std::{error::Error, path::Path};
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     ensure_config_folder();
     migration::migrate_config();
 
     let mut args = std::env::args();
-    migrate_config();
     if args.len() > 1 && args.nth(1).unwrap_or_default() == "--no-ui" {
         ui::run_sync();
         Ok(())
