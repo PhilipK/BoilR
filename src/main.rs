@@ -17,14 +17,21 @@ mod uplay;
 use std::{error::Error, path::Path};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut args = std::env::args();
+    ensure_config_folder();
     migrate_config();
+
+    let mut args = std::env::args();
     if args.len() > 1 && args.nth(1).unwrap_or_default() == "--no-ui" {
         ui::run_sync();
         Ok(())
     } else {
         ui::run_ui()
     }
+}
+
+fn ensure_config_folder() {
+    let path = config::get_config_folder();
+    let _ = std::fs::create_dir_all(&path);
 }
 
 fn migrate_config() {
@@ -52,7 +59,7 @@ fn migrate_config() {
 
         let old_path = &Path::new("cache.json");
         if old_path.exists() {
-            let new_path = config::get_thumbnails_folder();
+            let new_path = config::get_cache_file();
             let _ = std::fs::copy(old_path, new_path);
             let _ = std::fs::remove_file(old_path);
         }
