@@ -24,6 +24,8 @@ fn parse_line(input: &str) -> Option<LutrisGame> {
         index: index.to_string(),
         name: name.to_string(),
         platform: platform.to_string(),
+        //theese will be added by the platform class
+        settings: None,
     })
 }
 
