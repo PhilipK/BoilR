@@ -127,8 +127,9 @@ impl MyEguiApp {
         });
     }
 
-    fn save_settings_to_file(settings: &Settings) {
+    pub fn save_settings_to_file(settings: &Settings) {
         let toml = toml::to_string(&settings).unwrap();
-        std::fs::write("config.toml", toml).unwrap();
+        let config_path = crate::config::get_config_file();
+        std::fs::write(config_path, toml).unwrap();
     }
 }

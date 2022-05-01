@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    config::get_thumbnails_folder,
     steam::{get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{get_query_type, CachedSearch, ImageType, ToDownload},
 };
@@ -399,8 +400,6 @@ impl MyEguiApp {
     }
 
     fn handle_image_type_selected(&mut self, image_type: ImageType) {
-        let _ = std::fs::create_dir_all(".thumbnails");
-
         let state = &mut self.image_selected_state;
         state.image_type_selected = Some(image_type);
         let (tx, rx) = watch::channel(FetcStatus::Fetching);
@@ -411,7 +410,7 @@ impl MyEguiApp {
                 let auth_key = auth_key;
                 let image_type = image_type;
                 self.rt.spawn_blocking(move || {
-                    let thumbnails_folder = Path::new(".thumbnails");
+                    let thumbnails_folder = get_thumbnails_folder();
                     let client = steamgriddb_api::Client::new(auth_key);
                     let query = get_query_type(false, &image_type);
                     let search_res = block_on(client.get_images_for_id(grid_id, &query));

@@ -2,11 +2,7 @@ use std::path::Path;
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-fn get_boilr_links_path() -> std::path::PathBuf {
-    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
-    let boilr_links_path = Path::new(&home).join(".boilr").join("links");
-    boilr_links_path
-}
+use crate::config::get_boilr_links_path;
 
 pub fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
     let links_folder = get_boilr_links_path();
