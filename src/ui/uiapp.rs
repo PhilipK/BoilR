@@ -79,7 +79,9 @@ impl epi::App for MyEguiApp {
         _frame: &epi::Frame,
         _storage: Option<&dyn epi::Storage>,
     ) {
+        #[cfg(target_family = "unix")]
         ctx.set_pixels_per_point(1.0);
+
         let mut style: egui::Style = (*ctx.style()).clone();
         create_style(&mut style);
         ctx.set_style(style);
