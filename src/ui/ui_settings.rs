@@ -36,7 +36,7 @@ impl MyEguiApp {
                 #[cfg(target_family = "unix")]
                 {
                     ui.heading("Heroic");
-                    ui.checkbox(&mut self.settings.heroic.enabled, "Import form Heroic");
+                    ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");
 
                     ui.add_space(SECTION_SPACING);
                 }
@@ -56,7 +56,7 @@ impl MyEguiApp {
 
     fn render_lutris_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Lutris");
-        ui.checkbox(&mut self.settings.lutris.enabled, "Import form Lutris");
+        ui.checkbox(&mut self.settings.lutris.enabled, "Import from Lutris");
         if self.settings.lutris.enabled {
             ui.checkbox(&mut self.settings.lutris.flatpak, "Flatpak version");
             if !self.settings.lutris.flatpak {
@@ -79,19 +79,19 @@ impl MyEguiApp {
     #[cfg(windows)]
     fn render_amazon_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Amazon");
-        ui.checkbox(&mut self.settings.amazon.enabled, "Import form Amazon");
+        ui.checkbox(&mut self.settings.amazon.enabled, "Import from Amazon");
         ui.add_space(SECTION_SPACING);
     }
 
     fn render_uplay_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Uplay");
-        ui.checkbox(&mut self.settings.uplay.enabled, "Import form Uplay");
+        ui.checkbox(&mut self.settings.uplay.enabled, "Import from Uplay");
         ui.add_space(SECTION_SPACING);
     }
 
     fn render_gog_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("GoG Galaxy");
-        ui.checkbox(&mut self.settings.gog.enabled, "Import form GoG Galaxy");
+        ui.checkbox(&mut self.settings.gog.enabled, "Import from GoG Galaxy");
         if self.settings.gog.enabled {
             ui.horizontal(|ui| {
                 let mut empty_string = "".to_string();
@@ -118,7 +118,7 @@ impl MyEguiApp {
 
     fn render_itch_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Itch.io");
-        ui.checkbox(&mut self.settings.itch.enabled, "Import form Itch.io");
+        ui.checkbox(&mut self.settings.itch.enabled, "Import from Itch.io");
         if self.settings.itch.enabled {
             ui.horizontal(|ui| {
                 let mut empty_string = "".to_string();
@@ -219,7 +219,7 @@ impl MyEguiApp {
         ui.heading("Legendary & Rare");
         ui.checkbox(
             &mut self.settings.legendary.enabled,
-            "Import form Legendary & Rare",
+            "Import from Legendary & Rare",
         );
         if self.settings.legendary.enabled {
             ui.horizontal(|ui| {
@@ -243,7 +243,7 @@ impl MyEguiApp {
     fn render_epic_settings(&mut self, ui: &mut egui::Ui) {
         let epic_settings = &mut self.settings.epic_games;
         ui.heading("Epic Games");
-        ui.checkbox(&mut epic_settings.enabled, "Import form Epic Games");
+        ui.checkbox(&mut epic_settings.enabled, "Import from Epic Games");
         if epic_settings.enabled {
             ui.horizontal(|ui| {
                 let mut empty_string = "".to_string();
