@@ -7,7 +7,7 @@ Comment=Add non-steam games to your steam library
 Categories=Utility;Amusement;
 Keywords=Steam;Heroic;Lutris;Itch;Origin;GOG;UPlay;Icons;Images;Non-Steam;Games;
 
-Icon=dk.philipk.BoilR
+Icon=io.github.philipk.boilr
 Exec=boilr
 Terminal=false
 StartupNotify=true

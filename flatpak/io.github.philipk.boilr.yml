@@ -1,4 +1,4 @@
-app-id: dk.philipk.BoilR
+app-id: io.github.philipk.boilr
 command: boilr
 runtime: org.freedesktop.Platform
 runtime-version: '21.08'
@@ -49,22 +49,22 @@ modules:
     buildsystem: simple
     sources:
       - type: file
-        path: ../resources/dk.philipk.BoilR.png
+        path: ../resources/io.github.philipk.boilr.png
     build-commands:
-      - install -Dm644 dk.philipk.BoilR.png  -t /app/share/icons/hicolor/32x32/apps
+      - install -Dm644 io.github.philipk.boilr.png  -t /app/share/icons/hicolor/32x32/apps
 
   - name: boilr-desktop
     buildsystem: simple
     sources:
       - type: file
-        path: dk.philipk.BoilR.desktop
+        path: io.github.philipk.boilr.desktop
     build-commands:
-      - install -Dm644 dk.philipk.BoilR.desktop -t /app/share/applications/
+      - install -Dm644 io.github.philipk.boilr.desktop -t /app/share/applications/
 
   - name: boilr-appinfo
     buildsystem: simple
     sources:
       - type: file
-        path: dk.philipk.BoilR.appdata.xml
+        path: io.github.philipk.boilr.appdata.xml
     build-commands:
-      - install -Dm644 dk.philipk.BoilR.appdata.xml -t /app/share/metainfo/
+      - install -Dm644 io.github.philipk.boilr.appdata.xml -t /app/share/metainfo/

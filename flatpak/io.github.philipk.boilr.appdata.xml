@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Philip Kristoffersen 2022 <philipkristoffersen@gmail.com> -->
 <component type="desktop-application">
-  <id>dk.philipk.BoilR</id>
+  <id>io.github.philipk.boilr</id>
   <metadata_license>CC0</metadata_license>
   <project_license>MIT/APACHE</project_license>
   <name>BoilR</name>
@@ -34,5 +34,5 @@ https://hughsie.github.io/oars/index.html
   <developer_name>Philip Kristoffersen</developer_name>
   <update_contact>philipkristoffersen@gmail.com</update_contact>
 
-  <launchable type="desktop-id">dk.philipk.BoilR.desktop</launchable>
+  <launchable type="desktop-id">io.github.philipk.boilr.desktop</launchable>
 </component>
