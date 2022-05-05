@@ -121,4 +121,4 @@ Nope, please don't, donate it to your favorite charity instead, and if you don't
 This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
 
 ## What is up with the name BoilR?
-This tool turns things into Steam, therefor boiler, And it is written in **R**ust so therefor: BoilR
+This tool turns things into Steam, therefor boiler, And it is written in **R**ust so therefor: Boil**R**
