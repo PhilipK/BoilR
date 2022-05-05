@@ -2,8 +2,8 @@
 <!-- Philip Kristoffersen 2022 <philipkristoffersen@gmail.com> -->
 <component type="desktop-application">
   <id>io.github.philipk.boilr</id>
-  <metadata_license>CC0</metadata_license>
-  <project_license>MIT/APACHE</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR APACHE</project_license>
   <name>BoilR</name>
   <summary>Add non-steam games to your steam library</summary>
   <description>
@@ -14,7 +14,7 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/PhilipK/BoilR/v.1.2.3/screenshot_1.png</image>
+      <image>https://raw.githubusercontent.com/PhilipK/BoilR/v.1.3.0/screenshot_1.png</image>
       <caption>Main Window</caption>
     </screenshot>
   </screenshots>
@@ -25,7 +25,7 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="0.9.19" date="2022-03-27">
+    <release version="1.3.0 date="2022-05-05">
       <description>
         <p>First Flatpak Release of BoilR</p>
       </description>
