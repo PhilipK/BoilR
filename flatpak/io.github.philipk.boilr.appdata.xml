@@ -3,7 +3,7 @@
 <component type="desktop-application">
   <id>io.github.philipk.boilr</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>MIT OR APACHE</project_license>
+  <project_license>MIT-0 OR Apache-2.0</project_license>
   <name>BoilR</name>
   <summary>Add non-steam games to your steam library</summary>
   <description>
