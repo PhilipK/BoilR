@@ -214,40 +214,40 @@ async fn search_for_images_to_download(
                 }
             }
         } else {
-            for image_ids in image_ids.chunks(99) {
-                let image_search_result =
-                    get_images_for_ids(client, image_ids, &image_type, download_animated).await;
-                match image_search_result {
-                    Ok(images) => {
-                        let images = images
-                            .iter()
-                            .enumerate()
-                            .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
-                        let download_for_this_type = stream::iter(images)
-                            .filter_map(|(image, shortcut, game_id)| {
-                                let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                                async move {
-                                    let image_url = match image {
-                                        Ok(img) => Some(img.url.clone()),
-                                        Err(_) => get_steam_image_url(game_id, &image_type).await,
-                                    };
-                                    image_url.map(|url| ToDownload {
-                                        path,
-                                        url,
-                                        app_name: shortcut.app_name.clone(),
-                                        image_type,
-                                    })
-                                }
-                            })
-                            .collect::<Vec<ToDownload>>()
-                            .await;
+        for image_ids in image_ids.chunks(99) {
+            let image_search_result =
+                get_images_for_ids(client, image_ids, &image_type, download_animated).await;
+            match image_search_result {
+                Ok(images) => {
+                    let images = images
+                        .iter()
+                        .enumerate()
+                        .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
+                    let download_for_this_type = stream::iter(images)
+                        .filter_map(|(image, shortcut, game_id)| {
+                            let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                            async move {
+                                let image_url = match image {
+                                    Ok(img) => Some(img.url.clone()),
+                                    Err(_) => get_steam_image_url(game_id, &image_type).await,
+                                };
+                                image_url.map(|url| ToDownload {
+                                    path,
+                                    url,
+                                    app_name: shortcut.app_name.clone(),
+                                    image_type,
+                                })
+                            }
+                        })
+                        .collect::<Vec<ToDownload>>()
+                        .await;
 
-                        to_download.extend(download_for_this_type);
-                    }
-                    Err(err) => println!("Error getting images: {}", err),
+                    to_download.extend(download_for_this_type);
                 }
+                Err(err) => println!("Error getting images: {}", err),
             }
         }
+    }
     }
     Ok(to_download)
 }
@@ -301,13 +301,19 @@ pub fn get_query_type(
         nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
+
+    use steamgriddb_api::query_parameters::IconQueryParameters;
+    let icon_parameters = IconQueryParameters {
+        nsfw: Some(&Nsfw::False),
+        ..Default::default()
+    };
     let query_type = match image_type {
         ImageType::Hero => steamgriddb_api::QueryType::Hero(Some(hero_parameters)),
         ImageType::BigPicture => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
         ImageType::Grid => steamgriddb_api::QueryType::Grid(Some(grid_parameters)),
         ImageType::WideGrid => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
         ImageType::Logo => steamgriddb_api::QueryType::Logo(Some(logo_parameters)),
-        _ => panic!("Unsupported image type"),
+        ImageType::Icon => steamgriddb_api::QueryType::Icon(Some(icon_parameters)),
     };
     query_type
 }
