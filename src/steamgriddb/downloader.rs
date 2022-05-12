@@ -200,20 +200,6 @@ async fn search_for_images_to_download(
 
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
 
-        if let ImageType::Icon = image_type {
-            for (index, image_id) in image_ids.iter().enumerate() {
-                let shortcut = shortcuts[index];
-                if let Some(url) = get_steam_icon_url(*image_id).await {
-                    let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                    to_download.push(ToDownload {
-                        path,
-                        url,
-                        app_name: shortcut.app_name.clone(),
-                        image_type,
-                    });
-                }
-            }
-        } else {
         for image_ids in image_ids.chunks(99) {
             let image_search_result =
                 get_images_for_ids(client, image_ids, &image_type, download_animated).await;
@@ -247,7 +233,6 @@ async fn search_for_images_to_download(
                 Err(err) => println!("Error getting images: {}", err),
             }
         }
-    }
     }
     Ok(to_download)
 }
@@ -319,6 +304,11 @@ pub fn get_query_type(
 }
 
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {
+    if let ImageType::Icon = image_type {
+        if let Some(url) = get_steam_icon_url(game_id).await {
+            return Some(url);
+        }
+    }
     let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
     let response = reqwest::get(steamgriddb_page_url).await;
     if let Ok(response) = response {
