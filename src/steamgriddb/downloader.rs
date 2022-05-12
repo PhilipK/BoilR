@@ -200,52 +200,37 @@ async fn search_for_images_to_download(
 
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
 
-        if let ImageType::Icon = image_type {
-            for (index, image_id) in image_ids.iter().enumerate() {
-                let shortcut = shortcuts[index];
-                if let Some(url) = get_steam_icon_url(*image_id).await {
-                    let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                    to_download.push(ToDownload {
-                        path,
-                        url,
-                        app_name: shortcut.app_name.clone(),
-                        image_type,
-                    });
-                }
-            }
-        } else {
-            for image_ids in image_ids.chunks(99) {
-                let image_search_result =
-                    get_images_for_ids(client, image_ids, &image_type, download_animated).await;
-                match image_search_result {
-                    Ok(images) => {
-                        let images = images
-                            .iter()
-                            .enumerate()
-                            .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
-                        let download_for_this_type = stream::iter(images)
-                            .filter_map(|(image, shortcut, game_id)| {
-                                let path = grid_folder.join(image_type.file_name(shortcut.app_id));
-                                async move {
-                                    let image_url = match image {
-                                        Ok(img) => Some(img.url.clone()),
-                                        Err(_) => get_steam_image_url(game_id, &image_type).await,
-                                    };
-                                    image_url.map(|url| ToDownload {
-                                        path,
-                                        url,
-                                        app_name: shortcut.app_name.clone(),
-                                        image_type,
-                                    })
-                                }
-                            })
-                            .collect::<Vec<ToDownload>>()
-                            .await;
+        for image_ids in image_ids.chunks(99) {
+            let image_search_result =
+                get_images_for_ids(client, image_ids, &image_type, download_animated).await;
+            match image_search_result {
+                Ok(images) => {
+                    let images = images
+                        .iter()
+                        .enumerate()
+                        .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
+                    let download_for_this_type = stream::iter(images)
+                        .filter_map(|(image, shortcut, game_id)| {
+                            let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                            async move {
+                                let image_url = match image {
+                                    Ok(img) => Some(img.url.clone()),
+                                    Err(_) => get_steam_image_url(game_id, &image_type).await,
+                                };
+                                image_url.map(|url| ToDownload {
+                                    path,
+                                    url,
+                                    app_name: shortcut.app_name.clone(),
+                                    image_type,
+                                })
+                            }
+                        })
+                        .collect::<Vec<ToDownload>>()
+                        .await;
 
-                        to_download.extend(download_for_this_type);
-                    }
-                    Err(err) => println!("Error getting images: {}", err),
+                    to_download.extend(download_for_this_type);
                 }
+                Err(err) => println!("Error getting images: {}", err),
             }
         }
     }
@@ -301,18 +286,29 @@ pub fn get_query_type(
         nsfw: Some(&Nsfw::False),
         ..Default::default()
     };
+
+    use steamgriddb_api::query_parameters::IconQueryParameters;
+    let icon_parameters = IconQueryParameters {
+        nsfw: Some(&Nsfw::False),
+        ..Default::default()
+    };
     let query_type = match image_type {
         ImageType::Hero => steamgriddb_api::QueryType::Hero(Some(hero_parameters)),
         ImageType::BigPicture => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
         ImageType::Grid => steamgriddb_api::QueryType::Grid(Some(grid_parameters)),
         ImageType::WideGrid => steamgriddb_api::QueryType::Grid(Some(big_picture_parameters)),
         ImageType::Logo => steamgriddb_api::QueryType::Logo(Some(logo_parameters)),
-        _ => panic!("Unsupported image type"),
+        ImageType::Icon => steamgriddb_api::QueryType::Icon(Some(icon_parameters)),
     };
     query_type
 }
 
 async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<String> {
+    if let ImageType::Icon = image_type {
+        if let Some(url) = get_steam_icon_url(game_id).await {
+            return Some(url);
+        }
+    }
     let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
     let response = reqwest::get(steamgriddb_page_url).await;
     if let Ok(response) = response {

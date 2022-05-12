@@ -2747,9 +2747,9 @@ dependencies = [
 
 [[package]]
 name = "steamgriddb_api"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49989dd0a9cb16bc02ea1939b513e310fcdbc31d52981d8c70bcb86a23b12d5f"
+checksum = "14968a884ba517e194649a482617c37e908ac9cb4dbcb55582a838705ee705c7"
 dependencies = [
  "reqwest",
  "serde 1.0.136",

@@ -575,7 +575,8 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
                 _ => None,
             })
             .flatten();
-        if render_thumbnail(ui, texture, &image_type) {
+        let clicked = render_thumbnail(ui, texture);
+        if clicked {
             return Some(UserAction::ImageTypeSelected(*image_type));
         }
     }
@@ -597,28 +598,15 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction
 
 const MAX_WIDTH: f32 = 300.;
 
-fn render_thumbnail(
-    ui: &mut egui::Ui,
-    image: Option<egui::TextureHandle>,
-    image_type: &ImageType,
-) -> bool {
+fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>) -> bool {
     if let Some(texture) = image {
         let mut size = texture.size_vec2();
         clamp_to_width(&mut size, MAX_WIDTH);
         let image_button = ImageButton::new(&texture, size);
         let added = ui.add(image_button);
-        match image_type {
-            ImageType::Icon => false,
-            _ => added.on_hover_text("Click to change image").clicked(),
-        }
+        added.on_hover_text("Click to change image").clicked()
     } else {
-        match image_type {
-            ImageType::Icon => {
-                ui.label("No icon found");
-                false
-            }
-            _ => ui.button("Pick an image").clicked(),
-        }
+        ui.button("Pick an image").clicked()
     }
 }
 
