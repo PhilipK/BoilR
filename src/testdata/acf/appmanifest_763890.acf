@@ -1,0 +1,32 @@
+"AppState"
+{
+	"appid"		"763890"
+	"universe"		"1"
+	"name"		"Wildermyth"
+	"StateFlags"		"4"
+	"installdir"		"Wildermyth"
+	"LastUpdated"		"1651783287"
+	"UpdateResult"		"0"
+	"SizeOnDisk"		"2035740746"
+	"buildid"		"8621142"
+	"LastOwner"		"76561197970608363"
+	"BytesToDownload"		"1706137168"
+	"BytesDownloaded"		"1706137168"
+	"BytesToStage"		"2035740746"
+	"BytesStaged"		"2035740746"
+	"AutoUpdateBehavior"		"0"
+	"AllowOtherDownloadsWhileRunning"		"0"
+	"ScheduledAutoUpdate"		"0"
+	"InstalledDepots"
+	{
+		"763893"
+		{
+			"manifest"		"8422302896250419544"
+			"size"		"2035740746"
+		}
+	}
+	"UserConfig"
+	{
+		"language"		"english"
+	}
+}
