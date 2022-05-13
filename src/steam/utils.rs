@@ -200,7 +200,14 @@ pub fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Er
     let user_folders = std::fs::read_dir(&grid_folder)?;
     let file_names = user_folders
         .filter_map(|image| image.ok())
-        .map(|image| image.file_name().to_string_lossy().to_string())
+        .map(|image| {
+            image
+                .path()
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string()
+        })
         .collect();
     Ok(file_names)
 }

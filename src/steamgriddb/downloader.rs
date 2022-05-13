@@ -6,7 +6,9 @@ use std::{collections::HashMap, path::Path};
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
-use steamgriddb_api::query_parameters::{GridDimentions, Nsfw};
+use steamgriddb_api::query_parameters::{
+    GridDimentions, MimeType, MimeTypeIcon, MimeTypeLogo, Nsfw,
+};
 use tokio::sync::watch::Sender; // 0.3.1
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
@@ -157,7 +159,7 @@ async fn search_for_images_to_download(
             // if we are missing any of the images we need to search for them
             types
                 .iter()
-                .map(|t| t.file_name(s.app_id))
+                .map(|t| t.file_name_no_extension(s.app_id))
                 .any(|image| !known_images.contains(&image))
                 && !s.app_name.is_empty()
         });
@@ -191,7 +193,7 @@ async fn search_for_images_to_download(
             .iter()
             .filter(|s| search_results.contains_key(&s.app_id))
             .filter(|s| !settings.steamgrid_db.is_image_banned(&image_type, s.app_id))
-            .filter(|s| !known_images.contains(&image_type.file_name(s.app_id)));
+            .filter(|s| !known_images.contains(&image_type.file_name_no_extension(s.app_id)));
         let image_ids: Vec<usize> = images_needed
             .clone()
             .filter_map(|s| search_results.get(&s.app_id))
@@ -211,7 +213,12 @@ async fn search_for_images_to_download(
                         .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
                     let download_for_this_type = stream::iter(images)
                         .filter_map(|(image, shortcut, game_id)| {
-                            let path = grid_folder.join(image_type.file_name(shortcut.app_id));
+                            let extension = image
+                                .as_ref()
+                                .map(|image| get_image_extension(&image.mime))
+                                .unwrap_or("png");
+                            let path =
+                                grid_folder.join(image_type.file_name(shortcut.app_id, extension));
                             async move {
                                 let image_url = match image {
                                     Ok(img) => Some(img.url.clone()),
@@ -235,6 +242,18 @@ async fn search_for_images_to_download(
         }
     }
     Ok(to_download)
+}
+
+pub fn get_image_extension(mime_type: &steamgriddb_api::images::MimeTypes) -> &'static str {
+    match mime_type {
+        steamgriddb_api::images::MimeTypes::Default(MimeType::Jpeg) => "jpg",
+        steamgriddb_api::images::MimeTypes::Default(MimeType::Png) => "png",
+        steamgriddb_api::images::MimeTypes::Default(MimeType::Webp) => "webp",
+        steamgriddb_api::images::MimeTypes::Logo(MimeTypeLogo::Png) => "png",
+        steamgriddb_api::images::MimeTypes::Logo(MimeTypeLogo::Webp) => "png",
+        steamgriddb_api::images::MimeTypes::Icon(MimeTypeIcon::Icon) => "ico",
+        steamgriddb_api::images::MimeTypes::Icon(MimeTypeIcon::Png) => "png",
+    }
 }
 
 async fn get_images_for_ids(

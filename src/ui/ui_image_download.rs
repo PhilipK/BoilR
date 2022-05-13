@@ -6,12 +6,13 @@ use std::{
 use crate::{
     config::get_thumbnails_folder,
     steam::{get_shortcuts_paths, SteamUsersInfo},
-    steamgriddb::{get_query_type, CachedSearch, ImageType, ToDownload},
+    steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
 };
 use dashmap::DashMap;
 use egui::{ImageButton, ScrollArea};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
+use steamgriddb_api::images::MimeTypes;
 use tokio::sync::watch::{self, Receiver};
 
 use super::{ui_images::load_image_from_path, FetcStatus, MyEguiApp};
@@ -52,6 +53,7 @@ impl ImageSelectState {
 pub struct PossibleImage {
     thumbnail_path: PathBuf,
     thumbnail_url: String,
+    mime: MimeTypes,
     full_url: String,
     id: u32,
 }
@@ -321,22 +323,25 @@ impl MyEguiApp {
             .as_ref()
             .unwrap()
             .steam_user_data_folder;
-        let file_name = image_type.file_name(
-            self.image_selected_state
-                .selected_shortcut
-                .as_ref()
-                .unwrap()
-                .app_id,
-        );
-        let path = Path::new(data_folder)
-            .join("config")
-            .join("grid")
-            .join(&file_name);
-        if path.exists() {
-            let _ = std::fs::remove_file(&path);
+        for ext in POSSIBLE_EXTENSIONS {
+            let file_name = image_type.file_name(
+                self.image_selected_state
+                    .selected_shortcut
+                    .as_ref()
+                    .unwrap()
+                    .app_id,
+                ext,
+            );
+            let path = Path::new(data_folder)
+                .join("config")
+                .join("grid")
+                .join(&file_name);
+            if path.exists() {
+                let _ = std::fs::remove_file(&path);
+            }
+            let key = path.to_string_lossy().to_string();
+            self.image_selected_state.image_handles.remove(&key);
         }
-        let key = path.to_string_lossy().to_string();
-        self.image_selected_state.image_handles.remove(&key);
         self.image_selected_state.image_type_selected = None;
     }
 
@@ -420,6 +425,7 @@ impl MyEguiApp {
                             let path = thumbnails_folder.join(format!("{}.png", possible_image.id));
                             result.push(PossibleImage {
                                 thumbnail_path: path,
+                                mime: possible_image.mime.clone(),
                                 thumbnail_url: possible_image.thumb.clone(),
                                 full_url: possible_image.url.clone(),
                                 id: possible_image.id,
@@ -445,10 +451,12 @@ impl MyEguiApp {
             .selected_shortcut
             .as_ref()
             .unwrap();
+
+        let ext = get_image_extension(&image.mime);
         let to = Path::new(&user.steam_user_data_folder)
             .join("config")
             .join("grid")
-            .join(selected_image_type.file_name(selected_image.app_id));
+            .join(selected_image_type.file_name(selected_image.app_id, ext));
 
         if to.exists() {
             let old_key = to.to_string_lossy().to_string();
@@ -625,12 +633,28 @@ fn clamp_to_width(size: &mut egui::Vec2, max_width: f32) {
 trait HasImageKey {
     fn key(&self, image_type: &ImageType, user_path: &Path) -> (PathBuf, String);
 }
+const POSSIBLE_EXTENSIONS: [&'static str; 4] = ["png", "jpg", "ico", "webp"];
 
 impl HasImageKey for ShortcutOwned {
     fn key(&self, image_type: &ImageType, user_path: &Path) -> (PathBuf, String) {
-        let file_name = image_type.file_name(self.app_id);
-        let path = user_path.join("config").join("grid").join(&file_name);
-        let key = path.to_string_lossy().to_string();
+        let mut keys = POSSIBLE_EXTENSIONS
+            .iter()
+            .map(|ext| key_from_extension(self, image_type, user_path, ext));
+        let first = keys.next().unwrap();
+        let other = keys.filter(|(exsists, _, _)| *exsists).next();
+        let (_, path, key) = other.unwrap_or(first);
         (path, key)
     }
+}
+
+fn key_from_extension(
+    shortcut: &ShortcutOwned,
+    image_type: &ImageType,
+    user_path: &Path,
+    ext: &str,
+) -> (bool, PathBuf, String) {
+    let file_name = image_type.file_name(shortcut.app_id, ext);
+    let path = user_path.join("config").join("grid").join(&file_name);
+    let key = path.to_string_lossy().to_string();
+    (path.exists(), path, key)
 }

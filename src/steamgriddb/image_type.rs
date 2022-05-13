@@ -33,14 +33,19 @@ impl ImageType {
         }
     }
 
-    pub fn file_name(&self, app_id: u32) -> String {
+    pub fn file_name<S: AsRef<str>>(&self, app_id: u32, extension: S) -> String {
+        let file_name = self.file_name_no_extension(app_id);
+        format!("{}.{}", file_name, extension.as_ref())
+    }
+
+    pub fn file_name_no_extension(&self, app_id: u32) -> String {
         match self {
-            ImageType::Hero => format!("{}_hero.png", app_id),
-            ImageType::Grid => format!("{}p.png", app_id),
-            ImageType::WideGrid => format!("{}.png", app_id),
-            ImageType::Logo => format!("{}_logo.png", app_id),
-            ImageType::BigPicture => format!("{}_bigpicture.png", app_id),
-            ImageType::Icon => format!("{}.ico", app_id),
+            ImageType::Hero => format!("{}_hero", app_id),
+            ImageType::Grid => format!("{}p", app_id),
+            ImageType::WideGrid => format!("{}", app_id),
+            ImageType::Logo => format!("{}_logo", app_id),
+            ImageType::BigPicture => format!("{}_bigpicture", app_id),
+            ImageType::Icon => format!("{}-icon", app_id),
         }
     }
 
