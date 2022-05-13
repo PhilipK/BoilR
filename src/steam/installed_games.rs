@@ -1,7 +1,8 @@
-use std::path::Path;
+use std::{ffi::OsStr, path::Path};
 
 use super::{get_steam_path, SteamSettings};
 
+#[derive(Debug, Clone)]
 pub struct SteamGameInfo {
     appid: String,
     name: String,
@@ -27,14 +28,13 @@ pub fn get_installed_games(settings: &SteamSettings) -> Vec<SteamGameInfo> {
 }
 
 fn parse_manifest_file(path: &Path) -> Option<SteamGameInfo> {
-    if !path.ends_with(".acf") {
-        return None;
+    let extension = path.extension().and_then(OsStr::to_str);
+    if let Some("acf") = extension {
+        let file_content = std::fs::read_to_string(path);
+        if let Ok(file_content) = file_content {
+            return parse_manifest_string(file_content);
+        }
     }
-    let file_content = std::fs::read_to_string(path);
-    if let Ok(file_content) = file_content {
-        return parse_manifest_string(file_content);
-    }
-
     None
 }
 
@@ -65,4 +65,11 @@ mod tests {
         assert_eq!("Wildermyth", game_info.name);
         assert_eq!("763890", game_info.appid);
     }
+
+    // #[test]
+    // fn installed_files() {
+    //     let settings = SteamSettings::default();
+    //     let installed_games = get_installed_games(&settings);
+    //     assert_eq!(installed_games.len(), 7);
+    // }
 }
