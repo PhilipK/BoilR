@@ -150,10 +150,13 @@ fn fix_shortcut_icons(
                     &shortcut.exe,
                     &shortcut.app_name,
                 );
-                shortcut.icon = image_folder
-                    .join(image_type.file_name(app_id))
-                    .to_string_lossy()
-                    .to_string();
+                for ext in ["ico", "png", "jpg", "webp"] {
+                    let path = image_folder.join(image_type.file_name(app_id, ext));
+                    if path.exists() {
+                        shortcut.icon = path.to_string_lossy().to_string();
+                        break;
+                    }
+                }
             }
         }
     }
