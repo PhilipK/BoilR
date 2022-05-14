@@ -4,8 +4,8 @@ use super::{get_steam_path, SteamSettings};
 
 #[derive(Debug, Clone)]
 pub struct SteamGameInfo {
-    appid: String,
-    name: String,
+    pub appid: u32,
+    pub name: String,
 }
 
 pub fn get_installed_games(settings: &SteamSettings) -> Vec<SteamGameInfo> {
@@ -45,7 +45,10 @@ fn parse_manifest_string<S: AsRef<str>>(string: S) -> Option<SteamGameInfo> {
     match (app_id_line, name_line) {
         (Some(app_id_line), Some(name_line)) => Some(SteamGameInfo {
             name: name_line[10..name_line.len() - 1].to_string(),
-            appid: app_id_line[11..app_id_line.len() - 1].to_string(),
+            appid: app_id_line[11..app_id_line.len() - 1]
+                .to_string()
+                .parse()
+                .unwrap(),
         }),
         _ => None,
     }
@@ -63,7 +66,7 @@ mod tests {
         assert!(game_info.is_some());
         let game_info = game_info.unwrap();
         assert_eq!("Wildermyth", game_info.name);
-        assert_eq!("763890", game_info.appid);
+        assert_eq!(763890, game_info.appid);
     }
 
     // #[test]
