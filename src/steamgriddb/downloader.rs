@@ -250,7 +250,7 @@ pub fn get_image_extension(mime_type: &steamgriddb_api::images::MimeTypes) -> &'
         steamgriddb_api::images::MimeTypes::Default(MimeType::Png) => "png",
         steamgriddb_api::images::MimeTypes::Default(MimeType::Webp) => "webp",
         steamgriddb_api::images::MimeTypes::Logo(MimeTypeLogo::Png) => "png",
-        steamgriddb_api::images::MimeTypes::Logo(MimeTypeLogo::Webp) => "png",
+        steamgriddb_api::images::MimeTypes::Logo(MimeTypeLogo::Webp) => "webp",
         steamgriddb_api::images::MimeTypes::Icon(MimeTypeIcon::Icon) => "ico",
         steamgriddb_api::images::MimeTypes::Icon(MimeTypeIcon::Png) => "png",
     }
