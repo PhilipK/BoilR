@@ -120,7 +120,14 @@ impl App for MyEguiApp {
                         ui.ctx().request_repaint();
                     }
                     if !status_string.is_empty() {
-                        ui.label(status_string);
+                        if syncing {
+                            ui.horizontal(|c| {
+                                c.spinner();
+                                c.label(&status_string);
+                            });
+                        } else {
+                            ui.label(&status_string);
+                        }
                     }
 
                     let texture = self.get_import_image(ui);

@@ -5,9 +5,9 @@ use std::{
 
 use crate::{
     config::get_thumbnails_folder,
+    steam::{get_installed_games, SteamGameInfo},
     steam::{get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
-    steam::{get_installed_games,  SteamGameInfo},
 };
 use dashmap::DashMap;
 use egui::{ImageButton, ScrollArea};
@@ -262,7 +262,10 @@ impl MyEguiApp {
                                 TextureState::Downloading => {
                                     ui.ctx().request_repaint();
                                     //nothing to do,just wait
-                                    ui.label(format!("Downloading id {}", image.id));
+                                    ui.horizontal(|ui| {
+                                        ui.spinner();
+                                        ui.label(format!("Downloading id {}", image.id));
+                                    });
                                 }
                                 TextureState::Downloaded => {
                                     //Need to load
@@ -272,7 +275,10 @@ impl MyEguiApp {
                                         *state.value_mut() = TextureState::Loaded(handle);
                                     }
                                     ui.ctx().request_repaint();
-                                    ui.label("Loading");
+                                    ui.horizontal(|ui| {
+                                        ui.spinner();
+                                        ui.label("Loading");
+                                    });
                                 }
                                 TextureState::Loaded(texture_handle) => {
                                     //need to show
@@ -317,7 +323,10 @@ impl MyEguiApp {
                 }
             }
             _ => {
-                ui.label("Finding possible images");
+                ui.horizontal(|ui| {
+                    ui.spinner();
+                    ui.label("Finding possible images");
+                });
                 ui.ctx().request_repaint();
             }
         }
@@ -732,8 +741,8 @@ impl HasImageKey for GameType {
 impl HasImageKey for SteamGameInfo {
     fn key(&self, image_type: &ImageType, user_path: &Path) -> (PathBuf, String) {
         let mut keys = POSSIBLE_EXTENSIONS
-        .iter()
-        .map(|ext| key_from_extension(self.appid, image_type, user_path, ext));
+            .iter()
+            .map(|ext| key_from_extension(self.appid, image_type, user_path, ext));
         let first = keys.next().unwrap();
         let other = keys.filter(|(exsists, _, _)| *exsists).next();
         let (_, path, key) = other.unwrap_or(first);

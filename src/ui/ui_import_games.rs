@@ -84,7 +84,10 @@ impl MyEguiApp {
                 },
                 _=> {
                     ui.ctx().request_repaint();
-                    ui.label("Finding installed games");
+                    ui.horizontal(|ui|{
+                        ui.spinner();                            
+                        ui.label("Finding installed games");
+                    });
                 },
             };
         });
