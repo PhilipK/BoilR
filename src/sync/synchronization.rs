@@ -142,20 +142,15 @@ fn fix_shortcut_icons(
 
     for shortcut in shortcuts {
         if shortcut.is_boilr_shortcut() {
-            let replace_icon = shortcut.icon.trim().eq("")
-                || !Path::new(shortcut.icon.trim()).exists()
-                || shortcut.icon.eq(&shortcut.exe);
-            if replace_icon {
-                let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
-                    &shortcut.exe,
-                    &shortcut.app_name,
-                );
-                for ext in ["ico", "png", "jpg", "webp"] {
-                    let path = image_folder.join(image_type.file_name(app_id, ext));
-                    if path.exists() {
-                        shortcut.icon = path.to_string_lossy().to_string();
-                        break;
-                    }
+            let app_id = steam_shortcuts_util::app_id_generator::calculate_app_id(
+                &shortcut.exe,
+                &shortcut.app_name,
+            );
+            for ext in ["ico", "png", "jpg", "webp"] {
+                let path = image_folder.join(image_type.file_name(app_id, ext));
+                if path.exists() {
+                    shortcut.icon = path.to_string_lossy().to_string();
+                    break;
                 }
             }
         }
