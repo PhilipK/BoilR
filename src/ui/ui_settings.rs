@@ -9,6 +9,7 @@ use super::{
     MyEguiApp,
 };
 const SECTION_SPACING: f32 = 25.0;
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 impl MyEguiApp {
     pub(crate) fn render_settings(&mut self, ui: &mut egui::Ui) {
@@ -51,6 +52,8 @@ impl MyEguiApp {
                 {
                     self.render_amazon_settings(ui);
                 }
+                ui.add_space(SECTION_SPACING);
+                ui.label(format!("Version: {}", VERSION));
             });
     }
 
