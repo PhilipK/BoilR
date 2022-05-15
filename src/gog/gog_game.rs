@@ -44,7 +44,7 @@ impl From<GogShortcut> for ShortcutOwned {
         let icon = if icon_path.exists() {
             icon_path.to_str().unwrap().to_string()
         } else {
-            exe.to_str().unwrap_or("").to_string()
+            "".to_string()
         };
         let mut exe_string = exe.to_string_lossy().to_string();
         if exe_string.contains(' ') && !exe_string.starts_with('\"') {

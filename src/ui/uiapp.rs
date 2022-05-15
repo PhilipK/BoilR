@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use eframe::{egui, epi};
+use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::{
@@ -68,26 +68,8 @@ impl Default for Menues {
     }
 }
 
-impl epi::App for MyEguiApp {
-    fn name(&self) -> &str {
-        "BoilR"
-    }
-
-    fn setup(
-        &mut self,
-        ctx: &egui::Context,
-        _frame: &epi::Frame,
-        _storage: Option<&dyn epi::Storage>,
-    ) {
-        #[cfg(target_family = "unix")]
-        ctx.set_pixels_per_point(1.0);
-
-        let mut style: egui::Style = (*ctx.style()).clone();
-        create_style(&mut style);
-        ctx.set_style(style);
-    }
-
-    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
+impl App for MyEguiApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
         let frame = egui::Frame::default()
             .stroke(Stroke::new(0., BACKGROUND_COLOR))
             .fill(BACKGROUND_COLOR);
@@ -138,7 +120,14 @@ impl epi::App for MyEguiApp {
                         ui.ctx().request_repaint();
                     }
                     if !status_string.is_empty() {
-                        ui.label(status_string);
+                        if syncing {
+                            ui.horizontal(|c| {
+                                c.spinner();
+                                c.label(&status_string);
+                            });
+                        } else {
+                            ui.label(&status_string);
+                        }
                     }
 
                     let texture = self.get_import_image(ui);
@@ -218,6 +207,14 @@ impl MyEguiApp {
     }
 }
 
+fn setup(ctx: &egui::Context) {
+    #[cfg(target_family = "unix")]
+    ctx.set_pixels_per_point(1.0);
+
+    let mut style: egui::Style = (*ctx.style()).clone();
+    create_style(&mut style);
+    ctx.set_style(style);
+}
 pub fn run_sync() {
     let mut app = MyEguiApp::new();
     app.run_sync();
@@ -231,5 +228,12 @@ pub fn run_ui() -> Result<(), Box<dyn Error>> {
         icon_data: Some(get_logo_icon()),
         ..Default::default()
     };
-    eframe::run_native(Box::new(app), native_options);
+    eframe::run_native(
+        "BoilR",
+        native_options,
+        Box::new(|cc| {
+            setup(&cc.egui_ctx);
+            Box::new(app)
+        }),
+    );
 }

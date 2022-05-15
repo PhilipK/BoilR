@@ -84,7 +84,10 @@ impl MyEguiApp {
                 },
                 _=> {
                     ui.ctx().request_repaint();
-                    ui.label("Finding installed games");
+                    ui.horizontal(|ui|{
+                        ui.spinner();                            
+                        ui.label("Finding installed games");
+                    });
                 },
             };
         });
@@ -118,6 +121,10 @@ impl MyEguiApp {
             let usersinfo = sync::run_sync(&settings, &mut some_sender).unwrap();
             let task = download_images(&settings, &usersinfo, &mut some_sender);
             block_on(task);
+
+            //Run a second time to fix up shortcuts after images are downloaded
+            sync::run_sync(&settings, &mut some_sender).unwrap();
+
             if let Some(sender) = some_sender {
                 let _ = sender.send(SyncProgress::Done);
             }
