@@ -13,7 +13,7 @@ pub mod ui_colors {
 pub mod ui_images {
     use std::path::Path;
 
-    use eframe::epi::IconData;
+    use eframe::IconData;
     use egui::{ColorImage, ImageData};
 
     pub const IMPORT_GAMES_IMAGE: &[u8] = include_bytes!("../../resources/import_games_button.png");

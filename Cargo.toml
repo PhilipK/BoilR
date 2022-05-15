@@ -7,24 +7,24 @@ edition = "2021"
 [dependencies]
 steam_shortcuts_util = "1.1.7"
 steamgriddb_api = "^0.3.0"
-serde = { version = "^1.0.136", features = ["derive"] }
-serde_json = "^1.0.79"
-tokio = { version = "^1.17.0", features = ["full"] }
+serde = { version = "^1.0.137", features = ["derive"] }
+serde_json = "^1.0.81"
+tokio = { version = "^1.18.2", features = ["full"] }
 reqwest = { version = "^0.11.10", default_features = false }
 config = "^0.11.0"
 failure = "^0.1.8"
 nom = "^7.1.1"
-flate2 = "^1.0.22"
+flate2 = "^1.0.23"
 futures = { version = "^0.3.21" }
-dashmap = { version = "^5.2.0", features = ["serde"] }
+dashmap = { version = "^5.3.3", features = ["serde"] }
 is_executable = "^1.0.1"
 rusty-leveldb = "^0.3.6"
 base64 = "^0.13.0"
-eframe = { version = "0.17.0" }
-egui = { version = "0.17.0" }
-image = { version = "0.24.1", features = ["png"] }
-toml = { version = "^0.5.8" }
-sysinfo = "0.23.10"
+eframe = { version = "^0.18.0" }
+egui = { version = "^0.18.1" }
+image = { version = "0.24.2", features = ["png"] }
+toml = { version = "^0.5.9" }
+sysinfo = "^0.23.12"
 sqlite = "0.26.0"
 copypasta = "0.7.1"
 
