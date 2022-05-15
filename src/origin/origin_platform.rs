@@ -57,6 +57,7 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
                     id,
                     title: game_title,
                     origin_location: origin_exe.clone(),
+                    origin_compat_folder: origin_folders.compat_folder.clone(),
                 })
             });
         Ok(games.collect())
@@ -77,7 +78,6 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         return false;
         #[cfg(target_family = "unix")]
         {
-            //TODO Update this when origin gets support on linux
             true
         }
     }
@@ -118,6 +118,8 @@ struct OriginPathData {
     exe_path: Option<PathBuf>,
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/ProgramData/Origin/LocalContent
     local_content_path: Option<PathBuf>,
+    //~/.steam/steam/steamapps/compatdata/X
+    compat_folder: Option<PathBuf>,
 }
 
 #[cfg(target_family = "unix")]
@@ -150,6 +152,7 @@ fn get_default_locations() -> OriginPathData {
                 if origin_exe_path.exists() && origin_local_content.exists() {
                     res.exe_path = Some(origin_exe_path);
                     res.local_content_path = Some(origin_local_content);
+                    res.compat_folder = Some(dir.path().to_path_buf());
                 }
             }
         }
