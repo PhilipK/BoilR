@@ -6,7 +6,7 @@ BoilR automatically adds (almost) all your games to your Steam library.
 
 It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
 The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
-Optionally you can set BoilR up to automatically download artwork from [SteamGridDB](https://www.steamgriddb.com/).
+Optionally, you can set up BoilR to automatically download artwork from [SteamGridDB](https://www.steamgriddb.com/).
 
 ## Getting started
 - Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
@@ -77,11 +77,11 @@ If you are on Linux (or a Steam Deck) you can install BoilR from [flathub](https
 I currently don't have a steam deck, which slows down development for it a bit.
 There might still be problems specific to the deck, so if you run into one please check the issues.
 
-If you have a problem that a game wont launch, try to manually set a proton version for it.
+If you have a problem launching a game, try to manually set a proton version for it.
 
 ### Tips for linux
 
-If you are running linux (this includes Steam Dekc) and are running into problems check [tips for linux seciton](tips_for_linux.md)
+If you are running linux (this includes Steam Deck) and are running into problems check [tips for linux seciton](tips_for_linux.md)
 
 ### Configuration
 
@@ -96,16 +96,16 @@ This saves some CO2 from not having to build 2 versions of BoilR for each platfo
 ## Contributions 
 
 ### How can I help/contribute?
-If you are a coder, you can fork this repo and then create a pull request, they are very welcome!
+If you are a coder, you are very welcome! You can fork this repo and then create a pull request.
 To run BoilR just write:
 
 ```shell
 cargo run
 ```
 
-If you are not a developer (or you don't like to code in Rust) spread the work and create issues/discussions for anything.
+If you are not a developer (or you don't like to code in Rust) do spread the work and create issues/discussions for anything.
 
-### I found a bug, what do it do?
+### I found a bug, what do I do?
 Check that there is not already an issue for it [here](https://github.com/PhilipK/BoilR/issues)
 If not, create a new issue and I will have a look at it (remember to write which OS you are using).
 
