@@ -60,6 +60,7 @@ enum Menues {
     Import,
     Settings,
     Images,
+    Backup,
 }
 
 impl Default for Menues {
@@ -82,12 +83,17 @@ impl App for MyEguiApp {
                 ui.image(texture, size);
                 ui.add_space(SECTION_SPACING);
 
-                let changed = ui
+                let mut changed = ui
                     .selectable_value(&mut self.selected_menu, Menues::Import, "Import Games")
                     .changed();
-                let mut changed = changed
+                changed = changed
                     || ui
                         .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
+                        .changed();
+
+                changed = changed
+                    || ui
+                        .selectable_value(&mut self.selected_menu, Menues::Backup, "Backup")
                         .changed();
                 if self.settings.steamgrid_db.auth_key.is_some() {
                     changed = changed
@@ -154,6 +160,9 @@ impl App for MyEguiApp {
                 }
                 Menues::Images => {
                     self.render_ui_images(ui);
+                }
+                Menues::Backup => {
+                    self.render_backup(ui);
                 }
             };
         });
