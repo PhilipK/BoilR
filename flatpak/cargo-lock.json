@@ -3187,14 +3187,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/steam_shortcuts_util/steam_shortcuts_util-1.1.7.crate",
-        "sha256": "67248b9d183120bbc68813546d1aa0ed17230da95674f4fbae6e1060d97c0af8",
-        "dest": "cargo/vendor/steam_shortcuts_util-1.1.7"
+        "url": "https://static.crates.io/crates/steam_shortcuts_util/steam_shortcuts_util-1.1.8.crate",
+        "sha256": "d0543ebdb23a93b196aceebc53f70cc5a573bb74248a974b3f5fa3883e6a89b6",
+        "dest": "cargo/vendor/steam_shortcuts_util-1.1.8"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"67248b9d183120bbc68813546d1aa0ed17230da95674f4fbae6e1060d97c0af8\", \"files\": {}}",
-        "dest": "cargo/vendor/steam_shortcuts_util-1.1.7",
+        "contents": "{\"package\": \"d0543ebdb23a93b196aceebc53f70cc5a573bb74248a974b3f5fa3883e6a89b6\", \"files\": {}}",
+        "dest": "cargo/vendor/steam_shortcuts_util-1.1.8",
         "dest-filename": ".cargo-checksum.json"
     },
     {
