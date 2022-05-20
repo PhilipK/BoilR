@@ -88,6 +88,12 @@ impl App for MyEguiApp {
                 let mut changed = ui
                     .selectable_value(&mut self.selected_menu, Menues::Import, "Import Games")
                     .changed();
+                if self.settings.steamgrid_db.auth_key.is_some() {
+                    changed = changed
+                        || ui
+                            .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
+                            .changed();
+                }
                 changed = changed
                     || ui
                         .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
@@ -97,12 +103,7 @@ impl App for MyEguiApp {
                     || ui
                         .selectable_value(&mut self.selected_menu, Menues::Backup, "Backup")
                         .changed();
-                if self.settings.steamgrid_db.auth_key.is_some() {
-                    changed = changed
-                        || ui
-                            .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
-                            .changed();
-                }
+
                 if changed {
                     self.backup_state.available_backups = None;
                 }

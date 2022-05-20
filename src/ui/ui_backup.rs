@@ -27,6 +27,11 @@ impl MyEguiApp {
             ui.heading(format!("Last restored {:?}", last_restore));
         }
 
+        if ui.button("Click here to create a new backup").clicked() {
+            backup_shortcuts(&self.settings.steam);
+            self.backup_state.available_backups = None;
+        }
+
         let available_backups = self
             .backup_state
             .available_backups
@@ -54,10 +59,7 @@ impl MyEguiApp {
                 });
         }
 
-        if ui.button("Click here to create a new backup").clicked() {
-            backup_shortcuts(&self.settings.steam);
-            self.backup_state.available_backups = None;
-        }
+      
     }
 }
 
