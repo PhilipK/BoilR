@@ -17,7 +17,7 @@ use super::{
     },
     ui_images::{get_import_image, get_logo, get_logo_icon},
     ui_import_games::FetcStatus,
-    ImageSelectState,
+    ImageSelectState, BackupState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -37,6 +37,7 @@ pub struct MyEguiApp {
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
     pub(crate) image_selected_state: ImageSelectState,
+    pub(crate) backup_state: BackupState,
 }
 
 impl MyEguiApp {
@@ -51,6 +52,7 @@ impl MyEguiApp {
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
             image_selected_state: ImageSelectState::default(),
+            backup_state: BackupState::default()
         }
     }
 }
