@@ -10,7 +10,7 @@
     <p>This little tool will show games from other games platforms in your Steam library.
         It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
         The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
-      Optionally you can set BoilR up to automatically download artwork from SteamGridDB.</p>
+      You can also use BoilR to manually and automatically download custom art from SteamGridDB.</p>
   </description>
   <screenshots>
     <screenshot type="default">
@@ -25,7 +25,12 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
-  <release version="1.3.5" date="2022-05-17">
+  <release version="1.3.7" date="2022-05-17">
+      <description>
+        <p>Back up your shortcuts and restore them later</p>
+      </description>
+    </release>
+  <release version="1.3.6" date="2022-05-17">
       <description>
         <p>Automatically find Steam installed through flatpak</p>
       </description>
