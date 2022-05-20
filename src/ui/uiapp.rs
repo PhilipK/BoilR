@@ -17,7 +17,7 @@ use super::{
     },
     ui_images::{get_import_image, get_logo, get_logo_icon},
     ui_import_games::FetcStatus,
-    ImageSelectState,
+    BackupState, ImageSelectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -37,6 +37,7 @@ pub struct MyEguiApp {
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
     pub(crate) image_selected_state: ImageSelectState,
+    pub(crate) backup_state: BackupState,
 }
 
 impl MyEguiApp {
@@ -51,6 +52,7 @@ impl MyEguiApp {
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
             image_selected_state: ImageSelectState::default(),
+            backup_state: BackupState::default(),
         }
     }
 }
@@ -60,6 +62,7 @@ enum Menues {
     Import,
     Settings,
     Images,
+    Backup,
 }
 
 impl Default for Menues {
@@ -82,18 +85,27 @@ impl App for MyEguiApp {
                 ui.image(texture, size);
                 ui.add_space(SECTION_SPACING);
 
-                let changed = ui
+                let mut changed = ui
                     .selectable_value(&mut self.selected_menu, Menues::Import, "Import Games")
                     .changed();
-                let mut changed = changed
-                    || ui
-                        .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
-                        .changed();
                 if self.settings.steamgrid_db.auth_key.is_some() {
                     changed = changed
                         || ui
                             .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
                             .changed();
+                }
+                changed = changed
+                    || ui
+                        .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
+                        .changed();
+
+                changed = changed
+                    || ui
+                        .selectable_value(&mut self.selected_menu, Menues::Backup, "Backup")
+                        .changed();
+
+                if changed {
+                    self.backup_state.available_backups = None;
                 }
                 if changed && self.selected_menu == Menues::Settings {
                     //We reset games here, since user might change settings
@@ -154,6 +166,9 @@ impl App for MyEguiApp {
                 }
                 Menues::Images => {
                     self.render_ui_images(ui);
+                }
+                Menues::Backup => {
+                    self.render_backup(ui);
                 }
             };
         });

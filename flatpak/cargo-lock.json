@@ -405,6 +405,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/chrono/chrono-0.4.19.crate",
+        "sha256": "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73",
+        "dest": "cargo/vendor/chrono-0.4.19"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73\", \"files\": {}}",
+        "dest": "cargo/vendor/chrono-0.4.19",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/clipboard-win/clipboard-win-3.1.1.crate",
         "sha256": "9fdf5e01086b6be750428ba4a40619f847eb2e95756eee84b18e06e5f0b50342",
         "dest": "cargo/vendor/clipboard-win-3.1.1"
@@ -3325,6 +3338,19 @@
         "type": "inline",
         "contents": "{\"package\": \"7cfada0986f446a770eca461e8c6566cb879682f7d687c8348aa0c857bd52286\", \"files\": {}}",
         "dest": "cargo/vendor/tiff-0.7.2",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/time/time-0.1.43.crate",
+        "sha256": "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438",
+        "dest": "cargo/vendor/time-0.1.43"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438\", \"files\": {}}",
+        "dest": "cargo/vendor/time-0.1.43",
         "dest-filename": ".cargo-checksum.json"
     },
     {

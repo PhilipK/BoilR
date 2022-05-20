@@ -37,6 +37,12 @@ pub fn get_cache_file() -> PathBuf {
     get_config_folder().join("cache.json").to_path_buf()
 }
 
+pub fn get_backups_flder() -> PathBuf {
+    let backups_path = get_config_folder().join("backup");
+    let _ = create_dir_all(&backups_path);
+    backups_path.to_path_buf()
+}
+
 #[cfg(target_family = "unix")]
 pub fn get_boilr_links_path() -> PathBuf {
     get_config_folder().join("links").to_path_buf()
