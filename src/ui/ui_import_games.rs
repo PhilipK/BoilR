@@ -9,7 +9,7 @@ use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
 
-use super::ImageSelectState;
+use super::{ImageSelectState, backup_shortcuts};
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,
@@ -121,6 +121,7 @@ impl MyEguiApp {
         self.rt.spawn_blocking(move || {
             MyEguiApp::save_settings_to_file(&settings);
             let mut some_sender = Some(sender);
+            backup_shortcuts(&settings.steam);
             let usersinfo = sync::run_sync(&settings, &mut some_sender).unwrap();
             let task = download_images(&settings, &usersinfo, &mut some_sender);
             block_on(task);

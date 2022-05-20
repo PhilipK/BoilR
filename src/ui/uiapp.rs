@@ -17,7 +17,7 @@ use super::{
     },
     ui_images::{get_import_image, get_logo, get_logo_icon},
     ui_import_games::FetcStatus,
-    ImageSelectState, BackupState,
+    BackupState, ImageSelectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -52,7 +52,7 @@ impl MyEguiApp {
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
             image_selected_state: ImageSelectState::default(),
-            backup_state: BackupState::default()
+            backup_state: BackupState::default(),
         }
     }
 }
@@ -102,6 +102,9 @@ impl App for MyEguiApp {
                         || ui
                             .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
                             .changed();
+                }
+                if changed {
+                    self.backup_state.available_backups = None;
                 }
                 if changed && self.selected_menu == Menues::Settings {
                     //We reset games here, since user might change settings
