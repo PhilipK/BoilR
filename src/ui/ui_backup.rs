@@ -1,9 +1,7 @@
-use std::{
-    path::{Path, PathBuf},
-    time::SystemTime,
-};
+use std::path::{Path, PathBuf};
 
 use chrono::Local;
+use egui::ScrollArea;
 
 use crate::{
     config::get_backups_flder,
@@ -15,12 +13,19 @@ use super::MyEguiApp;
 #[derive(Default)]
 pub struct BackupState {
     pub available_backups: Option<Vec<PathBuf>>,
+    pub last_restore: Option<PathBuf>,
 }
 
 impl MyEguiApp {
     pub fn render_backup(&mut self, ui: &mut egui::Ui) {
         ui.heading("Backups");
-        ui.label("Here you can restore shortcuts from bakcups");
+        ui.label("Here you can restore backed up shortcuts files");
+        ui.label("Click a backup to restore it, your current shortcuts will be backed up first");
+        ui.add_space(15.0);
+
+        if let Some(last_restore) = self.backup_state.last_restore.as_ref() {
+            ui.heading(format!("Last restored {:?}", last_restore));
+        }
 
         let available_backups = self
             .backup_state
@@ -28,29 +33,35 @@ impl MyEguiApp {
             .get_or_insert_with(|| load_backups());
 
         if available_backups.is_empty() {
-            ui.label(
-                "No backed up shortcuts found, they will be created every time you run import",
-            );
-        }
-        for backup_path in available_backups {
-            if ui
-                .button(backup_path.to_string_lossy().to_string())
-                .clicked()
-            {
-                //Restore
-                backup_shortcuts(&self.settings.steam);
-                restore_backup(&self.settings.steam, backup_path.as_path());
-            }
+            ui.label("No backups found, they will be created every time you run import");
+        } else {
+            ScrollArea::vertical()
+                .stick_to_right()
+                .auto_shrink([false, true])
+                .show(ui, |ui| {
+                    for backup_path in available_backups {
+                        if ui
+                            .button(backup_path.to_string_lossy().to_string())
+                            .clicked()
+                        {
+                            //Restore
+                            backup_shortcuts(&self.settings.steam);
+                            if restore_backup(&self.settings.steam, backup_path.as_path()) {
+                                self.backup_state.last_restore = Some(backup_path.clone());
+                            }
+                        }
+                    }
+                });
         }
 
-        if ui.button("Back up shortcuts").clicked() {
+        if ui.button("Click here to create a new backup").clicked() {
             backup_shortcuts(&self.settings.steam);
             self.backup_state.available_backups = None;
         }
     }
 }
 
-pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) {
+pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) -> bool {
     let file_name = shortcut_path.file_name().unwrap();
     let paths = get_shortcuts_paths(steam_settings);
     if let Ok(paths) = paths {
@@ -59,10 +70,12 @@ pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) {
                 if file_name.to_string_lossy().starts_with(&user.user_id) {
                     std::fs::copy(shortcut_path, Path::new(&user_shortcut_path)).unwrap();
                     println!("Restored shortcut to path : {}", user_shortcut_path);
+                    return true;
                 }
             }
         }
     }
+    return false;
 }
 
 pub fn load_backups() -> Vec<PathBuf> {
@@ -84,6 +97,8 @@ pub fn load_backups() -> Vec<PathBuf> {
             }
         }
     }
+    result.sort();
+    result.reverse();
     return result;
 }
 
