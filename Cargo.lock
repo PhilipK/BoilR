@@ -148,7 +148,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
 name = "boilr"
-version = "1.3.6"
+version = "1.3.7"
 dependencies = [
  "base64",
  "chrono",
