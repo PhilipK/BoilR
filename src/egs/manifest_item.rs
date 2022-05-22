@@ -150,9 +150,8 @@ mod tests {
         let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
         manifest.is_managed = true;
         let shortcut: ShortcutOwned = manifest.clone().into();
-
-        assert_eq!(shortcut.exe, manifest.get_launch_url());
-        assert_eq!(shortcut.launch_options, "");
+        
+        assert_eq!(shortcut.launch_options, manifest.get_launch_url());
     }
     #[test]
     fn generates_shortcut_not_managed() {
@@ -178,7 +177,7 @@ mod tests {
         let shortcut: ShortcutOwned = manifest.into();
 
         let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
-        let actual = shortcut.exe;
+        let actual = shortcut.launch_options;
         assert_eq!(expected, actual);
     }
 }
