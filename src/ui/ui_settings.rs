@@ -179,16 +179,19 @@ impl MyEguiApp {
         ui.checkbox(&mut self.settings.steamgrid_db.enabled, "Download images");
         if self.settings.steamgrid_db.enabled {
             ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let auth_key = self
+                let mut auth_key = self
                     .settings
                     .steamgrid_db
                     .auth_key
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
+                    .clone()
+                    .unwrap_or_default();
                 ui.label("Authentication key: ");
-                if ui.text_edit_singleline(auth_key).changed() {
-                    *auth_key = auth_key.to_string();
+                if ui.text_edit_singleline(&mut auth_key).changed() {
+                    if auth_key.is_empty(){
+                        self.settings.steamgrid_db.auth_key = None;
+                    }else{
+                        self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
+                    }
                 }
                 if auth_key.is_empty() {
                     if ui.button("Paste from clipboard").clicked() {
