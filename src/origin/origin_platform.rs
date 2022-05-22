@@ -152,7 +152,7 @@ fn get_default_locations() -> Option<OriginPathData> {
                 if origin_exe_path.exists() && origin_local_content.exists() {
                     res.exe_path = origin_exe_path;
                     res.local_content_path = origin_local_content;
-                    res.compat_folder = dir.path().to_path_buf();
+                    res.compat_folder = Some(dir.path().to_path_buf());
                     return Some(res);
                 }
             }
