@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct EpicGamesLauncherSettings {
     pub enabled: bool,
     pub location: Option<String>,
+    pub launcher_exe : Option<String>,
 
     #[cfg(target_family = "unix")]
     pub create_symlinks: bool,

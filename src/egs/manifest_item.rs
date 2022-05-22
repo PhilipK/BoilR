@@ -1,9 +1,9 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub(crate) struct ManifestItem {
     #[serde(alias = "LaunchExecutable")]
     pub launch_executable: String,
@@ -34,6 +34,9 @@ pub(crate) struct ManifestItem {
 
     #[serde(default)]
     pub safe_launch: bool,
+
+    //This is not acutally in the manifest, but it will get added by get_manifests.rs
+    pub launcher_path: Option<PathBuf>,
 }
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
@@ -59,11 +62,11 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     Shortcut::new(
         "0",
         manifest.display_name.as_str(),
-        url.as_str(),
-        "",
+        manifest.launcher_path.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default().as_str(),
+        manifest.launcher_path.map(|p| p.parent().unwrap_or(Path::new("")).to_string_lossy().to_string()).unwrap_or_default().as_str(),
         icon.as_str(),
         "",
-        "",
+        url.as_str(),
     )
     .to_owned()
 }
