@@ -28,13 +28,13 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
 
     fn get_shortcuts(&self) -> Result<Vec<OriginGame>, OriginErrors> {
         let origin_folders = get_default_locations();
-        if origin_folders.local_content_path.is_none() {
+        if origin_folders.is_none() {
             return Err(OriginErrors::PathNotFound {
                 path: "Default path".to_string(),
             });
         }
-
-        let origin_folder = origin_folders.local_content_path.unwrap();
+        let origin_folders = origin_folders.unwrap();
+        let origin_folder = origin_folders.local_content_path;
         let origin_exe = origin_folders.exe_path;
         let game_folders = origin_folder.join("LocalContent").read_dir().map_err(|e| {
             OriginErrors::CouldNotReadGameDir {
@@ -115,15 +115,15 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
 #[derive(Default)]
 struct OriginPathData {
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Origin/Origin.exe
-    exe_path: Option<PathBuf>,
+    exe_path: PathBuf,
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/ProgramData/Origin/LocalContent
-    local_content_path: Option<PathBuf>,
+    local_content_path: PathBuf,
     //~/.steam/steam/steamapps/compatdata/X
     compat_folder: Option<PathBuf>,
 }
 
 #[cfg(target_family = "unix")]
-fn get_default_locations() -> OriginPathData {
+fn get_default_locations() -> Option<OriginPathData> {
     let mut res = OriginPathData::default();
     if let Ok(home) = std::env::var("HOME") {
         let compat_folder_path = Path::new(&home)
@@ -150,29 +150,57 @@ fn get_default_locations() -> OriginPathData {
                     .join("Origin");
 
                 if origin_exe_path.exists() && origin_local_content.exists() {
-                    res.exe_path = Some(origin_exe_path);
-                    res.local_content_path = Some(origin_local_content);
-                    res.compat_folder = Some(dir.path().to_path_buf());
+                    res.exe_path = origin_exe_path;
+                    res.local_content_path = origin_local_content;
+                    res.compat_folder = dir.path().to_path_buf();
+                    return Some(res);
                 }
             }
         }
     }
-    res
+    None
 }
 
 #[cfg(target_os = "windows")]
-fn get_default_locations() -> OriginPathData {
+fn get_default_locations() -> Option<OriginPathData> {
     let mut res = OriginPathData::default();
-
     let key = "PROGRAMDATA";
     let program_data = std::env::var(key);
     if let Ok(program_data) = program_data {
         let origin_folder = Path::new(&program_data).join("Origin");
         if origin_folder.exists() {
-            res.local_content_path = Some(origin_folder);
+            res.local_content_path = origin_folder;
+        } else {
+            return None;
+        }
+        let exe_path = get_exe_path();
+        if exe_path.is_none() {
+            return None;
+        } else {
+            res.exe_path = exe_path.unwrap();
         }
     }
-    res
+    Some(res)
+}
+
+#[cfg(target_os = "windows")]
+fn get_exe_path() -> Option<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+    //Computer\HKEY_CLASSES_ROOT\eadm\shell\open\command
+
+    let hklm = RegKey::predef(HKEY_CLASSES_ROOT);
+    if let Ok(launcher_key) = hklm.open_subkey("eadm\\shell\\open\\command") {
+        let launcher_string: Result<String, _> = launcher_key.get_value("");
+        if let Ok(launcher_string) = launcher_string {
+            let path = Path::new(&launcher_string[1..launcher_string.len() - 6]);
+            println!("{:?}",path);
+            if path.exists() {
+                return Some(path.to_path_buf());
+            }
+        }
+    }
+    None
 }
 
 #[derive(Debug, Fail)]
