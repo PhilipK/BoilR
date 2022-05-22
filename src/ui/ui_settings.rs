@@ -2,7 +2,7 @@ use copypasta::ClipboardProvider;
 use eframe::egui;
 use egui::ScrollArea;
 
-use crate::egs::EpicPlatform;
+use crate::{egs::EpicPlatform, heroic::HeroicPlatform};
 
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
@@ -39,6 +39,43 @@ impl MyEguiApp {
                     ui.heading("Heroic");
                     ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");
 
+                    
+            let safe_mode_header = match self.settings.heroic.launch_games_through_heroic.len() {
+                0 => "Force games to launch through Heroic Launcher".to_string(),
+                1 => "One game forced to launch through Heroic Launcher".to_string(),
+                x => format!("{} games forced to launch through Heroic Launcher", x),
+            };
+
+            egui::CollapsingHeader::new(safe_mode_header)
+        .id_source("Heroic_Launcher_safe_launch")
+        .show(ui, |ui| {
+            ui.label("Some games must be started from the Heroic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Heroic Launcher.");
+            let manifests =self.heroic_games.get_or_insert_with(||{
+                let heroic_setting = self.settings.heroic.clone();
+                            
+                let install_modes = vec![crate::heroic::InstallationMode::FlatPak, crate::heroic::InstallationMode::UserBin];
+                let heroic_platform =HeroicPlatform{
+                                    settings:heroic_setting
+                                };
+                let heroic_games = heroic_platform.get_heroic_games(&install_modes);
+                heroic_games
+            });
+                                                        
+            let safe_open_games = &mut self.settings.heroic.launch_games_through_heroic;
+            for manifest in manifests{
+                let key = &manifest.app_name;
+                let display_name = &manifest.title;
+                let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(key);
+                if ui.checkbox(&mut safe_open, display_name).clicked(){
+                    if safe_open{
+                        safe_open_games.push(key.clone());
+                    }else{
+                        safe_open_games.retain(|m| m!= display_name && m!= key);
+                    }
+                }
+            }
+        })        ;
+                    
                     ui.add_space(SECTION_SPACING);
                 }
 
@@ -187,9 +224,9 @@ impl MyEguiApp {
                     .unwrap_or_default();
                 ui.label("Authentication key: ");
                 if ui.text_edit_singleline(&mut auth_key).changed() {
-                    if auth_key.is_empty(){
+                    if auth_key.is_empty() {
                         self.settings.steamgrid_db.auth_key = None;
-                    }else{
+                    } else {
                         self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
                     }
                 }
@@ -263,14 +300,16 @@ impl MyEguiApp {
             });
             ui.horizontal(|ui| {
                 let mut empty_string = "".to_string();
-                let epic_location = epic_settings.launcher_exe.as_mut().unwrap_or(&mut empty_string);
-                ui.label("Epic Launcher Location: ").on_hover_text(
-                    "The location of the Epic launcher exe",
-                );
+                let epic_location = epic_settings
+                    .launcher_exe
+                    .as_mut()
+                    .unwrap_or(&mut empty_string);
+                ui.label("Epic Launcher Location: ")
+                    .on_hover_text("The location of the Epic launcher exe");
                 if ui.text_edit_singleline(epic_location).changed() {
-                    if epic_location.is_empty(){
+                    if epic_location.is_empty() {
                         epic_settings.launcher_exe = None;
-                    }else{
+                    } else {
                         epic_settings.launcher_exe = Some(epic_location.to_string());
                     }
                 }

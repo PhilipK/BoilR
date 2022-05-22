@@ -13,7 +13,8 @@ pub struct HeroicPlatform {
     pub settings: HeroicSettings,
 }
 
-enum InstallationMode {
+#[derive(Deserialize, Debug, Clone)]
+pub enum InstallationMode {
     FlatPak,
     UserBin,
 }
@@ -84,7 +85,7 @@ impl Platform<HeroicGameType, Box<dyn Error>> for HeroicPlatform {
     fn get_shortcuts(&self) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
         let install_modes = vec![InstallationMode::FlatPak, InstallationMode::UserBin];
 
-        let mut heroic_games = get_epic_games(&install_modes)?;
+        let mut heroic_games = self.get_epic_games(&install_modes)?;
         if let Ok(gog_games) = get_gog_games(&install_modes) {
             heroic_games.extend(gog_games);
         } else {
@@ -110,31 +111,58 @@ impl Platform<HeroicGameType, Box<dyn Error>> for HeroicPlatform {
 
     fn needs_proton(&self, input: &HeroicGameType) -> bool {
         match input {
-            HeroicGameType::Epic(_) => true,
+            HeroicGameType::Epic(game) => !game.launch_through_heroic,
             HeroicGameType::Gog(_, is_windows) => *is_windows,
         }
     }
 }
 
-fn get_epic_games(
-    install_modes: &[InstallationMode],
-) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
-    let mut shortcuts: Vec<HeroicGame> = install_modes
-        .iter()
-        .filter_map(|install_mode| get_shortcuts_from_install_mode(install_mode).ok())
-        .flatten()
-        .filter(|s| s.is_installed())
-        .collect();
-
-    shortcuts.sort_by_key(|m| format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name));
-    shortcuts.dedup_by_key(|m| format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name));
-    let mut epic_shortcuts = vec![];
-    for shortcut in shortcuts {
-        epic_shortcuts.push(HeroicGameType::Epic(shortcut));
+impl HeroicPlatform {
+    pub fn get_epic_games(
+        &self,
+        install_modes: &[InstallationMode],
+    ) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
+        let shortcuts = self.get_heroic_games(install_modes);
+        let mut epic_shortcuts = vec![];
+        for shortcut in shortcuts {
+            epic_shortcuts.push(HeroicGameType::Epic(shortcut));
+        }
+        Ok(epic_shortcuts)
     }
-    Ok(epic_shortcuts)
-}
 
+    pub fn get_heroic_games(&self, install_modes: &[InstallationMode]) -> Vec<HeroicGame> {
+        let mut shortcuts: Vec<HeroicGame> = install_modes
+            .iter()
+            .filter_map(|install_mode| {
+                let mut shortcuts = get_shortcuts_from_install_mode(install_mode).ok();
+                if let Some(shortcuts) = shortcuts.as_mut() {
+                    for shortcut in shortcuts {
+                        shortcut.install_mode = Some(install_mode.clone());
+                        if self
+                            .settings
+                            .launch_games_through_heroic
+                            .contains(&shortcut.app_name)
+                            || self
+                                .settings
+                                .launch_games_through_heroic
+                                .contains(&shortcut.title)
+                        {
+                            shortcut.launch_through_heroic = true;
+                        }
+                    }
+                }
+                shortcuts
+            })
+            .flatten()
+            .filter(|s| s.is_installed())
+            .collect();
+        shortcuts
+            .sort_by_key(|m| format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name));
+        shortcuts
+            .dedup_by_key(|m| format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name));
+        shortcuts
+    }
+}
 fn get_gog_games(
     install_modes: &[InstallationMode],
 ) -> Result<Vec<HeroicGameType>, Box<dyn Error>> {
