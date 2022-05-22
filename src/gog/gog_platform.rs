@@ -57,7 +57,10 @@ fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> 
                 if let Some(primary_task) = tasks.iter().find(|t| {
                     t.is_primary.unwrap_or_default()
                         && t.task_type == "FileTask"
-                        && t.category.as_ref().unwrap_or(&String::from("")) == "game"
+                        && (
+                            t.category.as_ref().unwrap_or(&String::from("")) == "launcher" || 
+                            t.category.as_ref().unwrap_or(&String::from("")) == "game"
+                        )
                 }) {
                     if let Some(task_path) = &primary_task.path {
                         let full_path = game_folder.join(&task_path);
