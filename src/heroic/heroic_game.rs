@@ -15,7 +15,7 @@ pub struct HeroicGame {
     #[serde(skip_deserializing)]
     pub install_mode: Option<InstallationMode>,
     #[serde(skip_deserializing)]
-    pub launch_directly: bool,
+    pub launch_through_heroic: bool,
 }
 
 impl HeroicGame {
@@ -28,7 +28,7 @@ impl HeroicGame {
 
 impl From<HeroicGame> for ShortcutOwned {
     fn from(game: HeroicGame) -> Self {
-        let mut owned_shortcut = if !game.launch_directly && game.install_mode.is_some() {
+        let mut owned_shortcut = if game.launch_through_heroic && game.install_mode.is_some() {
             let launch_parameter = format!("heroic://launch/{}", game.app_name);
             let (exe, parameter) = match game.install_mode.unwrap() {
                 InstallationMode::FlatPak => (
