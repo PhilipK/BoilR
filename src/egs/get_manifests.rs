@@ -34,6 +34,8 @@ pub(crate) fn get_egs_manifests(
     let manifest_dir_path = get_manifest_dir_path(settings)?;
     let manifest_dir_result = std::fs::read_dir(&manifest_dir_path);
 
+    #[cfg(target_os = "windows")]
+    let launcher_path = launcher_location_from_registry().unwrap_or_else(guess_default_launcher_location);
     match manifest_dir_result {
         Ok(manifest_dir) => {
             let manifests = manifest_dir
@@ -59,6 +61,10 @@ pub(crate) fn get_egs_manifests(
                     || settings.safe_launch.contains(&manifest.get_key())
                 {
                     manifest.safe_launch = true;
+                    #[cfg(target_os = "windows")]
+                    {
+                        manifest.launcher_path = Some(launcher_path.clone());
+                    }
                 }
             }
             Ok(manifests)
@@ -84,7 +90,7 @@ fn get_manifest_dir_path(
             });
         }
     } else {
-        let path = get_default_location();
+        let path = get_default_manifests_location();
 
         match path {
             Some(path) => Ok(path.to_str().unwrap().to_string()),
@@ -93,7 +99,7 @@ fn get_manifest_dir_path(
     }
 }
 
-pub fn get_default_location() -> Option<PathBuf> {
+pub fn get_default_manifests_location() -> Option<PathBuf> {
     #[cfg(target_family = "unix")]
     {
         //No path defined for epic gamestore, and we cannot guess on linux
@@ -102,9 +108,9 @@ pub fn get_default_location() -> Option<PathBuf> {
 
     #[cfg(target_os = "windows")]
     {
-        let path = match location_from_registry() {
+        let path = match manifest_location_from_registry() {
             Some(path) => path,
-            None => guess_default_location(),
+            None => guess_default_manifest_location(),
         };
         if path.exists() {
             Some(path)
@@ -113,8 +119,9 @@ pub fn get_default_location() -> Option<PathBuf> {
         }
     }
 }
+
 #[cfg(target_os = "windows")]
-fn location_from_registry() -> Option<PathBuf> {
+fn manifest_location_from_registry() -> Option<PathBuf> {
     use winreg::enums::*;
     use winreg::RegKey;
 
@@ -132,7 +139,7 @@ fn location_from_registry() -> Option<PathBuf> {
 }
 
 #[cfg(target_os = "windows")]
-fn guess_default_location() -> PathBuf {
+fn guess_default_manifest_location() -> PathBuf {
     let key = "SYSTEMDRIVE";
     let system_drive =
         env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
@@ -143,6 +150,42 @@ fn guess_default_location() -> PathBuf {
         .join("EpicGamesLauncher")
         .join("Data")
         .join("Manifests");
+    path
+}
+
+#[cfg(target_os = "windows")]
+fn launcher_location_from_registry() -> Option<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    
+    if let Ok(launcher) = hklm.open_subkey("SOFTWARE\\Classes\\com.epicgames.launcher\\shell\\open\\command") {
+        let launch_string: Result<String, _> = launcher.get_value("");
+        if let Ok(launch_string) = launch_string {
+            let path = Path::new(&launch_string[1..launch_string.len()-4]);
+            if path.exists() {
+                return Some(path.to_path_buf());
+            }
+        }
+    }
+    None
+}
+
+#[cfg(target_os = "windows")]
+fn guess_default_launcher_location() -> PathBuf {
+    let key = "SYSTEMDRIVE";
+    let system_drive =
+        env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
+
+    let path = Path::new(format!("{}\\", system_drive).as_str())
+        .join("Program Files (x86)")
+        .join("Epic Games")
+        .join("Launcher")
+        .join("Portal")
+        .join("Binaries")
+        .join("Win64")
+        .join("EpicGamesLauncher.exe");
     path
 }
 
@@ -165,3 +208,23 @@ fn get_manifest_item(dir_entry: DirEntry) -> Option<ManifestItem> {
     }
     None
 }
+
+//Commented out because it will change from machine to machine
+// #[cfg(test)]
+// pub mod test{
+//     use super::guess_default_launcher_location;
+//     use super::launcher_location_from_registry;
+
+//     #[test]
+//     pub fn test_launcher_registry(){
+//         let launcher = launcher_location_from_registry();
+//         assert_eq!(Some(std::path::Path::new("C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe").to_path_buf()),launcher);
+//     }
+
+
+//     #[test]
+//     pub fn test_launcher_guess(){
+//         let launcher = guess_default_launcher_location();
+//         assert_eq!(std::path::Path::new("C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe").to_path_buf(),launcher);
+//     }
+// }

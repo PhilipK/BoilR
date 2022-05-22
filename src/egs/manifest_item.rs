@@ -1,9 +1,9 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub(crate) struct ManifestItem {
     #[serde(alias = "LaunchExecutable")]
     pub launch_executable: String,
@@ -34,6 +34,9 @@ pub(crate) struct ManifestItem {
 
     #[serde(default)]
     pub safe_launch: bool,
+
+    //This is not acutally in the manifest, but it will get added by get_manifests.rs
+    pub launcher_path: Option<PathBuf>,
 }
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
@@ -59,11 +62,11 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     Shortcut::new(
         "0",
         manifest.display_name.as_str(),
-        url.as_str(),
-        "",
+        manifest.launcher_path.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default().as_str(),
+        manifest.launcher_path.map(|p| p.parent().unwrap_or(Path::new("")).to_string_lossy().to_string()).unwrap_or_default().as_str(),
         icon.as_str(),
         "",
-        "",
+        url.as_str(),
     )
     .to_owned()
 }
@@ -147,9 +150,8 @@ mod tests {
         let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
         manifest.is_managed = true;
         let shortcut: ShortcutOwned = manifest.clone().into();
-
-        assert_eq!(shortcut.exe, manifest.get_launch_url());
-        assert_eq!(shortcut.launch_options, "");
+        
+        assert_eq!(shortcut.launch_options, manifest.get_launch_url());
     }
     #[test]
     fn generates_shortcut_not_managed() {
@@ -175,7 +177,7 @@ mod tests {
         let shortcut: ShortcutOwned = manifest.into();
 
         let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
-        let actual = shortcut.exe;
+        let actual = shortcut.launch_options;
         assert_eq!(expected, actual);
     }
 }

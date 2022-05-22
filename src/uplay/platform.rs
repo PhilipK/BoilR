@@ -1,5 +1,7 @@
 use crate::platform::Platform;
 use std::error::Error;
+use std::path::Path;
+use std::path::PathBuf;
 
 use super::{game::Game, settings::UplaySettings};
 
@@ -24,7 +26,23 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
     }
 
     fn settings_valid(&self) -> crate::platform::SettingsValidity {
-        crate::platform::SettingsValidity::Valid
+        #[cfg(target_family = "unix")]
+        {
+            //Linux not supported yet
+            return crate::platform::SettingsValidity::Invalid {
+                reason: "Linux not supported yet".to_string(),
+            };
+        }
+        #[cfg(target_os = "windows")]
+        {
+            if get_launcher_path().is_some() {
+                return crate::platform::SettingsValidity::Valid;
+            } else {
+                return crate::platform::SettingsValidity::Invalid {
+                    reason: "Could not find UPlay instalation".to_string(),
+                };
+            }
+        }
     }
 
     fn get_shortcuts(&self) -> Result<Vec<Game>, Box<dyn Error>> {
@@ -53,17 +71,36 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         }
     }
 }
+#[cfg(target_os = "windows")]
+fn get_launcher_path() -> Option<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    if let Ok(launcher_key) = hklm.open_subkey("SOFTWARE\\WOW6432Node\\Ubisoft\\Launcher") {
+        let launcher_dir: Result<String, _> = launcher_key.get_value("InstallDir");
+        if let Ok(launcher_dir) = launcher_dir {
+            let path = Path::new(&launcher_dir).join("upc.exe");
+            if path.exists() {
+                return Some(path.to_path_buf());
+            }
+        }
+    }
+
+    None
+}
 
 #[cfg(target_os = "windows")]
 fn get_games_from_winreg() -> Result<Vec<Game>, Box<dyn Error>> {
-    use std::path::Path;
-
     use winreg::enums::*;
     use winreg::RegKey;
 
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let mut games = vec![];
     let mut installed_ids = vec![];
+    let launcher_path =
+        get_launcher_path().expect("This should only be called if launcher is found");
+
     if let Ok(installs) = hklm.open_subkey("SOFTWARE\\WOW6432Node\\Ubisoft\\Launcher\\Installs") {
         for i in installs.enum_keys().filter_map(|i| i.ok()) {
             if let Ok(install) = installs.open_subkey(&i) {
@@ -85,7 +122,12 @@ fn get_games_from_winreg() -> Result<Vec<Game>, Box<dyn Error>> {
             let name: Result<String, _> = subkey.get_value("DisplayName");
             if let Ok(name) = name {
                 let icon: String = subkey.get_value("DisplayIcon").unwrap_or_default();
-                games.push(Game { name, icon, id })
+                games.push(Game {
+                    name,
+                    icon,
+                    id,
+                    launcher: launcher_path.clone(),
+                })
             }
         }
     }
