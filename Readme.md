@@ -81,7 +81,7 @@ If you have a problem launching a game, try to manually set a proton version for
 
 ### Tips for linux
 
-If you are running linux (this includes Steam Deck) and are running into problems check [tips for linux seciton](tips_for_linux.md)
+If you are running linux (this includes Steam Deck) and are running into problems check [tips for linux section](tips_for_linux.md)
 
 ### Configuration
 
