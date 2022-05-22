@@ -104,10 +104,3 @@ fn get_launcher_path() -> Option<PathBuf> {
         Err(_e) => None,
     }
 }
-
-//
-//strip the exe
-//Add it to the exe
-
-
-
