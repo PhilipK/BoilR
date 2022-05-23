@@ -29,7 +29,7 @@ https://hughsie.github.io/oars/index.html
       <description>
         <ul>
           <li>Option to launch games through Heroic Launcher</li>
-          <li>Allow steam input Epic, Gog & Uplay</li>
+          <li>Allow steam input Epic, Gog and Uplay</li>
           <li>Fix bug where GOG games with a launcher where not found</li>
         </ul>
       </description>
