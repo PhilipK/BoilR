@@ -33,7 +33,7 @@ impl From<HeroicGame> for ShortcutOwned {
             let (exe, parameter) = match game.install_mode.unwrap() {
                 InstallationMode::FlatPak => (
                     "flatpak",
-                    format!("run com.heroicgameslauncher.hgl {}", launch_parameter),
+                    format!("run com.heroicgameslauncher.hgl {} --no-gui", launch_parameter),
                 ),
                 InstallationMode::UserBin => ("heroic", launch_parameter),
             };
