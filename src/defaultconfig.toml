@@ -39,7 +39,7 @@ flatpak = false
 [heroic]
 enabled = true
 launch_games_through_heroic =[]
-default_launch_through_heroic = false
+default_launch_through_heroic = true
 
 [amazon]
 enabled = true
