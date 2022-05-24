@@ -36,47 +36,7 @@ impl MyEguiApp {
 
                 #[cfg(target_family = "unix")]
                 {
-                    ui.heading("Heroic");
-                    ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");
-
-                    
-            let safe_mode_header = match self.settings.heroic.launch_games_through_heroic.len() {
-                0 => "Force games to launch through Heroic Launcher".to_string(),
-                1 => "One game forced to launch through Heroic Launcher".to_string(),
-                x => format!("{} games forced to launch through Heroic Launcher", x),
-            };
-
-            egui::CollapsingHeader::new(safe_mode_header)
-        .id_source("Heroic_Launcher_safe_launch")
-        .show(ui, |ui| {
-            ui.label("Some games must be started from the Heroic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Heroic Launcher.");
-            let manifests =self.heroic_games.get_or_insert_with(||{
-                let heroic_setting = self.settings.heroic.clone();
-                            
-                let install_modes = vec![crate::heroic::InstallationMode::FlatPak, crate::heroic::InstallationMode::UserBin];
-                let heroic_platform =HeroicPlatform{
-                                    settings:heroic_setting
-                                };
-                let heroic_games = heroic_platform.get_heroic_games(&install_modes);
-                heroic_games
-            });
-                                                        
-            let safe_open_games = &mut self.settings.heroic.launch_games_through_heroic;
-            for manifest in manifests{
-                let key = &manifest.app_name;
-                let display_name = &manifest.title;
-                let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(key);
-                if ui.checkbox(&mut safe_open, display_name).clicked(){
-                    if safe_open{
-                        safe_open_games.push(key.clone());
-                    }else{
-                        safe_open_games.retain(|m| m!= display_name && m!= key);
-                    }
-                }
-            }
-        })        ;
-                    
-                    ui.add_space(SECTION_SPACING);
+                    self.render_heroic_settings(ui);
                 }
 
                 self.render_legendary_settings(ui);
@@ -92,6 +52,59 @@ impl MyEguiApp {
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
             });
+    }
+
+    fn render_heroic_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Heroic");
+        ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");
+        ui.checkbox(&mut self.settings.heroic.default_launch_through_heroic, "Always launch games through Heroic");
+         let safe_mode_header = match (self.settings.heroic.default_launch_through_heroic,self.settings.heroic.launch_games_through_heroic.len()) {
+                        (false,0) => "Force games to launch through Heroic Launcher".to_string(),
+                        (false,1) => "One game forced to launch through Heroic Launcher".to_string(),
+                        (false,x) => format!("{} games forced to launch through Heroic Launcher", x),
+            
+                        (true,0) => "Force games to launch directly".to_string(),
+                        (true,1) => "One game forced to launch directly".to_string(),
+                        (true,x) => format!("{} games forced to launch directly", x),
+            
+                    };
+        egui::CollapsingHeader::new(safe_mode_header)
+                .id_source("Heroic_Launcher_safe_launch")
+                .show(ui, |ui| {
+if 
+self.settings.heroic.default_launch_through_heroic{
+                                   ui.label("Some games work best when launched directly, select those games below and BoilR will create shortcuts that launch the games directly.");
+                    
+                }   else{
+                                   ui.label("Some games must be started from the Heroic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Heroic Launcher.");
+                    
+                }
+                  let manifests =self.heroic_games.get_or_insert_with(||{
+                        let heroic_setting = self.settings.heroic.clone();
+        
+                        let install_modes = vec![crate::heroic::InstallationMode::FlatPak, crate::heroic::InstallationMode::UserBin];
+                        let heroic_platform =HeroicPlatform{
+                        settings:heroic_setting
+                    };
+                        let heroic_games = heroic_platform.get_heroic_games(&install_modes);
+                        heroic_games
+                    });
+                                    
+                    let safe_open_games = &mut self.settings.heroic.launch_games_through_heroic;
+                    for manifest in manifests{
+                        let key = &manifest.app_name;
+                        let display_name = &manifest.title;
+                        let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(key);
+                        if ui.checkbox(&mut safe_open, display_name).clicked(){
+        if safe_open{
+            safe_open_games.push(key.clone());
+        }else{
+            safe_open_games.retain(|m| m!= display_name && m!= key);
+        }
+                        }
+                    }
+                })        ;
+        ui.add_space(SECTION_SPACING);
     }
 
     fn render_lutris_settings(&mut self, ui: &mut egui::Ui) {
