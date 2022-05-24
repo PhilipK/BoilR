@@ -138,17 +138,22 @@ impl HeroicPlatform {
                 if let Some(shortcuts) = shortcuts.as_mut() {
                     for shortcut in shortcuts {
                         shortcut.install_mode = Some(install_mode.clone());
-                        if self
+
+                        let game_in_list = self
                             .settings
                             .launch_games_through_heroic
                             .contains(&shortcut.app_name)
                             || self
                                 .settings
                                 .launch_games_through_heroic
-                                .contains(&shortcut.title)
-                        {
-                            shortcut.launch_through_heroic = true;
-                        }
+                                .contains(&shortcut.title);
+
+                        shortcut.launch_through_heroic =
+                            if self.settings.default_launch_through_heroic {
+                                !game_in_list
+                            } else {
+                                game_in_list
+                            };
                     }
                 }
                 shortcuts
