@@ -15,6 +15,7 @@ Optionally, you can set up BoilR to automatically download artwork from [SteamGr
 - Restart Steam to see your new shortcuts.
 
 If you are on Linux (or a Steam Deck) you can install BoilR from [flathub](https://flathub.org/apps/details/io.github.philipk.boilr).
+There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gui)
 
 ## Index
 - [BoilR](#boilr)
