@@ -32,7 +32,7 @@ impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
 
     #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
-        self.settings.create_symlinks
+        false
     }
 
     fn settings_valid(&self) -> SettingsValidity {

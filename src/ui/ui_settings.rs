@@ -301,33 +301,6 @@ self.settings.heroic.default_launch_through_heroic{
         ui.heading("Epic Games");
         ui.checkbox(&mut epic_settings.enabled, "Import from Epic Games");
         if epic_settings.enabled {
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let epic_location = epic_settings.location.as_mut().unwrap_or(&mut empty_string);
-                ui.label("Epic Manifests Location: ").on_hover_text(
-                    "The location where Epic stores its manifest files that BoilR needs to read",
-                );
-                if ui.text_edit_singleline(epic_location).changed() {
-                    epic_settings.location = Some(epic_location.to_string());
-                }
-            });
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let epic_location = epic_settings
-                    .launcher_exe
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
-                ui.label("Epic Launcher Location: ")
-                    .on_hover_text("The location of the Epic launcher exe");
-                if ui.text_edit_singleline(epic_location).changed() {
-                    if epic_location.is_empty() {
-                        epic_settings.launcher_exe = None;
-                    } else {
-                        epic_settings.launcher_exe = Some(epic_location.to_string());
-                    }
-                }
-            });
-
             let safe_mode_header = match epic_settings.safe_launch.len() {
                 0 => "Force games to launch through Epic Launcher".to_string(),
                 1 => "One game forced to launch through Epic Launcher".to_string(),
