@@ -79,9 +79,12 @@ mod unix {
         }
         None
     }
+}
 
     #[cfg(target_os = "windows")]
     mod windows {
+        use super::EpicPaths;
+        use std::{path::{Path, PathBuf}, env};
 
         fn manifest_location_from_registry() -> Option<PathBuf> {
             use winreg::enums::*;
@@ -152,17 +155,17 @@ mod unix {
             path
         }
 
-        pub fn get_locations() -> EpicPaths {
+        pub fn get_locations() -> Option<EpicPaths> {
             {
                 let manifest_folder_path = manifest_location_from_registry()
                     .unwrap_or_else(guess_default_manifest_location);
-                let launcer_path = launcer_location_from_registry()
+                let launcer_path = launcher_location_from_registry()
                     .unwrap_or_else(guess_default_launcher_location);
-                if launcer_path.exsists() && manifest_folder_path.exsists() {
+                if launcer_path.exists() && manifest_folder_path.exists() {
                     Some(EpicPaths {
                         compat_folder_path: None,
-                        launcer_path,
                         manifest_folder_path,
+                        launcher_path: launcer_path,
                     })
                 } else {
                     None
@@ -170,4 +173,3 @@ mod unix {
             }
         }
     }
-}
