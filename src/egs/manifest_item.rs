@@ -1,6 +1,9 @@
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
-use serde::{Deserialize};
+use serde::Deserialize;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -37,33 +40,83 @@ pub(crate) struct ManifestItem {
 
     //This is not acutally in the manifest, but it will get added by get_manifests.rs
     pub launcher_path: Option<PathBuf>,
+
+    //This is not acutally in the manifest, but it will get added by get_manifests.rs if on linux
+    pub compat_folder: Option<PathBuf>,
 }
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let exe = manifest.exe();
     let start_dir = manifest.install_location.clone();
+
     let exe = exe.trim_matches('\"');
     let start_dir = start_dir.trim_matches('\"');
+
+    #[cfg(target_family = "unix")]
+    let start_dir = format!("\"{}\"", start_dir);
+
+    #[cfg(target_family = "unix")]
+    let exe = format!("\"{}\"", exe);
+
+    let parameters = match manifest.compat_folder.as_ref() {
+        Some(compat_folder) => format!(
+            "STEAM_COMPAT_DATA_PATH=\"{}\" %command%",
+            compat_folder.to_string_lossy(),
+        ),
+        None => String::default(),
+    };
+
     Shortcut::new(
         "0",
         manifest.display_name.as_str(),
-        exe,
-        start_dir,
-        exe,
+        &exe,
+        &start_dir,
+        &exe,
         "",
-        "",
+        parameters.as_str(),
     )
     .to_owned()
 }
 
 fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let icon = manifest.exe();
-    let url = manifest.get_launch_url();
+    let url = match manifest.compat_folder.as_ref() {
+        Some(compat_folder) => format!(
+            "STEAM_COMPAT_DATA_PATH=\"{}\" %command% '{}'",
+            compat_folder.to_string_lossy(),
+            manifest.get_launch_url()
+        ),
+        None => manifest.get_launch_url(),
+    };
+
+    let parent_folder = manifest
+        .launcher_path
+        .as_ref()
+        .map(|p| {
+            p.parent()
+                .unwrap_or(Path::new(""))
+                .to_string_lossy()
+                .to_string()
+        })
+        .unwrap_or_default();
+
+    #[cfg(target_family = "unix")]
+    let parent_folder = format!("\"{}\"", parent_folder);
+
+    let launcher_path = manifest
+        .launcher_path
+        .as_ref()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_default();
+
+    #[cfg(target_family = "unix")]
+    let launcher_path = format!("\"{}\"", launcher_path);
+
     Shortcut::new(
         "0",
         manifest.display_name.as_str(),
-        manifest.launcher_path.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default().as_str(),
-        manifest.launcher_path.map(|p| p.parent().unwrap_or(Path::new("")).to_string_lossy().to_string()).unwrap_or_default().as_str(),
+        launcher_path.as_str(),
+        parent_folder.as_str(),
         icon.as_str(),
         "",
         url.as_str(),
@@ -150,7 +203,7 @@ mod tests {
         let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
         manifest.is_managed = true;
         let shortcut: ShortcutOwned = manifest.clone().into();
-        
+
         assert_eq!(shortcut.launch_options, manifest.get_launch_url());
     }
     #[test]
@@ -164,7 +217,7 @@ mod tests {
         #[cfg(target_os = "windows")]
         assert_eq!(shortcut.exe, "C:\\Games\\MarvelGOTG\\retail/gotg.exe");
         #[cfg(target_family = "unix")]
-        assert_eq!(shortcut.exe, "C:\\Games\\MarvelGOTG/retail/gotg.exe");
+        assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG/retail/gotg.exe\"");
 
         assert_eq!(shortcut.launch_options, "");
     }

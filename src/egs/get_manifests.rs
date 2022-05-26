@@ -4,20 +4,14 @@ use std::env::{self};
 
 use std::fs::{DirEntry, File};
 use std::io::BufReader;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use failure::*;
 
 #[derive(Debug, Fail)]
 pub enum EpicGamesManifestsError {
-    #[fail(display = "Path to EpicGamesLauncher not defined, it must be defined on linux")]
-    PathNotDefined,
-
-    #[fail(
-        display = "EpicGamesLauncher path: {} could not be found. Try to specify a different path for the EpicGamesLauncher.",
-        path
-    )]
-    PathNotFound { path: String },
+    #[fail(display = "EpicGamesLauncher not found")]
+    NotFound,
 
     #[fail(
         display = "Could not read EpicGamesLauncher manifest directory at {} error: {}",
@@ -29,164 +23,77 @@ pub enum EpicGamesManifestsError {
 pub(crate) fn get_egs_manifests(
     settings: &EpicGamesLauncherSettings,
 ) -> Result<Vec<ManifestItem>, EpicGamesManifestsError> {
-    use EpicGamesManifestsError::*;
+    let locations = crate::egs::get_locations();
+    match locations {
+        Some(locations) => {
+            let manifest_dir_path = locations.manifest_folder_path;
+            let manifest_dir_result = std::fs::read_dir(&manifest_dir_path);
 
-    let manifest_dir_path = get_manifest_dir_path(settings)?;
-    let manifest_dir_result = std::fs::read_dir(&manifest_dir_path);
+            match manifest_dir_result {
+                Ok(manifest_dir) => {
+                    let all_manifests = manifest_dir
+                        .filter_map(|dir| dir.ok())
+                        .filter_map(get_manifest_item);
+                    let mut manifests = vec![];
+                    for mut manifest in all_manifests {
+                        #[cfg(target_family = "unix")]
+                        {
+                            if let Some(compat_folder) = locations.compat_folder_path.as_ref() {
+                                //Strip off the c:\\
+                                manifest.manifest_location = compat_folder
+                                    .join("pfx")
+                                    .join("drive_c")
+                                    .join(&manifest.manifest_location[3..].replace("\\", "/"))
+                                    .to_path_buf()
+                                    .to_string_lossy()
+                                    .to_string();
 
-    #[cfg(target_os = "windows")]
-    let launcher_path = launcher_location_from_registry().unwrap_or_else(guess_default_launcher_location);
-    match manifest_dir_result {
-        Ok(manifest_dir) => {
-            let manifests = manifest_dir
-                .filter_map(|dir| dir.ok())
-                .filter_map(get_manifest_item)
-                .filter(is_game_installed)
-                .filter(is_game_launchable);
-            let mut manifests: Vec<ManifestItem> = manifests.collect();
-            manifests.sort_by_key(|m| {
-                format!(
-                    "{}-{}-{}",
-                    m.install_location, m.launch_executable, m.is_managed
-                )
-            });
-            manifests.dedup_by_key(|m| {
-                format!(
-                    "{}-{}-{}",
-                    m.install_location, m.launch_executable, m.is_managed
-                )
-            });
-            for mut manifest in &mut manifests {
-                if settings.safe_launch.contains(&manifest.display_name)
-                    || settings.safe_launch.contains(&manifest.get_key())
-                {
-                    manifest.safe_launch = true;
-                    #[cfg(target_os = "windows")]
-                    {
-                        manifest.launcher_path = Some(launcher_path.clone());
+                                manifest.install_location = compat_folder
+                                    .join("pfx")
+                                    .join("drive_c")
+                                    .join(&manifest.install_location[3..].replace("\\", "/"))
+                                    .to_path_buf()
+                                    .to_string_lossy()
+                                    .to_string();
+                                dbg!(&manifest.manifest_location);
+                            }
+                        }
+                        if is_game_installed(&manifest) && is_game_launchable(&manifest) {
+                            manifests.push(manifest);
+                        }
                     }
+
+                    manifests.sort_by_key(|m| {
+                        format!(
+                            "{}-{}-{}",
+                            m.install_location, m.launch_executable, m.is_managed
+                        )
+                    });
+                    manifests.dedup_by_key(|m| {
+                        format!(
+                            "{}-{}-{}",
+                            m.install_location, m.launch_executable, m.is_managed
+                        )
+                    });
+                    for mut manifest in &mut manifests {
+                        manifest.launcher_path = Some(locations.launcher_path.clone());
+                        manifest.compat_folder = locations.compat_folder_path.clone();
+                        if settings.safe_launch.contains(&manifest.display_name)
+                            || settings.safe_launch.contains(&manifest.get_key())
+                        {
+                            manifest.safe_launch = true;
+                        }
+                    }
+                    Ok(manifests)
                 }
-            }
-            Ok(manifests)
-        }
-        Err(err) => Err(ReadDirError {
-            error: err,
-            path: manifest_dir_path,
-        }),
-    }
-}
-
-fn get_manifest_dir_path(
-    settings: &EpicGamesLauncherSettings,
-) -> Result<String, EpicGamesManifestsError> {
-    use EpicGamesManifestsError::*;
-    if let Some(location) = &settings.location {
-        let path = Path::new(location);
-        if path.exists() {
-            return Ok(path.to_str().unwrap().to_string());
-        } else {
-            return Err(PathNotFound {
-                path: path.to_str().unwrap().to_string(),
-            });
-        }
-    } else {
-        let path = get_default_manifests_location();
-
-        match path {
-            Some(path) => Ok(path.to_str().unwrap().to_string()),
-            None => Err(PathNotDefined),
-        }
-    }
-}
-
-pub fn get_default_manifests_location() -> Option<PathBuf> {
-    #[cfg(target_family = "unix")]
-    {
-        //No path defined for epic gamestore, and we cannot guess on linux
-        None
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let path = match manifest_location_from_registry() {
-            Some(path) => path,
-            None => guess_default_manifest_location(),
-        };
-        if path.exists() {
-            Some(path)
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn manifest_location_from_registry() -> Option<PathBuf> {
-    use winreg::enums::*;
-    use winreg::RegKey;
-
-    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    if let Ok(launcher) = hklm.open_subkey("SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher") {
-        let path_string: Result<String, _> = launcher.get_value("AppDataPath");
-        if let Ok(path_string) = path_string {
-            let path = Path::new(&path_string).join("Manifests");
-            if path.exists() {
-                return Some(path);
+                Err(err) => Err(EpicGamesManifestsError::ReadDirError {
+                    error: err,
+                    path: manifest_dir_path.to_string_lossy().to_string(),
+                }),
             }
         }
+        None => Err(EpicGamesManifestsError::NotFound),
     }
-    None
-}
-
-#[cfg(target_os = "windows")]
-fn guess_default_manifest_location() -> PathBuf {
-    let key = "SYSTEMDRIVE";
-    let system_drive =
-        env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
-
-    let path = Path::new(format!("{}\\", system_drive).as_str())
-        .join("ProgramData")
-        .join("Epic")
-        .join("EpicGamesLauncher")
-        .join("Data")
-        .join("Manifests");
-    path
-}
-
-#[cfg(target_os = "windows")]
-fn launcher_location_from_registry() -> Option<PathBuf> {
-    use winreg::enums::*;
-    use winreg::RegKey;
-
-    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    
-    if let Ok(launcher) = hklm.open_subkey("SOFTWARE\\Classes\\com.epicgames.launcher\\shell\\open\\command") {
-        let launch_string: Result<String, _> = launcher.get_value("");
-        if let Ok(launch_string) = launch_string {
-            let path = Path::new(&launch_string[1..launch_string.len()-4]);
-            if path.exists() {
-                return Some(path.to_path_buf());
-            }
-        }
-    }
-    None
-}
-
-#[cfg(target_os = "windows")]
-fn guess_default_launcher_location() -> PathBuf {
-    let key = "SYSTEMDRIVE";
-    let system_drive =
-        env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
-
-    let path = Path::new(format!("{}\\", system_drive).as_str())
-        .join("Program Files (x86)")
-        .join("Epic Games")
-        .join("Launcher")
-        .join("Portal")
-        .join("Binaries")
-        .join("Win64")
-        .join("EpicGamesLauncher.exe");
-    path
 }
 
 fn is_game_installed(manifest: &ManifestItem) -> bool {
@@ -220,7 +127,6 @@ fn get_manifest_item(dir_entry: DirEntry) -> Option<ManifestItem> {
 //         let launcher = launcher_location_from_registry();
 //         assert_eq!(Some(std::path::Path::new("C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe").to_path_buf()),launcher);
 //     }
-
 
 //     #[test]
 //     pub fn test_launcher_guess(){
