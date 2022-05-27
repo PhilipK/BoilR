@@ -149,13 +149,12 @@ impl MyEguiApp {
                     return value;
                 }
             } else if let Some(image_type) = state.image_type_selected.as_ref() {
-                    if let Some(action) = self.render_possible_images(ui, image_type, state) {
-                        return action;
-                    }
-                } else if let Some(action) = render_shortcut_images(ui, state) {
+                if let Some(action) = self.render_possible_images(ui, image_type, state) {
                     return action;
+                }
+            } else if let Some(action) = render_shortcut_images(ui, state) {
+                return action;
             }
-            
         } else {
             let is_shortcut = state.game_mode.is_shortcuts();
             if ui
@@ -176,9 +175,8 @@ impl MyEguiApp {
                     return action;
                 }
             } else if let Some(action) = render_steam_game_select(ui, state) {
-                    return action;
+                return action;
             }
-            
         }
         UserAction::NoAction
     }
@@ -660,13 +658,10 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
     for image_type in ImageType::all() {
         ui.label(image_type.name());
         let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
-        let texture = state
-            .image_handles
-            .get(&key)
-            .and_then(|k| match k.value() {
-                TextureState::Loaded(texture) => Some(texture.clone()),
-                _ => None,
-            });
+        let texture = state.image_handles.get(&key).and_then(|k| match k.value() {
+            TextureState::Loaded(texture) => Some(texture.clone()),
+            _ => None,
+        });
         let clicked = render_thumbnail(ui, texture);
         if clicked {
             return Some(UserAction::ImageTypeSelected(*image_type));

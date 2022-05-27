@@ -17,7 +17,7 @@ use super::{
     },
     ui_images::{get_import_image, get_logo, get_logo_icon},
     ui_import_games::FetcStatus,
-    BackupState, ImageSelectState,
+    BackupState, DiconnectState, ImageSelectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -39,6 +39,7 @@ pub struct MyEguiApp {
     pub(crate) heroic_games: Option<Vec<HeroicGame>>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
+    pub(crate) disconect_state: DiconnectState,
 }
 
 impl MyEguiApp {
@@ -55,6 +56,7 @@ impl MyEguiApp {
             heroic_games: None,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
+            disconect_state: DiconnectState::default(),
         }
     }
 }
@@ -65,6 +67,7 @@ enum Menues {
     Settings,
     Images,
     Backup,
+    Disconnect,
 }
 
 impl Default for Menues {
@@ -104,6 +107,11 @@ impl App for MyEguiApp {
                 changed = changed
                     || ui
                         .selectable_value(&mut self.selected_menu, Menues::Backup, "Backup")
+                        .changed();
+
+                changed = changed
+                    || ui
+                        .selectable_value(&mut self.selected_menu, Menues::Disconnect, "Disconnect")
                         .changed();
 
                 if changed {
@@ -171,6 +179,9 @@ impl App for MyEguiApp {
                 }
                 Menues::Backup => {
                     self.render_backup(ui);
+                }
+                Menues::Disconnect => {
+                    self.render_disconnect(ui);
                 }
             };
         });

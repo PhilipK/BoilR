@@ -9,7 +9,7 @@ use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
 
-use super::{ImageSelectState, backup_shortcuts};
+use super::{backup_shortcuts, ImageSelectState};
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,
@@ -42,9 +42,6 @@ impl<T> FetcStatus<T> {
 }
 
 impl MyEguiApp {
-    
- 
-    
     pub(crate) fn render_import_games(&mut self, ui: &mut egui::Ui) {
         ui.heading("Import Games");
 

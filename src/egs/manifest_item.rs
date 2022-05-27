@@ -94,7 +94,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
         .as_ref()
         .map(|p| {
             p.parent()
-                .unwrap_or_else(||Path::new(""))
+                .unwrap_or_else(|| Path::new(""))
                 .to_string_lossy()
                 .to_string()
         })
