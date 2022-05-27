@@ -29,18 +29,18 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         #[cfg(target_family = "unix")]
         {
             //Linux not supported yet
-            return crate::platform::SettingsValidity::Invalid {
+            crate::platform::SettingsValidity::Invalid {
                 reason: "Linux not supported yet".to_string(),
-            };
+            }
         }
         #[cfg(target_os = "windows")]
         {
             if get_launcher_path().is_some() {
-                return crate::platform::SettingsValidity::Valid;
+                crate::platform::SettingsValidity::Valid
             } else {
-                return crate::platform::SettingsValidity::Invalid {
+                crate::platform::SettingsValidity::Invalid {
                     reason: "Could not find UPlay instalation".to_string(),
-                };
+                }
             }
         }
     }
@@ -82,7 +82,7 @@ fn get_launcher_path() -> Option<PathBuf> {
         if let Ok(launcher_dir) = launcher_dir {
             let path = Path::new(&launcher_dir).join("upc.exe");
             if path.exists() {
-                return Some(path.to_path_buf());
+                return Some(path);
             }
         }
     }

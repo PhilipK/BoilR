@@ -1,4 +1,7 @@
-use std::{ffi::OsStr, path::{Path, PathBuf}};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 use super::{get_steam_path, SteamSettings};
 
@@ -9,21 +12,19 @@ pub struct SteamGameInfo {
 }
 
 pub fn get_installed_games(settings: &SteamSettings) -> Vec<SteamGameInfo> {
-    let install_folders = get_install_folders(settings);    
+    let install_folders = get_install_folders(settings);
     let mut games = vec![];
     for apps_path in install_folders {
-        if let Ok(files) = std::fs::read_dir(apps_path) {            
-            for file in files {
-                if let Ok(file) = file {
-                    if let Some(game_info) = parse_manifest_file(&file.path()) {
-                        games.push(game_info);
-                    }
+        if let Ok(files) = std::fs::read_dir(apps_path) {
+            for file in files.flatten() {
+                if let Some(game_info) = parse_manifest_file(&file.path()) {
+                    games.push(game_info);
                 }
             }
         }
     }
     games.sort_by_key(|g| g.name.clone());
-    return games;    
+    games
 }
 
 fn get_install_folders(settings: &SteamSettings) -> Vec<PathBuf> {
@@ -33,7 +34,7 @@ fn get_install_folders(settings: &SteamSettings) -> Vec<PathBuf> {
 
         let vdf_path = path.join("steamapps").join("libraryfolders.vdf");
         if !vdf_path.exists() {
-            result.push(path.join("steamapps").to_path_buf());
+            result.push(path.join("steamapps"));
             return result;
         }
         if let Ok(vdf_file) = std::fs::read_to_string(vdf_path) {
@@ -45,8 +46,8 @@ fn get_install_folders(settings: &SteamSettings) -> Vec<PathBuf> {
             }
         }
     }
-    
-    return result;
+
+    result
 }
 
 fn parse_manifest_file(path: &Path) -> Option<SteamGameInfo> {

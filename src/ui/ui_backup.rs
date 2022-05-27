@@ -35,7 +35,7 @@ impl MyEguiApp {
         let available_backups = self
             .backup_state
             .available_backups
-            .get_or_insert_with(|| load_backups());
+            .get_or_insert_with(load_backups);
 
         if available_backups.is_empty() {
             ui.label("No backups found, they will be created every time you run import");
@@ -58,8 +58,6 @@ impl MyEguiApp {
                     }
                 });
         }
-
-      
     }
 }
 
@@ -77,7 +75,7 @@ pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) -> b
             }
         }
     }
-    return false;
+    false
 }
 
 pub fn load_backups() -> Vec<PathBuf> {
@@ -85,28 +83,26 @@ pub fn load_backups() -> Vec<PathBuf> {
     let files = std::fs::read_dir(&backup_folder);
     let mut result = vec![];
     if let Ok(files) = files {
-        for file in files {
-            if let Ok(file) = file {
-                if file
-                    .path()
-                    .extension()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    == "vdf"
-                {
-                    result.push(file.path().to_path_buf());
-                }
+        for file in files.flatten() {
+            if file
+                .path()
+                .extension()
+                .unwrap_or_default()
+                .to_string_lossy()
+                == "vdf"
+            {
+                result.push(file.path().to_path_buf());
             }
         }
     }
     result.sort();
     result.reverse();
-    return result;
+    result
 }
 
 pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     let backup_folder = get_backups_flder();
-    let paths = get_shortcuts_paths(&steam_settings);
+    let paths = get_shortcuts_paths(steam_settings);
     let date = Local::now();
     let date_string = date.format("%Y-%m-%d-%H-%M-%S");
     if let Ok(user_infos) = paths {

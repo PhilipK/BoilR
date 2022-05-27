@@ -174,10 +174,11 @@ fn get_default_locations() -> Option<OriginPathData> {
             return None;
         }
         let exe_path = get_exe_path();
-        if exe_path.is_none() {
-            return None;
-        } else {
-            res.exe_path = exe_path.unwrap();
+        match exe_path {
+            Some(exe_path) => {
+                res.exe_path = exe_path;
+            }
+            None => return None,
         }
     }
     Some(res)
@@ -194,7 +195,7 @@ fn get_exe_path() -> Option<PathBuf> {
         let launcher_string: Result<String, _> = launcher_key.get_value("");
         if let Ok(launcher_string) = launcher_string {
             let path = Path::new(&launcher_string[1..launcher_string.len() - 6]);
-            println!("{:?}",path);
+            println!("{:?}", path);
             if path.exists() {
                 return Some(path.to_path_buf());
             }
