@@ -53,7 +53,6 @@ pub(crate) fn get_egs_manifests(
                                     .to_path_buf()
                                     .to_string_lossy()
                                     .to_string();
-                                dbg!(&manifest.manifest_location);
                             }
                         }
                         if is_game_installed(&manifest) && is_game_launchable(&manifest) {

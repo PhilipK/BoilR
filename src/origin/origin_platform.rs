@@ -195,7 +195,6 @@ fn get_exe_path() -> Option<PathBuf> {
         let launcher_string: Result<String, _> = launcher_key.get_value("");
         if let Ok(launcher_string) = launcher_string {
             let path = Path::new(&launcher_string[1..launcher_string.len() - 6]);
-            println!("{:?}", path);
             if path.exists() {
                 return Some(path.to_path_buf());
             }
