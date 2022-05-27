@@ -86,8 +86,7 @@ self.settings.heroic.default_launch_through_heroic{
                         let heroic_platform =HeroicPlatform{
                         settings:heroic_setting
                     };
-                        let heroic_games = heroic_platform.get_heroic_games(&install_modes);
-                        heroic_games
+                        heroic_platform.get_heroic_games(&install_modes)                        
                     });
                                     
                     let safe_open_games = &mut self.settings.heroic.launch_games_through_heroic;
@@ -243,12 +242,10 @@ self.settings.heroic.default_launch_through_heroic{
                         self.settings.steamgrid_db.auth_key = Some(auth_key.to_string());
                     }
                 }
-                if auth_key.is_empty() {
-                    if ui.button("Paste from clipboard").clicked() {
-                        if let Ok(mut clipboard_ctx) = copypasta::ClipboardContext::new() {
-                            if let Ok(content) = clipboard_ctx.get_contents() {
-                                self.settings.steamgrid_db.auth_key = Some(content.clone());
-                            }
+                if auth_key.is_empty() && ui.button("Paste from clipboard").clicked(){
+                    if let Ok(mut clipboard_ctx) = copypasta::ClipboardContext::new() {
+                        if let Ok(content) = clipboard_ctx.get_contents() {
+                            self.settings.steamgrid_db.auth_key = Some(content);
                         }
                     }
                 }

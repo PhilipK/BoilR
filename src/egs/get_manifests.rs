@@ -1,6 +1,4 @@
 use super::{EpicGamesLauncherSettings, ManifestItem};
-#[cfg(target_os = "windows")]
-use std::env::{self};
 
 use std::fs::{DirEntry, File};
 use std::io::BufReader;

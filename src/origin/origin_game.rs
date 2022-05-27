@@ -14,7 +14,7 @@ impl From<OriginGame> for ShortcutOwned {
     fn from(game: OriginGame) -> Self {
         let launch = match game.origin_compat_folder{
             Some(compat_folder) => 
-                format!("STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"", compat_folder.to_string_lossy().to_string(), game.id)
+                format!("STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"", compat_folder.to_string_lossy(), game.id)
             ,
             None => format!(
             "\"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"",

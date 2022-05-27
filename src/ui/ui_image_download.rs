@@ -148,17 +148,14 @@ impl MyEguiApp {
                 if let Some(value) = render_possible_names(possible_names, ui) {
                     return value;
                 }
-            } else {
-                if let Some(image_type) = state.image_type_selected.as_ref() {
+            } else if let Some(image_type) = state.image_type_selected.as_ref() {
                     if let Some(action) = self.render_possible_images(ui, image_type, state) {
                         return action;
                     }
-                } else {
-                    if let Some(action) = render_shortcut_images(ui, state) {
-                        return action;
-                    }
-                }
+                } else if let Some(action) = render_shortcut_images(ui, state) {
+                    return action;
             }
+            
         } else {
             let is_shortcut = state.game_mode.is_shortcuts();
             if ui
@@ -178,11 +175,10 @@ impl MyEguiApp {
                 if let Some(action) = self.render_shortcut_select(ui) {
                     return action;
                 }
-            } else {
-                if let Some(action) = render_steam_game_select(ui, state) {
+            } else if let Some(action) = render_steam_game_select(ui, state) {
                     return action;
-                }
             }
+            
         }
         UserAction::NoAction
     }
@@ -201,14 +197,11 @@ impl MyEguiApp {
                     let texture = self.image_selected_state.image_handles.get(&key);
                     let mut clicked = false;
                     if let Some(texture) = texture {
-                        match &texture.value() {
-                            TextureState::Loaded(texture) => {
-                                let mut size = texture.size_vec2();
-                                clamp_to_width(&mut size, 100.);
-                                let image_button = ImageButton::new(texture, size);
-                                clicked = clicked || ui.add(image_button).clicked();
-                            }
-                            _ => {}
+                        if let TextureState::Loaded(texture) = &texture.value() {
+                            let mut size = texture.size_vec2();
+                            clamp_to_width(&mut size, 100.);
+                            let image_button = ImageButton::new(texture, size);
+                            clicked = clicked || ui.add(image_button).clicked();
                         }
                     }
 
@@ -241,7 +234,7 @@ impl MyEguiApp {
             .on_hover_text("Click here to clear the image")
             .clicked()
         {
-            return Some(UserAction::ImageTypeCleared(image_type.clone(), false));
+            return Some(UserAction::ImageTypeCleared(*image_type, false));
         }
 
         if ui
@@ -249,7 +242,7 @@ impl MyEguiApp {
             .on_hover_text("Stop downloading this type of image for this shortcut at all")
             .clicked()
         {
-            return Some(UserAction::ImageTypeCleared(image_type.clone(), true));
+            return Some(UserAction::ImageTypeCleared(*image_type, true));
         }
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {
@@ -428,7 +421,7 @@ impl MyEguiApp {
             .image_selected_state
             .selected_shortcut
             .as_ref()
-            .map(|s| s.name().clone())
+            .map(|s| s.name())
             .unwrap_or_default();
         let auth_key = self
             .settings
@@ -437,7 +430,7 @@ impl MyEguiApp {
             .clone()
             .unwrap_or_default();
         let client = steamgriddb_api::Client::new(&auth_key);
-        let search_results = self.rt.block_on(client.search(&app_name));
+        let search_results = self.rt.block_on(client.search(app_name));
         self.image_selected_state.possible_names = search_results.ok();
     }
 
@@ -452,7 +445,7 @@ impl MyEguiApp {
             let client = steamgriddb_api::Client::new(auth_key);
             let mut cache = CachedSearch::new(&client);
             if let Some(shortcut) = &self.image_selected_state.selected_shortcut {
-                cache.set_cache(shortcut.app_id(), shortcut.name().clone(), grid_id);
+                cache.set_cache(shortcut.app_id(), shortcut.name(), grid_id);
                 cache.save();
             }
         }
@@ -571,14 +564,11 @@ impl MyEguiApp {
     }
 
     fn clear_loaded_images(&mut self) {
-        match &*self.image_selected_state.image_options.borrow() {
-            FetcStatus::Fetched(options) => {
-                for option in options {
-                    let key = option.thumbnail_path.to_string_lossy().to_string();
-                    self.image_selected_state.image_handles.remove(&key);
-                }
+        if let FetcStatus::Fetched(options) = &*self.image_selected_state.image_options.borrow() {
+            for option in options {
+                let key = option.thumbnail_path.to_string_lossy().to_string();
+                self.image_selected_state.image_handles.remove(&key);
             }
-            _ => {}
         }
     }
 
@@ -598,7 +588,7 @@ impl MyEguiApp {
         state.selected_shortcut = Some(shortcut.clone());
 
         for image_type in ImageType::all() {
-            let (path, key) = shortcut.key(image_type, &Path::new(&user.steam_user_data_folder));
+            let (path, key) = shortcut.key(image_type, Path::new(&user.steam_user_data_folder));
             let image = load_image_from_path(&path);
             if let Some(image) = image {
                 let texture = ui.ctx().load_texture(&key, image);
@@ -669,15 +659,14 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
     let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
     for image_type in ImageType::all() {
         ui.label(image_type.name());
-        let (_path, key) = shortcut.key(&image_type, Path::new(&user_path));
+        let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
         let texture = state
             .image_handles
             .get(&key)
-            .map(|k| match k.value() {
+            .and_then(|k| match k.value() {
                 TextureState::Loaded(texture) => Some(texture.clone()),
                 _ => None,
-            })
-            .flatten();
+            });
         let clicked = render_thumbnail(ui, texture);
         if clicked {
             return Some(UserAction::ImageTypeSelected(*image_type));
@@ -728,7 +717,7 @@ fn clamp_to_width(size: &mut egui::Vec2, max_width: f32) {
 trait HasImageKey {
     fn key(&self, image_type: &ImageType, user_path: &Path) -> (PathBuf, String);
 }
-const POSSIBLE_EXTENSIONS: [&'static str; 4] = ["png", "jpg", "ico", "webp"];
+const POSSIBLE_EXTENSIONS: [&str; 4] = ["png", "jpg", "ico", "webp"];
 
 impl HasImageKey for GameType {
     fn key(&self, image_type: &ImageType, user_path: &Path) -> (PathBuf, String) {
@@ -744,7 +733,7 @@ impl HasImageKey for SteamGameInfo {
             .iter()
             .map(|ext| key_from_extension(self.appid, image_type, user_path, ext));
         let first = keys.next().unwrap();
-        let other = keys.filter(|(exsists, _, _)| *exsists).next();
+        let other = keys.find(|(exsists, _, _)| *exsists);
         let (_, path, key) = other.unwrap_or(first);
         (path, key)
     }
@@ -756,7 +745,7 @@ impl HasImageKey for ShortcutOwned {
             .iter()
             .map(|ext| key_from_extension(self.app_id, image_type, user_path, ext));
         let first = keys.next().unwrap();
-        let other = keys.filter(|(exsists, _, _)| *exsists).next();
+        let other = keys.find(|(exsists, _, _)| *exsists);
         let (_, path, key) = other.unwrap_or(first);
         (path, key)
     }

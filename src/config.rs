@@ -18,7 +18,7 @@ pub fn get_config_folder() -> PathBuf {
 pub fn get_config_folder() -> PathBuf {
     let config_home = std::env::var("APPDATA");
     match config_home {
-        Ok(p) => Path::new(&p).join("boilr").to_path_buf(),
+        Ok(p) => Path::new(&p).join("boilr"),
         Err(_) => Path::new("").to_path_buf(),
     }
 }
@@ -26,21 +26,21 @@ pub fn get_config_folder() -> PathBuf {
 pub fn get_thumbnails_folder() -> PathBuf {
     let thumbnails_path = get_config_folder().join("thumbnails");
     let _ = create_dir_all(&thumbnails_path);
-    thumbnails_path.to_path_buf()
+    thumbnails_path
 }
 
 pub fn get_config_file() -> PathBuf {
-    get_config_folder().join("config.toml").to_path_buf()
+    get_config_folder().join("config.toml")
 }
 
 pub fn get_cache_file() -> PathBuf {
-    get_config_folder().join("cache.json").to_path_buf()
+    get_config_folder().join("cache.json")
 }
 
 pub fn get_backups_flder() -> PathBuf {
     let backups_path = get_config_folder().join("backup");
     let _ = create_dir_all(&backups_path);
-    backups_path.to_path_buf()
+    backups_path
 }
 
 #[cfg(target_family = "unix")]

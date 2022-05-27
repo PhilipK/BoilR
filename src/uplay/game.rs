@@ -13,7 +13,7 @@ pub(crate) struct Game {
 impl From<Game> for ShortcutOwned {
     fn from(game: Game) -> Self {
         let launch = format!("\"uplay://launch/{}/0\"", game.id);
-        let start_dir = game.launcher.parent().unwrap_or(Path::new("")).to_string_lossy();
+        let start_dir = game.launcher.parent().unwrap_or_else(|| {Path::new("")}).to_string_lossy();
         let exe = format!("\"{}\"",game.launcher.to_string_lossy());
         Shortcut::new("0", &game.name, &exe, &start_dir, &game.icon, "", &launch).to_owned()
     }
