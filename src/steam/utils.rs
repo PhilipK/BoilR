@@ -128,14 +128,19 @@ pub fn get_default_location() -> Result<String, Box<dyn Error + Sync + Send>> {
     #[cfg(target_os = "linux")]
     let path_string = {
         let home = std::env::var("HOME")?;
-        let default_path = Path::new(&home)
+        let default_path = Path::new(&home).join(".steam").join("steam");
+        if default_path.exists() {
+            default_path.to_string_lossy().to_string()
+        } else {
+            Path::new(&home)
+                .join(".var")
+                .join("app")
+                .join("com.valvesoftware.Steam")
                 .join(".steam")
-                .join("steam");
-            if default_path.exists(){
-                default_path.to_string_lossy().to_string()
-            }else{
-                Path::new(&home).join(".var").join("app").join("com.valvesoftware.Steam").join(".steam").join("steam").to_string_lossy().to_string()
-            }
+                .join("steam")
+                .to_string_lossy()
+                .to_string()
+        }
     };
     #[cfg(target_os = "macos")]
     let path_string = {

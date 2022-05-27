@@ -81,95 +81,98 @@ mod unix {
     }
 }
 
-    #[cfg(target_os = "windows")]
-    mod windows {
-        use super::EpicPaths;
-        use std::{path::{Path, PathBuf}, env};
+#[cfg(target_os = "windows")]
+mod windows {
+    use super::EpicPaths;
+    use std::{
+        env,
+        path::{Path, PathBuf},
+    };
 
-        fn manifest_location_from_registry() -> Option<PathBuf> {
-            use winreg::enums::*;
-            use winreg::RegKey;
+    fn manifest_location_from_registry() -> Option<PathBuf> {
+        use winreg::enums::*;
+        use winreg::RegKey;
 
-            let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-            if let Ok(launcher) =
-                hklm.open_subkey("SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher")
-            {
-                let path_string: Result<String, _> = launcher.get_value("AppDataPath");
-                if let Ok(path_string) = path_string {
-                    let path = Path::new(&path_string).join("Manifests");
-                    if path.exists() {
-                        return Some(path);
-                    }
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+        if let Ok(launcher) =
+            hklm.open_subkey("SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher")
+        {
+            let path_string: Result<String, _> = launcher.get_value("AppDataPath");
+            if let Ok(path_string) = path_string {
+                let path = Path::new(&path_string).join("Manifests");
+                if path.exists() {
+                    return Some(path);
                 }
             }
-            None
         }
+        None
+    }
 
-        fn guess_default_launcher_location() -> PathBuf {
-            let key = "SYSTEMDRIVE";
-            let system_drive =
-                env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
+    fn guess_default_launcher_location() -> PathBuf {
+        let key = "SYSTEMDRIVE";
+        let system_drive =
+            env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
 
-            let path = Path::new(format!("{}\\", system_drive).as_str())
-                .join("Program Files (x86)")
-                .join("Epic Games")
-                .join("Launcher")
-                .join("Portal")
-                .join("Binaries")
-                .join("Win64")
-                .join("EpicGamesLauncher.exe");
-            path
-        }
+        let path = Path::new(format!("{}\\", system_drive).as_str())
+            .join("Program Files (x86)")
+            .join("Epic Games")
+            .join("Launcher")
+            .join("Portal")
+            .join("Binaries")
+            .join("Win64")
+            .join("EpicGamesLauncher.exe");
+        path
+    }
 
-        fn launcher_location_from_registry() -> Option<PathBuf> {
-            use winreg::enums::*;
-            use winreg::RegKey;
+    fn launcher_location_from_registry() -> Option<PathBuf> {
+        use winreg::enums::*;
+        use winreg::RegKey;
 
-            let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
 
-            if let Ok(launcher) =
-                hklm.open_subkey("SOFTWARE\\Classes\\com.epicgames.launcher\\shell\\open\\command")
-            {
-                let launch_string: Result<String, _> = launcher.get_value("");
-                if let Ok(launch_string) = launch_string {
-                    let path = Path::new(&launch_string[1..launch_string.len() - 4]);
-                    if path.exists() {
-                        return Some(path.to_path_buf());
-                    }
+        if let Ok(launcher) =
+            hklm.open_subkey("SOFTWARE\\Classes\\com.epicgames.launcher\\shell\\open\\command")
+        {
+            let launch_string: Result<String, _> = launcher.get_value("");
+            if let Ok(launch_string) = launch_string {
+                let path = Path::new(&launch_string[1..launch_string.len() - 4]);
+                if path.exists() {
+                    return Some(path.to_path_buf());
                 }
             }
-            None
         }
+        None
+    }
 
-        fn guess_default_manifest_location() -> PathBuf {
-            let key = "SYSTEMDRIVE";
-            let system_drive =
-                env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
+    fn guess_default_manifest_location() -> PathBuf {
+        let key = "SYSTEMDRIVE";
+        let system_drive =
+            env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
 
-            let path = Path::new(format!("{}\\", system_drive).as_str())
-                .join("ProgramData")
-                .join("Epic")
-                .join("EpicGamesLauncher")
-                .join("Data")
-                .join("Manifests");
-            path
-        }
+        let path = Path::new(format!("{}\\", system_drive).as_str())
+            .join("ProgramData")
+            .join("Epic")
+            .join("EpicGamesLauncher")
+            .join("Data")
+            .join("Manifests");
+        path
+    }
 
-        pub fn get_locations() -> Option<EpicPaths> {
-            {
-                let manifest_folder_path = manifest_location_from_registry()
-                    .unwrap_or_else(guess_default_manifest_location);
-                let launcer_path = launcher_location_from_registry()
-                    .unwrap_or_else(guess_default_launcher_location);
-                if launcer_path.exists() && manifest_folder_path.exists() {
-                    Some(EpicPaths {
-                        compat_folder_path: None,
-                        manifest_folder_path,
-                        launcher_path: launcer_path,
-                    })
-                } else {
-                    None
-                }
+    pub fn get_locations() -> Option<EpicPaths> {
+        {
+            let manifest_folder_path =
+                manifest_location_from_registry().unwrap_or_else(guess_default_manifest_location);
+            let launcer_path =
+                launcher_location_from_registry().unwrap_or_else(guess_default_launcher_location);
+            if launcer_path.exists() && manifest_folder_path.exists() {
+                Some(EpicPaths {
+                    compat_folder_path: None,
+                    manifest_folder_path,
+                    launcher_path: launcer_path,
+                })
+            } else {
+                None
             }
         }
     }
+}

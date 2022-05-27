@@ -31,7 +31,7 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
     fn get_shortcuts(&self) -> Result<Vec<AmazonGame>, Box<dyn Error>> {
         let sqllite_path =
             get_sqlite_path().expect("This should never get called if settings are invalid");
-     let launcher_path =
+        let launcher_path =
             get_launcher_path().expect("This should never get called if settings are invalid");
         let mut result = vec![];
         let connection = sqlite::open(sqllite_path)?;
@@ -41,7 +41,11 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
             let id = statement.read::<String>(0);
             let title = statement.read::<String>(1);
             if let (Ok(id), Ok(title)) = (id, title) {
-                result.push(AmazonGame { title, id , launcher_path:launcher_path.clone()});
+                result.push(AmazonGame {
+                    title,
+                    id,
+                    launcher_path: launcher_path.clone(),
+                });
             }
         }
         Ok(result)
@@ -50,7 +54,7 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
     fn settings_valid(&self) -> crate::platform::SettingsValidity {
         let path = get_sqlite_path();
         let launcher = get_launcher_path();
-        if path.is_some() && launcher.is_some(){
+        if path.is_some() && launcher.is_some() {
             crate::platform::SettingsValidity::Valid
         } else {
             crate::platform::SettingsValidity::Invalid {

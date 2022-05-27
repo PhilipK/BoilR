@@ -19,8 +19,8 @@ impl From<OriginGame> for ShortcutOwned {
             None => format!(
             "\"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"",
             game.id)
-        };        
-        let origin_location = format!("\"{}\"",game.origin_location.to_string_lossy());
+        };
+        let origin_location = format!("\"{}\"", game.origin_location.to_string_lossy());
         let mut owned_shortcut = Shortcut::new(
             "0",
             game.title.as_str(),

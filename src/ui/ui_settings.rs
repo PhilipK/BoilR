@@ -8,7 +8,7 @@ use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,
 };
-const SECTION_SPACING: f32 = 25.0;
+pub const SECTION_SPACING: f32 = 25.0;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 impl MyEguiApp {
@@ -49,6 +49,9 @@ impl MyEguiApp {
                 {
                     self.render_amazon_settings(ui);
                 }
+               
+                self.render_disconnect(ui);
+                
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
             });

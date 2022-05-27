@@ -23,7 +23,7 @@ use std::error::Error;
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
 
-const BOILR_TAG: &str = "boilr";
+pub const BOILR_TAG: &str = "boilr";
 
 pub enum SyncProgress {
     NotStarted,
@@ -32,6 +32,25 @@ pub enum SyncProgress {
     FindingImages,
     DownloadingImages { to_download: usize },
     Done,
+}
+
+pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), String> {
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
+        .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
+
+    for user in userinfo_shortcuts.iter_mut() {
+        let mut shortcut_info = get_shortcuts_for_user(user);
+
+        for shortcut in shortcut_info.shortcuts.iter_mut() {
+            if shortcut.app_id == app_id {
+                shortcut.dev_kit_game_id = "".to_string();
+                shortcut.tags.retain(|s| s != BOILR_TAG);
+            }
+        }
+        save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+    }
+
+    Ok(())
 }
 
 pub fn run_sync(
