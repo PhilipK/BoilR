@@ -49,12 +49,27 @@ impl MyEguiApp {
                 {
                     self.render_amazon_settings(ui);
                 }
+                
+                
+                #[cfg(target_family = "unix")]
+                {
+                    self.render_flatpak_settings(ui);
+                }
+                
                
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
             });
     }
 
+    fn render_flatpak_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Flatpak");
+        ui.checkbox(&mut self.settings.flatpak.enabled, "Import from Flatpak");
+        
+                ui.add_space(SECTION_SPACING);
+    }
+    
+    
     fn render_heroic_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Heroic");
         ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");

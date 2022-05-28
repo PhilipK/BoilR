@@ -3,6 +3,7 @@ use tokio::sync::watch::Sender;
 
 use crate::{
     egs::EpicPlatform,
+    flatpak::FlatpakPlatform,
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
     platform::Platform,
@@ -216,6 +217,10 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
     {
         platform_results.push(update_platform_shortcuts(&HeroicPlatform {
             settings: settings.heroic.clone(),
+        }));
+
+        platform_results.push(update_platform_shortcuts(&FlatpakPlatform {
+            settings: settings.flatpak.clone(),
         }));
     }
 

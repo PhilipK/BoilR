@@ -43,6 +43,10 @@ default_launch_through_heroic = true
 [amazon]
 enabled = true
 
+
+[flatpak]
+enabled = true
+
 [steam]
 create_collections = false
 optimize_for_big_picture = false
