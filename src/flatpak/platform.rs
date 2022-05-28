@@ -67,6 +67,7 @@ impl Platform<FlatpakApp, Box<dyn Error>> for FlatpakPlatform {
         }
     }
 
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         false
     }
