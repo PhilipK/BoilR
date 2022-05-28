@@ -42,6 +42,8 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 
 - [x] Show games from other platforms in your steam library
 - [x] Automatically download art from [SteamGridDB](https://www.steamgriddb.com/)
+- [x] Customize your Steam games art
+- [x] Backup your shortcuts
 - [x] Cross Platform (Windows, Linux, Mac, Steam Deck)
 - [x] Standalone / No install needed
 - [x] Small (~3mb on disk)
@@ -60,6 +62,7 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 - [x] [Rare](https://github.com/Dummerle/Rare/releases)
 - [x] [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) (Linux Only)
 - [x] [Amazon Games](https://gaming.amazon.com) (Windows Only)
+- [x] [Flatpak](https://flathub.org/) (Linux Only)
 - [ ] XBox/Microsoft Store integration
 
 

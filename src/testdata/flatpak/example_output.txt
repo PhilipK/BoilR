@@ -1,0 +1,3 @@
+Heroic Games Launcher	com.heroicgameslauncher.hgl
+BoilR	io.github.philipk.boilr
+Lutris	net.lutris.Lutris

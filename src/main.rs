@@ -15,6 +15,7 @@ mod steamgriddb;
 mod sync;
 mod ui;
 mod uplay;
+mod flatpak;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
