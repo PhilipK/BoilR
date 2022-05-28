@@ -50,8 +50,6 @@ impl MyEguiApp {
                     self.render_amazon_settings(ui);
                 }
                
-                self.render_disconnect(ui);
-                
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
             });
