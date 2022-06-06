@@ -1,6 +1,6 @@
 # BoilR
 
-BoilR automatically adds (almost) all your games to your Steam library.
+BoilR automatically adds (almost) all your games to your Steam library (including image art).
 
 ![BoilR Screenshot](screenshot_1.png)
 
