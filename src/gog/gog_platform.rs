@@ -1,4 +1,3 @@
-use failure::*;
 use std::path::{Path, PathBuf};
 
 use crate::{gog::gog_config::GogConfig, platform::Platform};
@@ -15,7 +14,7 @@ pub struct GogPlatform {
 pub fn get_shortcuts_from_config(
     _wine_c_drive: Option<String>,
     config_path: PathBuf,
-) -> Result<Vec<GogShortcut>, GogErrors> {
+) -> Result<Vec<GogShortcut>, String> {
     let install_locations = get_install_locations(config_path)?;
     #[cfg(target_family = "unix")]
     let install_locations = if let Some(wine_c_drive) = &_wine_c_drive {
@@ -138,7 +137,7 @@ fn get_games_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<(GogGame, Path
     games
 }
 
-impl Platform<GogShortcut, GogErrors> for GogPlatform {
+impl Platform<GogShortcut, String> for GogPlatform {
     fn enabled(&self) -> bool {
         self.settings.enabled
     }
@@ -152,7 +151,7 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
         self.settings.create_symlinks
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<GogShortcut>, GogErrors> {
+    fn get_shortcuts(&self) -> Result<Vec<GogShortcut>, String> {
         let gog_location = self
             .settings
             .location
@@ -160,11 +159,11 @@ impl Platform<GogShortcut, GogErrors> for GogPlatform {
             .map(|location| Path::new(&location).to_path_buf())
             .unwrap_or_else(default_location);
         if !gog_location.exists() {
-            return Err(GogErrors::PathNotFound { path: gog_location });
+            return Err(format!("Could not find path: {:?}", gog_location));
         }
         let config_path = gog_location.join("config.json");
         if !config_path.exists() {
-            return Err(GogErrors::ConfigFileNotFound { path: config_path });
+            return Err(format!("Config file not found: {:?}", config_path));
         }
         get_shortcuts_from_config(self.settings.wine_c_drive.clone(), config_path)
     }
@@ -203,17 +202,11 @@ fn fix_paths(wine_c_drive: &str, paths: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-fn get_install_locations(path: PathBuf) -> Result<Vec<String>, GogErrors> {
-    let data_res =
-        std::fs::read_to_string(&path).map_err(|e| GogErrors::ConfigFileCouldNotBeRead {
-            path: path.clone(),
-            error: format!("{}", e),
-        })?;
-    let config: GogConfig =
-        serde_json::from_str(&data_res).map_err(|e| GogErrors::ConfigFileCouldNotBeRead {
-            path,
-            error: format!("{}", e),
-        })?;
+fn get_install_locations(path: PathBuf) -> Result<Vec<String>, String> {
+    let data_res = std::fs::read_to_string(&path)
+        .map_err(|e| format!("Config file not read {:?} , error: {:?} ", path.clone(), e))?;
+    let config: GogConfig = serde_json::from_str(&data_res)
+        .map_err(|e| format!("Config file not read {:?} , error: {:?} ", path.clone(), e))?;
     let path_vec = match config.library_path {
         Some(path) => vec![path],
         None => vec![],
@@ -233,22 +226,4 @@ pub fn default_location() -> PathBuf {
         let home = std::env::var("HOME").expect("Expected a home variable to be defined");
         Path::new(&home).join("Games/gog-galaxy/drive_c/ProgramData/GOG.com/Galaxy")
     }
-}
-
-#[derive(Debug, Fail)]
-pub enum GogErrors {
-    #[fail(
-        display = "Gog path: {:?} could not be found. Try to specify a different path for Gog.",
-        path
-    )]
-    PathNotFound { path: PathBuf },
-
-    #[fail(display = "Gog config file not found at path: {:?}", path)]
-    ConfigFileNotFound { path: PathBuf },
-
-    #[fail(
-        display = "Gog config file at path: {:?} could not be red {}",
-        path, error
-    )]
-    ConfigFileCouldNotBeRead { path: PathBuf, error: String },
 }

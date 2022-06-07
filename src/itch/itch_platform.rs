@@ -2,7 +2,6 @@ use super::butler_db_parser::*;
 use super::receipt::Receipt;
 use super::{ItchGame, ItchSettings};
 use crate::platform::{Platform, SettingsValidity};
-use failure::*;
 use flate2::read::GzDecoder;
 use is_executable::IsExecutable;
 use std::collections::HashSet;
@@ -19,7 +18,7 @@ impl ItchPlatform {
     }
 }
 
-impl Platform<ItchGame, ItchErrors> for ItchPlatform {
+impl Platform<ItchGame, String> for ItchPlatform {
     fn enabled(&self) -> bool {
         self.settings.enabled
     }
@@ -28,25 +27,24 @@ impl Platform<ItchGame, ItchErrors> for ItchPlatform {
         "Itch"
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<ItchGame>, ItchErrors> {
+    fn get_shortcuts(&self) -> Result<Vec<ItchGame>, String> {
         let itch_location = self.settings.location.clone();
         let itch_location = itch_location.unwrap_or_else(get_default_location);
 
         let itch_db_location = Path::new(&itch_location).join("db").join("butler.db-wal");
         if !itch_db_location.exists() {
-            return Err(ItchErrors::PathNotFound {
-                path: itch_db_location.to_str().unwrap().to_string(),
-            });
+            return Err(format!("Path not found: {:?}", itch_db_location.to_str()));
         }
 
         let shortcut_bytes = std::fs::read(&itch_db_location).unwrap();
 
         let paths = match parse_butler_db(&shortcut_bytes) {
             Ok((_, shortcuts)) => Ok(shortcuts),
-            Err(e) => Err(ItchErrors::ParseError {
-                error: e.to_string(),
-                path: itch_db_location.to_str().unwrap().to_string(),
-            }),
+            Err(e) => Err(format!(
+                "Could not parse path: {:?} , error: {:?}",
+                itch_db_location.to_str(),
+                e
+            )),
         }?;
 
         //This is done to paths dedupe
@@ -128,16 +126,4 @@ pub fn get_default_location() -> String {
         .unwrap()
         .to_string()
     //C:\Users\phili\AppData\Local\itch
-}
-
-#[derive(Debug, Fail)]
-pub enum ItchErrors {
-    #[fail(
-        display = "Itch path: {} could not be found. Try to specify a different path for the Itch.",
-        path
-    )]
-    PathNotFound { path: String },
-
-    #[fail(display = "Could not parse Itch db at {} error: {}", path, error)]
-    ParseError { path: String, error: String },
 }
