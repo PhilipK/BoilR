@@ -30,45 +30,36 @@ pub struct Settings {
 
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let mut s = Config::new();
-
         let default_str = include_str!("defaultconfig.toml");
-        s.merge(File::from_str(default_str, config::FileFormat::Toml))?;
-
         let config_file = get_config_file();
         let config_file = config_file.to_string_lossy();
-
-        // Start off by merging in the "default" configuration file
-        s.merge(File::with_name(config_file.as_ref()).required(false))?;
-
-        // Add in the current environment file
-        // Default to 'development' env
-        // Note that this file is _optional_
         let env = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
-        s.merge(File::with_name(&format!("config/{}", env)).required(false))?;
 
-        // Add in a local configuration file
-        // This file shouldn't be checked in to git
-        s.merge(File::with_name("local.toml").required(false))?;
-
-        // Add in settings from the environment (with a prefix of STEAMSYNC)
-        // Eg.. `STEAMSYNC_DEBUG=1 ./target/app` would set the `debug` key
-        s.merge(Environment::with_prefix("boilr").separator("-"))?;
-
-        let mut result: Result<Self, ConfigError> = s.try_into();
-
-        sanitize_auth_key(&mut result);
-
-        result
+        let config = Config::builder()
+            .add_source(File::from_str(default_str, config::FileFormat::Toml))
+            // Start off by merging in the "default" configuration file
+            .add_source(File::with_name(config_file.as_ref()).required(false))
+            // Add in the current environment file
+            // Default to 'development' env
+            // Note that this file is _optional_
+            .add_source(File::with_name(&format!("config/{}", env)).required(false))
+            // Add in a local configuration file
+            // This file shouldn't be checked in to git
+            .add_source(File::with_name("local.toml").required(false))
+            // Add in settings from the environment (with a prefix of STEAMSYNC)
+            // Eg.. `STEAMSYNC_DEBUG=1 ./target/app` would set the `debug` key
+            .add_source(Environment::with_prefix("boilr").separator("-"))
+            .build()?;
+        let mut settings = config.try_deserialize::<Settings>()?;
+        sanitize_auth_key(&mut settings);
+        Ok(settings)
     }
 }
 
-fn sanitize_auth_key(result: &mut Result<Settings, ConfigError>) {
-    if let Ok(result) = result.as_mut() {
-        if let Some(auth_key) = result.steamgrid_db.auth_key.as_ref() {
-            if auth_key == "Write your authentication key between these quotes" {
-                result.steamgrid_db.auth_key = None;
-            }
+fn sanitize_auth_key(result: &mut Settings) {
+    if let Some(auth_key) = result.steamgrid_db.auth_key.as_ref() {
+        if auth_key == "Write your authentication key between these quotes" {
+            result.steamgrid_db.auth_key = None;
         }
     }
 }
