@@ -1,5 +1,4 @@
 use crate::platform::{Platform, SettingsValidity};
-use failure::*;
 use nom::bytes::complete::take_until;
 use std::{
     fs::DirEntry,
@@ -12,7 +11,7 @@ pub struct OriginPlatform {
     pub settings: OriginSettings,
 }
 
-impl Platform<OriginGame, OriginErrors> for OriginPlatform {
+impl Platform<OriginGame, String> for OriginPlatform {
     fn enabled(&self) -> bool {
         self.settings.enabled
     }
@@ -26,21 +25,20 @@ impl Platform<OriginGame, OriginErrors> for OriginPlatform {
         false
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<OriginGame>, OriginErrors> {
+    fn get_shortcuts(&self) -> Result<Vec<OriginGame>, String> {
         let origin_folders = get_default_locations();
         if origin_folders.is_none() {
-            return Err(OriginErrors::PathNotFound {
-                path: "Default path".to_string(),
-            });
+            return Err(String::from("Default path not found"));
         }
         let origin_folders = origin_folders.unwrap();
         let origin_folder = origin_folders.local_content_path;
         let origin_exe = origin_folders.exe_path;
         let game_folders = origin_folder.join("LocalContent").read_dir().map_err(|e| {
-            OriginErrors::CouldNotReadGameDir {
-                path: origin_folder.join("LocalContent"),
-                error: format!("{:?}", e),
-            }
+            format!(
+                "Could not read game dir: {} , error: {:?}",
+                origin_folder.join("LocalContent").to_string_lossy(),
+                e
+            )
         })?;
         let games = game_folders
             .filter_map(|folder| folder.ok())
@@ -201,19 +199,4 @@ fn get_exe_path() -> Option<PathBuf> {
         }
     }
     None
-}
-
-#[derive(Debug, Fail)]
-pub enum OriginErrors {
-    #[fail(
-        display = "Origin path: {} could not be found. Try to specify a different path for Origin.",
-        path
-    )]
-    PathNotFound { path: String },
-
-    #[fail(
-        display = "Could not read Origin directory: {:?}. Error: {}",
-        path, error
-    )]
-    CouldNotReadGameDir { path: PathBuf, error: String },
 }

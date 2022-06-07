@@ -1,9 +1,6 @@
 use crate::platform::{Platform, SettingsValidity};
 
-use super::{
-    get_egs_manifests, get_manifests::EpicGamesManifestsError, EpicGamesLauncherSettings,
-    ManifestItem,
-};
+use super::{get_egs_manifests, EpicGamesLauncherSettings, ManifestItem};
 
 pub struct EpicPlatform {
     settings: EpicGamesLauncherSettings,
@@ -17,7 +14,7 @@ impl EpicPlatform {
     }
 }
 
-impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
+impl Platform<ManifestItem, String> for EpicPlatform {
     fn enabled(&self) -> bool {
         self.settings.enabled
     }
@@ -26,7 +23,7 @@ impl Platform<ManifestItem, EpicGamesManifestsError> for EpicPlatform {
         "EGS"
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<ManifestItem>, EpicGamesManifestsError> {
+    fn get_shortcuts(&self) -> Result<Vec<ManifestItem>, String> {
         get_egs_manifests(&self.settings)
     }
 

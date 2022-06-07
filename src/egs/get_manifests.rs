@@ -4,23 +4,9 @@ use std::fs::{DirEntry, File};
 use std::io::BufReader;
 use std::path::Path;
 
-use failure::*;
-
-#[derive(Debug, Fail)]
-pub enum EpicGamesManifestsError {
-    #[fail(display = "EpicGamesLauncher not found")]
-    NotFound,
-
-    #[fail(
-        display = "Could not read EpicGamesLauncher manifest directory at {} error: {}",
-        path, error
-    )]
-    ReadDirError { path: String, error: std::io::Error },
-}
-
 pub(crate) fn get_egs_manifests(
     settings: &EpicGamesLauncherSettings,
-) -> Result<Vec<ManifestItem>, EpicGamesManifestsError> {
+) -> Result<Vec<ManifestItem>, String> {
     let locations = crate::egs::get_locations();
     match locations {
         Some(locations) => {
@@ -83,13 +69,13 @@ pub(crate) fn get_egs_manifests(
                     }
                     Ok(manifests)
                 }
-                Err(err) => Err(EpicGamesManifestsError::ReadDirError {
-                    error: err,
-                    path: manifest_dir_path.to_string_lossy().to_string(),
-                }),
+                Err(err) => Err(format!(
+                    "Could not read dir at: {:?} error: {:?}",
+                    manifest_dir_path, err
+                )),
             }
         }
-        None => Err(EpicGamesManifestsError::NotFound),
+        None => Err("Manifests not found".to_string()),
     }
 }
 
