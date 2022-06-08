@@ -98,21 +98,20 @@ self.settings.heroic.default_launch_through_heroic{
                   let manifests =self.heroic_games.get_or_insert_with(||{
                         let heroic_setting = self.settings.heroic.clone();
         
-                        let install_modes = vec![crate::heroic::InstallationMode::FlatPak, crate::heroic::InstallationMode::UserBin];
                         let heroic_platform =HeroicPlatform{
                         settings:heroic_setting
                     };
-                        heroic_platform.get_heroic_games(&install_modes)                        
+                        heroic_platform.get_heroic_games()                        
                     });
                                     
                     let safe_open_games = &mut self.settings.heroic.launch_games_through_heroic;
                     for manifest in manifests{
-                        let key = &manifest.app_name;
-                        let display_name = &manifest.title;
-                        let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(key);
+                        let key = manifest.app_name();
+                        let display_name = manifest.title();
+                        let mut safe_open = safe_open_games.contains(&display_name.to_string()) || safe_open_games.contains(&key.to_string());
                         if ui.checkbox(&mut safe_open, display_name).clicked(){
         if safe_open{
-            safe_open_games.push(key.clone());
+            safe_open_games.push(key.to_string());
         }else{
             safe_open_games.retain(|m| m!= display_name && m!= key);
         }
