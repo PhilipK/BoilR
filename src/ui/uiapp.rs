@@ -8,7 +8,12 @@ use tokio::{
     sync::watch::{self, Receiver},
 };
 
-use crate::{egs::ManifestItem, heroic::HeroicGame, settings::Settings, sync::SyncProgress};
+use crate::{
+    egs::ManifestItem,
+    heroic::{HeroicGame, HeroicGameType},
+    settings::Settings,
+    sync::SyncProgress,
+};
 
 use super::{
     ui_colors::{
@@ -36,7 +41,7 @@ pub struct MyEguiApp {
     pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
-    pub(crate) heroic_games: Option<Vec<HeroicGame>>,
+    pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
     pub(crate) disconect_state: DiconnectState,
