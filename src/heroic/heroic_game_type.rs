@@ -57,7 +57,7 @@ impl From<HeroicGameType> for ShortcutOwned {
                     InstallationMode::FlatPak => (
                         "flatpak",
                         format!(
-                            "run com.heroicgameslauncher.hgl {} --no-gui",
+                            "run com.heroicgameslauncher.hgl {} --no-gui --no-sandbox",
                             launch_parameter
                         ),
                     ),
