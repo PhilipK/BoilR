@@ -141,7 +141,7 @@ dependencies = [
 
 [[package]]
 name = "boilr"
-version = "1.3.19"
+version = "1.3.20"
 dependencies = [
  "base64",
  "chrono",
@@ -370,9 +370,9 @@ dependencies = [
 
 [[package]]
 name = "copypasta"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4423d79fed83ebd9ab81ec21fa97144300a961782158287dc9bf7eddac37ff0b"
+checksum = "60490f5fad15cd9aff7d8f34bb8e5230bc592ef098e4298fa5a81e90b7722864"
 dependencies = [
  "clipboard-win 3.1.1",
  "objc",
@@ -3131,9 +3131,9 @@ dependencies = [
 
 [[package]]
 name = "x11-clipboard"
-version = "0.5.3"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "473068b7b80ac86a18328824f1054e5e007898c47b5bbc281bd7abe32bc3653c"
+checksum = "6a7468a5768fea473e6c8c0d4b60d6d7001a64acceaac267207ca0281e1337e8"
 dependencies = [
  "xcb",
 ]
@@ -3163,12 +3163,12 @@ dependencies = [
 
 [[package]]
 name = "xcb"
-version = "0.10.1"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "771e2b996df720cd1c6dd9ff90f62d91698fd3610cc078388d0564bdd6622a9c"
+checksum = "b127bf5bfe9dbb39118d6567e3773d4bbc795411a8e1ef7b7e056bccac0011a9"
 dependencies = [
+ "bitflags",
  "libc",
- "log",
  "quick-xml",
 ]
 
