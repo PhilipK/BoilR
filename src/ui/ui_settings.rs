@@ -199,7 +199,12 @@ self.settings.heroic.default_launch_through_heroic{
                 if ui.text_edit_singleline(itch_location).changed() {
                     self.settings.itch.location = Some(itch_location.to_string());
                 }
+
             });
+                #[cfg(target_family = "unix")]
+                {
+                    ui.checkbox(&mut self.settings.itch.create_symlinks, "Create symlinks");
+                }
         }
         ui.add_space(SECTION_SPACING);
     }
