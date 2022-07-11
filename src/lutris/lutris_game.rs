@@ -36,12 +36,12 @@ impl LutrisGame {
             .unwrap_or_default();
         if is_flatpak {
             format!(
-                "run {} lutris:rungame/{}",
+                "run {} lutris:rungameid/{}",
                 self.settings
                     .as_ref()
                     .map(|s| s.flatpak_image.clone())
                     .unwrap_or_default(),
-                self.id
+                self.index
             )
         } else {
             format!("lutris:rungame/{}", self.id)
