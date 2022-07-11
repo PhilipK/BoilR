@@ -509,14 +509,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/copypasta/copypasta-0.7.1.crate",
-        "sha256": "4423d79fed83ebd9ab81ec21fa97144300a961782158287dc9bf7eddac37ff0b",
-        "dest": "cargo/vendor/copypasta-0.7.1"
+        "url": "https://static.crates.io/crates/copypasta/copypasta-0.8.0.crate",
+        "sha256": "60490f5fad15cd9aff7d8f34bb8e5230bc592ef098e4298fa5a81e90b7722864",
+        "dest": "cargo/vendor/copypasta-0.8.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"4423d79fed83ebd9ab81ec21fa97144300a961782158287dc9bf7eddac37ff0b\", \"files\": {}}",
-        "dest": "cargo/vendor/copypasta-0.7.1",
+        "contents": "{\"package\": \"60490f5fad15cd9aff7d8f34bb8e5230bc592ef098e4298fa5a81e90b7722864\", \"files\": {}}",
+        "dest": "cargo/vendor/copypasta-0.8.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4123,14 +4123,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/x11-clipboard/x11-clipboard-0.5.3.crate",
-        "sha256": "473068b7b80ac86a18328824f1054e5e007898c47b5bbc281bd7abe32bc3653c",
-        "dest": "cargo/vendor/x11-clipboard-0.5.3"
+        "url": "https://static.crates.io/crates/x11-clipboard/x11-clipboard-0.6.1.crate",
+        "sha256": "6a7468a5768fea473e6c8c0d4b60d6d7001a64acceaac267207ca0281e1337e8",
+        "dest": "cargo/vendor/x11-clipboard-0.6.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"473068b7b80ac86a18328824f1054e5e007898c47b5bbc281bd7abe32bc3653c\", \"files\": {}}",
-        "dest": "cargo/vendor/x11-clipboard-0.5.3",
+        "contents": "{\"package\": \"6a7468a5768fea473e6c8c0d4b60d6d7001a64acceaac267207ca0281e1337e8\", \"files\": {}}",
+        "dest": "cargo/vendor/x11-clipboard-0.6.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4162,14 +4162,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/xcb/xcb-0.10.1.crate",
-        "sha256": "771e2b996df720cd1c6dd9ff90f62d91698fd3610cc078388d0564bdd6622a9c",
-        "dest": "cargo/vendor/xcb-0.10.1"
+        "url": "https://static.crates.io/crates/xcb/xcb-1.1.1.crate",
+        "sha256": "b127bf5bfe9dbb39118d6567e3773d4bbc795411a8e1ef7b7e056bccac0011a9",
+        "dest": "cargo/vendor/xcb-1.1.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"771e2b996df720cd1c6dd9ff90f62d91698fd3610cc078388d0564bdd6622a9c\", \"files\": {}}",
-        "dest": "cargo/vendor/xcb-0.10.1",
+        "contents": "{\"package\": \"b127bf5bfe9dbb39118d6567e3773d4bbc795411a8e1ef7b7e056bccac0011a9\", \"files\": {}}",
+        "dest": "cargo/vendor/xcb-1.1.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
