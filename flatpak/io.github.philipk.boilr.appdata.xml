@@ -7,7 +7,7 @@
   <name>BoilR</name>
   <summary>Add non-steam games to your steam library</summary>
   <description>
-    <p>This little tool will show games from other games platforms in your Steam library.
+    <p>BoilR will show games from other games platforms in your Steam library.
         It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
         The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
       You can also use BoilR to manually and automatically download custom art from SteamGridDB.</p>
@@ -25,6 +25,16 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+
+  <release version="1.4.1" date="2022-07-18">
+      <description>
+        <ul>
+          <li>Add a save button to the settings page</li>          
+          <li>Add option to run without vsync</li>          
+          <li>Prevent crash when settings where invalid</li>          
+        </ul>
+      </description>
+  </release>
 
   <release version="1.4.0" date="2022-07-11">
       <description>
