@@ -53,3 +53,9 @@ enabled = true #If false, the whole download of custom art will be skipped.
 auth_key="<your steamgrid db auth key>" #This value is mandatory if you have steamgrid_db enabled.
 prefer_animated = false #If true, animated images will be prefered over static images when downloading art.
 ```
+
+
+## No Vsync
+BoilR runs with Vsync Enabled, to limit its resource use.
+This can be a problem for some setups that run Linux, Wayland and Nvidia (but not all). 
+If BoilR just crashes when you start it, try to add `--no-vsync` as an argument when you launch boilr.
