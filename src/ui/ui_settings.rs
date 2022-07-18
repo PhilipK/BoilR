@@ -221,7 +221,12 @@ self.settings.heroic.default_launch_through_heroic{
                 .unwrap_or(&mut empty_string);
             ui.label("Steam Location: ");
             if ui.text_edit_singleline(steam_location).changed() {
-                self.settings.steam.location = Some(steam_location.to_string());
+                if steam_location.trim().is_empty(){
+                    self.settings.steam.location = None;
+                }else{
+                    self.settings.steam.location = Some(steam_location.to_string());
+                }
+                
             }
         });
         ui.checkbox(
