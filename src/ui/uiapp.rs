@@ -1,7 +1,7 @@
 use std::{env::Args, error::Error};
 
 use eframe::{egui, App, Frame};
-use egui::{ImageButton, Rounding, Stroke, TextureHandle};
+use egui::{Button, ImageButton, Rounding, Stroke, TextureHandle};
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::{
     runtime::Runtime,
@@ -20,7 +20,7 @@ use super::{
         BACKGROUND_COLOR, BG_STROKE_COLOR, EXTRA_BACKGROUND_COLOR, LIGHT_ORANGE, ORANGE, PURLPLE,
         TEXT_COLOR,
     },
-    ui_images::{get_import_image, get_logo, get_logo_icon},
+    ui_images::{get_import_image, get_logo, get_logo_icon, get_save_image},
     ui_import_games::FetcStatus,
     BackupState, DiconnectState, ImageSelectState,
 };
@@ -30,6 +30,7 @@ const SECTION_SPACING: f32 = 25.0;
 #[derive(Default)]
 struct UiImages {
     import_button: Option<egui::TextureHandle>,
+    save_button: Option<egui::TextureHandle>,
     logo_32: Option<egui::TextureHandle>,
 }
 
@@ -127,6 +128,20 @@ impl App for MyEguiApp {
                     self.games_to_sync = watch::channel(FetcStatus::NeedsFetched).1;
                 }
             });
+
+        if self.selected_menu == Menues::Settings {
+            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
+                .frame(frame)
+                .show(ctx, |ui| {
+                    let texture = self.get_save_image(ui);
+                    let size = texture.size_vec2();
+                    let save_button = ImageButton::new(texture, size * 0.5);
+
+                    if ui.add(save_button).on_hover_text("Save settings").clicked() {
+                        MyEguiApp::save_settings_to_file(&self.settings.clone());
+                    }
+                });
+        }
         if self.games_to_sync.borrow().is_some() {
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
                 .frame(frame)
@@ -229,6 +244,13 @@ impl MyEguiApp {
         self.ui_images.import_button.get_or_insert_with(|| {
             // Load the texture only once.
             ui.ctx().load_texture("import_image", get_import_image())
+        })
+    }
+
+    fn get_save_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
+        self.ui_images.save_button.get_or_insert_with(|| {
+            // Load the texture only once.
+            ui.ctx().load_texture("save_image", get_save_image())
         })
     }
 
