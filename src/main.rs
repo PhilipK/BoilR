@@ -1,6 +1,7 @@
 mod amazon;
 mod config;
 mod egs;
+mod flatpak;
 mod gog;
 mod heroic;
 mod itch;
@@ -15,19 +16,18 @@ mod steamgriddb;
 mod sync;
 mod ui;
 mod uplay;
-mod flatpak;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     ensure_config_folder();
     migration::migrate_config();
 
-    let mut args = std::env::args();
-    if args.len() > 1 && args.nth(1).unwrap_or_default() == "--no-ui" {
+    let args: Vec<String> = std::env::args().collect();
+    if args.contains(&"--no-ui".to_string()) {
         ui::run_sync();
         Ok(())
     } else {
-        ui::run_ui()
+        ui::run_ui(args)
     }
 }
 

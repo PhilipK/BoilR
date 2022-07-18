@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{env::Args, error::Error};
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
@@ -253,12 +253,13 @@ pub fn run_sync() {
     app.run_sync();
 }
 
-pub fn run_ui() -> Result<(), Box<dyn Error>> {
+pub fn run_ui(args: Vec<String>) -> Result<(), Box<dyn Error>> {
     let app = MyEguiApp::new();
-
+    let no_v_sync = args.contains(&"--no-vsync".to_string());
     let native_options = eframe::NativeOptions {
         initial_window_size: Some(egui::Vec2 { x: 800., y: 500. }),
         icon_data: Some(get_logo_icon()),
+        vsync: !no_v_sync,
         ..Default::default()
     };
     eframe::run_native(
