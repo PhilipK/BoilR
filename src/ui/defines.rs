@@ -17,11 +17,16 @@ pub mod ui_images {
     use egui::{ColorImage, ImageData};
 
     pub const IMPORT_GAMES_IMAGE: &[u8] = include_bytes!("../../resources/import_games_button.png");
+    pub const SAVE_IMAGE: &[u8] = include_bytes!("../../resources/save.png");
     pub const LOGO_32: &[u8] = include_bytes!("../../resources/logo32.png");
     pub const LOGO_ICON: &[u8] = include_bytes!("../../resources/logo_small.png");
 
     pub fn get_import_image() -> ImageData {
         ImageData::Color(load_image_from_memory(IMPORT_GAMES_IMAGE).unwrap())
+    }
+
+    pub fn get_save_image() -> ImageData {
+        ImageData::Color(load_image_from_memory(SAVE_IMAGE).unwrap())
     }
 
     pub fn get_logo() -> ImageData {
