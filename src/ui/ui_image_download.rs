@@ -23,6 +23,7 @@ pub struct ImageSelectState {
     pub grid_id: Option<usize>,
 
     pub steam_user: Option<SteamUsersInfo>,
+    pub settings_error: Option<String>,
     pub steam_users: Option<Vec<SteamUsersInfo>>,
     pub user_shortcuts: Option<Vec<ShortcutOwned>>,
     pub game_mode: GameMode,
@@ -81,6 +82,7 @@ impl Default for ImageSelectState {
             grid_id: Default::default(),
             steam_user: Default::default(),
             steam_users: Default::default(),
+            settings_error: Default::default(),
             user_shortcuts: Default::default(),
             game_mode: GameMode::Shortcuts,
             image_type_selected: Default::default(),
@@ -325,16 +327,28 @@ impl MyEguiApp {
     }
 
     fn ensure_steam_users_loaded(&mut self) {
-        self.image_selected_state
-            .steam_users
-            .get_or_insert_with(|| {
-                get_shortcuts_paths(&self.settings.steam).expect("Should have steam user")
-            });
+        if self.image_selected_state.settings_error.is_none() &&  self.image_selected_state.steam_users.is_none() {
+            let paths = get_shortcuts_paths(&self.settings.steam);
+            match paths{
+                Ok(paths) => {
+                    self.image_selected_state.steam_users = Some(paths) 
+                },
+                Err(err) => {                    
+                    self.image_selected_state.settings_error = Some(format!("Could not find user steam location, error message: {} , try to clear the steam location field in settings to let BoilR find it itself",err));
+                },
+            }
+            
+        }
     }
 
     pub(crate) fn render_ui_images(&mut self, ui: &mut egui::Ui) {
         self.ensure_games_loaded();
         self.ensure_steam_users_loaded();
+
+        if let Some(error_message) = &self.image_selected_state.settings_error{
+            ui.label(error_message);
+            return;
+        }
 
         let mut action = UserAction::NoAction;
         ScrollArea::vertical()
