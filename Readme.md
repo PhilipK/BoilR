@@ -25,13 +25,12 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
   - [Integrations](#integrations)
   - [Getting cover art for your shortcuts](#getting-cover-art-for-your-shortcuts)
   - [Tips](#tips)
-    - [Tips for steam deck](#tips-for-steam-deck)
-    - [Tips for linux](#tips-for-linux)
+    - [Tips for Linux](#tips-for-linux)
     - [Configuration](#configuration)
     - [Run as CLI](#run-as-cli)
   - [Contributions](#contributions)
     - [How can I help/contribute?](#how-can-i-helpcontribute)
-    - [I found a bug, what do it do?](#i-found-a-bug-what-do-it-do)
+    - [I found a bug, what do I do?](#i-found-a-bug-what-do-i-do)
     - [I have a great idea / I would like support for a specific platform, what do I do?](#i-have-a-great-idea--i-would-like-support-for-a-specific-platform-what-do-i-do)
     - [Can I donate to support BoilR?](#can-i-donate-to-support-boilr)
     - [License](#license)
@@ -52,18 +51,23 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 
 ## Integrations
 
-- [x] [Epic Games Store](https://www.epicgames.com/)
-- [x] [Itch.io](https://itch.io/app)
-- [x] [Origin](https://www.origin.com)
-- [x] [GOG](https://www.gog.com/galaxy)
-- [x] [UPlay](https://ubisoftconnect.com)
-- [x] [Lutris](https://github.com/lutris/lutris)
-- [x] [Legendary](https://github.com/derrod/legendary)
-- [x] [Rare](https://github.com/Dummerle/Rare/releases)
-- [x] [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) (Linux Only)
-- [x] [Amazon Games](https://gaming.amazon.com) (Windows Only)
-- [x] [Flatpak](https://flathub.org/) (Linux Only)
-- [ ] XBox/Microsoft Store integration
+BoilR can import games from many platforms, but there are limits based 
+
+| Platforms                                                                       | Windows | Linux (executable)          | Linux (flatpak)                                                           |
+| ------------------------------------------------------------------------------- | ------- | --------------------------- | ------------------------------------------------------------------------- |
+| [Epic Games Store](https://www.epicgames.com/)                                  | Yes     | Yes, install through proton | Yes, install through proton                                               |
+| [Itch.io](https://itch.io/app) (Windows Games)                                  | Yes     | No                          | No                                                                        |
+| [Itch.io](https://itch.io/app) (Linux Games)                                    | No      | Yes                         | Yes                                                                       |
+| [Origin](https://www.origin.com)                                                | Yes     | Yes, install through proton | Yes, install through proton                                               |
+| [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic)             | No (Use Heroic)                                                           |
+| [UPlay](https://ubisoftconnect.com)                                             | Yes     | No                          | No                                                                        |
+| [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                         | [No](https://github.com/PhilipK/BoilR/issues/184#issuecomment-1192680467) |
+| [Lutris](https://github.com/lutris/lutris) (Non-Flatpak)                        | No      | Yes                         | Yes                                                                       |
+| [Legendary](https://github.com/derrod/legendary)                                | No      | Yes                         | Yes                                                                       |
+| [Rare](https://github.com/Dummerle/Rare/releases)                               | No      | Yes                         | Yes                                                                       |
+| [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) | No      | Yes                         | Yes                                                                       |
+| [Amazon Games](https://gaming.amazon.com)                                       | Yes     | No                          | No                                                                        |
+| [Flatpaks](https://flathub.org/)                                                | No      | Yes                         | [No](https://github.com/PhilipK/BoilR/issues/184#issuecomment-1192680467) |
 
 
 ## Getting cover art for your shortcuts
@@ -76,20 +80,13 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 
 ## Tips 
 
-### Tips for steam deck
-
-I currently don't have a steam deck, which slows down development for it a bit.
-There might still be problems specific to the deck, so if you run into one please check the issues.
-
-If you have a problem launching a game, try to manually set a proton version for it.
-
 ### Tips for Linux
 
 If you are running Linux (this includes Steam Deck) and are running into problems check [tips for Linux section](tips_for_linux.md)
 
 ### Configuration
 
-Most people will not have to configure anything, just open BoilR and click Synchronize, but it is possible to configure a lot, see the [configuration section](configuration.md)
+Most people will not have to configure anything, just open BoilR and click Import Games, but it is possible to configure a lot, see the [configuration section](configuration.md)
 
 ### Run as CLI
 
