@@ -1,11 +1,14 @@
 use crate::lutris::settings::LutrisSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-#[derive(Clone)]
+use serde::Deserialize;
+
+#[derive(Deserialize, Clone)]
 pub struct LutrisGame {
-    pub index: String,
+    pub id: i64,
+    pub slug: String,
     pub name: String,
-    pub id: String,
+    pub runner: String,
     pub platform: String,
     pub settings: Option<LutrisSettings>,
 }
@@ -36,15 +39,15 @@ impl LutrisGame {
             .unwrap_or_default();
         if is_flatpak {
             format!(
-                "run {} lutris:rungameid/{}",
+                "run {} lutris:rungame/{}",
                 self.settings
                     .as_ref()
                     .map(|s| s.flatpak_image.clone())
                     .unwrap_or_default(),
-                self.index
+                self.slug
             )
         } else {
-            format!("lutris:rungame/{}", self.id)
+            format!("lutris:rungame/{}", self.slug)
         }
     }
 

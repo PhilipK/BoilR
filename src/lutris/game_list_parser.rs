@@ -1,32 +1,15 @@
 use super::lutris_game::LutrisGame;
 
 pub fn parse_lutris_games(input: &str) -> Vec<LutrisGame> {
-    input
-        .split('\n')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .filter_map(parse_line)
-        .collect()
-}
-
-fn parse_line(input: &str) -> Option<LutrisGame> {
-    let mut sections = input.split('|');
-    if sections.clone().count() < 4 {
-        return None;
+    let games = serde_json::from_str::<Vec<LutrisGame>>(&input);
+    match games {
+        Ok(games) => {
+            return games
+        }
+        Err(_err) => {
+            return Vec::new()
+        }
     }
-    let index = sections.next().unwrap().trim();
-    let name = sections.next().unwrap().trim();
-    let id = sections.next().unwrap().trim();
-    let platform = sections.next().unwrap().trim();
-
-    Some(LutrisGame {
-        id: id.to_string(),
-        index: index.to_string(),
-        name: name.to_string(),
-        platform: platform.to_string(),
-        //theese will be added by the platform class
-        settings: None,
-    })
 }
 
 #[cfg(test)]
@@ -39,7 +22,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(19, games.len());
+        assert_eq!(6, games.len());
     }
 
     #[test]
@@ -48,7 +31,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[0].index, "7");
+        assert_eq!(games[0].id, 1);
     }
 
     #[test]
@@ -57,7 +40,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[1].name, "Cave Story+");
+        assert_eq!(games[5].name, "The Witcher 3: Wild Hunt - Game of the Year Edition");
     }
 
     #[test]
@@ -66,7 +49,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[3].id, "dicey-dungeons");
+        assert_eq!(games[5].slug, "the-witcher-3-wild-hunt-game-of-the-year-edition");
     }
 
     #[test]
@@ -75,6 +58,6 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[18].platform, "steam");
+        assert_eq!(games[1].runner, "steam");
     }
 }
