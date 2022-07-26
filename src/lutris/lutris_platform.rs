@@ -23,7 +23,7 @@ impl Platform<LutrisGame, Box<dyn Error>> for LutrisPlatform {
         let games = parse_lutris_games(output.as_str());
         let mut res = vec![];
         for mut game in games {
-            if game.platform != "steam" {
+            if game.runner != "steam" {
                 game.settings = Some(self.settings.clone());
                 res.push(game);
             }
@@ -55,10 +55,10 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> Result<String, Box<dy
     let output = if settings.flatpak {
         let flatpak_image = &settings.flatpak_image;
         let mut command = Command::new("flatpak");
-        command.arg("run").arg(flatpak_image).arg("-lo").output()?
+        command.arg("run").arg(flatpak_image).arg("-lo").arg("--json").output()?
     } else {
         let mut command = Command::new(&settings.executable);
-        command.arg("-lo").output()?
+        command.arg("-lo").arg("--json").output()?
     };
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
