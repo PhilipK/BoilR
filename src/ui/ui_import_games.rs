@@ -107,7 +107,7 @@ impl MyEguiApp {
         }
     }
 
-    pub fn run_sync(&mut self) {
+    pub fn run_sync(&mut self, wait: bool ) {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
@@ -115,7 +115,7 @@ impl MyEguiApp {
         }
 
         self.status_reciever = reciever;
-        self.rt.spawn_blocking(move || {
+        let handle = self.rt.spawn_blocking(move || {
             MyEguiApp::save_settings_to_file(&settings);
             let mut some_sender = Some(sender);
             backup_shortcuts(&settings.steam);
@@ -133,6 +133,9 @@ impl MyEguiApp {
                 crate::steam::ensure_steam_started(&settings.steam);
             }
         });
+        if wait {
+            self.rt.block_on(handle).unwrap();
+        }
     }
 
     pub fn save_settings_to_file(settings: &Settings) {
