@@ -181,7 +181,7 @@ impl App for MyEguiApp {
                         .clicked()
                         && !syncing
                     {
-                        self.run_sync();
+                        self.run_sync(false);
                     }
                 });
         }
@@ -272,7 +272,7 @@ fn setup(ctx: &egui::Context) {
 }
 pub fn run_sync() {
     let mut app = MyEguiApp::new();
-    app.run_sync();
+    app.run_sync(true);
 }
 
 pub fn run_ui(args: Vec<String>) -> Result<(), Box<dyn Error>> {
