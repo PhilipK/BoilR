@@ -141,7 +141,7 @@ dependencies = [
 
 [[package]]
 name = "boilr"
-version = "1.4.1"
+version = "1.4.3"
 dependencies = [
  "base64",
  "chrono",
@@ -351,9 +351,9 @@ dependencies = [
 
 [[package]]
 name = "config"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ea917b74b6edfb5024e3b55d3c8f710b5f4ed92646429601a42e96f0812b31b"
+checksum = "11f1667b8320afa80d69d8bbe40830df2c8a06003d86f73d8e003b2c48df416d"
 dependencies = [
  "async-trait",
  "json5",
@@ -370,9 +370,9 @@ dependencies = [
 
 [[package]]
 name = "copypasta"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60490f5fad15cd9aff7d8f34bb8e5230bc592ef098e4298fa5a81e90b7722864"
+checksum = "d7216b5c1e9ad3867252505995b02d01c6fa7e6db0d8abd42634352ef377777e"
 dependencies = [
  "clipboard-win 3.1.1",
  "objc",
@@ -1229,9 +1229,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.24.2"
+version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28edd9d7bc256be2502e325ac0628bde30b7001b9b52e0abe31a1a9dc2701212"
+checksum = "7e30ca2ecf7666107ff827a8e481de6a132a9b687ed3bb20bb1c144a36c00964"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -1239,7 +1239,6 @@ dependencies = [
  "exr",
  "gif",
  "jpeg-decoder",
- "num-iter",
  "num-rational",
  "num-traits",
  "png",
@@ -1280,9 +1279,9 @@ dependencies = [
 
 [[package]]
 name = "integer-encoding"
-version = "1.1.7"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48dc51180a9b377fd75814d0cc02199c20f8e99433d6762f650d39cdbbd3b56f"
+checksum = "8bb03732005da905c88227371639bf1ad885cc712789c011c31c5fb3ab3ccf02"
 
 [[package]]
 name = "ipnet"
@@ -1670,17 +1669,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "225d3389fb3509a24c93f5c29eb6bde2586b98d9f016636dff58d7c6f7569cd9"
 dependencies = [
  "autocfg",
- "num-traits",
-]
-
-[[package]]
-name = "num-iter"
-version = "0.1.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d03e6c028c5dc5cac6e2dec0efda81fc887605bb3d884578bb6d6bf7514e252"
-dependencies = [
- "autocfg",
- "num-integer",
  "num-traits",
 ]
 
@@ -2139,9 +2127,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.11.10"
+version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46a1f7aa4f35e5e8b4160449f51afc758f0ce6454315a9fa7d0d113e958c41eb"
+checksum = "b75aa69a3f06bbcc66ede33af2af253c6f7a86b1ca0033f60c580a27074fbf92"
 dependencies = [
  "base64",
  "bytes",
@@ -2166,6 +2154,7 @@ dependencies = [
  "serde_urlencoded",
  "tokio",
  "tokio-native-tls",
+ "tower-service",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -2196,9 +2185,9 @@ dependencies = [
 
 [[package]]
 name = "rusty-leveldb"
-version = "0.3.6"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19365c4619fa0892aef573e6ee1b569b1161ac1ac3da765f550a17645192615e"
+checksum = "440fc25292d3ed04eba65e99d4b0405834f1fa4f30792638afb07a4110901187"
 dependencies = [
  "crc",
  "errno",
@@ -2276,18 +2265,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.137"
+version = "1.0.142"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61ea8d54c77f8315140a05f4c7237403bf38b72704d031543aa1d16abbf517d1"
+checksum = "e590c437916fb6b221e1d00df6e3294f3fccd70ca7e92541c475d6ed6ef5fee2"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.137"
+version = "1.0.142"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f26faba0c3959972377d3b2d306ee9f71faee9714294e41bb777f83f88578be"
+checksum = "34b5b8d809babe02f538c2cfec6f2c1ed10804c0e5a6a041a049a4f5588ccc2e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2296,9 +2285,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.81"
+version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
+checksum = "38dd04e3c8279e75b31ef29dbdceebfe5ad89f4d0937213c53f7d49d01b3d5a7"
 dependencies = [
  "itoa",
  "ryu",
@@ -2425,9 +2414,9 @@ dependencies = [
 
 [[package]]
 name = "sqlite"
-version = "0.26.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fb1a534c07ec276fbbe0e55a1c00814d8563da3a2f4d9d9d4c802bd1278db6a"
+checksum = "e2df8edd55685048550daaaf2be9024182f3523086cc86f7d50c136e55173e8c"
 dependencies = [
  "libc",
  "sqlite3-sys",
@@ -2435,9 +2424,9 @@ dependencies = [
 
 [[package]]
 name = "sqlite3-src"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a260b07ce75a0644c6f5891f34f46db9869e731838e95293469ab17999abcfa3"
+checksum = "d1815a7a02c996eb8e5c64f61fcb6fd9b12e593ce265c512c5853b2513635691"
 dependencies = [
  "cc",
  "pkg-config",
@@ -2445,9 +2434,9 @@ dependencies = [
 
 [[package]]
 name = "sqlite3-sys"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04d2f028faeb14352df7934b4771806f60d61ce61be1928ec92396d7492e2e54"
+checksum = "d47c99824fc55360ba00caf28de0b8a0458369b832e016a64c13af0ad9fbb9ee"
 dependencies = [
  "libc",
  "sqlite3-src",
@@ -2502,9 +2491,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.24.2"
+version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a2809487b962344ca55d9aea565f9ffbcb6929780802217acc82561f6746770"
+checksum = "373e4bc9213f734126e2be3e2e118dbc9b909c37487d8d755822bc90f70ae62a"
 dependencies = [
  "cfg-if 1.0.0",
  "core-foundation-sys 0.8.3",
@@ -2596,10 +2585,11 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.19.2"
+version = "1.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c51a52ed6686dd62c320f9b89299e9dfb46f730c7a48e635c19f21d116cb1439"
+checksum = "7a8325f63a7d4774dd041e363b2409ed1c5cbbd0f867795e661df066b2b0a581"
 dependencies = [
+ "autocfg",
  "bytes",
  "libc",
  "memchr",
