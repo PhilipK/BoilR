@@ -26,6 +26,15 @@ https://hughsie.github.io/oars/index.html
   <content_rating type="oars-1.1" />
   <releases>
 
+  <release version="1.4.3" date="2022-08-03">
+      <description>
+        <ul>
+          <li>Fix lutris game import with long names</li>          
+          <li>Fix bug when creating collections</li>          
+          <li>Update all external dependencies</li>          
+        </ul>
+      </description>
+  </release>
   <release version="1.4.1" date="2022-07-18">
       <description>
         <ul>
