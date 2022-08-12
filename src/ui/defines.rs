@@ -57,7 +57,17 @@ pub mod ui_images {
         let size = [image.width() as _, image.height() as _];
         let image_buffer = image.to_rgba8();
         let pixels = image_buffer.as_flat_samples();
-
-        Ok(ColorImage::from_rgba_unmultiplied(size, pixels.as_slice()))
+        let rgba = pixels.as_slice();
+        let is_valid = size[0] * size[1] * 4 == rgba.len();
+        if is_valid {
+            Ok(ColorImage::from_rgba_unmultiplied(size, rgba))
+        } else {
+            Err(image::ImageError::Decoding(
+                image::error::DecodingError::new(
+                    image::error::ImageFormatHint::Unknown,
+                    "Image did not have right amount of pixels",
+                ),
+            ))
+        }
     }
 }
