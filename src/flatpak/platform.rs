@@ -44,7 +44,7 @@ impl Platform<FlatpakApp, Box<dyn Error>> for FlatpakPlatform {
         let output_string = String::from_utf8_lossy(&output.stdout).to_string();
         let mut result = vec![];
         for line in output_string.lines() {
-            let mut split = line.split("\t");
+            let mut split = line.split('\t');
             if let Some(name) = split.next() {
                 if let Some(id) = split.next() {
                     result.push(FlatpakApp {

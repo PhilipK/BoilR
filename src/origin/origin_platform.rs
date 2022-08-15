@@ -66,7 +66,7 @@ impl Platform<OriginGame, String> for OriginPlatform {
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,
             Err(err) => SettingsValidity::Invalid {
-                reason: format!("{}", err),
+                reason: err.to_string(),
             },
         }
     }
@@ -150,7 +150,7 @@ fn get_default_locations() -> Option<OriginPathData> {
                 if origin_exe_path.exists() && origin_local_content.exists() {
                     res.exe_path = origin_exe_path;
                     res.local_content_path = origin_local_content;
-                    res.compat_folder = Some(dir.path().to_path_buf());
+                    res.compat_folder = Some(dir.path());
                     return Some(res);
                 }
             }

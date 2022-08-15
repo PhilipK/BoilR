@@ -25,7 +25,7 @@ impl HeroicGameType {
                 title,
                 app_name,
                 install_mode,
-            } => &app_name,
+            } => app_name,
         }
     }
 

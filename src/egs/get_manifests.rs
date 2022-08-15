@@ -27,7 +27,7 @@ pub(crate) fn get_egs_manifests(
                                 manifest.manifest_location = compat_folder
                                     .join("pfx")
                                     .join("drive_c")
-                                    .join(&manifest.manifest_location[3..].replace("\\", "/"))
+                                    .join(&manifest.manifest_location[3..].replace('\\', "/"))
                                     .to_path_buf()
                                     .to_string_lossy()
                                     .to_string();
@@ -35,7 +35,7 @@ pub(crate) fn get_egs_manifests(
                                 manifest.install_location = compat_folder
                                     .join("pfx")
                                     .join("drive_c")
-                                    .join(&manifest.install_location[3..].replace("\\", "/"))
+                                    .join(&manifest.install_location[3..].replace('\\', "/"))
                                     .to_path_buf()
                                     .to_string_lossy()
                                     .to_string();

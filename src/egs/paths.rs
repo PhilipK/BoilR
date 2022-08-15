@@ -68,7 +68,7 @@ mod unix {
                                 //We found all we need
                                 return Some(EpicPaths {
                                     launcher_path,
-                                    compat_folder_path: Some(dir.path().to_path_buf()),
+                                    compat_folder_path: Some(dir.path()),
                                     manifest_folder_path,
                                 });
                             }

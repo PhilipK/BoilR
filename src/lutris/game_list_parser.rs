@@ -1,14 +1,10 @@
 use super::lutris_game::LutrisGame;
 
 pub fn parse_lutris_games(input: &str) -> Vec<LutrisGame> {
-    let games = serde_json::from_str::<Vec<LutrisGame>>(&input);
+    let games = serde_json::from_str::<Vec<LutrisGame>>(input);
     match games {
-        Ok(games) => {
-            return games
-        }
-        Err(_err) => {
-            return Vec::new()
-        }
+        Ok(games) => games,
+        Err(_err) => Vec::new(),
     }
 }
 
@@ -40,7 +36,10 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[5].name, "The Witcher 3: Wild Hunt - Game of the Year Edition");
+        assert_eq!(
+            games[5].name,
+            "The Witcher 3: Wild Hunt - Game of the Year Edition"
+        );
     }
 
     #[test]
@@ -49,7 +48,10 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[5].slug, "the-witcher-3-wild-hunt-game-of-the-year-edition");
+        assert_eq!(
+            games[5].slug,
+            "the-witcher-3-wild-hunt-game-of-the-year-edition"
+        );
     }
 
     #[test]

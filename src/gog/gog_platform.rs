@@ -174,7 +174,7 @@ impl Platform<GogShortcut, String> for GogPlatform {
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,
             Err(err) => SettingsValidity::Invalid {
-                reason: format!("{}", err),
+                reason: err.to_string(),
             },
         }
     }
