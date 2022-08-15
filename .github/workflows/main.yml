@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1    
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v1.3.0    
+      uses: Swatinem/rust-cache@v2    
     - name: dependencies
       run: |
         sudo apt-get update 
@@ -34,7 +34,7 @@ jobs:
         toolchain: stable
     - name: Rust Cache
       id: rust_cache
-      uses: Swatinem/rust-cache@v1.3.0    
+      uses: Swatinem/rust-cache@v2    
     - name: Test
       run: cargo test
   test_Macos:
@@ -47,7 +47,7 @@ jobs:
         toolchain: stable
     - name: Rust Cache
       id: rust_cache
-      uses: Swatinem/rust-cache@v1.3.0    
+      uses: Swatinem/rust-cache@v2    
     - name: Test
       run: cargo test
 
