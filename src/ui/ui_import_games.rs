@@ -55,7 +55,7 @@ impl MyEguiApp {
         scroll_style.visuals.widgets.hovered.bg_fill = EXTRA_BACKGROUND_COLOR;
 
         ScrollArea::vertical()
-        .stick_to_right()
+        .stick_to_right(true)
         .auto_shrink([false,true])
         .show(ui,|ui| {
             ui.reset_style();

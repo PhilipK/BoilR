@@ -243,21 +243,21 @@ impl MyEguiApp {
     fn get_import_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
         self.ui_images.import_button.get_or_insert_with(|| {
             // Load the texture only once.
-            ui.ctx().load_texture("import_image", get_import_image())
+            ui.ctx().load_texture("import_image", get_import_image(),egui::TextureFilter::Linear)
         })
     }
 
     fn get_save_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
         self.ui_images.save_button.get_or_insert_with(|| {
             // Load the texture only once.
-            ui.ctx().load_texture("save_image", get_save_image())
+            ui.ctx().load_texture("save_image", get_save_image(),egui::TextureFilter::Linear)
         })
     }
 
     fn get_logo_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
         self.ui_images.logo_32.get_or_insert_with(|| {
             // Load the texture only once.
-            ui.ctx().load_texture("logo32", get_logo())
+            ui.ctx().load_texture("logo32", get_logo(),egui::TextureFilter::Linear)
         })
     }
 }
@@ -275,7 +275,7 @@ pub fn run_sync() {
     app.run_sync(true);
 }
 
-pub fn run_ui(args: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub fn run_ui(args: Vec<String>){
     let app = MyEguiApp::new();
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let native_options = eframe::NativeOptions {

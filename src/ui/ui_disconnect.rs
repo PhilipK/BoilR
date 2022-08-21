@@ -47,7 +47,7 @@ impl MyEguiApp {
                 let mut redraw = 0;
                 set_scroll_style(ui);
                 ScrollArea::vertical()
-                    .stick_to_right()
+                    .stick_to_right(true)
                     .auto_shrink([false, true])
                     .show(ui, |ui| {
                         ui.reset_style();

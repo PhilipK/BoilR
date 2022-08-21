@@ -264,7 +264,11 @@ impl MyEguiApp {
                                     //Need to load
                                     let image_data = load_image_from_path(&image.thumbnail_path);
                                     if let Some(image_data) = image_data {
-                                        let handle = ui.ctx().load_texture(&image_key, image_data);
+                                        let handle = ui.ctx().load_texture(
+                                            &image_key,
+                                            image_data,
+                                            egui::TextureFilter::Linear,
+                                        );
                                         *state.value_mut() = TextureState::Loaded(handle);
                                     }
                                     ui.ctx().request_repaint();
@@ -327,17 +331,16 @@ impl MyEguiApp {
     }
 
     fn ensure_steam_users_loaded(&mut self) {
-        if self.image_selected_state.settings_error.is_none() &&  self.image_selected_state.steam_users.is_none() {
+        if self.image_selected_state.settings_error.is_none()
+            && self.image_selected_state.steam_users.is_none()
+        {
             let paths = get_shortcuts_paths(&self.settings.steam);
-            match paths{
-                Ok(paths) => {
-                    self.image_selected_state.steam_users = Some(paths) 
-                },
-                Err(err) => {                    
+            match paths {
+                Ok(paths) => self.image_selected_state.steam_users = Some(paths),
+                Err(err) => {
                     self.image_selected_state.settings_error = Some(format!("Could not find user steam location, error message: {} , try to clear the steam location field in settings to let BoilR find it itself",err));
-                },
+                }
             }
-            
         }
     }
 
@@ -345,14 +348,14 @@ impl MyEguiApp {
         self.ensure_games_loaded();
         self.ensure_steam_users_loaded();
 
-        if let Some(error_message) = &self.image_selected_state.settings_error{
+        if let Some(error_message) = &self.image_selected_state.settings_error {
             ui.label(error_message);
             return;
         }
 
         let mut action = UserAction::NoAction;
         ScrollArea::vertical()
-            .stick_to_right()
+            .stick_to_right(true)
             .auto_shrink([false, true])
             .show(ui, |ui| {
                 ui.reset_style();
@@ -479,7 +482,9 @@ impl MyEguiApp {
             if !loaded && path.exists() {
                 let image = load_image_from_path(&path);
                 if let Some(image) = image {
-                    let texture = ui.ctx().load_texture(&key, image);
+                    let texture = ui
+                        .ctx()
+                        .load_texture(&key, image, egui::TextureFilter::Linear);
                     state
                         .image_handles
                         .insert(key, TextureState::Loaded(texture));
@@ -603,7 +608,9 @@ impl MyEguiApp {
             let (path, key) = shortcut.key(image_type, Path::new(&user.steam_user_data_folder));
             let image = load_image_from_path(&path);
             if let Some(image) = image {
-                let texture = ui.ctx().load_texture(&key, image);
+                let texture = ui
+                    .ctx()
+                    .load_texture(&key, image, egui::TextureFilter::Linear);
                 state
                     .image_handles
                     .insert(key, TextureState::Loaded(texture));
