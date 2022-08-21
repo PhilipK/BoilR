@@ -41,7 +41,7 @@ impl MyEguiApp {
             ui.label("No backups found, they will be created every time you run import");
         } else {
             ScrollArea::vertical()
-                .stick_to_right()
+                .stick_to_right(true)
                 .auto_shrink([false, true])
                 .show(ui, |ui| {
                     for backup_path in available_backups {

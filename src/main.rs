@@ -16,18 +16,16 @@ mod steamgriddb;
 mod sync;
 mod ui;
 mod uplay;
-use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main(){
     ensure_config_folder();
     migration::migrate_config();
 
     let args: Vec<String> = std::env::args().collect();
     if args.contains(&"--no-ui".to_string()) {
-        ui::run_sync();
-        Ok(())
+        ui::run_sync();        
     } else {
-        ui::run_ui(args)
+        ui::run_ui(args);
     }
 }
 
