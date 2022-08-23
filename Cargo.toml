@@ -18,6 +18,7 @@ steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
 sysinfo = "^0.25.2"
 
+
 [dependencies.dashmap]
 features = ["serde"]
 version = "^5.3.4"
@@ -32,8 +33,9 @@ version = "^0.19.0"
 version = "^0.3.23"
 
 [dependencies.image]
-features = ["png"]
-version = "^0.24.3"
+features = ["png","webp","jpeg"]
+git = "https://github.com/PhilipK/image"
+rev = "cb66840dd42785c7283206cc9805240501695a61"
 
 [dependencies.reqwest]
 default_features = false

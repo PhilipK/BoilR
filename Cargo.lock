@@ -1340,8 +1340,7 @@ dependencies = [
 [[package]]
 name = "image"
 version = "0.24.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e30ca2ecf7666107ff827a8e481de6a132a9b687ed3bb20bb1c144a36c00964"
+source = "git+https://github.com/PhilipK/image?rev=cb66840dd42785c7283206cc9805240501695a61#cb66840dd42785c7283206cc9805240501695a61"
 dependencies = [
  "bytemuck",
  "byteorder",

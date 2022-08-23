@@ -263,7 +263,7 @@ impl MyEguiApp {
                                 TextureState::Downloaded => {
                                     //Need to load
                                     let image_data = load_image_from_path(&image.thumbnail_path);
-                                    if let Some(image_data) = image_data {
+                                    if let Ok(image_data) = image_data {
                                         let handle = ui.ctx().load_texture(
                                             &image_key,
                                             image_data,
@@ -481,7 +481,7 @@ impl MyEguiApp {
             let loaded = state.image_handles.contains_key(&key);
             if !loaded && path.exists() {
                 let image = load_image_from_path(&path);
-                if let Some(image) = image {
+                if let Ok(image) = image {
                     let texture = ui
                         .ctx()
                         .load_texture(&key, image, egui::TextureFilter::Linear);
@@ -607,7 +607,7 @@ impl MyEguiApp {
         for image_type in ImageType::all() {
             let (path, key) = shortcut.key(image_type, Path::new(&user.steam_user_data_folder));
             let image = load_image_from_path(&path);
-            if let Some(image) = image {
+            if let Ok(image) = image {
                 let texture = ui
                     .ctx()
                     .load_texture(&key, image, egui::TextureFilter::Linear);
