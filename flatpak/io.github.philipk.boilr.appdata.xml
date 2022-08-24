@@ -25,6 +25,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+  <release version="1.4.5" date="2022-08-25">
+      <description>
+        <ul>
+          <li>Fix a crash that could happen when loading certain animated webp images</li>          
+          <li>Updated all dependencies</li>          
+        </ul>
+      </description>
+  </release>
   <release version="1.4.4" date="2022-08-15">
       <description>
         <ul>
