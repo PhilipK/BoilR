@@ -1685,7 +1685,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git\\image-cb66840\\.\" \"cargo/vendor/image\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/image-cb66840/.\" \"cargo/vendor/image\""
         ]
     },
     {
