@@ -22,6 +22,8 @@ finish-args:
   - --filesystem=~/Games/Heroic:rw # Heroic (non-flatpak)
   - --filesystem=~/.var/app/com.heroicgameslauncher.hgl:rw # Heroic (Flatpak)
   - --filesystem=~/.config/itch:rw # Itch
+  - --talk-name=org.freedesktop.Flatpak
+  - --filesystem=xdg-data/flatpak:ro
 
   - --share=network
   - --share=ipc
@@ -42,7 +44,7 @@ modules:
       - cargo-lock.json
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
-      - cargo --offline build --release --verbose
+      - cargo --offline build --release --verbose --features flatpak
       - install -Dm755 ./target/release/boilr -t /app/bin/
 
   - name: boilr-icon
