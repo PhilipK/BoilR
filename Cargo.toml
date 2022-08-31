@@ -59,3 +59,7 @@ winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
 winreg = "^0.10.1"
+
+[features]
+# This feature is enabled when building for a flatpak environment
+flatpak = []

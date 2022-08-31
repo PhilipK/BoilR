@@ -54,8 +54,15 @@ impl Platform<LutrisGame, Box<dyn Error>> for LutrisPlatform {
 fn get_lutris_command_output(settings: &LutrisSettings) -> Result<String, Box<dyn Error>> {
     let output = if settings.flatpak {
         let flatpak_image = &settings.flatpak_image;
-        let mut command = Command::new("flatpak");
-        command.arg("run").arg(flatpak_image).arg("-lo").arg("--json").output()?
+        #[cfg(not(feature = "flatpak"))]{
+            let mut command = Command::new("flatpak");
+            command.arg("run").arg(flatpak_image).arg("-lo").arg("--json").output()?
+        }
+        #[cfg(feature = "flatpak")]
+        {
+            let mut command = Command::new("flatpak-spawn");
+            command.arg("--host").arg("flatpak").arg("run").arg(flatpak_image).arg("-lo").arg("--json").output()?
+        }
     } else {
         let mut command = Command::new(&settings.executable);
         command.arg("-lo").arg("--json").output()?
