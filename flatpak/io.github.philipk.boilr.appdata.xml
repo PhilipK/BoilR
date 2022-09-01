@@ -25,6 +25,13 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+   <release version="1.4.7" date="2022-09-01">
+      <description>
+        <ul>
+          <li>Load images with wrong extensions</li>          
+        </ul>
+      </description>
+  </release>
   <release version="1.4.6" date="2022-08-31">
       <description>
         <ul>
