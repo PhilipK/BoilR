@@ -15,6 +15,7 @@ Optionally, you can set up BoilR to automatically download artwork from [SteamGr
 - Restart Steam to see your new shortcuts.
 
 If you are on Linux (or a Steam Deck) you can install BoilR from [flathub](https://flathub.org/apps/details/io.github.philipk.boilr).
+Be aware that the flatpak version has some limitations compared to the native version.
 There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gui)
 
 ## Index
@@ -61,7 +62,7 @@ BoilR can import games from many platforms, but there are limits based
 | [Origin](https://www.origin.com)                                                | Yes     | Yes, install through proton | Yes, install through proton                                               |
 | [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic)             | No (Use Heroic)                                                           |
 | [UPlay](https://ubisoftconnect.com)                                             | Yes     | No                          | No                                                                        |
-| [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                         | [No](https://github.com/PhilipK/BoilR/issues/184#issuecomment-1192680467) |
+| [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                         | Yes (make sure Lutris is shut down first) |
 | [Lutris](https://github.com/lutris/lutris) (Non-Flatpak)                        | No      | Yes                         | Yes                                                                       |
 | [Legendary](https://github.com/derrod/legendary)                                | No      | Yes                         | Yes                                                                       |
 | [Rare](https://github.com/Dummerle/Rare/releases)                               | No      | Yes                         | Yes                                                                       |
