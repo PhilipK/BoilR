@@ -25,6 +25,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+   <release version="1.4.8" date="2022-09-06">
+      <description>
+        <ul>
+          <li>Itch settings can not be reset</li>
+          <li>Delete old images when new ones are selected</li>
+        </ul>
+      </description>
+  </release>
    <release version="1.4.7" date="2022-09-01">
       <description>
         <ul>
