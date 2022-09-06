@@ -197,9 +197,19 @@ self.settings.heroic.default_launch_through_heroic{
                     .unwrap_or(&mut empty_string);
                 ui.label("Itch.io Folder: ");
                 if ui.text_edit_singleline(itch_location).changed() {
-                    self.settings.itch.location = Some(itch_location.to_string());
+                    self.settings.itch.location =  if itch_location.is_empty(){
+                        None
+                    }else {
+                        Some(itch_location.to_string())
+                    };
+                }else{
+                    if !itch_location.is_empty(){
+                        if ui.button("Reset").on_hover_text("Reset the itch path, let BoilR guess again").clicked(){
+                            self.settings.itch.location = None;
+                        }
+                    }
                 }
-
+                
             });
                 #[cfg(target_family = "unix")]
                 {
