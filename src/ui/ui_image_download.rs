@@ -1,6 +1,6 @@
 use std::{
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::Arc, thread::Thread,
 };
 
 use crate::{
@@ -9,6 +9,7 @@ use crate::{
     steam::{get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
 };
+use config::File;
 use dashmap::DashMap;
 use egui::{ImageButton, ScrollArea};
 use futures::executor::block_on;
@@ -521,16 +522,17 @@ impl MyEguiApp {
                     if let Ok(possible_images) = search_res {
                         let mut result = vec![];
                         for possible_image in &possible_images {
-                            let path = thumbnails_folder.join(format!("{}.png", possible_image.id));
+                            let ext = get_image_extension(&possible_image.mime);
+                            let path = thumbnails_folder.join(format!("{}.{}",possible_image.id,ext));
                             result.push(PossibleImage {
                                 thumbnail_path: path,
                                 mime: possible_image.mime.clone(),
                                 thumbnail_url: possible_image.thumb.clone(),
                                 full_url: possible_image.url.clone(),
                                 id: possible_image.id,
-                            });
-                            let _ = tx.send(FetcStatus::Fetched(result.clone()));
+                            });                            
                         }
+                        let _ = tx.send(FetcStatus::Fetched(result));
                     }
                 });
             }
@@ -545,33 +547,47 @@ impl MyEguiApp {
             .image_type_selected
             .as_ref()
             .unwrap();
-        let selected_image = self
+        let selected_shortcut = self
             .image_selected_state
             .selected_shortcut
             .as_ref()
             .unwrap();
 
         let ext = get_image_extension(&image.mime);
-        let to = Path::new(&user.steam_user_data_folder)
+        let to_download_to_path = Path::new(&user.steam_user_data_folder)
             .join("config")
             .join("grid")
-            .join(selected_image_type.file_name(selected_image.app_id(), ext));
+            .join(selected_image_type.file_name(selected_shortcut.app_id(), ext));
 
-        if to.exists() {
-            let old_key = to.to_string_lossy().to_string();
-            let new_key = image.thumbnail_path.to_string_lossy().to_string();
-            let _ = self.image_selected_state.image_handles.remove(&old_key);
-            let swap = self.image_selected_state.image_handles.get(&new_key);
-            if let Some(swp) = swap {
-                self.image_selected_state
-                    .image_handles
-                    .insert(old_key, swp.value().clone());
-            }
+        //Delete old possible images
+
+        let data_folder = Path::new(&user.steam_user_data_folder);
+
+
+        //Keep deleting images of this type untill we don't find any more
+        let mut path = self.get_shortcut_image_path(data_folder);
+        while Path::new(&path).exists(){
+            let _= std::fs::remove_file(&path);
+            path = self.get_shortcut_image_path(data_folder);
         }
 
-        let app_name = selected_image.name();
+        //Put the loaded thumbnail into the image handler map, we can use that for preview
+        let full_image_key = to_download_to_path.to_string_lossy().to_string();
+        let _ = self.image_selected_state.image_handles.remove(&full_image_key);
+        let thumbnail_key = image.thumbnail_path.to_string_lossy().to_string();
+        let thumbnail = self.image_selected_state.image_handles.remove(&thumbnail_key);
+        if let Some((key,thumbnail)) = thumbnail {
+            dbg!(&full_image_key);
+            dbg!(&key);
+            
+            self.image_selected_state
+                .image_handles
+                .insert(full_image_key, thumbnail);
+        }
+
+        let app_name = selected_shortcut.name();
         let to_download = ToDownload {
-            path: to,
+            path: to_download_to_path,
             url: image.full_url.clone(),
             app_name: app_name.to_string(),
             image_type: *selected_image_type,
@@ -585,6 +601,10 @@ impl MyEguiApp {
             self.image_selected_state.image_type_selected = None;
             self.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
         }
+    }
+
+    fn get_shortcut_image_path(&self, data_folder: &Path) -> String {
+        self.image_selected_state.selected_shortcut.as_ref().unwrap().key(&self.image_selected_state.image_type_selected.unwrap(), data_folder).1
     }
 
     fn clear_loaded_images(&mut self) {
