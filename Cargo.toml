@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.4.8"
+version = "1.4.9"
 
 [dependencies]
 base64 = "^0.13.0"
@@ -35,7 +35,7 @@ version = "^0.3.23"
 [dependencies.image]
 features = ["png","webp","jpeg"]
 git = "https://github.com/PhilipK/image"
-rev = "cb66840dd42785c7283206cc9805240501695a61"
+rev = "55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
 
 [dependencies.reqwest]
 default_features = false

@@ -577,9 +577,6 @@ impl MyEguiApp {
         let thumbnail_key = image.thumbnail_path.to_string_lossy().to_string();
         let thumbnail = self.image_selected_state.image_handles.remove(&thumbnail_key);
         if let Some((key,thumbnail)) = thumbnail {
-            dbg!(&full_image_key);
-            dbg!(&key);
-            
             self.image_selected_state
                 .image_handles
                 .insert(full_image_key, thumbnail);

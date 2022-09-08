@@ -94,4 +94,10 @@ mod tests {
         let res = load_image_from_path(std::path::Path::new("src/testdata/hollow.webp"));
         assert!(res.is_err());
     }
+
+    #[test]
+    pub fn test_image_load_animated_webp2() {
+        let res = load_image_from_path(std::path::Path::new("src/testdata/tunic.webp"));
+        assert!(res.is_err());
+    }
 }

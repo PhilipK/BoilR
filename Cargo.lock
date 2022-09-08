@@ -168,7 +168,7 @@ dependencies = [
 
 [[package]]
 name = "boilr"
-version = "1.4.8"
+version = "1.4.9"
 dependencies = [
  "base64",
  "chrono",
@@ -1340,7 +1340,7 @@ dependencies = [
 [[package]]
 name = "image"
 version = "0.24.3"
-source = "git+https://github.com/PhilipK/image?rev=cb66840dd42785c7283206cc9805240501695a61#cb66840dd42785c7283206cc9805240501695a61"
+source = "git+https://github.com/PhilipK/image?rev=55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5#55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
 dependencies = [
  "bytemuck",
  "byteorder",
