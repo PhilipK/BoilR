@@ -10,7 +10,8 @@ Optionally, you can set up BoilR to automatically download artwork from [SteamGr
 
 ## Getting started
 - Download the latest release from the [releases page](https://github.com/PhilipK/BoilR/releases).
-- Run the executable.
+- Run the executable. 
+    - if you are on a Steam Deck, right click and mark it "executable" under properties
 - Click Import Games.
 - Restart Steam to see your new shortcuts.
 
