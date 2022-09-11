@@ -1,13 +1,5 @@
 #[cfg(target_family = "unix")]
-use crate::heroic::HeroicGame;
-#[cfg(target_family = "unix")]
 use crate::heroic::HeroicGameType;
-#[cfg(target_family = "unix")]
-use egui::Button;
-#[cfg(target_family = "unix")]
-use std::env::Args;
-#[cfg(target_family = "unix")]
-use std::error::Error;
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};

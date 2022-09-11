@@ -19,7 +19,7 @@ use crate::{
 use crate::heroic::HeroicPlatform;
 
 #[cfg(target_family = "unix")]
-use flatpak::FlatpakPlatform;
+use crate::flatpak::FlatpakPlatform;
 
 use std::error::Error;
 
