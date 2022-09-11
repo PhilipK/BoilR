@@ -1,9 +1,12 @@
 use crate::{
     amazon::AmazonSettings, config::get_config_file, egs::EpicGamesLauncherSettings,
-    flatpak::FlatpakSettings, gog::GogSettings, heroic::HeroicSettings, itch::ItchSettings,
-    legendary::LegendarySettings, lutris::settings::LutrisSettings, origin::OriginSettings,
-    steam::SteamSettings, steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
+    flatpak::FlatpakSettings, gog::GogSettings, itch::ItchSettings, legendary::LegendarySettings,
+    lutris::settings::LutrisSettings, origin::OriginSettings, steam::SteamSettings,
+    steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
 };
+
+#[cfg(target_family = "unix")]
+use crate::heroic::HeroicSettings;
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
@@ -23,6 +26,7 @@ pub struct Settings {
     pub gog: GogSettings,
     pub uplay: UplaySettings,
     pub lutris: LutrisSettings,
+    #[cfg(target_family = "unix")]
     pub heroic: HeroicSettings,
     pub amazon: AmazonSettings,
     pub flatpak: FlatpakSettings,

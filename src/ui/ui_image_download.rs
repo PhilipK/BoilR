@@ -1,6 +1,6 @@
 use std::{
     path::{Path, PathBuf},
-    sync::Arc, thread::Thread,
+    sync::Arc,
 };
 
 use crate::{
@@ -9,7 +9,6 @@ use crate::{
     steam::{get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
 };
-use config::File;
 use dashmap::DashMap;
 use egui::{ImageButton, ScrollArea};
 use futures::executor::block_on;
@@ -41,6 +40,7 @@ pub enum TextureState {
     Downloading,
     Downloaded,
     Loaded(egui::TextureHandle),
+    Failed,
 }
 
 #[derive(Debug)]
@@ -149,7 +149,7 @@ impl MyEguiApp {
             ui.heading(shortcut.name());
 
             if let Some(possible_names) = state.possible_names.as_ref() {
-                if let Some(value) = render_possible_names(possible_names, ui,state) {
+                if let Some(value) = render_possible_names(possible_names, ui, state) {
                     return value;
                 }
             } else if let Some(image_type) = state.image_type_selected.as_ref() {
@@ -265,19 +265,22 @@ impl MyEguiApp {
                                 TextureState::Downloaded => {
                                     //Need to load
                                     let image_data = load_image_from_path(&image.thumbnail_path);
-                                    if let Ok(image_data) = image_data {
-                                        let handle = ui.ctx().load_texture(
-                                            &image_key,
-                                            image_data,
-                                            egui::TextureFilter::Linear,
-                                        );
-                                        *state.value_mut() = TextureState::Loaded(handle);
+                                    match image_data {
+                                        Ok(image_data) => {
+                                            let handle = ui.ctx().load_texture(
+                                                &image_key,
+                                                image_data,
+                                                egui::TextureFilter::Linear,
+                                            );
+                                            *state.value_mut() = TextureState::Loaded(handle);
+                                            ui.horizontal(|ui| {
+                                                ui.spinner();
+                                                ui.label("Loading");
+                                            });
+                                        }
+                                        Err(_) => *state.value_mut() = TextureState::Failed,
                                     }
                                     ui.ctx().request_repaint();
-                                    ui.horizontal(|ui| {
-                                        ui.spinner();
-                                        ui.label("Loading");
-                                    });
                                 }
                                 TextureState::Loaded(texture_handle) => {
                                     //need to show
@@ -287,6 +290,9 @@ impl MyEguiApp {
                                     if ui.add(image_button).clicked() {
                                         return Some(UserAction::ImageSelected(image.clone()));
                                     }
+                                }
+                                TextureState::Failed => {
+                                    ui.label("Failed to load image");
                                 }
                             }
                         }
@@ -401,12 +407,12 @@ impl MyEguiApp {
                     .set_image_banned(&image_type, app_id, should_ban);
                 self.handle_image_type_clear(image_type);
             }
-            UserAction::ClearImages =>{
-                for image_type in ImageType::all(){
+            UserAction::ClearImages => {
+                for image_type in ImageType::all() {
                     self.handle_image_type_clear(*image_type);
                 }
                 self.handle_back_button_action();
-            },
+            }
         };
     }
 
@@ -523,14 +529,15 @@ impl MyEguiApp {
                         let mut result = vec![];
                         for possible_image in &possible_images {
                             let ext = get_image_extension(&possible_image.mime);
-                            let path = thumbnails_folder.join(format!("{}.{}",possible_image.id,ext));
+                            let path =
+                                thumbnails_folder.join(format!("{}.{}", possible_image.id, ext));
                             result.push(PossibleImage {
                                 thumbnail_path: path,
                                 mime: possible_image.mime.clone(),
                                 thumbnail_url: possible_image.thumb.clone(),
                                 full_url: possible_image.url.clone(),
                                 id: possible_image.id,
-                            });                            
+                            });
                         }
                         let _ = tx.send(FetcStatus::Fetched(result));
                     }
@@ -563,20 +570,25 @@ impl MyEguiApp {
 
         let data_folder = Path::new(&user.steam_user_data_folder);
 
-
         //Keep deleting images of this type untill we don't find any more
         let mut path = self.get_shortcut_image_path(data_folder);
-        while Path::new(&path).exists(){
-            let _= std::fs::remove_file(&path);
+        while Path::new(&path).exists() {
+            let _ = std::fs::remove_file(&path);
             path = self.get_shortcut_image_path(data_folder);
         }
 
         //Put the loaded thumbnail into the image handler map, we can use that for preview
         let full_image_key = to_download_to_path.to_string_lossy().to_string();
-        let _ = self.image_selected_state.image_handles.remove(&full_image_key);
+        let _ = self
+            .image_selected_state
+            .image_handles
+            .remove(&full_image_key);
         let thumbnail_key = image.thumbnail_path.to_string_lossy().to_string();
-        let thumbnail = self.image_selected_state.image_handles.remove(&thumbnail_key);
-        if let Some((key,thumbnail)) = thumbnail {
+        let thumbnail = self
+            .image_selected_state
+            .image_handles
+            .remove(&thumbnail_key);
+        if let Some((_key, thumbnail)) = thumbnail {
             self.image_selected_state
                 .image_handles
                 .insert(full_image_key, thumbnail);
@@ -601,7 +613,15 @@ impl MyEguiApp {
     }
 
     fn get_shortcut_image_path(&self, data_folder: &Path) -> String {
-        self.image_selected_state.selected_shortcut.as_ref().unwrap().key(&self.image_selected_state.image_type_selected.unwrap(), data_folder).1
+        self.image_selected_state
+            .selected_shortcut
+            .as_ref()
+            .unwrap()
+            .key(
+                &self.image_selected_state.image_type_selected.unwrap(),
+                data_folder,
+            )
+            .1
     }
 
     fn clear_loaded_images(&mut self) {
@@ -662,17 +682,17 @@ impl MyEguiApp {
 fn render_possible_names(
     possible_names: &Vec<steamgriddb_api::search::SearchResult>,
     ui: &mut egui::Ui,
-    state: &ImageSelectState
+    state: &ImageSelectState,
 ) -> Option<UserAction> {
     let mut grid_id_text = state.grid_id.map(|id| id.to_string()).unwrap_or_default();
-    ui.label("SteamGridDB ID").on_hover_text("You can change this id to one you have found at the steamgriddb webpage");
-    if ui.text_edit_singleline(&mut grid_id_text)
-    .changed() {
+    ui.label("SteamGridDB ID")
+        .on_hover_text("You can change this id to one you have found at the steamgriddb webpage");
+    if ui.text_edit_singleline(&mut grid_id_text).changed() {
         if let Ok(grid_id) = grid_id_text.parse::<usize>() {
             return Some(UserAction::GridIdChanged(grid_id));
         }
     };
-   
+
     for possible in possible_names {
         if ui.button(&possible.name).clicked() {
             return Some(UserAction::GridIdChanged(possible.id));
@@ -680,7 +700,11 @@ fn render_possible_names(
     }
 
     ui.separator();
-    if ui.button("Clear all images").on_hover_text("Clicking this deletes all images for this shortcut").clicked(){
+    if ui
+        .button("Clear all images")
+        .on_hover_text("Clicking this deletes all images for this shortcut")
+        .clicked()
+    {
         return Some(UserAction::ClearImages);
     }
     None
@@ -700,7 +724,6 @@ fn render_steam_game_select(ui: &mut egui::Ui, state: &ImageSelectState) -> Opti
 }
 
 fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option<UserAction> {
-
     if ui
         .button("Click here if the images are for a wrong game")
         .clicked()

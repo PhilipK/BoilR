@@ -3,7 +3,6 @@ use tokio::sync::watch::Sender;
 
 use crate::{
     egs::EpicPlatform,
-    flatpak::FlatpakPlatform,
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
     platform::Platform,
@@ -18,6 +17,9 @@ use crate::{
 
 #[cfg(target_family = "unix")]
 use crate::heroic::HeroicPlatform;
+
+#[cfg(target_family = "unix")]
+use flatpak::FlatpakPlatform;
 
 use std::error::Error;
 
