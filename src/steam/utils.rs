@@ -17,7 +17,7 @@ pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
             shortcuts = parse_shortcuts(content.as_slice())
                 .unwrap()
                 .iter()
-                .map(|s| s.to_owned())
+                .map(steam_shortcuts_util::Shortcut::to_owned)
                 .collect();
             Path::new(&shortcut_path).to_path_buf()
         }

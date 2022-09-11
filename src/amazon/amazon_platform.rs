@@ -37,7 +37,7 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
         let connection = sqlite::open(sqllite_path)?;
         let mut statement =
             connection.prepare("SELECT Id, ProductTitle FROM DbSet WHERE Installed = 1")?;
-        while let State::Row = statement.next().unwrap() {
+        while let Ok(State::Row) = statement.next() {
             let id = statement.read::<String>(0);
             let title = statement.read::<String>(1);
             if let (Ok(id), Ok(title)) = (id, title) {

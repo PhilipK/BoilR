@@ -41,7 +41,7 @@ fn get_install_folders(settings: &SteamSettings) -> Vec<PathBuf> {
             for line in vdf_file.lines() {
                 if line.contains("\"path\"") {
                     let path_string = &line[11..line.len() - 1];
-                    result.push(Path::new(&path_string).join("steamapps").to_path_buf());
+                    result.push(Path::new(&path_string).join("steamapps").clone());
                 }
             }
         }

@@ -126,7 +126,7 @@ pub fn write_collections<S: AsRef<str>>(
     for (category_key, mut collections) in current_categories {
         collections.retain(|(_key, collection)| !collection.is_boilr_collection());
         collections.extend(new_collections.clone());
-        save_category(category_key, collections, &mut write_batch)?;
+        save_category(category_key, &collections, &mut write_batch)?;
 
         if let Some(path) = get_vdf_path(steam_user_id) {
             let content = std::fs::read_to_string(&path).expect("Should be able to read this file");
@@ -211,7 +211,7 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
 
 fn save_category<S: AsRef<str>>(
     category_key: S,
-    category: Vec<(String, SteamCollection)>,
+    category: &[(String, SteamCollection)],
     batch: &mut WriteBatch,
 ) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_string(&category)?;
