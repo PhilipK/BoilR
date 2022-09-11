@@ -1,19 +1,15 @@
-use std::{env::Args, error::Error};
+#[cfg(target_family = "unix")]
+use crate::heroic::HeroicGameType;
 
 use eframe::{egui, App, Frame};
-use egui::{Button, ImageButton, Rounding, Stroke, TextureHandle};
+use egui::{ImageButton, Rounding, Stroke, TextureHandle};
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
 };
 
-use crate::{
-    egs::ManifestItem,
-    heroic::{HeroicGame, HeroicGameType},
-    settings::Settings,
-    sync::SyncProgress,
-};
+use crate::{egs::ManifestItem, settings::Settings, sync::SyncProgress};
 
 use super::{
     ui_colors::{
@@ -42,6 +38,7 @@ pub struct MyEguiApp {
     pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
+    #[cfg(target_family = "unix")]
     pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
@@ -59,6 +56,7 @@ impl MyEguiApp {
             ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             epic_manifests: None,
+            #[cfg(target_family = "unix")]
             heroic_games: None,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
@@ -243,21 +241,27 @@ impl MyEguiApp {
     fn get_import_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
         self.ui_images.import_button.get_or_insert_with(|| {
             // Load the texture only once.
-            ui.ctx().load_texture("import_image", get_import_image(),egui::TextureFilter::Linear)
+            ui.ctx().load_texture(
+                "import_image",
+                get_import_image(),
+                egui::TextureFilter::Linear,
+            )
         })
     }
 
     fn get_save_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
         self.ui_images.save_button.get_or_insert_with(|| {
             // Load the texture only once.
-            ui.ctx().load_texture("save_image", get_save_image(),egui::TextureFilter::Linear)
+            ui.ctx()
+                .load_texture("save_image", get_save_image(), egui::TextureFilter::Linear)
         })
     }
 
     fn get_logo_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
         self.ui_images.logo_32.get_or_insert_with(|| {
             // Load the texture only once.
-            ui.ctx().load_texture("logo32", get_logo(),egui::TextureFilter::Linear)
+            ui.ctx()
+                .load_texture("logo32", get_logo(), egui::TextureFilter::Linear)
         })
     }
 }
@@ -275,7 +279,7 @@ pub fn run_sync() {
     app.run_sync(true);
 }
 
-pub fn run_ui(args: Vec<String>){
+pub fn run_ui(args: Vec<String>) {
     let app = MyEguiApp::new();
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let native_options = eframe::NativeOptions {

@@ -3,6 +3,7 @@ mod config;
 mod egs;
 mod flatpak;
 mod gog;
+#[cfg(target_family = "unix")]
 mod heroic;
 mod itch;
 mod legendary;
@@ -17,13 +18,13 @@ mod sync;
 mod ui;
 mod uplay;
 
-fn main(){
+fn main() {
     ensure_config_folder();
     migration::migrate_config();
 
     let args: Vec<String> = std::env::args().collect();
     if args.contains(&"--no-ui".to_string()) {
-        ui::run_sync();        
+        ui::run_sync();
     } else {
         ui::run_ui(args);
     }

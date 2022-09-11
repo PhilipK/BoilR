@@ -2,7 +2,9 @@ use copypasta::ClipboardProvider;
 use eframe::egui;
 use egui::ScrollArea;
 
-use crate::{egs::EpicPlatform, heroic::HeroicPlatform};
+use crate::{egs::EpicPlatform};
+#[cfg(target_family = "unix")]
+use crate::heroic::HeroicPlatform;
 
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
@@ -62,6 +64,7 @@ impl MyEguiApp {
             });
     }
 
+    #[cfg(target_family = "unix")]            
     fn render_flatpak_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Flatpak");
         ui.checkbox(&mut self.settings.flatpak.enabled, "Import from Flatpak");
@@ -69,7 +72,7 @@ impl MyEguiApp {
                 ui.add_space(SECTION_SPACING);
     }
     
-    
+    #[cfg(target_family = "unix")]
     fn render_heroic_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Heroic");
         ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");
@@ -95,6 +98,7 @@ self.settings.heroic.default_launch_through_heroic{
                                    ui.label("Some games must be started from the Heroic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Heroic Launcher.");
                     
                 }
+                #[cfg(target_family = "unix")]{
                   let manifests =self.heroic_games.get_or_insert_with(||{
                         let heroic_setting = self.settings.heroic.clone();
         
@@ -110,11 +114,12 @@ self.settings.heroic.default_launch_through_heroic{
                         let display_name = manifest.title();
                         let mut safe_open = safe_open_games.contains(&display_name.to_string()) || safe_open_games.contains(&key.to_string());
                         if ui.checkbox(&mut safe_open, display_name).clicked(){
-        if safe_open{
-            safe_open_games.push(key.to_string());
-        }else{
-            safe_open_games.retain(|m| m!= display_name && m!= key);
-        }
+                            if safe_open{
+                                safe_open_games.push(key.to_string());
+                            }else{
+                                safe_open_games.retain(|m| m!= display_name && m!= key);
+                            }
+                        }                  
                         }
                     }
                 })        ;
