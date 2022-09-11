@@ -1,6 +1,8 @@
 use crate::platform::Platform;
 use std::error::Error;
+#[cfg(target_os = "windows")]
 use std::path::Path;
+#[cfg(target_os = "windows")]
 use std::path::PathBuf;
 
 use super::{game::Game, settings::UplaySettings};
