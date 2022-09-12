@@ -17,6 +17,7 @@ mod steamgriddb;
 mod sync;
 mod ui;
 mod uplay;
+mod bottles;
 
 fn main() {
     ensure_config_folder();

@@ -43,8 +43,10 @@ default_launch_through_heroic = true
 [amazon]
 enabled = true
 
-
 [flatpak]
+enabled = true
+
+[bottles]
 enabled = true
 
 [steam]
