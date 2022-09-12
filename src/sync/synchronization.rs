@@ -224,6 +224,11 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
         platform_results.push(update_platform_shortcuts(&FlatpakPlatform {
             settings: settings.flatpak.clone(),
         }));
+        platform_results.push(update_platform_shortcuts(&crate::bottles::BottlesPlatform {
+            settings: settings.bottles.clone(),
+        }));
+
+        
     }
 
     #[cfg(windows)]
