@@ -39,6 +39,7 @@ impl MyEguiApp {
                 #[cfg(target_family = "unix")]
                 {
                     self.render_heroic_settings(ui);
+                    self.render_bottles_settings(ui);
                 }
 
                 self.render_legendary_settings(ui);
@@ -72,7 +73,16 @@ impl MyEguiApp {
                 ui.add_space(SECTION_SPACING);
     }
     
-    #[cfg(target_family = "unix")]
+
+    #[cfg(target_family = "unix")]
+    fn render_bottles_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Bottles");
+        ui.checkbox(&mut self.settings.bottles.enabled, "Import from Bottles");
+        ui.add_space(SECTION_SPACING);
+    }
+
+    
+#[cfg(target_family = "unix")]
     fn render_heroic_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Heroic");
         ui.checkbox(&mut self.settings.heroic.enabled, "Import from Heroic");
