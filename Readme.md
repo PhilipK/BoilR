@@ -63,14 +63,14 @@ BoilR can import games from many platforms, but there are limits based
 | [Origin](https://www.origin.com)                                                | Yes     | Yes, install through proton | Yes, install through proton                                               |
 | [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic)             | No (Use Heroic)                                                           |
 | [UPlay](https://ubisoftconnect.com)                                             | Yes     | No                          | No                                                                        |
-| [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                         | Yes (make sure Lutris is shut down first) |
+| [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                         | Yes (make sure Lutris is shut down first)                                 |
 | [Lutris](https://github.com/lutris/lutris) (Non-Flatpak)                        | No      | Yes                         | Yes                                                                       |
 | [Legendary](https://github.com/derrod/legendary)                                | No      | Yes                         | Yes                                                                       |
 | [Rare](https://github.com/Dummerle/Rare/releases)                               | No      | Yes                         | Yes                                                                       |
 | [Heroic Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) | No      | Yes                         | Yes                                                                       |
 | [Amazon Games](https://gaming.amazon.com)                                       | Yes     | No                          | No                                                                        |
 | [Flatpaks](https://flathub.org/)                                                | No      | Yes                         | [No](https://github.com/PhilipK/BoilR/issues/184#issuecomment-1192680467) |
-
+| [Bottles](https://usebottles.com/)                                              | No      | Yes                         | Yes                                                                       |
 
 ## Getting cover art for your shortcuts
 
