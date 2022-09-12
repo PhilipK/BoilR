@@ -63,6 +63,7 @@ impl Platform<BottlesApp, Box<dyn Error>> for BottlesPlatform {
         crate::platform::SettingsValidity::Invalid { reason: String::from("Nothing found")}
     }
 
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self) -> bool {
         false
     }
