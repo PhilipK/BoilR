@@ -33,6 +33,10 @@ pub fn get_config_file() -> PathBuf {
     get_config_folder().join("config.toml")
 }
 
+pub fn get_renames_file() -> PathBuf {
+    get_config_folder().join("renames.json")
+}
+
 pub fn get_cache_file() -> PathBuf {
     get_config_folder().join("cache.json")
 }

@@ -1,3 +1,5 @@
+use std::{collections::HashMap, error::Error};
+
 #[cfg(target_family = "unix")]
 use crate::heroic::HeroicGameType;
 
@@ -9,7 +11,7 @@ use tokio::{
     sync::watch::{self, Receiver},
 };
 
-use crate::{egs::ManifestItem, settings::Settings, sync::SyncProgress};
+use crate::{egs::ManifestItem, settings::Settings, sync::SyncProgress, config::get_renames_file};
 
 use super::{
     ui_colors::{
@@ -43,6 +45,8 @@ pub struct MyEguiApp {
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
     pub(crate) disconect_state: DiconnectState,
+    pub(crate) rename_map : HashMap<u32,String>,
+    pub(crate) current_edit : Option<u32>,
 }
 
 impl MyEguiApp {
@@ -61,8 +65,21 @@ impl MyEguiApp {
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconect_state: DiconnectState::default(),
+            rename_map: get_rename_map(),
+            current_edit: Option::None
         }
     }
+}
+
+fn get_rename_map() -> HashMap<u32,String>{
+    try_get_rename_map().unwrap_or_default()
+}
+
+fn try_get_rename_map() -> Result<HashMap<u32,String>,Box<dyn Error>>{
+    let rename_map = get_renames_file();
+    let file_content = std::fs::read_to_string(rename_map)?;
+    let deserialized = serde_json::from_str(&file_content)?;
+    Ok(deserialized)
 }
 
 #[derive(PartialEq)]
@@ -283,7 +300,7 @@ pub fn run_ui(args: Vec<String>) {
     let app = MyEguiApp::new();
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some(egui::Vec2 { x: 800., y: 500. }),
+        initial_window_size: Some(egui::Vec2 { x: 1280., y: 800. }),
         icon_data: Some(get_logo_icon()),
         vsync: !no_v_sync,
         ..Default::default()
