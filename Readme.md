@@ -30,6 +30,7 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
     - [Tips for Linux](#tips-for-linux)
     - [Configuration](#configuration)
     - [Run as CLI](#run-as-cli)
+    - [Rename shortcuts](#rename-shortcuts)
   - [Contributions](#contributions)
     - [How can I help/contribute?](#how-can-i-helpcontribute)
     - [I found a bug, what do I do?](#i-found-a-bug-what-do-i-do)
@@ -95,6 +96,11 @@ Most people will not have to configure anything, just open BoilR and click Impor
 In previous releases there was both a CLI and UI version of BoilR, now there is only a UI version.
 But you can add the commandline argument ``--no-ui`` and then the UI version will act like the old CLI version.
 This saves some CO2 from not having to build 2 versions of BoilR for each platform, and it also makes development easier.
+
+### Rename shortcuts
+
+You can rename a shortcut from BoilR by double clicking it from the import list and picking a new name.
+If you want to revert back to the original name, just clear the name and click rename.
 
 ## Contributions 
 
