@@ -145,16 +145,17 @@ impl MyEguiApp {
         }
 
         self.status_reciever = reciever;
+        let renames = self.rename_map.clone();
         let handle = self.rt.spawn_blocking(move || {
             MyEguiApp::save_settings_to_file(&settings);
             let mut some_sender = Some(sender);
             backup_shortcuts(&settings.steam);
-            let usersinfo = sync::run_sync(&settings, &mut some_sender).unwrap();
+            let usersinfo = sync::run_sync(&settings, &mut some_sender,&renames).unwrap();
             let task = download_images(&settings, &usersinfo, &mut some_sender);
             block_on(task);
 
             //Run a second time to fix up shortcuts after images are downloaded
-            sync::run_sync(&settings, &mut some_sender).unwrap();
+            sync::run_sync(&settings, &mut some_sender,&renames).unwrap();
 
             if let Some(sender) = some_sender {
                 let _ = sender.send(SyncProgress::Done);
