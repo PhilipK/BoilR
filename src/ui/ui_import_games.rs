@@ -4,6 +4,7 @@ use futures::executor::block_on;
 
 use tokio::sync::watch;
 
+use crate::config::get_renames_file;
 use crate::settings::Settings;
 use crate::sync;
 
@@ -66,17 +67,46 @@ impl MyEguiApp {
                     ui.label("Select the games you want to import into steam");
                     for (platform_name, shortcuts) in games_to_sync{
                         ui.heading(platform_name);
+                        
                         for shortcut in shortcuts {
                             let mut import_game = !self.settings.blacklisted_games.contains(&shortcut.app_id);
-                            let checkbox = egui::Checkbox::new(&mut import_game,&shortcut.app_name);
-                            let response = ui.add(checkbox);
-                            if response.clicked(){
-                                if !self.settings.blacklisted_games.contains(&shortcut.app_id){
-                                    self.settings.blacklisted_games.push(shortcut.app_id);
-                                }else{
-                                    self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
+                            ui.horizontal(|ui|{
+                                if self.current_edit == Option::Some(shortcut.app_id){
+                                    if let Some(new_name) = self.rename_map.get_mut(&shortcut.app_id){
+                                        ui.text_edit_singleline(new_name).request_focus();
+                                        if ui.button("Rename").clicked() {
+                                            if new_name.is_empty(){
+                                                *new_name = shortcut.app_name.to_string();
+                                            }
+                                            self.current_edit = Option::None;
+                                            let rename_file_path = get_renames_file();
+                                            let contents = serde_json::to_string(&self.rename_map);
+                                            if let Ok(contents) = contents{
+                                                let res = std::fs::write(&rename_file_path, contents);
+                                                println!("Write rename file at {:?} with result: {:?}",rename_file_path, res);
+                                            }
+                                        }
+                                    }
+                                }  else {                                                          
+                                let name = self.rename_map.get(&shortcut.app_id).unwrap_or(&shortcut.app_name);
+                                let checkbox = egui::Checkbox::new(&mut import_game,name);
+                                let response = ui.add(checkbox);                                
+                                if response.double_clicked(){
+                                    if !self.rename_map.contains_key(&shortcut.app_id){
+                                        self.rename_map.insert(shortcut.app_id,shortcut.app_name.to_owned());
+                                    }                                    
+                                    self.current_edit = Option::Some(shortcut.app_id);
                                 }
-                            }
+                                if response.clicked(){
+                                    if !self.settings.blacklisted_games.contains(&shortcut.app_id){
+                                        self.settings.blacklisted_games.push(shortcut.app_id);
+                                    }else{
+                                        self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
+                                    }
+                                }
+                            }   
+                                
+                            });                                                 
                         }
                     }
                     ui.add_space(SECTION_SPACING);
@@ -115,16 +145,17 @@ impl MyEguiApp {
         }
 
         self.status_reciever = reciever;
+        let renames = self.rename_map.clone();
         let handle = self.rt.spawn_blocking(move || {
             MyEguiApp::save_settings_to_file(&settings);
             let mut some_sender = Some(sender);
             backup_shortcuts(&settings.steam);
-            let usersinfo = sync::run_sync(&settings, &mut some_sender).unwrap();
+            let usersinfo = sync::run_sync(&settings, &mut some_sender,&renames).unwrap();
             let task = download_images(&settings, &usersinfo, &mut some_sender);
             block_on(task);
 
             //Run a second time to fix up shortcuts after images are downloaded
-            sync::run_sync(&settings, &mut some_sender).unwrap();
+            sync::run_sync(&settings, &mut some_sender,&renames).unwrap();
 
             if let Some(sender) = some_sender {
                 let _ = sender.send(SyncProgress::Done);

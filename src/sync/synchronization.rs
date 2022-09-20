@@ -1,4 +1,4 @@
-use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes};
+use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, calculate_app_id_for_shortcut, Shortcut};
 use tokio::sync::watch::Sender;
 
 use crate::{
@@ -21,7 +21,7 @@ use crate::heroic::HeroicPlatform;
 #[cfg(target_family = "unix")]
 use crate::flatpak::FlatpakPlatform;
 
-use std::error::Error;
+use std::{error::Error, collections::HashMap};
 
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
@@ -59,6 +59,7 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
 pub fn run_sync(
     settings: &Settings,
     sender: &mut Option<Sender<SyncProgress>>,
+    renames: &HashMap<u32,String>
 ) -> Result<Vec<SteamUsersInfo>, String> {
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
@@ -67,7 +68,7 @@ pub fn run_sync(
         .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
 
     let platform_shortcuts = get_platform_shortcuts(settings);
-    let all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
+    let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
@@ -77,7 +78,20 @@ pub fn run_sync(
             games_found: all_shortcuts.len(),
         });
     }
-    for shortcut in &all_shortcuts {
+    for shortcut in &mut all_shortcuts {
+        if let Some(rename) = renames.get(&shortcut.app_id){
+            shortcut.app_name = rename.clone();
+            let new_shortcut = Shortcut::new(
+                "0",
+                shortcut.app_name.as_str(),
+                &shortcut.exe,
+                "",
+                "",
+                "",
+                ""
+            );
+            shortcut.app_id = calculate_app_id_for_shortcut(&new_shortcut);
+        }
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
     println!("Found {} user(s)", userinfo_shortcuts.len());
