@@ -13,29 +13,29 @@ impl EpicPlatform {
             };
 
             egui::CollapsingHeader::new(safe_mode_header)
-    .id_source("Epic_Launcher_safe_launch")
-    .show(ui, |ui| {
-        ui.label("Some games must be started from the Epic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Epic Launcher.");
-        let manifests =self.epic_manifests.get_or_insert_with(||{
-            let epic_platform = EpicPlatform::new(epic_settings);
-            let manifests = epic_platform.get_epic_games();
-            manifests.unwrap_or_default()
-        });
-        let mut safe_open_games = epic_settings.safe_launch.clone();
-        for manifest in manifests{
-            let key = manifest.get_key();
-            let display_name = &manifest.display_name;
-            let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(&key);
-            if ui.checkbox(&mut safe_open, display_name).clicked(){
-                if safe_open{
-                    safe_open_games.push(key);
-                }else{
-                    safe_open_games.retain(|m| m!= display_name && m!= &key);
+            .id_source("Epic_Launcher_safe_launch")
+            .show(ui, |ui| {
+                ui.label("Some games must be started from the Epic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Epic Launcher.");
+                let manifests =self.epic_manifests.get_or_insert_with(||{
+                    let epic_platform = EpicPlatform::new(epic_settings);
+                    let manifests = epic_platform.get_epic_games();
+                    manifests.unwrap_or_default()
+                });
+                let mut safe_open_games = epic_settings.safe_launch.clone();
+                for manifest in manifests{
+                    let key = manifest.get_key();
+                    let display_name = &manifest.display_name;
+                    let mut safe_open = safe_open_games.contains(display_name) || safe_open_games.contains(&key);
+                    if ui.checkbox(&mut safe_open, display_name).clicked(){
+                        if safe_open{
+                            safe_open_games.push(key);
+                        }else{
+                            safe_open_games.retain(|m| m!= display_name && m!= &key);
+                        }
+                    }
                 }
-            }
-        }
-        epic_settings.safe_launch = safe_open_games;
-    })        ;
+                epic_settings.safe_launch = safe_open_games;
+            });
         }
     }
 }

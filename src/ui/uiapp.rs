@@ -12,10 +12,10 @@ use tokio::{
 };
 
 use crate::{
-    amazon::{AmazonPlatform, AmazonSettings},
+    amazon::{AmazonPlatform},
     bottles::BottlesPlatform,
     config::get_renames_file,
-    egs::{EpicPlatform, ManifestItem},
+    egs::{EpicPlatform},
     platform::PlatformEnum,
     settings::Settings,
     sync::SyncProgress,
