@@ -23,7 +23,7 @@ use crate::flatpak::FlatpakPlatform;
 
 use std::{collections::HashMap, error::Error};
 
-use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
+use crate::{gog::GogPlatform,  origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
 
 pub const BOILR_TAG: &str = "boilr";
@@ -231,15 +231,16 @@ pub fn get_enum_platform_shortcuts(
         .map(|p| (p.name().to_owned(), p.get_shortcuts()))
         .filter_map(|(name, shortcuts)| match shortcuts {
             Ok(shortcuts) => Some((name, shortcuts)),
-            Err(_error) => None,
+            Err(error) => {
+                eprint!("Error importing {name} games: {error}");
+                None},
         })
         .collect()
 }
 
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut platform_results = vec![
-        update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
-        update_platform_shortcuts(&ItchPlatform::new(settings.itch.clone())),
+        update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),        
         update_platform_shortcuts(&OriginPlatform {
             settings: settings.origin.clone(),
         }),
@@ -259,11 +260,6 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
         platform_results.push(update_platform_shortcuts(&FlatpakPlatform {
             settings: settings.flatpak.clone(),
         }));
-        platform_results.push(update_platform_shortcuts(
-            &crate::bottles::BottlesPlatform {
-                settings: settings.bottles.clone(),
-            },
-        ));
     }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }

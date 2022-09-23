@@ -3,7 +3,6 @@ mod flatpak;
 mod gog;
 #[cfg(target_family = "unix")]
 mod heroic;
-mod itch;
 mod legendary;
 mod lutris;
 mod migration;

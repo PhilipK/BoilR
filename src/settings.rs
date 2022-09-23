@@ -2,12 +2,11 @@ use crate::{
     config::get_config_file,
     flatpak::FlatpakSettings,
     gog::GogSettings,
-    itch::ItchSettings,
     legendary::LegendarySettings,
     lutris::settings::LutrisSettings,
     origin::OriginSettings,
     platforms::AmazonSettings,
-    platforms::{EpicGamesLauncherSettings, UplaySettings},
+    platforms::{EpicGamesLauncherSettings, UplaySettings, ItchSettings},
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
 };

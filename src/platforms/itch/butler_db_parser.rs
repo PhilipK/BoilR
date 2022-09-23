@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn parse_itch_butler_db_test() {
-        let content = include_bytes!("../testdata/itch/butler.db-wal");
+        let content = include_bytes!("../../testdata/itch/butler.db-wal");
         let result = parse_butler_db(content);
         assert!(result.is_ok());
         let (_r, paths) = result.unwrap();
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn parse_itch_butler_db_test_other() {
-        let content = include_bytes!("../testdata/itch/other-butler.db-wal");
+        let content = include_bytes!("../../testdata/itch/other-butler.db-wal");
         let result = parse_butler_db(content);
         assert!(result.is_ok());
         let (_r, paths) = result.unwrap();

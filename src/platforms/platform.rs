@@ -3,6 +3,7 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 use super::amazon::AmazonPlatform;
 use super::bottles::BottlesPlatform;
 use super::egs::EpicPlatform;
+use super::itch::ItchPlatform;
 use super::uplay::{get_uplay_games, UplayPlatform};
 
 pub trait Platform<T, E>
@@ -35,6 +36,7 @@ pub enum PlatformEnum {
     Bottles(BottlesPlatform),
     Epic(EpicPlatform),
     Uplay(UplayPlatform),
+    Itch(ItchPlatform)
 }
 
 impl PlatformEnum {
@@ -44,6 +46,7 @@ impl PlatformEnum {
             PlatformEnum::Bottles(_) => "Bottles",
             PlatformEnum::Epic(_) => "Epic",
             PlatformEnum::Uplay(_) => "Uplay",
+            PlatformEnum::Itch(_) => "Itch",
         }
     }
 
@@ -53,6 +56,7 @@ impl PlatformEnum {
             PlatformEnum::Bottles(p) => p.settings.enabled,
             PlatformEnum::Epic(p) => p.settings.enabled,
             PlatformEnum::Uplay(p) => p.settings.enabled,
+            PlatformEnum::Itch(p) => p.settings.enabled,
         }
     }
 
@@ -62,6 +66,7 @@ impl PlatformEnum {
             PlatformEnum::Bottles(p) => p.render_bottles_settings(ui),
             PlatformEnum::Epic(p) => p.render_epic_settings(ui),
             PlatformEnum::Uplay(p) => p.render_uplay_settings(ui),
+            PlatformEnum::Itch(p) => p.render_itch_settings(ui),
         }
     }
 
@@ -71,6 +76,7 @@ impl PlatformEnum {
             PlatformEnum::Bottles(p) => to_shortcuts(p.get_botttles()),
             PlatformEnum::Epic(p) => to_shortcuts(p.get_epic_games()),
             PlatformEnum::Uplay(_) => to_shortcuts(get_uplay_games()),
+            PlatformEnum::Itch(p) => to_shortcuts(p.get_itch_games()),
         }
     }
 }
@@ -87,7 +93,7 @@ where
     Ok(shortcut_owneds)
 }
 
-pub type Platforms = [PlatformEnum; 4];
+pub type Platforms = [PlatformEnum; 5];
 
 pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
     [
@@ -103,6 +109,9 @@ pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
         }),
         PlatformEnum::Uplay(UplayPlatform {
             settings: settings.uplay.clone(),
+        }),
+        PlatformEnum::Itch(ItchPlatform {
+            settings: settings.itch.clone(),
         }),
     ]
 }

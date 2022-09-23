@@ -45,7 +45,6 @@ impl MyEguiApp {
                 }
 
                 self.render_legendary_settings(ui);
-                self.render_itch_settings(ui);
                 self.render_origin_settings(ui);
                 self.render_gog_settings(ui);
                 self.render_lutris_settings(ui);
@@ -180,43 +179,6 @@ self.settings.heroic.default_launch_through_heroic{
         ui.checkbox(&mut self.settings.origin.enabled, "Import from Origin");
         ui.add_space(SECTION_SPACING);
     }
-
-    fn render_itch_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Itch.io");
-        ui.checkbox(&mut self.settings.itch.enabled, "Import from Itch.io");
-        if self.settings.itch.enabled {
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let itch_location = self
-                    .settings
-                    .itch
-                    .location
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
-                ui.label("Itch.io Folder: ");
-                if ui.text_edit_singleline(itch_location).changed() {
-                    self.settings.itch.location =  if itch_location.is_empty(){
-                        None
-                    }else {
-                        Some(itch_location.to_string())
-                    };
-                }else{
-                    if !itch_location.is_empty(){
-                        if ui.button("Reset").on_hover_text("Reset the itch path, let BoilR guess again").clicked(){
-                            self.settings.itch.location = None;
-                        }
-                    }
-                }
-                
-            });
-                #[cfg(target_family = "unix")]
-                {
-                    ui.checkbox(&mut self.settings.itch.create_symlinks, "Create symlinks");
-                }
-        }
-        ui.add_space(SECTION_SPACING);
-    }
-
     fn render_steam_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Steam");
         ui.horizontal(|ui| {
