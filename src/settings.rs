@@ -8,7 +8,6 @@ use crate::{
 #[cfg(target_family = "unix")]
 use crate::heroic::HeroicSettings;
 
-#[cfg(target_family = "unix")]
 use crate::bottles::BottlesSettings;
 
 use config::{Config, ConfigError, Environment, File};
@@ -33,7 +32,6 @@ pub struct Settings {
     pub heroic: HeroicSettings,
     pub amazon: AmazonSettings,
     pub flatpak: FlatpakSettings,
-    #[cfg(target_family = "unix")]
     pub bottles: BottlesSettings,
 }
 

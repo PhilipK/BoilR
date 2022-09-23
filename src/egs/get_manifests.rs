@@ -6,7 +6,7 @@ use std::path::Path;
 
 pub(crate) fn get_egs_manifests(
     settings: &EpicGamesLauncherSettings,
-) -> Result<Vec<ManifestItem>, String> {
+) -> eyre::Result<Vec<ManifestItem>> {
     let locations = crate::egs::get_locations();
     match locations {
         Some(locations) => {
@@ -70,13 +70,13 @@ pub(crate) fn get_egs_manifests(
                     }
                     Ok(manifests)
                 }
-                Err(err) => Err(format!(
+                Err(err) => Err(eyre::format_err!(
                     "Could not read dir at: {:?} error: {:?}",
                     manifest_dir_path, err
                 )),
             }
         }
-        None => Err("Manifests not found".to_string()),
+        None => Err(eyre::format_err!("Manifests not found")),
     }
 }
 

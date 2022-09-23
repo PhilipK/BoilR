@@ -13,6 +13,7 @@ use tokio::{
 
 use crate::{
     amazon::{AmazonPlatform, AmazonSettings},
+    bottles::BottlesPlatform,
     config::get_renames_file,
     egs::{EpicPlatform, ManifestItem},
     platform::PlatformEnum,
@@ -46,7 +47,6 @@ pub struct MyEguiApp {
     ui_images: UiImages,
     pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
-    pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
     #[cfg(target_family = "unix")]
     pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
     pub(crate) image_selected_state: ImageSelectState,
@@ -54,7 +54,7 @@ pub struct MyEguiApp {
     pub(crate) disconect_state: DiconnectState,
     pub(crate) rename_map: HashMap<u32, String>,
     pub(crate) current_edit: Option<u32>,
-    pub(crate) platforms: [PlatformEnum; 2],
+    pub(crate) platforms: [PlatformEnum; 3],
 }
 
 impl MyEguiApp {
@@ -68,7 +68,6 @@ impl MyEguiApp {
             games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
             ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
-            epic_manifests: None,
             #[cfg(target_family = "unix")]
             heroic_games: None,
             image_selected_state: ImageSelectState::default(),
@@ -83,6 +82,9 @@ impl MyEguiApp {
                 }),
                 PlatformEnum::Amazon(AmazonPlatform {
                     settings: settings.amazon,
+                }),
+                PlatformEnum::Bottles(BottlesPlatform {
+                    settings: settings.bottles,
                 }),
             ],
         }

@@ -1,4 +1,4 @@
-use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{amazon::AmazonPlatform, bottles::BottlesPlatform, egs::EpicPlatform};
 
@@ -51,18 +51,28 @@ impl PlatformEnum {
     }
 
     pub fn render_ui(&mut self, ui: &mut egui::Ui) {
-        match self{
+        match self {
             PlatformEnum::Amazon(p) => p.render_amazon_settings(ui),
-            PlatformEnum::Bottles(_) => todo!(),
+            PlatformEnum::Bottles(p) => p.render_bottles_settings(ui),
             PlatformEnum::Epic(p) => p.render_epic_settings(ui),
         }
     }
 
-    pub fn get_shortcuts(&self) -> Result<Vec<ShortcutOwned>,String>{
-        match self{
-            PlatformEnum::Amazon(p) => p.get_owned_shortcuts(),
-            PlatformEnum::Bottles(_) => todo!(),
-            PlatformEnum::Epic(p) => p.get_owned_shortcuts(),
+    pub fn get_shortcuts(&self) -> eyre::Result<Vec<ShortcutOwned>> {
+        match self {
+            PlatformEnum::Amazon(p) => to_shortcuts(p.get_amazon_games()),
+            PlatformEnum::Bottles(p) => to_shortcuts(p.get_botttles()),
+            PlatformEnum::Epic(p) => to_shortcuts(p.get_epic_games()),
         }
     }
+}
+
+fn to_shortcuts<T>(into_shortcuts: Result<Vec<T>, eyre::ErrReport>) -> eyre::Result<Vec<ShortcutOwned>>
+where
+    T: Clone,
+    T: Into<ShortcutOwned>,    
+{
+    let shortcuts = into_shortcuts?;
+    let shortcut_owneds = shortcuts.iter().map(|m| m.clone().into()).collect();
+    Ok(shortcut_owneds)
 }

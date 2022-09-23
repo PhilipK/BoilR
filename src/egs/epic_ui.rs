@@ -18,7 +18,7 @@ impl EpicPlatform {
         ui.label("Some games must be started from the Epic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Epic Launcher.");
         let manifests =self.epic_manifests.get_or_insert_with(||{
             let epic_platform = EpicPlatform::new(epic_settings);
-            let manifests = crate::platform::Platform::get_shortcuts(&epic_platform);
+            let manifests = epic_platform.get_epic_games();
             manifests.unwrap_or_default()
         });
         let mut safe_open_games = epic_settings.safe_launch.clone();

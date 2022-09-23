@@ -1,9 +1,7 @@
-use std::{error::Error, process::Command};
+use std::process::Command;
 
 use eframe::epaint::ahash::HashMap;
 use serde::{Deserialize, Serialize};
-
-use crate::platform::Platform;
 
 use super::BottlesSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
@@ -30,64 +28,17 @@ impl From<BottlesApp> for ShortcutOwned {
     }
 }
 
-impl Platform<BottlesApp, Box<dyn Error>> for BottlesPlatform {
-    fn enabled(&self) -> bool {
-        self.settings.enabled
+fn get_bottles() -> eyre::Result<Vec<Bottle>> {
+    let json = get_bottles_output()?;
+    let map: HashMap<String, Bottle> = serde_json::from_str(json.as_str())?;
+    let mut res = vec![];
+    for (_, value) in map {
+        res.push(value);
     }
-
-    fn name(&self) -> &str {
-        "Bottles"
-    }
-
-    fn get_shortcuts(&self) -> Result<Vec<BottlesApp>, Box<dyn Error>> {
-        let mut res = vec![];
-        let bottles = get_bottles();
-        for bottle in bottles {
-            for (_id,program) in bottle.external_programs {
-                res.push(BottlesApp{
-                    name:program.name,
-                    bottle: bottle.name.clone()
-                })
-            }
-        }
-        Ok(res)
-    }
-
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
-        if let Ok(s) =self.get_shortcuts(){
-            if !s.is_empty() {
-                return crate::platform::SettingsValidity::Valid;
-            }
-        }
-        crate::platform::SettingsValidity::Invalid { reason: String::from("Nothing found")}
-    }
-
-    #[cfg(target_family = "unix")]
-    fn create_symlinks(&self) -> bool {
-        false
-    }
-
-    fn needs_proton(&self, _input: &BottlesApp) -> bool {
-        false
-    }
+    Ok(res)
 }
 
-fn get_bottles() -> Vec<Bottle> {
-    let output_result = get_bottles_output();
-    match output_result {
-        Ok(json) => {
-            let map : HashMap<String,Bottle>= serde_json::from_str(json.as_str()).unwrap_or_default();
-            let mut res = vec![];
-            for (_,value) in map{
-                res.push(value);
-            }
-            res
-        },
-        Err(_err) => vec![],
-    }
-}
-
-fn get_bottles_output() -> Result<String, Box<dyn Error>> {
+fn get_bottles_output() -> eyre::Result<String> {
     let output = {
         #[cfg(not(feature = "flatpak"))]
         {
@@ -119,17 +70,37 @@ fn get_bottles_output() -> Result<String, Box<dyn Error>> {
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 struct Bottle {
     #[serde(alias = "Name")]
     pub(crate) name: String,
     #[serde(alias = "External_Programs")]
-    pub(crate) external_programs : HashMap<String,Program>,
+    pub(crate) external_programs: HashMap<String, Program>,
 }
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 struct Program {
     #[serde(alias = "Name")]
     pub(crate) name: String,
 }
 
+impl BottlesPlatform {
+    pub fn render_bottles_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Bottles");
+        ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
+    }
+
+    pub fn get_botttles(&self) -> eyre::Result<Vec<BottlesApp>> {
+        let mut res = vec![];
+        let bottles = get_bottles()?;
+        for bottle in bottles {
+            for (_id, program) in bottle.external_programs {
+                res.push(BottlesApp {
+                    name: program.name,
+                    bottle: bottle.name.clone(),
+                })
+            }
+        }
+        Ok(res)
+    }
+}
