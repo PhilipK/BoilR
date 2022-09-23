@@ -1,4 +1,3 @@
-mod amazon;
 mod config;
 mod flatpak;
 mod gog;

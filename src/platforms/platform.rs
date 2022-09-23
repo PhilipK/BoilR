@@ -1,7 +1,8 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use super::egs::EpicPlatform;
-use crate::{amazon::AmazonPlatform, bottles::BottlesPlatform};
+use super::amazon::AmazonPlatform;
+use crate::{ bottles::BottlesPlatform};
 
 pub trait Platform<T, E>
 where
@@ -86,13 +87,13 @@ pub fn get_platforms(settings:&crate::settings::Settings) -> Platforms {
     [
         PlatformEnum::Epic(EpicPlatform {
             epic_manifests: None,
-            settings: settings.epic_games,
+            settings: settings.epic_games.clone(),
         }),
         PlatformEnum::Amazon(AmazonPlatform {
-            settings: settings.amazon,
+            settings: settings.amazon.clone(),
         }),
         PlatformEnum::Bottles(BottlesPlatform {
-            settings: settings.bottles,
+            settings: settings.bottles.clone(),
         }),
     ]
 }

@@ -8,5 +8,6 @@ mod epic_ui;
 pub use epic_platform::*;
 use get_manifests::get_egs_manifests;
 pub(crate) use manifest_item::*;
-pub use paths::*;
+use paths::*;
+
 pub use settings::EpicGamesLauncherSettings;

@@ -1,7 +1,7 @@
 use crate::{
-    amazon::AmazonSettings, config::get_config_file, flatpak::FlatpakSettings, gog::GogSettings,
-    itch::ItchSettings, legendary::LegendarySettings, lutris::settings::LutrisSettings,
-    origin::OriginSettings, platforms::EpicGamesLauncherSettings, steam::SteamSettings,
+    config::get_config_file, flatpak::FlatpakSettings, gog::GogSettings, itch::ItchSettings,
+    legendary::LegendarySettings, lutris::settings::LutrisSettings, origin::OriginSettings,
+    platforms::AmazonSettings, platforms::EpicGamesLauncherSettings, steam::SteamSettings,
     steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
 };
 
