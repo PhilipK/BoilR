@@ -4,6 +4,7 @@ use crate::platform::{Platform, SettingsValidity};
 
 use super::{get_egs_manifests, EpicGamesLauncherSettings, ManifestItem};
 
+#[derive(Clone)]
 pub struct EpicPlatform {
     pub(crate) settings: EpicGamesLauncherSettings,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,

@@ -9,6 +9,7 @@ use crate::platform::Platform;
 
 use super::{AmazonGame, AmazonSettings};
 
+#[derive(Clone)]
 pub struct AmazonPlatform {
     pub settings: AmazonSettings,
 }

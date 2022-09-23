@@ -129,9 +129,12 @@ impl MyEguiApp {
             let (tx, rx) = watch::channel(FetcStatus::NeedsFetched);
             self.games_to_sync = rx;
             let settings = self.settings.clone();
+            let platforms = self.platforms.clone();
             self.rt.spawn_blocking(move || {
                 let _ = tx.send(FetcStatus::Fetching);
-                let games_to_sync = sync::get_platform_shortcuts(&settings);
+                let mut old_shortcuts = sync::get_platform_shortcuts(&settings);
+                old_shortcuts.extend(sync::get_enum_platform_shortcuts(&platforms));
+                let games_to_sync = old_shortcuts;
                 let _ = tx.send(FetcStatus::Fetched(games_to_sync));
             });
         }
@@ -146,16 +149,16 @@ impl MyEguiApp {
 
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
+        let platforms = self.platforms.clone();
         let handle = self.rt.spawn_blocking(move || {
             MyEguiApp::save_settings_to_file(&settings);
             let mut some_sender = Some(sender);
             backup_shortcuts(&settings.steam);
-            let usersinfo = sync::run_sync(&settings, &mut some_sender,&renames).unwrap();
+            let usersinfo = sync::run_sync(&settings, &mut some_sender,&renames,&platforms).unwrap();
             let task = download_images(&settings, &usersinfo, &mut some_sender);
             block_on(task);
-
             //Run a second time to fix up shortcuts after images are downloaded
-            sync::run_sync(&settings, &mut some_sender,&renames).unwrap();
+            sync::run_sync(&settings, &mut some_sender,&renames,&platforms).unwrap();
 
             if let Some(sender) = some_sender {
                 let _ = sender.send(SyncProgress::Done);

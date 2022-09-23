@@ -60,18 +60,21 @@ pub fn run_sync(
     settings: &Settings,
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32,String>,
+    platforms: &[PlatformEnum]
 ) -> Result<Vec<SteamUsersInfo>, String> {
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
     }
 
     let platform_shortcuts = get_platform_shortcuts(settings);
-    sync_shortcuts(settings, platform_shortcuts, sender, renames)
+    let mut platform_enum_shortcuts = get_enum_platform_shortcuts(platforms);
+    platform_enum_shortcuts.extend(platform_shortcuts);
+    sync_shortcuts(settings,&platform_enum_shortcuts, sender, renames)
 }
 
 fn sync_shortcuts(
     settings: &Settings, 
-    platform_shortcuts: Vec<(String, Vec<ShortcutOwned>)>, 
+    platform_shortcuts: &Vec<(String, Vec<ShortcutOwned>)>, 
     sender: &mut Option<Sender<SyncProgress>>, 
     renames: &HashMap<u32, String>) -> Result<Vec<SteamUsersInfo>, String> {
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
@@ -223,15 +226,14 @@ pub fn get_enum_platform_shortcuts(platforms: &[PlatformEnum]) -> Vec<(String, V
     .map(|p| (p.name().to_owned(), p.get_shortcuts()))
     .filter_map(|(name,shortcuts)| {
         match shortcuts {
-            Ok(shortcuts) => Ok(name,shortcuts),
+            Ok(shortcuts) => Some((name,shortcuts)),
             Err(_error) => None,
         }
-    });
+    }).collect()
 }
 
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut platform_results = vec![
-        update_platform_shortcuts(&EpicPlatform::new(&settings.epic_games)),
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
         update_platform_shortcuts(&ItchPlatform::new(settings.itch.clone())),
         update_platform_shortcuts(&OriginPlatform {

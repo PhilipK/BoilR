@@ -26,6 +26,7 @@ pub enum SettingsValidity {
     Invalid { reason: String },
 }
 
+#[derive(Clone)]
 pub enum PlatformEnum {
     Amazon(AmazonPlatform),
     Bottles(BottlesPlatform),
