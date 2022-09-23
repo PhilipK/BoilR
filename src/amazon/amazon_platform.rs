@@ -4,6 +4,7 @@ use std::{
 };
 
 use sqlite::State;
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::platform::Platform;
 
@@ -30,10 +31,8 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
     }
 
     fn get_shortcuts(&self) -> Result<Vec<AmazonGame>, Box<dyn Error>> {
-        let sqllite_path =
-            get_sqlite_path().expect("This should never get called if settings are invalid");
-        let launcher_path =
-            get_launcher_path().expect("This should never get called if settings are invalid");
+        let sqllite_path = get_sqlite_path()?;
+        let launcher_path = get_launcher_path()?;
         let mut result = vec![];
         let connection = sqlite::open(sqllite_path)?;
         let mut statement =
@@ -55,7 +54,7 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
     fn settings_valid(&self) -> crate::platform::SettingsValidity {
         let path = get_sqlite_path();
         let launcher = get_launcher_path();
-        if path.is_some() && launcher.is_some() {
+        if path.is_ok() && launcher.is_ok() {
             crate::platform::SettingsValidity::Valid
         } else {
             crate::platform::SettingsValidity::Invalid {
@@ -74,38 +73,47 @@ impl Platform<AmazonGame, Box<dyn Error>> for AmazonPlatform {
     }
 }
 
-fn get_sqlite_path() -> Option<PathBuf> {
-    match std::env::var("LOCALAPPDATA") {
-        Ok(localdata) => {
-            let path = Path::new(&localdata)
-                .join("Amazon Games")
-                .join("Data")
-                .join("Games")
-                .join("Sql")
-                .join("GameInstallInfo.sqlite");
-            if path.exists() {
-                Some(path)
-            } else {
-                None
-            }
-        }
-        Err(_e) => None,
+fn get_sqlite_path() -> eyre::Result<PathBuf> {
+    let localdata = std::env::var("LOCALAPPDATA")?;
+    let path = Path::new(&localdata)
+        .join("Amazon Games")
+        .join("Data")
+        .join("Games")
+        .join("Sql")
+        .join("GameInstallInfo.sqlite");
+    if path.exists() {
+        Ok(path)
+    } else {
+        Err(eyre::format_err!(
+            "Amazong GameInstallInfo.sqlite not found at {:?}",path
+        ))
     }
 }
 
-fn get_launcher_path() -> Option<PathBuf> {
-    match std::env::var("LOCALAPPDATA") {
-        Ok(localdata) => {
-            let path = Path::new(&localdata)
-                .join("Amazon Games")
-                .join("App")
-                .join("Amazon Games.exe");
-            if path.exists() {
-                Some(path)
-            } else {
-                None
-            }
-        }
-        Err(_e) => None,
+fn get_launcher_path() -> eyre::Result<PathBuf> {
+    let localdata = std::env::var("LOCALAPPDATA")?;
+    let path = Path::new(&localdata)
+        .join("Amazon Games")
+        .join("App")
+        .join("Amazon Games.exe");
+    if path.exists() {
+        Ok(path)
+    } else {
+        Err(eyre::format_err!(
+            "Could not find Amazon Games.exe at {:?}",path
+        ))
+    }
+}
+
+impl AmazonPlatform {
+    pub fn render_amazon_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Amazon");
+        ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
+    }
+
+    pub fn get_owned_shortcuts(&self) -> Result<Vec<ShortcutOwned>, String> {
+        self.get_shortcuts()
+            .map(|shortcuts| shortcuts.iter().map(|m| m.clone().into()).collect())
+            .map_err(|err| format!("{:?}", err))
     }
 }

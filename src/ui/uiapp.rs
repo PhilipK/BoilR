@@ -12,7 +12,7 @@ use tokio::{
 };
 
 use crate::{
-    amazon::AmazonSettings,
+    amazon::{AmazonPlatform, AmazonSettings},
     config::get_renames_file,
     egs::{EpicPlatform, ManifestItem},
     platform::PlatformEnum,
@@ -54,7 +54,7 @@ pub struct MyEguiApp {
     pub(crate) disconect_state: DiconnectState,
     pub(crate) rename_map: HashMap<u32, String>,
     pub(crate) current_edit: Option<u32>,
-    pub(crate) platforms: [PlatformEnum; 1],
+    pub(crate) platforms: [PlatformEnum; 2],
 }
 
 impl MyEguiApp {
@@ -76,10 +76,15 @@ impl MyEguiApp {
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
-            platforms: [PlatformEnum::Epic(EpicPlatform {
-                epic_manifests: None,
-                settings: settings.epic_games,
-            })],
+            platforms: [
+                PlatformEnum::Epic(EpicPlatform {
+                    epic_manifests: None,
+                    settings: settings.epic_games,
+                }),
+                PlatformEnum::Amazon(AmazonPlatform {
+                    settings: settings.amazon,
+                }),
+            ],
         }
     }
 }

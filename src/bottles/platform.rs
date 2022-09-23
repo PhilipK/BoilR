@@ -42,7 +42,6 @@ impl Platform<BottlesApp, Box<dyn Error>> for BottlesPlatform {
     fn get_shortcuts(&self) -> Result<Vec<BottlesApp>, Box<dyn Error>> {
         let mut res = vec![];
         let bottles = get_bottles();
-        dbg!(&bottles);
         for bottle in bottles {
             for (_id,program) in bottle.external_programs {
                 res.push(BottlesApp{

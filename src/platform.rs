@@ -52,7 +52,7 @@ impl PlatformEnum {
 
     pub fn render_ui(&mut self, ui: &mut egui::Ui) {
         match self{
-            PlatformEnum::Amazon(_) => todo!(),
+            PlatformEnum::Amazon(p) => p.render_amazon_settings(ui),
             PlatformEnum::Bottles(_) => todo!(),
             PlatformEnum::Epic(p) => p.render_epic_settings(ui),
         }
@@ -60,13 +60,9 @@ impl PlatformEnum {
 
     pub fn get_shortcuts(&self) -> Result<Vec<ShortcutOwned>,String>{
         match self{
-            PlatformEnum::Amazon(_) => todo!(),
+            PlatformEnum::Amazon(p) => p.get_owned_shortcuts(),
             PlatformEnum::Bottles(_) => todo!(),
             PlatformEnum::Epic(p) => p.get_owned_shortcuts(),
         }
     }
-}
-
-impl PlatformEnum {
-   
 }

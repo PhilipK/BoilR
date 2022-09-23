@@ -1,4 +1,6 @@
-use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, calculate_app_id_for_shortcut, Shortcut};
+use steam_shortcuts_util::{
+    calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
+};
 use tokio::sync::watch::Sender;
 
 use crate::{
@@ -21,7 +23,7 @@ use crate::heroic::HeroicPlatform;
 #[cfg(target_family = "unix")]
 use crate::flatpak::FlatpakPlatform;
 
-use std::{error::Error, collections::HashMap};
+use std::{collections::HashMap, error::Error};
 
 use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
@@ -59,8 +61,8 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
 pub fn run_sync(
     settings: &Settings,
     sender: &mut Option<Sender<SyncProgress>>,
-    renames: &HashMap<u32,String>,
-    platforms: &[PlatformEnum]
+    renames: &HashMap<u32, String>,
+    platforms: &[PlatformEnum],
 ) -> Result<Vec<SteamUsersInfo>, String> {
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
@@ -69,16 +71,17 @@ pub fn run_sync(
     let platform_shortcuts = get_platform_shortcuts(settings);
     let mut platform_enum_shortcuts = get_enum_platform_shortcuts(platforms);
     platform_enum_shortcuts.extend(platform_shortcuts);
-    sync_shortcuts(settings,&platform_enum_shortcuts, sender, renames)
+    sync_shortcuts(settings, &platform_enum_shortcuts, sender, renames)
 }
 
 fn sync_shortcuts(
-    settings: &Settings, 
-    platform_shortcuts: &Vec<(String, Vec<ShortcutOwned>)>, 
-    sender: &mut Option<Sender<SyncProgress>>, 
-    renames: &HashMap<u32, String>) -> Result<Vec<SteamUsersInfo>, String> {
+    settings: &Settings,
+    platform_shortcuts: &Vec<(String, Vec<ShortcutOwned>)>,
+    sender: &mut Option<Sender<SyncProgress>>,
+    renames: &HashMap<u32, String>,
+) -> Result<Vec<SteamUsersInfo>, String> {
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
-    .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
+        .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
@@ -90,7 +93,7 @@ fn sync_shortcuts(
         });
     }
     for shortcut in &mut all_shortcuts {
-        if let Some(rename) = renames.get(&shortcut.app_id){
+        if let Some(rename) = renames.get(&shortcut.app_id) {
             shortcut.app_name = rename.clone();
             let new_shortcut = Shortcut::new(
                 "0",
@@ -99,7 +102,7 @@ fn sync_shortcuts(
                 "",
                 "",
                 "",
-                ""
+                "",
             );
             shortcut.app_id = calculate_app_id_for_shortcut(&new_shortcut);
         }
@@ -221,15 +224,18 @@ fn write_shortcut_collections<S: AsRef<str>>(
     Ok(())
 }
 
-pub fn get_enum_platform_shortcuts(platforms: &[PlatformEnum]) -> Vec<(String, Vec<ShortcutOwned>)>{
-    platforms.iter()
-    .map(|p| (p.name().to_owned(), p.get_shortcuts()))
-    .filter_map(|(name,shortcuts)| {
-        match shortcuts {
-            Ok(shortcuts) => Some((name,shortcuts)),
+pub fn get_enum_platform_shortcuts(
+    platforms: &[PlatformEnum],
+) -> Vec<(String, Vec<ShortcutOwned>)> {
+    platforms
+        .iter()
+        .filter(|p| p.enabled())
+        .map(|p| (p.name().to_owned(), p.get_shortcuts()))
+        .filter_map(|(name, shortcuts)| match shortcuts {
+            Ok(shortcuts) => Some((name, shortcuts)),
             Err(_error) => None,
-        }
-    }).collect()
+        })
+        .collect()
 }
 
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
@@ -258,18 +264,11 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
         platform_results.push(update_platform_shortcuts(&FlatpakPlatform {
             settings: settings.flatpak.clone(),
         }));
-        platform_results.push(update_platform_shortcuts(&crate::bottles::BottlesPlatform {
-            settings: settings.bottles.clone(),
-        }));
-
-        
-    }
-
-    #[cfg(windows)]
-    {
-        platform_results.push(update_platform_shortcuts(&crate::amazon::AmazonPlatform {
-            settings: settings.amazon.clone(),
-        }));
+        platform_results.push(update_platform_shortcuts(
+            &crate::bottles::BottlesPlatform {
+                settings: settings.bottles.clone(),
+            },
+        ));
     }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }

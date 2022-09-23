@@ -60,7 +60,6 @@ impl EpicPlatform {
         get_egs_manifests(&self.settings).map(|ms| {
             ms.iter()
                 .map(|m| {
-                    //Remove this clone
                      m.clone().into()
                 })
                 .collect()
