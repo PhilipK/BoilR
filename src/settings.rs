@@ -1,8 +1,15 @@
 use crate::{
-    config::get_config_file, flatpak::FlatpakSettings, gog::GogSettings, itch::ItchSettings,
-    legendary::LegendarySettings, lutris::settings::LutrisSettings, origin::OriginSettings,
-    platforms::AmazonSettings, platforms::EpicGamesLauncherSettings, steam::SteamSettings,
-    steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
+    config::get_config_file,
+    flatpak::FlatpakSettings,
+    gog::GogSettings,
+    itch::ItchSettings,
+    legendary::LegendarySettings,
+    lutris::settings::LutrisSettings,
+    origin::OriginSettings,
+    platforms::AmazonSettings,
+    platforms::{EpicGamesLauncherSettings, UplaySettings},
+    steam::SteamSettings,
+    steamgriddb::SteamGridDbSettings,
 };
 
 #[cfg(target_family = "unix")]

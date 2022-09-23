@@ -14,7 +14,6 @@ mod steam;
 mod steamgriddb;
 mod sync;
 mod ui;
-mod uplay;
 
 use color_eyre::eyre::Result;
 

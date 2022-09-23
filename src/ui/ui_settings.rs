@@ -48,7 +48,6 @@ impl MyEguiApp {
                 self.render_itch_settings(ui);
                 self.render_origin_settings(ui);
                 self.render_gog_settings(ui);
-                self.render_uplay_settings(ui);
                 self.render_lutris_settings(ui);
                 
                 
@@ -152,13 +151,6 @@ self.settings.heroic.default_launch_through_heroic{
                 });
             }
         }
-        ui.add_space(SECTION_SPACING);
-    }
-
-    
-    fn render_uplay_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Uplay");
-        ui.checkbox(&mut self.settings.uplay.enabled, "Import from Uplay");
         ui.add_space(SECTION_SPACING);
     }
 

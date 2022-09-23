@@ -13,7 +13,6 @@ use crate::{
         Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
-    uplay::Uplay,
 };
 
 #[cfg(target_family = "unix")]
@@ -246,9 +245,6 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
         }),
         update_platform_shortcuts(&GogPlatform {
             settings: settings.gog.clone(),
-        }),
-        update_platform_shortcuts(&Uplay {
-            settings: settings.uplay.clone(),
         }),
         update_platform_shortcuts(&LutrisPlatform {
             settings: settings.lutris.clone(),

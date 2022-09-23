@@ -1,8 +1,9 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use super::egs::EpicPlatform;
 use super::amazon::AmazonPlatform;
 use super::bottles::BottlesPlatform;
+use super::egs::EpicPlatform;
+use super::uplay::{get_uplay_games, UplayPlatform};
 
 pub trait Platform<T, E>
 where
@@ -33,6 +34,7 @@ pub enum PlatformEnum {
     Amazon(AmazonPlatform),
     Bottles(BottlesPlatform),
     Epic(EpicPlatform),
+    Uplay(UplayPlatform),
 }
 
 impl PlatformEnum {
@@ -41,6 +43,7 @@ impl PlatformEnum {
             PlatformEnum::Amazon(_) => "Amazon",
             PlatformEnum::Bottles(_) => "Bottles",
             PlatformEnum::Epic(_) => "Epic",
+            PlatformEnum::Uplay(_) => "Uplay",
         }
     }
 
@@ -49,6 +52,7 @@ impl PlatformEnum {
             PlatformEnum::Amazon(p) => p.settings.enabled,
             PlatformEnum::Bottles(p) => p.settings.enabled,
             PlatformEnum::Epic(p) => p.settings.enabled,
+            PlatformEnum::Uplay(p) => p.settings.enabled,
         }
     }
 
@@ -57,6 +61,7 @@ impl PlatformEnum {
             PlatformEnum::Amazon(p) => p.render_amazon_settings(ui),
             PlatformEnum::Bottles(p) => p.render_bottles_settings(ui),
             PlatformEnum::Epic(p) => p.render_epic_settings(ui),
+            PlatformEnum::Uplay(p) => p.render_uplay_settings(ui),
         }
     }
 
@@ -65,6 +70,7 @@ impl PlatformEnum {
             PlatformEnum::Amazon(p) => to_shortcuts(p.get_amazon_games()),
             PlatformEnum::Bottles(p) => to_shortcuts(p.get_botttles()),
             PlatformEnum::Epic(p) => to_shortcuts(p.get_epic_games()),
+            PlatformEnum::Uplay(_) => to_shortcuts(get_uplay_games()),
         }
     }
 }
@@ -81,9 +87,9 @@ where
     Ok(shortcut_owneds)
 }
 
-pub type Platforms = [PlatformEnum;3];
+pub type Platforms = [PlatformEnum; 4];
 
-pub fn get_platforms(settings:&crate::settings::Settings) -> Platforms {
+pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
     [
         PlatformEnum::Epic(EpicPlatform {
             epic_manifests: None,
@@ -94,6 +100,9 @@ pub fn get_platforms(settings:&crate::settings::Settings) -> Platforms {
         }),
         PlatformEnum::Bottles(BottlesPlatform {
             settings: settings.bottles.clone(),
+        }),
+        PlatformEnum::Uplay(UplayPlatform {
+            settings: settings.uplay.clone(),
         }),
     ]
 }
