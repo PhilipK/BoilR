@@ -11,7 +11,14 @@ use tokio::{
     sync::watch::{self, Receiver},
 };
 
-use crate::{egs::ManifestItem, settings::Settings, sync::SyncProgress, config::get_renames_file};
+use crate::{
+    amazon::AmazonSettings,
+    config::get_renames_file,
+    egs::{EpicPlatform, ManifestItem},
+    platform::PlatformEnum,
+    settings::Settings,
+    sync::SyncProgress,
+};
 
 use super::{
     ui_colors::{
@@ -45,16 +52,18 @@ pub struct MyEguiApp {
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
     pub(crate) disconect_state: DiconnectState,
-    pub(crate) rename_map : HashMap<u32,String>,
-    pub(crate) current_edit : Option<u32>,
+    pub(crate) rename_map: HashMap<u32, String>,
+    pub(crate) current_edit: Option<u32>,
+    pub(crate) platforms: [PlatformEnum; 1],
 }
 
 impl MyEguiApp {
     pub fn new() -> Self {
         let runtime = Runtime::new().unwrap();
+        let settings = Settings::new().expect("We must be able to load our settings");
         Self {
             selected_menu: Menues::Import,
-            settings: Settings::new().expect("We must be able to load our settings"),
+            settings: settings.clone(),
             rt: runtime,
             games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
             ui_images: UiImages::default(),
@@ -66,16 +75,20 @@ impl MyEguiApp {
             backup_state: BackupState::default(),
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
-            current_edit: Option::None
+            current_edit: Option::None,
+            platforms: [PlatformEnum::Epic(EpicPlatform {
+                epic_manifests: None,
+                settings: settings.epic_games,
+            })],
         }
     }
 }
 
-fn get_rename_map() -> HashMap<u32,String>{
+fn get_rename_map() -> HashMap<u32, String> {
     try_get_rename_map().unwrap_or_default()
 }
 
-fn try_get_rename_map() -> Result<HashMap<u32,String>,Box<dyn Error>>{
+fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
     let rename_map = get_renames_file();
     let file_content = std::fs::read_to_string(rename_map)?;
     let deserialized = serde_json::from_str(&file_content)?;

@@ -17,7 +17,8 @@ sqlite = "^0.27.0"
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
 sysinfo = "^0.25.2"
-
+eyre = "^0.6.8"
+color-eyre = "^0.6"
 
 [dependencies.dashmap]
 features = ["serde"]

@@ -5,7 +5,7 @@ use crate::{
     egs::EpicPlatform,
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
-    platform::Platform,
+    platform::{Platform, PlatformEnum},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -59,15 +59,23 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
 pub fn run_sync(
     settings: &Settings,
     sender: &mut Option<Sender<SyncProgress>>,
-    renames: &HashMap<u32,String>
+    renames: &HashMap<u32,String>,
 ) -> Result<Vec<SteamUsersInfo>, String> {
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
     }
-    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
-        .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
 
     let platform_shortcuts = get_platform_shortcuts(settings);
+    sync_shortcuts(settings, platform_shortcuts, sender, renames)
+}
+
+fn sync_shortcuts(
+    settings: &Settings, 
+    platform_shortcuts: Vec<(String, Vec<ShortcutOwned>)>, 
+    sender: &mut Option<Sender<SyncProgress>>, 
+    renames: &HashMap<u32, String>) -> Result<Vec<SteamUsersInfo>, String> {
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
+    .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
@@ -127,7 +135,6 @@ pub fn run_sync(
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
     }
-
     Ok(userinfo_shortcuts)
 }
 
@@ -209,6 +216,17 @@ fn write_shortcut_collections<S: AsRef<str>>(
     println!("Writing {} collections ", collections.len());
     write_collections(steam_id.as_ref(), &collections)?;
     Ok(())
+}
+
+pub fn get_enum_platform_shortcuts(platforms: &[PlatformEnum]) -> Vec<(String, Vec<ShortcutOwned>)>{
+    platforms.iter()
+    .map(|p| (p.name().to_owned(), p.get_shortcuts()))
+    .filter_map(|(name,shortcuts)| {
+        match shortcuts {
+            Ok(shortcuts) => Ok(name,shortcuts),
+            Err(_error) => None,
+        }
+    });
 }
 
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {

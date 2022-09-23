@@ -1,15 +1,19 @@
+use steam_shortcuts_util::shortcut::ShortcutOwned;
+
 use crate::platform::{Platform, SettingsValidity};
 
 use super::{get_egs_manifests, EpicGamesLauncherSettings, ManifestItem};
 
 pub struct EpicPlatform {
-    settings: EpicGamesLauncherSettings,
+    pub(crate) settings: EpicGamesLauncherSettings,
+    pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
 }
 
 impl EpicPlatform {
     pub fn new(settings: &EpicGamesLauncherSettings) -> Self {
         EpicPlatform {
             settings: settings.clone(),
+            epic_manifests: None,
         }
     }
 }
@@ -47,5 +51,18 @@ impl Platform<ManifestItem, String> for EpicPlatform {
         return true;
         #[cfg(target_os = "windows")]
         return false;
+    }
+}
+
+impl EpicPlatform {
+   pub(crate) fn get_owned_shortcuts(&self) -> Result<Vec<ShortcutOwned>, String> {
+        get_egs_manifests(&self.settings).map(|ms| {
+            ms.iter()
+                .map(|m| {
+                    //Remove this clone
+                     m.clone().into()
+                })
+                .collect()
+        })
     }
 }

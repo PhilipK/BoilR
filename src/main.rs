@@ -19,7 +19,10 @@ mod ui;
 mod uplay;
 mod bottles;
 
-fn main() {
+use color_eyre::eyre::Result;
+
+fn main() -> Result<()>{
+    color_eyre::install()?;
     ensure_config_folder();
     migration::migrate_config();
 
@@ -29,6 +32,7 @@ fn main() {
     } else {
         ui::run_ui(args);
     }
+    Ok(())
 }
 
 fn ensure_config_folder() {

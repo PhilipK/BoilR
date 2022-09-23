@@ -19,6 +19,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a13739d7177fbd22bb0ed28badfff9f372f8bef46c863db4e1c6248f6b223b6e"
 
 [[package]]
+name = "addr2line"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9ecd88a8c8378ca913a680cd98f0f13ac67383d35993f86c90a70e3f137816b"
+dependencies = [
+ "gimli",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -122,6 +131,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "backtrace"
+version = "0.3.66"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cab84319d616cfb654d03394f38ab7e6f0919e181b1b57e1fd15e7fb4077d9a7"
+dependencies = [
+ "addr2line",
+ "cc",
+ "cfg-if",
+ "libc",
+ "miniz_oxide",
+ "object",
+ "rustc-demangle",
+]
+
+[[package]]
 name = "base64"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -172,11 +196,13 @@ version = "1.5.1"
 dependencies = [
  "base64",
  "chrono",
+ "color-eyre",
  "config",
  "copypasta",
  "dashmap",
  "eframe",
  "egui",
+ "eyre",
  "flate2",
  "futures",
  "image",
@@ -366,6 +392,33 @@ dependencies = [
  "foreign-types 0.3.2",
  "libc",
  "objc",
+]
+
+[[package]]
+name = "color-eyre"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a667583cca8c4f8436db8de46ea8233c42a7d9ae424a82d338f2e4675229204"
+dependencies = [
+ "backtrace",
+ "color-spantrace",
+ "eyre",
+ "indenter",
+ "once_cell",
+ "owo-colors",
+ "tracing-error",
+]
+
+[[package]]
+name = "color-spantrace"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ba75b3d9449ecdccb27ecbc479fdc0b87fa2dd43d2f8298f9bf0e59aacc8dce"
+dependencies = [
+ "once_cell",
+ "owo-colors",
+ "tracing-core",
+ "tracing-error",
 ]
 
 [[package]]
@@ -830,6 +883,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "eyre"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c2b6b5a29c02cdc822728b7d7b8ae1bab3e3b05d44522770ddd49722eeac7eb"
+dependencies = [
+ "indenter",
+ "once_cell",
+]
+
+[[package]]
 name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1100,6 +1163,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "gimli"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22030e2c5a68ec659fde1e949a745124b48e6fa8b045b7ed5bd1fe4ccc5c4e5d"
+
+[[package]]
 name = "gl_generator"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1354,6 +1423,12 @@ dependencies = [
  "scoped_threadpool",
  "tiff",
 ]
+
+[[package]]
+name = "indenter"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 
 [[package]]
 name = "indexmap"
@@ -1888,6 +1963,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "object"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21158b2c33aa6d4561f1c0a6ea283ca92bc54802a93b263e910746d679a7eb53"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1971,6 +2055,12 @@ checksum = "4fb1e509cfe7a12db2a90bfa057dfcdbc55a347f5da677c506b53dd099cfec9d"
 dependencies = [
  "ttf-parser",
 ]
+
+[[package]]
+name = "owo-colors"
+version = "3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
 
 [[package]]
 name = "parking_lot"
@@ -2303,6 +2393,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-demangle"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ef03e0a2b150c7a90d01faf6254c9c48a41e95fb2a8c2ac1c6f0d2b9aefc342"
+
+[[package]]
 name = "rusty-leveldb"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2477,6 +2573,15 @@ dependencies = [
  "digest",
  "fake-simd",
  "opaque-debug",
+]
+
+[[package]]
+name = "sharded-slab"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
+dependencies = [
+ "lazy_static",
 ]
 
 [[package]]
@@ -2718,6 +2823,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "thread_local"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5516c27b78311c50bf42c071425c560ac799b11c30b31f87e3081965fe5e0180"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
 name = "threadpool"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2888,6 +3002,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f54c8ca710e81886d498c2fd3331b56c93aa248d49de2222ad2742247c60072f"
 dependencies = [
  "lazy_static",
+ "valuable",
+]
+
+[[package]]
+name = "tracing-error"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d686ec1c0f384b1277f097b2f279a2ecc11afe8c133c1aabf036a27cb4cd206e"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "tracing-subscriber"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bc28f93baff38037f64e6f43d34cfa1605f27a49c34e8a04c5e78b0babf2596"
+dependencies = [
+ "sharded-slab",
+ "thread_local",
+ "tracing-core",
 ]
 
 [[package]]
@@ -2952,6 +3088,12 @@ name = "urlencoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68b90931029ab9b034b300b797048cf23723400aa757e8a2bfb9d748102f9821"
+
+[[package]]
+name = "valuable"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 
 [[package]]
 name = "vcpkg"

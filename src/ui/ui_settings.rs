@@ -34,7 +34,10 @@ impl MyEguiApp {
 
                 self.render_steam_settings(ui);
 
-                self.render_epic_settings(ui);
+                for platform in &mut self.platforms{
+                    platform.render_ui(ui);
+                    ui.add_space(SECTION_SPACING);
+                }
 
                 #[cfg(target_family = "unix")]
                 {
@@ -62,6 +65,9 @@ impl MyEguiApp {
                
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
+                
+              
+
             });
     }
 
