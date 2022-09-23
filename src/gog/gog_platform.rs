@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::{gog::gog_config::GogConfig, platform::Platform};
+use crate::{gog::gog_config::GogConfig, platforms::Platform};
 
 use super::{
     gog_game::{GogGame, GogShortcut},
@@ -168,8 +168,8 @@ impl Platform<GogShortcut, String> for GogPlatform {
         get_shortcuts_from_config(self.settings.wine_c_drive.clone(), config_path)
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
-        use crate::platform::*;
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
+        use crate::platforms::*;
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

@@ -7,7 +7,7 @@ use std::path::Path;
 pub(crate) fn get_egs_manifests(
     settings: &EpicGamesLauncherSettings,
 ) -> eyre::Result<Vec<ManifestItem>> {
-    let locations = crate::egs::get_locations();
+    let locations = super::get_locations();
     match locations {
         Some(locations) => {
             let manifest_dir_path = locations.manifest_folder_path;

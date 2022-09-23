@@ -1,4 +1,4 @@
-use crate::platform::{Platform, SettingsValidity};
+use crate::platforms::{Platform, SettingsValidity};
 use nom::bytes::complete::take_until;
 use std::{
     fs::DirEntry,
@@ -61,7 +61,7 @@ impl Platform<OriginGame, String> for OriginPlatform {
         Ok(games.collect())
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

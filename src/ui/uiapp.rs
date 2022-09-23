@@ -12,11 +12,8 @@ use tokio::{
 };
 
 use crate::{
-    amazon::{AmazonPlatform},
-    bottles::BottlesPlatform,
-    config::get_renames_file,
-    egs::{EpicPlatform},
-    platform::PlatformEnum,
+    config::get_renames_file,    
+    platforms::{get_platforms, Platforms},
     settings::Settings,
     sync::SyncProgress,
 };
@@ -54,7 +51,7 @@ pub struct MyEguiApp {
     pub(crate) disconect_state: DiconnectState,
     pub(crate) rename_map: HashMap<u32, String>,
     pub(crate) current_edit: Option<u32>,
-    pub(crate) platforms: [PlatformEnum; 3],
+    pub(crate) platforms: Platforms,
 }
 
 impl MyEguiApp {
@@ -75,18 +72,7 @@ impl MyEguiApp {
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
-            platforms: [
-                PlatformEnum::Epic(EpicPlatform {
-                    epic_manifests: None,
-                    settings: settings.epic_games,
-                }),
-                PlatformEnum::Amazon(AmazonPlatform {
-                    settings: settings.amazon,
-                }),
-                PlatformEnum::Bottles(BottlesPlatform {
-                    settings: settings.bottles,
-                }),
-            ],
+            platforms: get_platforms(&settings),
         }
     }
 }

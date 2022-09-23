@@ -1,6 +1,7 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use crate::{amazon::AmazonPlatform, bottles::BottlesPlatform, egs::EpicPlatform};
+use super::egs::EpicPlatform;
+use crate::{amazon::AmazonPlatform, bottles::BottlesPlatform};
 
 pub trait Platform<T, E>
 where
@@ -67,12 +68,31 @@ impl PlatformEnum {
     }
 }
 
-fn to_shortcuts<T>(into_shortcuts: Result<Vec<T>, eyre::ErrReport>) -> eyre::Result<Vec<ShortcutOwned>>
+fn to_shortcuts<T>(
+    into_shortcuts: Result<Vec<T>, eyre::ErrReport>,
+) -> eyre::Result<Vec<ShortcutOwned>>
 where
     T: Clone,
-    T: Into<ShortcutOwned>,    
+    T: Into<ShortcutOwned>,
 {
     let shortcuts = into_shortcuts?;
     let shortcut_owneds = shortcuts.iter().map(|m| m.clone().into()).collect();
     Ok(shortcut_owneds)
+}
+
+pub type Platforms = [PlatformEnum;3];
+
+pub fn get_platforms(settings:&crate::settings::Settings) -> Platforms {
+    [
+        PlatformEnum::Epic(EpicPlatform {
+            epic_manifests: None,
+            settings: settings.epic_games,
+        }),
+        PlatformEnum::Amazon(AmazonPlatform {
+            settings: settings.amazon,
+        }),
+        PlatformEnum::Bottles(BottlesPlatform {
+            settings: settings.bottles,
+        }),
+    ]
 }

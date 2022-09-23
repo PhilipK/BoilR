@@ -4,10 +4,9 @@ use steam_shortcuts_util::{
 use tokio::sync::watch::Sender;
 
 use crate::{
-    egs::EpicPlatform,
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
-    platform::{Platform, PlatformEnum},
+    platforms::{Platform, PlatformEnum},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -308,7 +307,7 @@ where
     T: Clone,
 {
     if platform.enabled() {
-        if let crate::platform::SettingsValidity::Invalid { reason } = platform.settings_valid() {
+        if let crate::platforms::SettingsValidity::Invalid { reason } = platform.settings_valid() {
             eprintln!(
                 "Setting for platform {} are invalid, reason: {}",
                 platform.name(),

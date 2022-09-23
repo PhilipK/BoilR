@@ -1,7 +1,7 @@
 use super::butler_db_parser::*;
 use super::receipt::Receipt;
 use super::{ItchGame, ItchSettings};
-use crate::platform::{Platform, SettingsValidity};
+use crate::platforms::{Platform, SettingsValidity};
 use flate2::read::GzDecoder;
 use is_executable::IsExecutable;
 use std::collections::HashSet;
@@ -58,7 +58,7 @@ impl Platform<ItchGame, String> for ItchPlatform {
         self.settings.create_symlinks
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

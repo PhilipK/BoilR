@@ -1,7 +1,7 @@
 use super::game_list_parser::parse_lutris_games;
 use super::lutris_game::LutrisGame;
 use super::settings::LutrisSettings;
-use crate::platform::{Platform, SettingsValidity};
+use crate::platforms::{Platform, SettingsValidity};
 use std::error::Error;
 use std::process::Command;
 
@@ -36,7 +36,7 @@ impl Platform<LutrisGame, Box<dyn Error>> for LutrisPlatform {
         false
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

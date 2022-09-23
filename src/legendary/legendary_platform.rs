@@ -1,5 +1,5 @@
 use super::{LegendaryGame, LegendarySettings};
-use crate::platform::{Platform, SettingsValidity};
+use crate::platforms::{Platform, SettingsValidity};
 use serde_json::from_str;
 use std::error::Error;
 use std::process::Command;
@@ -38,7 +38,7 @@ impl Platform<LegendaryGame, Box<dyn Error>> for LegendaryPlatform {
         false
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

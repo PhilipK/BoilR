@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::platform::{Platform, SettingsValidity};
+use crate::platforms::{Platform, SettingsValidity};
 use std::error::Error;
 
 use super::FlatpakSettings;
@@ -57,7 +57,7 @@ impl Platform<FlatpakApp, Box<dyn Error>> for FlatpakPlatform {
         Ok(result)
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

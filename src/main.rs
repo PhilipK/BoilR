@@ -1,6 +1,5 @@
 mod amazon;
 mod config;
-mod egs;
 mod flatpak;
 mod gog;
 #[cfg(target_family = "unix")]
@@ -10,7 +9,7 @@ mod legendary;
 mod lutris;
 mod migration;
 mod origin;
-mod platform;
+mod platforms;
 mod settings;
 mod steam;
 mod steamgriddb;

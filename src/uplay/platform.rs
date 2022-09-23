@@ -1,4 +1,4 @@
-use crate::platform::Platform;
+use crate::platforms::Platform;
 use std::error::Error;
 #[cfg(target_os = "windows")]
 use std::path::Path;
@@ -27,7 +27,7 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         "Uplay"
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         #[cfg(target_family = "unix")]
         {
             //Linux not supported yet
@@ -38,9 +38,9 @@ impl Platform<Game, Box<dyn Error>> for Uplay {
         #[cfg(target_os = "windows")]
         {
             if get_launcher_path().is_some() {
-                crate::platform::SettingsValidity::Valid
+                crate::platforms::SettingsValidity::Valid
             } else {
-                crate::platform::SettingsValidity::Invalid {
+                crate::platforms::SettingsValidity::Invalid {
                     reason: "Could not find UPlay instalation".to_string(),
                 }
             }
