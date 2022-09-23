@@ -3,7 +3,6 @@ use std::process::Command;
 use eframe::epaint::ahash::HashMap;
 use serde::{Deserialize, Serialize};
 
-use super::BottlesSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -16,6 +15,12 @@ pub struct BottlesApp {
     pub name: String,
     pub bottle: String,
 }
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct BottlesSettings {
+    pub enabled: bool,
+}
+
 
 impl From<BottlesApp> for ShortcutOwned {
     fn from(app: BottlesApp) -> Self {

@@ -8,7 +8,7 @@ use crate::{
 #[cfg(target_family = "unix")]
 use crate::heroic::HeroicSettings;
 
-use crate::bottles::BottlesSettings;
+use crate::platforms::BottlesSettings;
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};

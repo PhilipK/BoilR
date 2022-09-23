@@ -15,7 +15,6 @@ mod steamgriddb;
 mod sync;
 mod ui;
 mod uplay;
-mod bottles;
 
 use color_eyre::eyre::Result;
 

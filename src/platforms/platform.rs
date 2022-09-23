@@ -2,7 +2,7 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use super::egs::EpicPlatform;
 use super::amazon::AmazonPlatform;
-use crate::{ bottles::BottlesPlatform};
+use super::bottles::BottlesPlatform;
 
 pub trait Platform<T, E>
 where
