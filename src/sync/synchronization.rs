@@ -118,7 +118,7 @@ fn sync_shortcuts(
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
         if settings.steam.create_collections {
-            match write_shortcut_collections(&user.user_id, &platform_shortcuts) {
+            match write_shortcut_collections(&user.user_id, platform_shortcuts) {
                 Ok(_) => (),
                 Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
             }

@@ -113,16 +113,11 @@ impl ItchPlatform {
                     } else {
                         Some(itch_location.to_string())
                     };
-                } else {
-                    if !itch_location.is_empty() {
-                        if ui
-                            .button("Reset")
-                            .on_hover_text("Reset the itch path, let BoilR guess again")
-                            .clicked()
-                        {
-                            self.settings.location = None;
-                        }
-                    }
+                } else if !itch_location.is_empty() && ui
+                        .button("Reset")
+                        .on_hover_text("Reset the itch path, let BoilR guess again")
+                        .clicked() {
+                    self.settings.location = None;
                 }
             });
             #[cfg(target_family = "unix")]

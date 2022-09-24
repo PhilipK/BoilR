@@ -184,10 +184,8 @@ impl HeroicPlatform {
                         app_name: game.app_name,
                         install_mode: *install_mode,
                     });
-                } else {
-                    if game.is_installed() {
-                        shortcuts.push(HeroicGameType::Epic(game));
-                    }
+                } else if game.is_installed() {
+                    shortcuts.push(HeroicGameType::Epic(game));
                 }
             }
         }

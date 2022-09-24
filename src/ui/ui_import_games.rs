@@ -92,9 +92,7 @@ impl MyEguiApp {
                                 let checkbox = egui::Checkbox::new(&mut import_game,name);
                                 let response = ui.add(checkbox);                                
                                 if response.double_clicked(){
-                                    if !self.rename_map.contains_key(&shortcut.app_id){
-                                        self.rename_map.insert(shortcut.app_id,shortcut.app_name.to_owned());
-                                    }                                    
+                                    self.rename_map.entry(shortcut.app_id).or_insert_with(|| shortcut.app_name.to_owned());                                    
                                     self.current_edit = Option::Some(shortcut.app_id);
                                 }
                                 if response.clicked(){
