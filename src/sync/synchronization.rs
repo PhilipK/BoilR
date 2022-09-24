@@ -20,7 +20,6 @@ use crate::heroic::HeroicPlatform;
 
 use std::{collections::HashMap, error::Error};
 
-use crate::{gog::GogPlatform};
 use std::{fs::File, io::Write, path::Path};
 
 pub const BOILR_TAG: &str = "boilr";
@@ -270,9 +269,6 @@ pub fn get_enum_platform_shortcuts(
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut platform_results = vec![
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
-        update_platform_shortcuts(&GogPlatform {
-            settings: settings.gog.clone(),
-        }),
         update_platform_shortcuts(&LutrisPlatform {
             settings: settings.lutris.clone(),
         }),

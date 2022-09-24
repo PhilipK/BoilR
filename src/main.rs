@@ -1,5 +1,4 @@
 mod config;
-mod gog;
 #[cfg(target_family = "unix")]
 mod heroic;
 mod legendary;

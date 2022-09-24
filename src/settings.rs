@@ -1,9 +1,8 @@
 use crate::{
     config::get_config_file,
-    gog::GogSettings,
     legendary::LegendarySettings,
     lutris::settings::LutrisSettings,
-    platforms::{AmazonSettings, OriginSettings},
+    platforms::{AmazonSettings, OriginSettings, GogSettings},
     platforms::{EpicGamesLauncherSettings, UplaySettings, ItchSettings, FlatpakSettings},
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,

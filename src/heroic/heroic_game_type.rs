@@ -1,13 +1,12 @@
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 use super::{HeroicGame, InstallationMode};
-use crate::gog::GogShortcut;
 
 #[derive(Clone)]
 pub enum HeroicGameType {
     Epic(HeroicGame),
     //The bool is if it is windows (true) or not (false)
-    Gog(GogShortcut, bool),
+    Gog(crate::platforms::GogShortcut, bool),
     //The string is the app name
     Heroic {
         title: String,

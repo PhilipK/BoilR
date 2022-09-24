@@ -1,20 +1,63 @@
 use std::path::{Path, PathBuf};
 
-use crate::{gog::gog_config::GogConfig, platforms::Platform};
+use crate::platforms::{to_shortcuts, ShortcutToImport, NeedsPorton};
 
 use super::{
+    gog_config::GogConfig,
     gog_game::{GogGame, GogShortcut},
     GogSettings,
 };
 
+#[derive(Clone)]
 pub struct GogPlatform {
     pub settings: GogSettings,
 }
 
-pub fn get_shortcuts_from_config(
+impl GogPlatform {
+    pub fn render_gog_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("GoG Galaxy");
+        ui.checkbox(&mut self.settings.enabled, "Import from GoG Galaxy");
+        if self.settings.enabled {
+            ui.horizontal(|ui| {
+                let mut empty_string = "".to_string();
+                let gog_location = self.settings.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("GoG Galaxy Folder: ");
+                if ui.text_edit_singleline(gog_location).changed() {
+                    self.settings.location = Some(gog_location.to_string());
+                }
+            });
+        }
+    }
+
+    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, self.get_shortcuts())
+    }
+
+    fn get_shortcuts(&self) -> eyre::Result<Vec<GogShortcut>> {
+        let gog_location = self
+            .settings
+            .location
+            .as_ref()
+            .map(|location| Path::new(&location).to_path_buf())
+            .unwrap_or_else(default_location);
+        if !gog_location.exists() {
+            return Err(eyre::format_err!("Could not find path: {:?}", gog_location));
+        }
+        let config_path = gog_location.join("config.json");
+        if !config_path.exists() {
+            return Err(eyre::format_err!(
+                "Config file not found: {:?}",
+                config_path
+            ));
+        }
+        get_shortcuts_from_config(self.settings.wine_c_drive.clone(), config_path)
+    }
+}
+
+fn get_shortcuts_from_config(
     _wine_c_drive: Option<String>,
     config_path: PathBuf,
-) -> Result<Vec<GogShortcut>, String> {
+) -> eyre::Result<Vec<GogShortcut>> {
     let install_locations = get_install_locations(config_path)?;
     #[cfg(target_family = "unix")]
     let install_locations = if let Some(wine_c_drive) = &_wine_c_drive {
@@ -38,11 +81,11 @@ pub fn get_shortcuts_from_config(
             }
         }
     }
-    let shortcuts = get_shortcuts_from_game_folders(game_folders);
+    let shortcuts = get_gog_shortcuts_from_game_folders(game_folders);
     Ok(shortcuts)
 }
 
-pub fn get_shortcuts_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<GogShortcut> {
+pub fn get_gog_shortcuts_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<GogShortcut> {
     let games = get_games_from_game_folders(game_folders);
 
     get_shortcuts_from_games(games)
@@ -137,53 +180,19 @@ fn get_games_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<(GogGame, Path
     games
 }
 
-impl Platform<GogShortcut, String> for GogPlatform {
-    fn enabled(&self) -> bool {
-        self.settings.enabled
-    }
-
-    fn name(&self) -> &str {
-        "Gog"
-    }
-
+impl NeedsPorton<GogPlatform> for GogShortcut{
     #[cfg(target_family = "unix")]
-    fn create_symlinks(&self) -> bool {
-        self.settings.create_symlinks
+    fn needs_proton(&self, _platform: &GogPlatform) -> bool {
+        true
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<GogShortcut>, String> {
-        let gog_location = self
-            .settings
-            .location
-            .as_ref()
-            .map(|location| Path::new(&location).to_path_buf())
-            .unwrap_or_else(default_location);
-        if !gog_location.exists() {
-            return Err(format!("Could not find path: {:?}", gog_location));
-        }
-        let config_path = gog_location.join("config.json");
-        if !config_path.exists() {
-            return Err(format!("Config file not found: {:?}", config_path));
-        }
-        get_shortcuts_from_config(self.settings.wine_c_drive.clone(), config_path)
+    #[cfg(not(target_family = "unix"))]
+    fn needs_proton(&self, _platform: &GogPlatform) -> bool {
+        false
     }
 
-    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
-        use crate::platforms::*;
-        let shortcuts_res = self.get_shortcuts();
-        match shortcuts_res {
-            Ok(_) => SettingsValidity::Valid,
-            Err(err) => SettingsValidity::Invalid {
-                reason: err.to_string(),
-            },
-        }
-    }
-
-    fn needs_proton(&self, _input: &GogShortcut) -> bool {
-        #[cfg(target_family = "unix")]
-        return true;
-        #[cfg(target_os = "windows")]
-        return false;
+    fn create_symlinks(&self, platform: &GogPlatform) -> bool {
+        platform.settings.create_symlinks
     }
 }
 
@@ -202,11 +211,9 @@ fn fix_paths(wine_c_drive: &str, paths: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-fn get_install_locations(path: PathBuf) -> Result<Vec<String>, String> {
-    let data_res = std::fs::read_to_string(&path)
-        .map_err(|e| format!("Config file not read {:?} , error: {:?} ", path.clone(), e))?;
-    let config: GogConfig = serde_json::from_str(&data_res)
-        .map_err(|e| format!("Config file not read {:?} , error: {:?} ", path.clone(), e))?;
+fn get_install_locations(path: PathBuf) -> eyre::Result<Vec<String>> {
+    let data_res = std::fs::read_to_string(&path)?;
+    let config: GogConfig = serde_json::from_str(&data_res)?;
     let path_vec = match config.library_path {
         Some(path) => vec![path],
         None => vec![],

@@ -5,6 +5,7 @@ use super::amazon::AmazonPlatform;
 use super::bottles::BottlesPlatform;
 use super::egs::EpicPlatform;
 use super::flatpak::FlatpakPlatform;
+use super::gog::GogPlatform;
 use super::itch::ItchPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
@@ -41,7 +42,8 @@ pub enum PlatformEnum {
     Uplay(UplayPlatform),
     Itch(ItchPlatform),
     Flatpak(FlatpakPlatform),
-    Origin(OriginPlatform)
+    Origin(OriginPlatform),
+    Gog(GogPlatform)
 }
 
 impl PlatformEnum {
@@ -54,6 +56,7 @@ impl PlatformEnum {
             PlatformEnum::Itch(_) => "Itch",
             PlatformEnum::Flatpak(_) => "Flatpak",
             PlatformEnum::Origin(_) => "Origin",
+            PlatformEnum::Gog(_) => "Gog",
         }
     }
 
@@ -65,7 +68,8 @@ impl PlatformEnum {
             PlatformEnum::Uplay(p) => p.settings.enabled,
             PlatformEnum::Itch(p) => p.settings.enabled,
             PlatformEnum::Flatpak(p) => p.settings.enabled,
-            PlatformEnum::Origin(p) => p.settings.enabled
+            PlatformEnum::Origin(p) => p.settings.enabled,
+            PlatformEnum::Gog(p) => p.settings.enabled,
         }
     }
 
@@ -78,6 +82,8 @@ impl PlatformEnum {
             PlatformEnum::Itch(p) => p.render_itch_settings(ui),
             PlatformEnum::Flatpak(p) => p.render_flatpak_settings(ui),
             PlatformEnum::Origin(p) => p.render_origin_settings(ui),
+            PlatformEnum::Gog(p) => p.render_gog_settings(ui),
+            
             
         }
     }
@@ -91,6 +97,8 @@ impl PlatformEnum {
             PlatformEnum::Itch(p) => p.get_shortcut_info(),
             PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
             PlatformEnum::Origin(p) => p.get_shortcut_info(),
+            PlatformEnum::Gog(p) => p.get_shortcut_info(),
+            
         }
     }
 }
@@ -145,7 +153,7 @@ where
     Ok(shortcut_info)
 }
 
-pub type Platforms = [PlatformEnum; 7];
+pub type Platforms = [PlatformEnum; 8];
 
 pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
     [
@@ -170,6 +178,9 @@ pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
         }),
         PlatformEnum::Origin(OriginPlatform {
             settings: settings.origin.clone(),
+        }),
+        PlatformEnum::Gog(GogPlatform {
+            settings: settings.gog.clone(),
         }),
     ]
 }

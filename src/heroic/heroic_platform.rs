@@ -1,7 +1,6 @@
 use serde::Deserialize;
 
 use super::{HeroicGame, HeroicGameType, HeroicSettings};
-use crate::gog::get_shortcuts_from_game_folders;
 use crate::platforms::{Platform, SettingsValidity};
 use std::collections::HashMap;
 use std::error::Error;
@@ -211,7 +210,7 @@ fn get_gog_games(
             }
         })
         .collect();
-    let direct_shortcuts = get_shortcuts_from_game_folders(game_folders);
+    let direct_shortcuts = crate::platforms::get_gog_shortcuts_from_game_folders(game_folders);
     for shortcut in direct_shortcuts {
         let is_windows = is_windows_map.get(&shortcut.game_id).unwrap_or(&false);
         gog_shortcuts.push(HeroicGameType::Gog(shortcut, *is_windows));

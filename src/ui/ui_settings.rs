@@ -42,9 +42,7 @@ impl MyEguiApp {
                 {
                     self.render_heroic_settings(ui);
                 }
-
                 self.render_legendary_settings(ui);
-                self.render_gog_settings(ui);
                 self.render_lutris_settings(ui);
                 
                 ui.add_space(SECTION_SPACING);
@@ -127,27 +125,6 @@ self.settings.heroic.default_launch_through_heroic{
                     ui.text_edit_singleline(flatpak_image);
                 });
             }
-        }
-        ui.add_space(SECTION_SPACING);
-    }
-
-    fn render_gog_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("GoG Galaxy");
-        ui.checkbox(&mut self.settings.gog.enabled, "Import from GoG Galaxy");
-        if self.settings.gog.enabled {
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let itch_location = self
-                    .settings
-                    .gog
-                    .location
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
-                ui.label("GoG Galaxy Folder: ");
-                if ui.text_edit_singleline(itch_location).changed() {
-                    self.settings.gog.location = Some(itch_location.to_string());
-                }
-            });
         }
         ui.add_space(SECTION_SPACING);
     }
