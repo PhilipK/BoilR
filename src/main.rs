@@ -5,7 +5,6 @@ mod heroic;
 mod legendary;
 mod lutris;
 mod migration;
-mod origin;
 mod platforms;
 mod settings;
 mod steam;

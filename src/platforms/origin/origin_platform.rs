@@ -1,4 +1,4 @@
-use crate::platforms::{Platform, SettingsValidity};
+use crate::platforms::{NeedsPorton, to_shortcuts, ShortcutToImport};
 use nom::bytes::complete::take_until;
 use std::{
     fs::DirEntry,
@@ -7,39 +7,42 @@ use std::{
 
 use super::{origin_game::OriginGame, OriginSettings};
 
+#[derive(Clone)]
 pub struct OriginPlatform {
     pub settings: OriginSettings,
 }
 
-impl Platform<OriginGame, String> for OriginPlatform {
-    fn enabled(&self) -> bool {
-        self.settings.enabled
-    }
-
-    fn name(&self) -> &str {
-        "Origin"
-    }
-
-    #[cfg(target_family = "unix")]
-    fn create_symlinks(&self) -> bool {
+impl NeedsPorton<OriginPlatform> for OriginGame {
+    #[cfg(target_os = "windows")]
+    fn needs_proton(&self, _platform: &OriginPlatform) -> bool {
         false
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<OriginGame>, String> {
+    #[cfg(target_family = "unix")]
+    fn needs_proton(&self, _platform: &OriginPlatform) -> bool {
+        true
+    }
+
+
+    fn create_symlinks(&self, _platform: &OriginPlatform) -> bool {
+        false
+    }
+}
+
+impl OriginPlatform {
+    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, self.get_shortcuts())
+    }
+
+    fn get_shortcuts(&self) -> eyre::Result<Vec<OriginGame>> {
         let origin_folders = get_default_locations();
         if origin_folders.is_none() {
-            return Err(String::from("Default path not found"));
+            return Err(eyre::format_err!("Default path not found"));
         }
         let origin_folders = origin_folders.unwrap();
         let origin_folder = origin_folders.local_content_path;
         let origin_exe = origin_folders.exe_path;
-        let game_folders = origin_folder.join("LocalContent").read_dir().map_err(|e| {
-            format!(
-                "Could not read game dir: {} , error: {:?}",
-                origin_folder.join("LocalContent").to_string_lossy(),
-                e
-            )
-        })?;
+        let game_folders = origin_folder.join("LocalContent").read_dir()?;
         let games = game_folders
             .filter_map(|folder| folder.ok())
             .filter_map(|game_folder| {
@@ -61,23 +64,9 @@ impl Platform<OriginGame, String> for OriginPlatform {
         Ok(games.collect())
     }
 
-    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
-        let shortcuts_res = self.get_shortcuts();
-        match shortcuts_res {
-            Ok(_) => SettingsValidity::Valid,
-            Err(err) => SettingsValidity::Invalid {
-                reason: err.to_string(),
-            },
-        }
-    }
-
-    fn needs_proton(&self, _input: &OriginGame) -> bool {
-        #[cfg(target_os = "windows")]
-        return false;
-        #[cfg(target_family = "unix")]
-        {
-            true
-        }
+    pub fn render_origin_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Origin");
+        ui.checkbox(&mut self.settings.enabled, "Import from Origin");
     }
 }
 

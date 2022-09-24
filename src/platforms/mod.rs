@@ -5,6 +5,7 @@ mod bottles;
 mod uplay;
 mod itch;
 mod flatpak;
+mod origin;
 
 pub use platform::*;
 
@@ -14,3 +15,4 @@ pub use bottles::BottlesSettings;
 pub use uplay::UplaySettings;
 pub use itch::ItchSettings;
 pub use flatpak::FlatpakSettings;
+pub use origin::OriginSettings;

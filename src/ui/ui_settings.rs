@@ -44,7 +44,6 @@ impl MyEguiApp {
                 }
 
                 self.render_legendary_settings(ui);
-                self.render_origin_settings(ui);
                 self.render_gog_settings(ui);
                 self.render_lutris_settings(ui);
                 
@@ -153,11 +152,7 @@ self.settings.heroic.default_launch_through_heroic{
         ui.add_space(SECTION_SPACING);
     }
 
-    fn render_origin_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Origin");
-        ui.checkbox(&mut self.settings.origin.enabled, "Import from Origin");
-        ui.add_space(SECTION_SPACING);
-    }
+   
     fn render_steam_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Steam");
         ui.horizontal(|ui| {
