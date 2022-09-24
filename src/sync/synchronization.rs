@@ -18,9 +18,6 @@ use crate::{
 #[cfg(target_family = "unix")]
 use crate::heroic::HeroicPlatform;
 
-#[cfg(target_family = "unix")]
-use crate::flatpak::FlatpakPlatform;
-
 use std::{collections::HashMap, error::Error};
 
 use crate::{gog::GogPlatform, origin::OriginPlatform};

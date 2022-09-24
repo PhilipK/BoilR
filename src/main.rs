@@ -1,5 +1,4 @@
 mod config;
-mod flatpak;
 mod gog;
 #[cfg(target_family = "unix")]
 mod heroic;

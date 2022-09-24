@@ -1,10 +1,9 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use crate::flatpak::FlatpakPlatform;
-
 use super::amazon::{AmazonPlatform, AmazonGame};
 use super::bottles::{BottlesPlatform, BottlesApp};
 use super::egs::{EpicPlatform, ManifestItem};
+use super::flatpak::FlatpakPlatform;
 use super::itch::{ItchPlatform, ItchGame};
 use super::uplay::{get_uplay_games, UplayPlatform, UplayGame};
 
