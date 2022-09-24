@@ -34,13 +34,7 @@ impl MyEguiApp {
                     platform.render_ui(ui);
                     ui.add_space(SECTION_SPACING);
                 }
-                self.render_legendary_settings(ui);
-                
-                ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
-                
-              
-
             });
     }
 
@@ -128,29 +122,4 @@ impl MyEguiApp {
         }
         ui.add_space(SECTION_SPACING);
     }
-
-    fn render_legendary_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Legendary & Rare");
-        ui.checkbox(
-            &mut self.settings.legendary.enabled,
-            "Import from Legendary & Rare",
-        );
-        if self.settings.legendary.enabled {
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let legendary_location = self
-                    .settings
-                    .legendary
-                    .executable
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
-                ui.label("Legendary Executable: ")
-                    .on_hover_text("The location of the legendary executable to use");
-                if ui.text_edit_singleline(legendary_location).changed() {
-                    self.settings.legendary.executable = Some(legendary_location.to_string());
-                }
-            });
-        }
-        ui.add_space(SECTION_SPACING);
-    }    
 }

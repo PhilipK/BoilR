@@ -9,6 +9,7 @@ mod origin;
 mod gog;
 mod heroic;
 mod lutris;
+mod legendary;
 
 pub use platform::*;
 
@@ -26,3 +27,4 @@ pub use gog::GogShortcut;
 
 pub use heroic::HeroicSettings;
 pub use lutris::LutrisSettings;
+pub use legendary::LegendarySettings;

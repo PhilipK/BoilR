@@ -7,33 +7,10 @@ use super::flatpak::FlatpakPlatform;
 use super::gog::GogPlatform;
 use super::heroic::HeroicPlatform;
 use super::itch::ItchPlatform;
+use super::legendary::LegendaryPlatform;
 use super::lutris::LutrisPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
-
-pub trait Platform<T, E>
-where
-    T: Into<ShortcutOwned>,
-{
-    fn enabled(&self) -> bool;
-
-    fn name(&self) -> &str;
-
-    fn get_shortcuts(&self) -> Result<Vec<T>, E>;
-
-    fn settings_valid(&self) -> SettingsValidity;
-
-    #[cfg(target_family = "unix")]
-    fn create_symlinks(&self) -> bool;
-
-    // HOME/.local/share/Steam/config/config.vdf
-    fn needs_proton(&self, input: &T) -> bool;
-}
-
-pub enum SettingsValidity {
-    Valid,
-    Invalid { reason: String },
-}
 
 #[derive(Clone)]
 pub enum PlatformEnum {
@@ -46,7 +23,8 @@ pub enum PlatformEnum {
     Origin(OriginPlatform),
     Gog(GogPlatform),
     Heroic(HeroicPlatform),
-    Lutris(LutrisPlatform)
+    Lutris(LutrisPlatform),
+    Legendary(LegendaryPlatform)
 }
 
 impl PlatformEnum {
@@ -62,7 +40,7 @@ impl PlatformEnum {
             PlatformEnum::Gog(_) => "Gog",
             PlatformEnum::Heroic(_) => "Heroic",
             PlatformEnum::Lutris(_) => "Lutris",
-            
+            PlatformEnum::Legendary(_) => "Legendary",
         }
     }
 
@@ -78,7 +56,7 @@ impl PlatformEnum {
             PlatformEnum::Gog(p) => p.settings.enabled,
             PlatformEnum::Heroic(p) => p.settings.enabled,
             PlatformEnum::Lutris(p) => p.settings.enabled,
-            
+            PlatformEnum::Legendary(p) => p.settings.enabled,
         }
     }
 
@@ -94,7 +72,7 @@ impl PlatformEnum {
             PlatformEnum::Gog(p) => p.render_gog_settings(ui),
             PlatformEnum::Heroic(p) => p.render_heroic_settings(ui),
             PlatformEnum::Lutris(p) => p.render_lutris_settings(ui),
-            
+            PlatformEnum::Legendary(p) => p.render_legendary_settings(ui),
         }
     }
 
@@ -110,6 +88,7 @@ impl PlatformEnum {
             PlatformEnum::Gog(p) => p.get_shortcut_info(),
             PlatformEnum::Heroic(p) => p.get_shortcut_info(),
             PlatformEnum::Lutris(p) => p.get_shortcut_info(),
+            PlatformEnum::Legendary(p) => p.get_shortcut_info(),
         }
     }
 }
@@ -164,7 +143,7 @@ where
     Ok(shortcut_info)
 }
 
-pub type Platforms = [PlatformEnum; 10];
+pub type Platforms = [PlatformEnum; 11];
 
 pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
     [
@@ -199,6 +178,9 @@ pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
         }),
         PlatformEnum::Lutris(LutrisPlatform {
             settings: settings.lutris.clone()
+        }),
+        PlatformEnum::Legendary(LegendaryPlatform{
+            settings: settings.legendary.clone()
         })
     ]
 }

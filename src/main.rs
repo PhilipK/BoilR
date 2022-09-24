@@ -1,5 +1,4 @@
 mod config;
-mod legendary;
 mod migration;
 mod platforms;
 mod settings;

@@ -4,8 +4,7 @@ use steam_shortcuts_util::{
 use tokio::sync::watch::Sender;
 
 use crate::{
-    legendary::LegendaryPlatform,
-    platforms::{Platform, PlatformEnum},
+    platforms::PlatformEnum,
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -57,10 +56,7 @@ pub fn run_sync(
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
     }
-
-    let platform_shortcuts = get_platform_shortcuts(settings);
-    let mut platform_enum_shortcuts = get_enum_platform_shortcuts(platforms);
-    platform_enum_shortcuts.extend(platform_shortcuts);
+    let platform_enum_shortcuts = get_enum_platform_shortcuts(platforms);
     sync_shortcuts(settings, &platform_enum_shortcuts, sender, renames)
 }
 
@@ -217,19 +213,18 @@ fn write_shortcut_collections<S: AsRef<str>>(
 pub fn get_enum_platform_shortcuts(
     platforms: &[PlatformEnum],
 ) -> Vec<(String, Vec<ShortcutOwned>)> {
-
     let mut result = vec![];
     let mut shortcuts_to_proton = vec![];
-    for p in platforms{
-        if p.enabled(){
+    for p in platforms {
+        if p.enabled() {
             let name = p.name();
             let shortcut_infos = p.get_shortcuts();
             let mut platform_shortcuts = vec![];
-            match shortcut_infos{
-                Ok(shortcut_infos) =>{
-                    for shortcut_info in shortcut_infos{
+            match shortcut_infos {
+                Ok(shortcut_infos) => {
+                    for shortcut_info in shortcut_infos {
                         #[cfg(target_family = "unix")]
-                        if shortcut_info.needs_proton{
+                        if shortcut_info.needs_proton {
                             super::symlinks::ensure_links_folder_created(name);
                         }
                         if shortcut_info.needs_proton {
@@ -248,25 +243,16 @@ pub fn get_enum_platform_shortcuts(
                     }
                 }
                 Err(error) => {
-                    eprintln!("Error importing {name} games, error: {error}");                    
+                    eprintln!("Error importing {name} games, error: {error}");
                 }
             }
-            if !platform_shortcuts.is_empty(){
-                result.push((name.to_owned(),platform_shortcuts));
+            if !platform_shortcuts.is_empty() {
+                result.push((name.to_owned(), platform_shortcuts));
             }
-            
         }
     }
     setup_proton_games(&shortcuts_to_proton);
     result
-
-}
-
-pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
-    let platform_results = vec![
-        update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
-    ];
-    platform_results.iter().filter_map(|p| p.clone()).collect()
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
@@ -294,78 +280,4 @@ fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
             );
         }
     }
-}
-
-fn update_platform_shortcuts<P, T, E>(platform: &P) -> Option<(String, Vec<ShortcutOwned>)>
-where
-    P: Platform<T, E>,
-    E: std::fmt::Debug + std::fmt::Display,
-    T: Into<ShortcutOwned>,
-    T: Clone,
-{
-    if platform.enabled() {
-        if let crate::platforms::SettingsValidity::Invalid { reason } = platform.settings_valid() {
-            eprintln!(
-                "Setting for platform {} are invalid, reason: {}",
-                platform.name(),
-                reason
-            );
-            return None;
-        }
-
-        let mut current_shortcuts = vec![];
-
-        #[cfg(target_family = "unix")]
-        if platform.create_symlinks() {
-            let name = platform.name();
-            super::symlinks::ensure_links_folder_created(name);
-        }
-
-        let shortcuts_to_add_result = platform.get_shortcuts();
-
-        match shortcuts_to_add_result {
-            Ok(shortcuts_to_add) => {
-                let mut shortcuts_to_proton = vec![];
-                let mut shortcuts_to_add_transformed = vec![];
-                for shortcut in shortcuts_to_add {
-                    let mut shortcut_owned: ShortcutOwned = shortcut.clone().into();
-                    shortcut_owned.dev_kit_game_id =
-                        format!("{}-{}", BOILR_TAG, shortcut_owned.app_id);
-                    shortcuts_to_add_transformed.push((shortcut, shortcut_owned));
-                }
-
-                let shortcuts_to_add = shortcuts_to_add_transformed;
-
-                println!(
-                    "Found {} game(s) for platform {}",
-                    shortcuts_to_add.len(),
-                    platform.name()
-                );
-
-                for (orign_shortcut, shortcut_owned) in shortcuts_to_add {
-                    #[cfg(target_family = "unix")]
-                    let shortcut_owned = if platform.create_symlinks() {
-                        crate::sync::symlinks::create_sym_links(&shortcut_owned)
-                    } else {
-                        shortcut_owned
-                    };
-                    if platform.needs_proton(&orign_shortcut) {
-                        shortcuts_to_proton.push(format!("{}", shortcut_owned.app_id));
-                    }
-                    current_shortcuts.push(shortcut_owned.clone());
-                }
-                if !shortcuts_to_proton.is_empty() {
-                    setup_proton_games(shortcuts_to_proton.as_slice());
-                }
-
-                let name = platform.name();
-                return Some((name.to_string(), current_shortcuts));
-            }
-            Err(err) => {
-                eprintln!("Error getting shortcuts from platform: {}", platform.name());
-                eprintln!("{}", err);
-            }
-        }
-    }
-    None
 }

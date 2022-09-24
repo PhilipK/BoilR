@@ -128,11 +128,10 @@ impl MyEguiApp {
             self.image_selected_state = ImageSelectState::default();
             let (tx, rx) = watch::channel(FetcStatus::NeedsFetched);
             self.games_to_sync = rx;
-            let settings = self.settings.clone();
             let platforms = self.platforms.clone();
             self.rt.spawn_blocking(move || {
                 let _ = tx.send(FetcStatus::Fetching);
-                let mut old_shortcuts = sync::get_platform_shortcuts(&settings);
+                let mut old_shortcuts = vec![];
                 for (name,shortcut_info) in sync::get_enum_platform_shortcuts(&platforms){                    
                     old_shortcuts.push((name,shortcut_info));
                 }
