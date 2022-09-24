@@ -35,7 +35,6 @@ impl MyEguiApp {
                     ui.add_space(SECTION_SPACING);
                 }
                 self.render_legendary_settings(ui);
-                self.render_lutris_settings(ui);
                 
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
@@ -43,29 +42,6 @@ impl MyEguiApp {
               
 
             });
-    }
-    
-#[cfg(target_family = "unix")]
-     fn render_lutris_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Lutris");
-        ui.checkbox(&mut self.settings.lutris.enabled, "Import from Lutris");
-        if self.settings.lutris.enabled {
-            ui.checkbox(&mut self.settings.lutris.flatpak, "Flatpak version");
-            if !self.settings.lutris.flatpak {
-                ui.horizontal(|ui| {
-                    let lutris_location = &mut self.settings.lutris.executable;
-                    ui.label("Lutris Location: ");
-                    ui.text_edit_singleline(lutris_location);
-                });
-            } else {
-                ui.horizontal(|ui| {
-                    let flatpak_image = &mut self.settings.lutris.flatpak_image;
-                    ui.label("Flatpak image");
-                    ui.text_edit_singleline(flatpak_image);
-                });
-            }
-        }
-        ui.add_space(SECTION_SPACING);
     }
 
    

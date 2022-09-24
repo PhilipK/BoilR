@@ -1,6 +1,5 @@
 mod config;
 mod legendary;
-mod lutris;
 mod migration;
 mod platforms;
 mod settings;

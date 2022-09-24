@@ -8,6 +8,7 @@ mod flatpak;
 mod origin;
 mod gog;
 mod heroic;
+mod lutris;
 
 pub use platform::*;
 
@@ -24,3 +25,4 @@ pub use gog::get_gog_shortcuts_from_game_folders;
 pub use gog::GogShortcut;
 
 pub use heroic::HeroicSettings;
+pub use lutris::LutrisSettings;

@@ -1,13 +1,13 @@
 use crate::{
     config::get_config_file,
     legendary::LegendarySettings,
-    lutris::settings::LutrisSettings,
-    platforms::{AmazonSettings, OriginSettings, GogSettings, HeroicSettings},
-    platforms::{EpicGamesLauncherSettings, UplaySettings, ItchSettings, FlatpakSettings},
+    platforms::{AmazonSettings, GogSettings, HeroicSettings, OriginSettings},
+    platforms::{
+        EpicGamesLauncherSettings, FlatpakSettings, ItchSettings, LutrisSettings, UplaySettings,
+    },
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
 };
-
 
 use crate::platforms::BottlesSettings;
 

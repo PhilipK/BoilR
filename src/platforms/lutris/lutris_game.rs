@@ -1,7 +1,8 @@
-use crate::lutris::settings::LutrisSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 use serde::Deserialize;
+
+use super::LutrisSettings;
 
 #[derive(Deserialize, Clone)]
 pub struct LutrisGame {

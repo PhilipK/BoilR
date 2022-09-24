@@ -5,7 +5,6 @@ use tokio::sync::watch::Sender;
 
 use crate::{
     legendary::LegendaryPlatform,
-    lutris::lutris_platform::LutrisPlatform,
     platforms::{Platform, PlatformEnum},
     settings::Settings,
     steam::{
@@ -266,9 +265,6 @@ pub fn get_enum_platform_shortcuts(
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
     let platform_results = vec![
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
-        update_platform_shortcuts(&LutrisPlatform {
-            settings: settings.lutris.clone(),
-        }),
     ];
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }

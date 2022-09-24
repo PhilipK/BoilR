@@ -169,7 +169,7 @@ impl HeroicPlatform {
     pub fn get_epic_games(&self, install_modes: &[InstallationMode]) -> eyre::Result<Vec<HeroicGameType>> {
         let mut shortcuts = vec![];
         for install_mode in install_modes {
-            let mut games = get_shortcuts_from_install_mode(install_mode)?;
+            if let Ok(mut games) = get_shortcuts_from_install_mode(install_mode) {
             games.sort_by_key(|m| {
                 format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name)
             });
@@ -190,6 +190,7 @@ impl HeroicPlatform {
                     }
                 }
             }
+        }
         }
         Ok(shortcuts)
     }
