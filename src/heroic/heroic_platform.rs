@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use super::{HeroicGame, HeroicGameType, HeroicSettings};
 use crate::gog::get_shortcuts_from_game_folders;
-use crate::platform::{Platform, SettingsValidity};
+use crate::platforms::{Platform, SettingsValidity};
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
@@ -106,7 +106,7 @@ impl Platform<HeroicGameType, Box<dyn Error>> for HeroicPlatform {
         false
     }
 
-    fn settings_valid(&self) -> crate::platform::SettingsValidity {
+    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
         let shortcuts_res = self.get_shortcuts();
         match shortcuts_res {
             Ok(_) => SettingsValidity::Valid,

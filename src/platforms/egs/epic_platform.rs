@@ -26,14 +26,14 @@ impl EpicPlatform {
 }
 
 impl NeedsPorton<EpicPlatform> for ManifestItem{
-    fn needs_proton(&self, platform: &EpicPlatform) -> bool {
+    fn needs_proton(&self, _platform: &EpicPlatform) -> bool {
         #[cfg(target_family = "unix")]
         return true;
         #[cfg(target_os = "windows")]
         return false;
     }
 
-    fn create_symlinks(&self, platform: &EpicPlatform) -> bool {
+    fn create_symlinks(&self, _platform: &EpicPlatform) -> bool {
         false        
     }
 }

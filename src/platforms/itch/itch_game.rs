@@ -41,7 +41,7 @@ impl From<ItchGame> for ShortcutOwned {
 
 
 impl NeedsPorton<ItchPlatform> for ItchGame{
-    fn needs_proton(&self, platform: &ItchPlatform) -> bool {
+    fn needs_proton(&self, _platform: &ItchPlatform) -> bool {
         self.executable.ends_with("exe")
     }
     

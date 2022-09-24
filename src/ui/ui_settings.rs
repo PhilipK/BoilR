@@ -41,7 +41,6 @@ impl MyEguiApp {
                 #[cfg(target_family = "unix")]
                 {
                     self.render_heroic_settings(ui);
-                    self.render_bottles_settings(ui);
                 }
 
                 self.render_legendary_settings(ui);

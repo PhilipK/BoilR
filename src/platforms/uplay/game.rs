@@ -28,11 +28,11 @@ impl From<UplayGame> for ShortcutOwned {
 }
 
 impl NeedsPorton<UplayPlatform> for UplayGame{
-    fn needs_proton(&self, platform: &UplayPlatform) -> bool {
+    fn needs_proton(&self, _platform: &UplayPlatform) -> bool {
         false
     }
 
-    fn create_symlinks(&self, platform: &UplayPlatform) -> bool {
+    fn create_symlinks(&self, _platform: &UplayPlatform) -> bool {
         false
     }
 }

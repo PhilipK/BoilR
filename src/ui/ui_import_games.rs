@@ -2,11 +2,9 @@ use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
 
-use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
-use crate::platforms::ShortcutToImport;
 use crate::settings::Settings;
 use crate::sync;
 

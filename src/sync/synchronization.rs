@@ -6,7 +6,7 @@ use tokio::sync::watch::Sender;
 use crate::{
     legendary::LegendaryPlatform,
     lutris::lutris_platform::LutrisPlatform,
-    platforms::{Platform, PlatformEnum, ShortcutToImport, self},
+    platforms::{Platform, PlatformEnum},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -246,17 +246,17 @@ pub fn get_enum_platform_shortcuts(
 
                         let shortcut_owned = shortcut_info.shortcut;
                         #[cfg(target_family = "unix")]
-                        let shortcut_owned = if platform.create_symlinks() {
-                            crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut)
+                        let shortcut_owned = if shortcut_info.needs_symlinks {
+                            crate::sync::symlinks::create_sym_links(&shortcut_owned)
                         } else {
-                            shortcut_info.shortcut
+                            shortcut_owned
                         };
 
                         platform_shortcuts.push(shortcut_owned)
                     }
                 }
                 Err(error) => {
-                    eprint!("Error importing {name} games, error: {error}");                    
+                    eprintln!("Error importing {name} games, error: {error}");                    
                 }
             }
             if !platform_shortcuts.is_empty(){
