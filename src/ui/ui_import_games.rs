@@ -2,9 +2,11 @@ use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
 
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
+use crate::platforms::ShortcutToImport;
 use crate::settings::Settings;
 use crate::sync;
 
@@ -133,7 +135,9 @@ impl MyEguiApp {
             self.rt.spawn_blocking(move || {
                 let _ = tx.send(FetcStatus::Fetching);
                 let mut old_shortcuts = sync::get_platform_shortcuts(&settings);
-                old_shortcuts.extend(sync::get_enum_platform_shortcuts(&platforms));
+                for (name,shortcut_info) in sync::get_enum_platform_shortcuts(&platforms){                    
+                    old_shortcuts.push((name,shortcut_info));
+                }
                 let games_to_sync = old_shortcuts;
                 let _ = tx.send(FetcStatus::Fetched(games_to_sync));
             });

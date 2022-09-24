@@ -85,7 +85,7 @@ pub fn get_default_location() -> String {
         .to_str()
         .unwrap()
         .to_string()
-    //C:\Users\phili\AppData\Local\itch
+        //C:\Users\phili\AppData\Local\itch
 }
 
 impl ItchPlatform {

@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
+use crate::platforms::NeedsPorton;
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesPlatform {
     pub settings: BottlesSettings,
@@ -107,5 +109,15 @@ impl BottlesPlatform {
             }
         }
         Ok(res)
+    }
+}
+
+impl NeedsPorton<BottlesPlatform> for BottlesApp {
+    fn needs_proton(&self, _platform: &BottlesPlatform) -> bool {
+        false
+    }
+
+    fn create_symlinks(&self, _platform: &BottlesPlatform) -> bool {
+        false
     }
 }

@@ -1,7 +1,9 @@
-use std::path::{Path, PathBuf};
-use sqlite::State;
 use serde::{Deserialize, Serialize};
+use sqlite::State;
+use std::path::{Path, PathBuf};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
+
+use crate::platforms::NeedsPorton;
 
 #[derive(Clone)]
 pub struct AmazonPlatform {
@@ -70,6 +72,15 @@ impl AmazonPlatform {
     }
 }
 
+impl NeedsPorton<AmazonPlatform> for AmazonGame {
+    fn needs_proton(&self, _platform: &AmazonPlatform) -> bool {
+        false
+    }
+
+    fn create_symlinks(&self, _platform: &AmazonPlatform) -> bool {
+        false
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct AmazonGame {
@@ -106,4 +117,3 @@ pub struct AmazonSettings {
     pub enabled: bool,
     pub launcher_location: Option<String>,
 }
-

@@ -3,14 +3,14 @@ use std::path::Path;
 #[cfg(target_os = "windows")]
 use std::path::PathBuf;
 
-use super::{game::Game, settings::UplaySettings};
+use super::{game::UplayGame, settings::UplaySettings};
 
 #[derive(Clone)]
 pub struct UplayPlatform {
     pub settings: UplaySettings,
 }
 
-pub(crate) fn get_uplay_games() -> eyre::Result<Vec<Game>> {
+pub(crate) fn get_uplay_games() -> eyre::Result<Vec<UplayGame>> {
     #[cfg(target_family = "unix")]
     {
         Ok(vec![])
@@ -41,7 +41,7 @@ fn get_launcher_path() -> eyre::Result<PathBuf> {
 }
 
 #[cfg(target_os = "windows")]
-fn get_games_from_winreg() -> eyre::Result<Vec<Game>> {
+fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
     use winreg::enums::*;
     use winreg::RegKey;
 
@@ -71,7 +71,7 @@ fn get_games_from_winreg() -> eyre::Result<Vec<Game>> {
             let name: Result<String, _> = subkey.get_value("DisplayName");
             if let Ok(name) = name {
                 let icon: String = subkey.get_value("DisplayIcon").unwrap_or_default();
-                games.push(Game {
+                games.push(UplayGame {
                     name,
                     icon,
                     id,

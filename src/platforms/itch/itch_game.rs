@@ -3,6 +3,10 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
+use crate::platforms::NeedsPorton;
+
+use super::ItchPlatform;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct ItchGame {
@@ -31,5 +35,23 @@ impl From<ItchGame> for ShortcutOwned {
         owned_shortcut.tags.push("Installed".to_owned());
 
         owned_shortcut
+    }
+}
+
+
+
+impl NeedsPorton<ItchPlatform> for ItchGame{
+    fn needs_proton(&self, platform: &ItchPlatform) -> bool {
+        self.executable.ends_with("exe")
+    }
+    
+    #[cfg(target_family = "unix")]
+    fn create_symlinks(&self, platform: &ItchPlatform) -> bool {
+        platform.settings.create_symlinks
+    }
+
+    #[cfg(not(target_family = "unix"))]
+    fn create_symlinks(&self, platform: &ItchPlatform) -> bool {
+        false
     }
 }
