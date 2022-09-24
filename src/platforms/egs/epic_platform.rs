@@ -1,5 +1,4 @@
-
-use crate::platforms::NeedsPorton;
+use crate::platforms::{to_shortcuts, NeedsPorton, ShortcutToImport};
 
 use super::{get_egs_manifests, EpicGamesLauncherSettings, ManifestItem};
 
@@ -10,22 +9,12 @@ pub struct EpicPlatform {
 }
 
 impl EpicPlatform {
-    pub fn new(settings: &EpicGamesLauncherSettings) -> Self {
-        EpicPlatform {
-            settings: settings.clone(),
-            epic_manifests: None,
-        }
+    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, get_egs_manifests(&self.settings))
     }
 }
 
-impl EpicPlatform {
-
-   pub(crate) fn get_epic_games(&self) -> eyre::Result<Vec<ManifestItem>> {
-        get_egs_manifests(&self.settings)        
-    }
-}
-
-impl NeedsPorton<EpicPlatform> for ManifestItem{
+impl NeedsPorton<EpicPlatform> for ManifestItem {
     fn needs_proton(&self, _platform: &EpicPlatform) -> bool {
         #[cfg(target_family = "unix")]
         return true;
@@ -34,6 +23,6 @@ impl NeedsPorton<EpicPlatform> for ManifestItem{
     }
 
     fn create_symlinks(&self, _platform: &EpicPlatform) -> bool {
-        false        
+        false
     }
 }

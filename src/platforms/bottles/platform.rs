@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::NeedsPorton;
+use crate::platforms::{to_shortcuts_simple, ShortcutToImport};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesPlatform {
@@ -22,7 +22,6 @@ pub struct BottlesApp {
 pub struct BottlesSettings {
     pub enabled: bool,
 }
-
 
 impl From<BottlesApp> for ShortcutOwned {
     fn from(app: BottlesApp) -> Self {
@@ -97,7 +96,11 @@ impl BottlesPlatform {
         ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
     }
 
-    pub fn get_botttles(&self) -> eyre::Result<Vec<BottlesApp>> {
+    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts_simple(self.get_botttles())
+    }
+
+    fn get_botttles(&self) -> eyre::Result<Vec<BottlesApp>> {
         let mut res = vec![];
         let bottles = get_bottles()?;
         for bottle in bottles {
@@ -109,15 +112,5 @@ impl BottlesPlatform {
             }
         }
         Ok(res)
-    }
-}
-
-impl NeedsPorton<BottlesPlatform> for BottlesApp {
-    fn needs_proton(&self, _platform: &BottlesPlatform) -> bool {
-        false
-    }
-
-    fn create_symlinks(&self, _platform: &BottlesPlatform) -> bool {
-        false
     }
 }

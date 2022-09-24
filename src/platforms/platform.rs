@@ -1,11 +1,11 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use super::amazon::{AmazonPlatform, AmazonGame};
-use super::bottles::{BottlesPlatform, BottlesApp};
-use super::egs::{EpicPlatform, ManifestItem};
+use super::amazon::AmazonPlatform;
+use super::bottles::BottlesPlatform;
+use super::egs::EpicPlatform;
 use super::flatpak::FlatpakPlatform;
-use super::itch::{ItchPlatform, ItchGame};
-use super::uplay::{get_uplay_games, UplayPlatform, UplayGame};
+use super::itch::ItchPlatform;
+use super::uplay::UplayPlatform;
 
 pub trait Platform<T, E>
 where
@@ -38,7 +38,7 @@ pub enum PlatformEnum {
     Epic(EpicPlatform),
     Uplay(UplayPlatform),
     Itch(ItchPlatform),
-    Flatpak(FlatpakPlatform)
+    Flatpak(FlatpakPlatform),
 }
 
 impl PlatformEnum {
@@ -77,11 +77,11 @@ impl PlatformEnum {
 
     pub fn get_shortcuts(&self) -> eyre::Result<Vec<ShortcutToImport>> {
         match self {
-            PlatformEnum::Amazon(p) => to_shortcuts::<AmazonGame,AmazonPlatform>(&p, p.get_amazon_games()),
-            PlatformEnum::Bottles(p) => to_shortcuts::<BottlesApp,BottlesPlatform>(&p, p.get_botttles()),
-            PlatformEnum::Epic(p) => to_shortcuts::<ManifestItem,EpicPlatform>(&p, p.get_epic_games()),
-            PlatformEnum::Uplay(p) => to_shortcuts::<UplayGame,UplayPlatform>(&p, get_uplay_games()),
-            PlatformEnum::Itch(p) => to_shortcuts::<ItchGame,ItchPlatform>(&p, p.get_itch_games()),
+            PlatformEnum::Amazon(p) => p.get_shortcut_info(),
+            PlatformEnum::Bottles(p) => p.get_shortcut_info(),
+            PlatformEnum::Epic(p) => p.get_shortcut_info(),
+            PlatformEnum::Uplay(p) => p.get_shortcut_info(),
+            PlatformEnum::Itch(p) => p.get_shortcut_info(),
             PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
         }
     }
@@ -98,7 +98,6 @@ pub fn to_shortcuts<T, P>(
     into_shortcuts: Result<Vec<T>, eyre::ErrReport>,
 ) -> eyre::Result<Vec<ShortcutToImport>>
 where
-    T: Clone,
     T: Into<ShortcutOwned>,
     T: NeedsPorton<P>,
 {
@@ -106,7 +105,28 @@ where
     let mut shortcut_info = vec![];
     for m in shortcuts {
         let needs_proton = m.needs_proton(platform);
-        let needs_symlinks =  m.create_symlinks(platform);
+        let needs_symlinks = m.create_symlinks(platform);
+        let shortcut = m.into();
+        shortcut_info.push(ShortcutToImport {
+            shortcut,
+            needs_proton,
+            needs_symlinks,
+        });
+    }
+    Ok(shortcut_info)
+}
+
+pub fn to_shortcuts_simple<T>(
+    into_shortcuts: Result<Vec<T>, eyre::ErrReport>,
+) -> eyre::Result<Vec<ShortcutToImport>>
+where
+    T: Into<ShortcutOwned>,
+{
+    let shortcuts = into_shortcuts?;
+    let mut shortcut_info = vec![];
+    for m in shortcuts {
+        let needs_proton = false;
+        let needs_symlinks = false;
         let shortcut = m.into();
         shortcut_info.push(ShortcutToImport {
             shortcut,

@@ -1,6 +1,8 @@
+use crate::platforms::{to_shortcuts, ShortcutToImport};
+use super::itch_game::ItchGame;
 use super::receipt::Receipt;
 use super::ItchSettings;
-use super::{butler_db_parser::*, ItchGame};
+use super::{butler_db_parser::*};
 use flate2::read::GzDecoder;
 use is_executable::IsExecutable;
 use std::collections::HashSet;
@@ -13,7 +15,11 @@ pub struct ItchPlatform {
 }
 
 impl ItchPlatform {
-    pub fn get_itch_games(&self) -> eyre::Result<Vec<ItchGame>> {
+    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>{
+        to_shortcuts(self, self.get_itch_games())
+    } 
+
+    fn get_itch_games(&self) -> eyre::Result<Vec<ItchGame>> {
         let itch_location = self.settings.location.clone();
         let itch_location = itch_location.unwrap_or_else(get_default_location);
 

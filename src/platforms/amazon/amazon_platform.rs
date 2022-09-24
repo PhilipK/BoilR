@@ -3,7 +3,7 @@ use sqlite::State;
 use std::path::{Path, PathBuf};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::NeedsPorton;
+use crate::platforms::{to_shortcuts_simple, ShortcutToImport};
 
 #[derive(Clone)]
 pub struct AmazonPlatform {
@@ -45,7 +45,12 @@ fn get_launcher_path() -> eyre::Result<PathBuf> {
 }
 
 impl AmazonPlatform {
-    pub fn get_amazon_games(&self) -> eyre::Result<Vec<AmazonGame>> {
+
+    pub(crate) fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>{
+        to_shortcuts_simple(self.get_amazon_games())
+    }
+
+    fn get_amazon_games(&self) -> eyre::Result<Vec<AmazonGame>> {
         let sqllite_path = get_sqlite_path()?;
         let launcher_path = get_launcher_path()?;
         let mut result = vec![];
@@ -69,16 +74,6 @@ impl AmazonPlatform {
     pub fn render_amazon_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Amazon");
         ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
-    }
-}
-
-impl NeedsPorton<AmazonPlatform> for AmazonGame {
-    fn needs_proton(&self, _platform: &AmazonPlatform) -> bool {
-        false
-    }
-
-    fn create_symlinks(&self, _platform: &AmazonPlatform) -> bool {
-        false
     }
 }
 

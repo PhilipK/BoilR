@@ -6,4 +6,3 @@ mod settings;
 
 pub use itch_platform::ItchPlatform;
 pub use settings::ItchSettings;
-pub(crate) use itch_game::ItchGame;

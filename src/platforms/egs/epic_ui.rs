@@ -1,4 +1,4 @@
-use super::EpicPlatform;
+use super::{get_manifests::get_egs_manifests, EpicPlatform};
 
 impl EpicPlatform {
     pub fn render_epic_settings(&mut self, ui: &mut egui::Ui) {
@@ -17,8 +17,7 @@ impl EpicPlatform {
             .show(ui, |ui| {
                 ui.label("Some games must be started from the Epic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Epic Launcher.");
                 let manifests =self.epic_manifests.get_or_insert_with(||{
-                    let epic_platform = EpicPlatform::new(epic_settings);
-                    let manifests = epic_platform.get_epic_games();
+                    let manifests = get_egs_manifests(epic_settings);
                     manifests.unwrap_or_default()
                 });
                 let mut safe_open_games = epic_settings.safe_launch.clone();

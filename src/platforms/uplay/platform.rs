@@ -3,6 +3,9 @@ use std::path::Path;
 #[cfg(target_os = "windows")]
 use std::path::PathBuf;
 
+use crate::platforms::to_shortcuts_simple;
+use crate::platforms::ShortcutToImport;
+
 use super::{game::UplayGame, settings::UplaySettings};
 
 #[derive(Clone)]
@@ -10,10 +13,16 @@ pub struct UplayPlatform {
     pub settings: UplaySettings,
 }
 
-pub(crate) fn get_uplay_games() -> eyre::Result<Vec<UplayGame>> {
+impl UplayPlatform {
+    pub(crate) fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts_simple(get_uplay_games())
+    }
+}
+
+fn get_uplay_games() -> eyre::Result<Vec<UplayGame>> {
     #[cfg(target_family = "unix")]
     {
-        Ok(vec![])
+        Err(eyre::format_err!("Uplay is not supported on Linux"))
     }
     #[cfg(target_os = "windows")]
     {
@@ -87,6 +96,6 @@ fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
 impl UplayPlatform {
     pub(crate) fn render_uplay_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Uplay");
-        ui.checkbox(&mut self.settings.enabled, "Import from Uplay");        
+        ui.checkbox(&mut self.settings.enabled, "Import from Uplay");
     }
 }
