@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::platforms::{Platform, SettingsValidity};
-use std::error::Error;
+use crate::platforms::{NeedsPorton, to_shortcuts, ShortcutToImport};
 
 use super::FlatpakSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
@@ -24,16 +23,28 @@ impl From<FlatpakApp> for ShortcutOwned {
     }
 }
 
-impl Platform<FlatpakApp, Box<dyn Error>> for FlatpakPlatform {
-    fn enabled(&self) -> bool {
-        self.settings.enabled
+impl NeedsPorton<FlatpakPlatform> for FlatpakApp{
+    fn needs_proton(&self, _platform: &FlatpakPlatform) -> bool {
+        false
     }
 
-    fn name(&self) -> &str {
-        "Flatpak"
+    fn create_symlinks(&self, _platform: &FlatpakPlatform) -> bool {
+        false
+    }
+}
+
+impl FlatpakPlatform {
+    pub fn render_flatpak_settings(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Flatpak");
+        ui.checkbox(&mut self.settings.enabled, "Import from Flatpak");
     }
 
-    fn get_shortcuts(&self) -> Result<Vec<FlatpakApp>, Box<dyn Error>> {
+
+    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>{
+        to_shortcuts(self, self.get_flatpak_apps())
+
+    }
+    fn get_flatpak_apps(&self) -> eyre::Result<Vec<FlatpakApp>> {
         use std::process::Command;
         let mut command = Command::new("flatpak");
         let output = command
@@ -55,24 +66,5 @@ impl Platform<FlatpakApp, Box<dyn Error>> for FlatpakPlatform {
             }
         }
         Ok(result)
-    }
-
-    fn settings_valid(&self) -> crate::platforms::SettingsValidity {
-        let shortcuts_res = self.get_shortcuts();
-        match shortcuts_res {
-            Ok(_) => SettingsValidity::Valid,
-            Err(err) => SettingsValidity::Invalid {
-                reason: format!("{}", err),
-            },
-        }
-    }
-
-    #[cfg(target_family = "unix")]
-    fn create_symlinks(&self) -> bool {
-        false
-    }
-
-    fn needs_proton(&self, _input: &FlatpakApp) -> bool {
-        false
     }
 }

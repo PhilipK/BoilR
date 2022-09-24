@@ -48,13 +48,6 @@ impl MyEguiApp {
                 self.render_gog_settings(ui);
                 self.render_lutris_settings(ui);
                 
-                
-                #[cfg(target_family = "unix")]
-                {
-                    self.render_flatpak_settings(ui);
-                }
-                
-               
                 ui.add_space(SECTION_SPACING);
                 ui.label(format!("Version: {}", VERSION));
                 
@@ -62,19 +55,6 @@ impl MyEguiApp {
 
             });
     }
-
-    #[cfg(target_family = "unix")]            
-    fn render_flatpak_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Flatpak");
-        ui.checkbox(&mut self.settings.flatpak.enabled, "Import from Flatpak");
-        
-                ui.add_space(SECTION_SPACING);
-    }
-    
-
-    #[cfg(target_family = "unix")]
-    
-
     
 #[cfg(target_family = "unix")]
     fn render_heroic_settings(&mut self, ui: &mut egui::Ui) {

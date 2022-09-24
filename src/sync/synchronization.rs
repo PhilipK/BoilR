@@ -288,10 +288,6 @@ pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutO
         platform_results.push(update_platform_shortcuts(&HeroicPlatform {
             settings: settings.heroic.clone(),
         }));
-
-        platform_results.push(update_platform_shortcuts(&FlatpakPlatform {
-            settings: settings.flatpak.clone(),
-        }));
     }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }

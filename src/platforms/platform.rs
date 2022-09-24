@@ -1,5 +1,7 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
+use crate::flatpak::FlatpakPlatform;
+
 use super::amazon::{AmazonPlatform, AmazonGame};
 use super::bottles::{BottlesPlatform, BottlesApp};
 use super::egs::{EpicPlatform, ManifestItem};
@@ -37,6 +39,7 @@ pub enum PlatformEnum {
     Epic(EpicPlatform),
     Uplay(UplayPlatform),
     Itch(ItchPlatform),
+    Flatpak(FlatpakPlatform)
 }
 
 impl PlatformEnum {
@@ -47,6 +50,7 @@ impl PlatformEnum {
             PlatformEnum::Epic(_) => "Epic",
             PlatformEnum::Uplay(_) => "Uplay",
             PlatformEnum::Itch(_) => "Itch",
+            PlatformEnum::Flatpak(_) => "Flatpak",
         }
     }
 
@@ -57,6 +61,7 @@ impl PlatformEnum {
             PlatformEnum::Epic(p) => p.settings.enabled,
             PlatformEnum::Uplay(p) => p.settings.enabled,
             PlatformEnum::Itch(p) => p.settings.enabled,
+            PlatformEnum::Flatpak(p) => p.settings.enabled,
         }
     }
 
@@ -67,6 +72,7 @@ impl PlatformEnum {
             PlatformEnum::Epic(p) => p.render_epic_settings(ui),
             PlatformEnum::Uplay(p) => p.render_uplay_settings(ui),
             PlatformEnum::Itch(p) => p.render_itch_settings(ui),
+            PlatformEnum::Flatpak(p) => p.render_flatpak_settings(ui),
         }
     }
 
@@ -77,6 +83,7 @@ impl PlatformEnum {
             PlatformEnum::Epic(p) => to_shortcuts::<ManifestItem,EpicPlatform>(&p, p.get_epic_games()),
             PlatformEnum::Uplay(p) => to_shortcuts::<UplayGame,UplayPlatform>(&p, get_uplay_games()),
             PlatformEnum::Itch(p) => to_shortcuts::<ItchGame,ItchPlatform>(&p, p.get_itch_games()),
+            PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
         }
     }
 }
@@ -87,7 +94,7 @@ pub struct ShortcutToImport {
     pub needs_symlinks: bool,
 }
 
-fn to_shortcuts<T, P>(
+pub fn to_shortcuts<T, P>(
     platform: &P,
     into_shortcuts: Result<Vec<T>, eyre::ErrReport>,
 ) -> eyre::Result<Vec<ShortcutToImport>>
@@ -111,7 +118,7 @@ where
     Ok(shortcut_info)
 }
 
-pub type Platforms = [PlatformEnum; 5];
+pub type Platforms = [PlatformEnum; 6];
 
 pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
     [
@@ -130,6 +137,9 @@ pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
         }),
         PlatformEnum::Itch(ItchPlatform {
             settings: settings.itch.clone(),
+        }),
+        PlatformEnum::Flatpak(FlatpakPlatform {
+            settings: settings.flatpak.clone(),
         }),
     ]
 }
