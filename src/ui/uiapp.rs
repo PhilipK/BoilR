@@ -53,9 +53,10 @@ impl MyEguiApp {
     pub fn new() -> Self {
         let runtime = Runtime::new().unwrap();
         let settings = Settings::new().expect("We must be able to load our settings");
+        let platforms = get_platforms(&settings);
         Self {
             selected_menu: Menues::Import,
-            settings: settings.clone(),
+            settings,
             rt: runtime,
             games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
             ui_images: UiImages::default(),
@@ -65,7 +66,7 @@ impl MyEguiApp {
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
-            platforms: get_platforms(&settings),
+            platforms,
         }
     }
 }
