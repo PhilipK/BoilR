@@ -1,6 +1,4 @@
 mod config;
-#[cfg(target_family = "unix")]
-mod heroic;
 mod legendary;
 mod lutris;
 mod migration;

@@ -15,9 +15,6 @@ use crate::{
     steamgriddb::{download_images_for_users, ImageType},
 };
 
-#[cfg(target_family = "unix")]
-use crate::heroic::HeroicPlatform;
-
 use std::{collections::HashMap, error::Error};
 
 use std::{fs::File, io::Write, path::Path};
@@ -267,18 +264,12 @@ pub fn get_enum_platform_shortcuts(
 }
 
 pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
-    let mut platform_results = vec![
+    let platform_results = vec![
         update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
         update_platform_shortcuts(&LutrisPlatform {
             settings: settings.lutris.clone(),
         }),
     ];
-    #[cfg(target_family = "unix")]
-    {
-        platform_results.push(update_platform_shortcuts(&HeroicPlatform {
-            settings: settings.heroic.clone(),
-        }));
-    }
     platform_results.iter().filter_map(|p| p.clone()).collect()
 }
 

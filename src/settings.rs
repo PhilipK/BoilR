@@ -2,14 +2,12 @@ use crate::{
     config::get_config_file,
     legendary::LegendarySettings,
     lutris::settings::LutrisSettings,
-    platforms::{AmazonSettings, OriginSettings, GogSettings},
+    platforms::{AmazonSettings, OriginSettings, GogSettings, HeroicSettings},
     platforms::{EpicGamesLauncherSettings, UplaySettings, ItchSettings, FlatpakSettings},
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
 };
 
-#[cfg(target_family = "unix")]
-use crate::heroic::HeroicSettings;
 
 use crate::platforms::BottlesSettings;
 
@@ -31,7 +29,6 @@ pub struct Settings {
     pub gog: GogSettings,
     pub uplay: UplaySettings,
     pub lutris: LutrisSettings,
-    #[cfg(target_family = "unix")]
     pub heroic: HeroicSettings,
     pub amazon: AmazonSettings,
     pub flatpak: FlatpakSettings,

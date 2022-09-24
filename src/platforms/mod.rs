@@ -7,6 +7,7 @@ mod itch;
 mod flatpak;
 mod origin;
 mod gog;
+mod heroic;
 
 pub use platform::*;
 
@@ -17,7 +18,9 @@ pub use uplay::UplaySettings;
 pub use itch::ItchSettings;
 pub use flatpak::FlatpakSettings;
 pub use origin::OriginSettings;
-pub use gog::GogSettings;
 
+pub use gog::GogSettings;
 pub use gog::get_gog_shortcuts_from_game_folders;
 pub use gog::GogShortcut;
+
+pub use heroic::HeroicSettings;

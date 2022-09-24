@@ -6,6 +6,7 @@ use super::bottles::BottlesPlatform;
 use super::egs::EpicPlatform;
 use super::flatpak::FlatpakPlatform;
 use super::gog::GogPlatform;
+use super::heroic::HeroicPlatform;
 use super::itch::ItchPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
@@ -43,7 +44,8 @@ pub enum PlatformEnum {
     Itch(ItchPlatform),
     Flatpak(FlatpakPlatform),
     Origin(OriginPlatform),
-    Gog(GogPlatform)
+    Gog(GogPlatform),
+    Heroic(HeroicPlatform)
 }
 
 impl PlatformEnum {
@@ -57,6 +59,8 @@ impl PlatformEnum {
             PlatformEnum::Flatpak(_) => "Flatpak",
             PlatformEnum::Origin(_) => "Origin",
             PlatformEnum::Gog(_) => "Gog",
+            PlatformEnum::Heroic(_) => "Heroic",
+            
         }
     }
 
@@ -70,6 +74,8 @@ impl PlatformEnum {
             PlatformEnum::Flatpak(p) => p.settings.enabled,
             PlatformEnum::Origin(p) => p.settings.enabled,
             PlatformEnum::Gog(p) => p.settings.enabled,
+            PlatformEnum::Heroic(p) => p.settings.enabled,
+            
         }
     }
 
@@ -83,8 +89,7 @@ impl PlatformEnum {
             PlatformEnum::Flatpak(p) => p.render_flatpak_settings(ui),
             PlatformEnum::Origin(p) => p.render_origin_settings(ui),
             PlatformEnum::Gog(p) => p.render_gog_settings(ui),
-            
-            
+            PlatformEnum::Heroic(p) => p.render_heroic_settings(ui)
         }
     }
 
@@ -98,6 +103,7 @@ impl PlatformEnum {
             PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
             PlatformEnum::Origin(p) => p.get_shortcut_info(),
             PlatformEnum::Gog(p) => p.get_shortcut_info(),
+            PlatformEnum::Heroic(p) => p.get_shortcut_info(),
             
         }
     }
@@ -153,7 +159,7 @@ where
     Ok(shortcut_info)
 }
 
-pub type Platforms = [PlatformEnum; 8];
+pub type Platforms = [PlatformEnum; 9];
 
 pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
     [
@@ -181,6 +187,10 @@ pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
         }),
         PlatformEnum::Gog(GogPlatform {
             settings: settings.gog.clone(),
+        }),
+        PlatformEnum::Heroic(HeroicPlatform { 
+            settings: settings.heroic.clone(),
+            heroic_games:None
         }),
     ]
 }
