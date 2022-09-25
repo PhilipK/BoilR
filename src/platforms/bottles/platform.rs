@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings};
+use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings, GamesPlatform};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesPlatform {
@@ -97,15 +97,6 @@ struct Program {
 }
 
 impl BottlesPlatform {
-    pub fn render_bottles_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Bottles");
-        ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
-    }
-
-    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
-        to_shortcuts_simple(self.get_botttles())
-    }
-
     fn get_botttles(&self) -> eyre::Result<Vec<BottlesApp>> {
         let mut res = vec![];
         let bottles = get_bottles()?;
@@ -118,5 +109,25 @@ impl BottlesPlatform {
             }
         }
         Ok(res)
+    }
+}
+
+
+impl GamesPlatform for BottlesPlatform{
+    fn name(&self) -> &str {
+        "Bottles"
+    }
+
+    fn enabled(&self) -> bool {
+        self.settings.enabled
+    }
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts_simple(self.get_botttles())
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Bottles");
+        ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
     }
 }

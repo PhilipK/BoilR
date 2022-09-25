@@ -19,8 +19,6 @@ use super::uplay::UplayPlatform;
 
 #[derive(Clone)]
 pub enum PlatformEnum {
-    Bottles(BottlesPlatform),
-    Epic(EpicPlatform),
     Uplay(UplayPlatform),
     Itch(ItchPlatform),
     Flatpak(FlatpakPlatform),
@@ -52,8 +50,6 @@ where
 impl GamesPlatform for PlatformEnum {
     fn name(&self) -> &str {
         match self {
-            PlatformEnum::Bottles(_) => "Bottles",
-            PlatformEnum::Epic(_) => "Epic",
             PlatformEnum::Uplay(_) => "Uplay",
             PlatformEnum::Itch(_) => "Itch",
             PlatformEnum::Flatpak(_) => "Flatpak",
@@ -67,8 +63,6 @@ impl GamesPlatform for PlatformEnum {
 
     fn enabled(&self) -> bool {
         match self {
-            PlatformEnum::Bottles(p) => p.settings.enabled,
-            PlatformEnum::Epic(p) => p.settings.enabled,
             PlatformEnum::Uplay(p) => p.settings.enabled,
             PlatformEnum::Itch(p) => p.settings.enabled,
             PlatformEnum::Flatpak(p) => p.settings.enabled,
@@ -82,8 +76,6 @@ impl GamesPlatform for PlatformEnum {
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
         match self {
-            PlatformEnum::Bottles(p) => p.get_shortcut_info(),
-            PlatformEnum::Epic(p) => p.get_shortcut_info(),
             PlatformEnum::Uplay(p) => p.get_shortcut_info(),
             PlatformEnum::Itch(p) => p.get_shortcut_info(),
             PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
@@ -97,8 +89,6 @@ impl GamesPlatform for PlatformEnum {
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         match self {
-            PlatformEnum::Bottles(p) => p.render_bottles_settings(ui),
-            PlatformEnum::Epic(p) => p.render_epic_settings(ui),
             PlatformEnum::Uplay(p) => p.render_uplay_settings(ui),
             PlatformEnum::Itch(p) => p.render_itch_settings(ui),
             PlatformEnum::Flatpak(p) => p.render_flatpak_settings(ui),
@@ -118,13 +108,15 @@ impl PlatformEnum {
     ) -> eyre::Result<Box<dyn GamesPlatform>> {
         let name = name.as_ref();
         match name {
-            "amazon" => Ok(Box::new(AmazonPlatform::from_settings_string(settings_string))),
-            "bottles" => Ok(Box::new(PlatformEnum::Bottles(
-                BottlesPlatform::from_settings_string(settings_string),
+            "amazon" => Ok(Box::new(AmazonPlatform::from_settings_string(
+                settings_string,
             ))),
-            "epic_games" => Ok(Box::new(PlatformEnum::Epic(
+            "bottles" => Ok(Box::new(BottlesPlatform::from_settings_string(
+                settings_string,
+            ))),
+            "epic_games" => Ok(Box::new(
                 EpicPlatform::from_settings_string(settings_string),
-            ))),
+            )),
 
             _ => Err(eyre::format_err!("Unknown platform named {name}")),
         }
@@ -219,7 +211,7 @@ pub trait GamesPlatform
 where
     Self: std::marker::Send,
     Self: std::marker::Sync,
-    Self: DynClone
+    Self: DynClone,
 {
     fn name(&self) -> &str;
 
