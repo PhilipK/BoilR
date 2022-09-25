@@ -24,10 +24,18 @@ pub enum PlatformEnum {
     Gog(GogPlatform),
     Heroic(HeroicPlatform),
     Lutris(LutrisPlatform),
-    Legendary(LegendaryPlatform)
+    Legendary(LegendaryPlatform),
 }
 
 impl PlatformEnum {
+    pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(name: A, settings_string: B) -> Self {
+        todo!("Implement loading settings")
+    }
+
+    pub fn serialize_settings(&self) -> (String, String) {
+        todo!("Implement saving settings");
+    }
+
     pub fn name(&self) -> &str {
         match self {
             PlatformEnum::Amazon(_) => "Amazon",
@@ -172,16 +180,16 @@ pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
         PlatformEnum::Gog(GogPlatform {
             settings: settings.gog.clone(),
         }),
-        PlatformEnum::Heroic(HeroicPlatform { 
+        PlatformEnum::Heroic(HeroicPlatform {
             settings: settings.heroic.clone(),
-            heroic_games:None
+            heroic_games: None,
         }),
         PlatformEnum::Lutris(LutrisPlatform {
-            settings: settings.lutris.clone()
+            settings: settings.lutris.clone(),
         }),
-        PlatformEnum::Legendary(LegendaryPlatform{
-            settings: settings.legendary.clone()
-        })
+        PlatformEnum::Legendary(LegendaryPlatform {
+            settings: settings.legendary.clone(),
+        }),
     ]
 }
 
