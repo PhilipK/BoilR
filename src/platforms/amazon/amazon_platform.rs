@@ -3,7 +3,7 @@ use sqlite::State;
 use std::path::{Path, PathBuf};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings};
+use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings, GamesPlatform};
 
 #[derive(Clone)]
 pub struct AmazonPlatform {
@@ -51,11 +51,28 @@ fn get_launcher_path() -> eyre::Result<PathBuf> {
     }
 }
 
-impl AmazonPlatform {
-
-    pub(crate) fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>{
-        to_shortcuts_simple(self.get_amazon_games())
+impl GamesPlatform for AmazonPlatform{
+    fn name(&self) -> &str {
+        "Amazon"
     }
+
+    fn enabled(&self) -> bool {
+        self.settings.enabled
+    }
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts_simple(self.get_amazon_games())
+
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Amazon");
+        ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
+        }
+}
+
+
+impl AmazonPlatform {
 
     fn get_amazon_games(&self) -> eyre::Result<Vec<AmazonGame>> {
         let sqllite_path = get_sqlite_path()?;
@@ -76,11 +93,6 @@ impl AmazonPlatform {
             }
         }
         Ok(result)
-    }
-
-    pub fn render_amazon_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Amazon");
-        ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
     }
 }
 

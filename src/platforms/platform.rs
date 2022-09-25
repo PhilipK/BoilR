@@ -19,7 +19,6 @@ use super::uplay::UplayPlatform;
 
 #[derive(Clone)]
 pub enum PlatformEnum {
-    Amazon(AmazonPlatform),
     Bottles(BottlesPlatform),
     Epic(EpicPlatform),
     Uplay(UplayPlatform),
@@ -53,7 +52,6 @@ where
 impl GamesPlatform for PlatformEnum {
     fn name(&self) -> &str {
         match self {
-            PlatformEnum::Amazon(_) => "Amazon",
             PlatformEnum::Bottles(_) => "Bottles",
             PlatformEnum::Epic(_) => "Epic",
             PlatformEnum::Uplay(_) => "Uplay",
@@ -69,7 +67,6 @@ impl GamesPlatform for PlatformEnum {
 
     fn enabled(&self) -> bool {
         match self {
-            PlatformEnum::Amazon(p) => p.settings.enabled,
             PlatformEnum::Bottles(p) => p.settings.enabled,
             PlatformEnum::Epic(p) => p.settings.enabled,
             PlatformEnum::Uplay(p) => p.settings.enabled,
@@ -85,7 +82,6 @@ impl GamesPlatform for PlatformEnum {
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
         match self {
-            PlatformEnum::Amazon(p) => p.get_shortcut_info(),
             PlatformEnum::Bottles(p) => p.get_shortcut_info(),
             PlatformEnum::Epic(p) => p.get_shortcut_info(),
             PlatformEnum::Uplay(p) => p.get_shortcut_info(),
@@ -101,7 +97,6 @@ impl GamesPlatform for PlatformEnum {
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         match self {
-            PlatformEnum::Amazon(p) => p.render_amazon_settings(ui),
             PlatformEnum::Bottles(p) => p.render_bottles_settings(ui),
             PlatformEnum::Epic(p) => p.render_epic_settings(ui),
             PlatformEnum::Uplay(p) => p.render_uplay_settings(ui),
@@ -123,9 +118,7 @@ impl PlatformEnum {
     ) -> eyre::Result<Box<dyn GamesPlatform>> {
         let name = name.as_ref();
         match name {
-            "amazon" => Ok(Box::new(PlatformEnum::Amazon(
-                AmazonPlatform::from_settings_string(settings_string),
-            ))),
+            "amazon" => Ok(Box::new(AmazonPlatform::from_settings_string(settings_string))),
             "bottles" => Ok(Box::new(PlatformEnum::Bottles(
                 BottlesPlatform::from_settings_string(settings_string),
             ))),
