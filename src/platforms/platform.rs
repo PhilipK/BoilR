@@ -151,10 +151,10 @@ where
     Ok(shortcut_info)
 }
 
-pub type Platforms = [PlatformEnum; 11];
+pub type Platforms = Vec<PlatformEnum>;
 
 pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
-    [
+    vec![
         PlatformEnum::Epic(EpicPlatform {
             epic_manifests: None,
             settings: settings.epic_games.clone(),

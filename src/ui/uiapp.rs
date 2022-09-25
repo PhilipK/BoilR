@@ -1,7 +1,5 @@
 use std::{collections::HashMap, error::Error};
 
-#[cfg(target_family = "unix")]
-use crate::heroic::HeroicGameType;
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
@@ -44,8 +42,6 @@ pub struct MyEguiApp {
     ui_images: UiImages,
     pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
-    #[cfg(target_family = "unix")]
-    pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
     pub(crate) disconect_state: DiconnectState,
@@ -65,8 +61,6 @@ impl MyEguiApp {
             games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
             ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
-            #[cfg(target_family = "unix")]
-            heroic_games: None,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconect_state: DiconnectState::default(),
