@@ -1,4 +1,4 @@
-use crate::platforms::{to_shortcuts, ShortcutToImport};
+use crate::platforms::{to_shortcuts, ShortcutToImport, load_settings, FromSettingsString, GamesPlatform};
 use super::itch_game::ItchGame;
 use super::receipt::Receipt;
 use super::ItchSettings;
@@ -15,10 +15,6 @@ pub struct ItchPlatform {
 }
 
 impl ItchPlatform {
-    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>{
-        to_shortcuts(self, self.get_itch_games())
-    } 
-
     fn get_itch_games(&self) -> eyre::Result<Vec<ItchGame>> {
         let itch_location = self.settings.location.clone();
         let itch_location = itch_location.unwrap_or_else(get_default_location);
@@ -94,8 +90,31 @@ pub fn get_default_location() -> String {
         //C:\Users\phili\AppData\Local\itch
 }
 
-impl ItchPlatform {
-    pub fn render_itch_settings(&mut self, ui: &mut egui::Ui) {
+
+
+impl FromSettingsString for ItchPlatform {
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        ItchPlatform {
+            settings: load_settings(s),
+        }
+    }
+}
+
+
+impl GamesPlatform for ItchPlatform{
+    fn name(&self) -> &str {
+        "Itch"
+    }
+
+    fn enabled(&self) -> bool {
+        self.settings.enabled
+    }
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, self.get_itch_games())
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Itch.io");
         ui.checkbox(&mut self.settings.enabled, "Import from Itch.io");
         if self.settings.enabled {

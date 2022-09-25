@@ -17,18 +17,6 @@ use super::lutris::LutrisPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
 
-#[derive(Clone)]
-pub enum PlatformEnum {
-    Uplay(UplayPlatform),
-    Itch(ItchPlatform),
-    Flatpak(FlatpakPlatform),
-    Origin(OriginPlatform),
-    Gog(GogPlatform),
-    Heroic(HeroicPlatform),
-    Lutris(LutrisPlatform),
-    Legendary(LegendaryPlatform),
-}
-
 pub trait FromSettingsString {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self;
 }
@@ -47,80 +35,35 @@ where
     }
 }
 
-impl GamesPlatform for PlatformEnum {
-    fn name(&self) -> &str {
-        match self {
-            PlatformEnum::Uplay(_) => "Uplay",
-            PlatformEnum::Itch(_) => "Itch",
-            PlatformEnum::Flatpak(_) => "Flatpak",
-            PlatformEnum::Origin(_) => "Origin",
-            PlatformEnum::Gog(_) => "Gog",
-            PlatformEnum::Heroic(_) => "Heroic",
-            PlatformEnum::Lutris(_) => "Lutris",
-            PlatformEnum::Legendary(_) => "Legendary",
-        }
-    }
-
-    fn enabled(&self) -> bool {
-        match self {
-            PlatformEnum::Uplay(p) => p.settings.enabled,
-            PlatformEnum::Itch(p) => p.settings.enabled,
-            PlatformEnum::Flatpak(p) => p.settings.enabled,
-            PlatformEnum::Origin(p) => p.settings.enabled,
-            PlatformEnum::Gog(p) => p.settings.enabled,
-            PlatformEnum::Heroic(p) => p.settings.enabled,
-            PlatformEnum::Lutris(p) => p.settings.enabled,
-            PlatformEnum::Legendary(p) => p.settings.enabled,
-        }
-    }
-
-    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
-        match self {
-            PlatformEnum::Uplay(p) => p.get_shortcut_info(),
-            PlatformEnum::Itch(p) => p.get_shortcut_info(),
-            PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
-            PlatformEnum::Origin(p) => p.get_shortcut_info(),
-            PlatformEnum::Gog(p) => p.get_shortcut_info(),
-            PlatformEnum::Heroic(p) => p.get_shortcut_info(),
-            PlatformEnum::Lutris(p) => p.get_shortcut_info(),
-            PlatformEnum::Legendary(p) => p.get_shortcut_info(),
-        }
-    }
-
-    fn render_ui(&mut self, ui: &mut egui::Ui) {
-        match self {
-            PlatformEnum::Uplay(p) => p.render_uplay_settings(ui),
-            PlatformEnum::Itch(p) => p.render_itch_settings(ui),
-            PlatformEnum::Flatpak(p) => p.render_flatpak_settings(ui),
-            PlatformEnum::Origin(p) => p.render_origin_settings(ui),
-            PlatformEnum::Gog(p) => p.render_gog_settings(ui),
-            PlatformEnum::Heroic(p) => p.render_heroic_settings(ui),
-            PlatformEnum::Lutris(p) => p.render_lutris_settings(ui),
-            PlatformEnum::Legendary(p) => p.render_legendary_settings(ui),
-        }
+pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
+    name: A,
+    settings_string: B,
+) -> eyre::Result<Box<dyn GamesPlatform>> {
+    let name = name.as_ref();
+    let s = settings_string.as_ref();
+    match name {
+        "amazon" => load::<AmazonPlatform>(s),
+        "bottles" => load::<BottlesPlatform>(s),
+        "epic_games" => load::<EpicPlatform>(s),
+        "uplay" => load::<UplayPlatform>(s),
+        "itch" => load::<ItchPlatform>(s),
+        "flatpak" => load::<FlatpakPlatform>(s),
+        "gog" => load::<GogPlatform>(s),
+        "heroic" => load::<HeroicPlatform>(s),
+        "legendary" => load::<LegendaryPlatform>(s),
+        "lutris" => load::<LutrisPlatform>(s),
+        "origin" => load::<OriginPlatform>(s),
+        _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
 }
 
-impl PlatformEnum {
-    pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
-        name: A,
-        settings_string: B,
-    ) -> eyre::Result<Box<dyn GamesPlatform>> {
-        let name = name.as_ref();
-        match name {
-            "amazon" => Ok(Box::new(AmazonPlatform::from_settings_string(
-                settings_string,
-            ))),
-            "bottles" => Ok(Box::new(BottlesPlatform::from_settings_string(
-                settings_string,
-            ))),
-            "epic_games" => Ok(Box::new(
-                EpicPlatform::from_settings_string(settings_string),
-            )),
-
-            _ => Err(eyre::format_err!("Unknown platform named {name}")),
-        }
-    }
+fn load<T>(s: &str) -> eyre::Result<Box<dyn GamesPlatform>>
+where
+    T: FromSettingsString,
+    T: GamesPlatform,
+    T: 'static,
+{
+    Ok(Box::new(T::from_settings_string(s)))
 }
 
 pub struct ShortcutToImport {
@@ -129,7 +72,7 @@ pub struct ShortcutToImport {
     pub needs_symlinks: bool,
 }
 
-pub fn to_shortcuts<T, P>(
+pub(crate) fn to_shortcuts<T, P>(
     platform: &P,
     into_shortcuts: Result<Vec<T>, eyre::ErrReport>,
 ) -> eyre::Result<Vec<ShortcutToImport>>
@@ -152,7 +95,7 @@ where
     Ok(shortcut_info)
 }
 
-pub fn to_shortcuts_simple<T>(
+pub(crate) fn to_shortcuts_simple<T>(
     into_shortcuts: Result<Vec<T>, eyre::ErrReport>,
 ) -> eyre::Result<Vec<ShortcutToImport>>
 where
@@ -190,9 +133,9 @@ pub fn get_platforms() -> Platforms {
 
     let mut platforms = vec![];
     for (name, settings) in &sections {
-        match PlatformEnum::load_platform(name, settings) {
+        match load_platform(name, settings) {
             Ok(platform) => platforms.push(platform),
-            Err(e) => eprintln!("Could not load platoform {name}, gave error: {e}"),
+            Err(e) => eprintln!("Could not load platform {name}, gave error: {e}"),
         }
     }
 
