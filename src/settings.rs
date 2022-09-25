@@ -2,7 +2,8 @@ use crate::{
     config::get_config_file,
     platforms::{AmazonSettings, GogSettings, HeroicSettings, OriginSettings},
     platforms::{
-        EpicGamesLauncherSettings, FlatpakSettings, ItchSettings, LutrisSettings, UplaySettings, LegendarySettings,
+        EpicGamesLauncherSettings, FlatpakSettings, ItchSettings, LegendarySettings,
+        LutrisSettings, UplaySettings,
     },
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
@@ -12,7 +13,7 @@ use crate::platforms::BottlesSettings;
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
-use std::env;
+use std::{collections::HashMap, env};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
@@ -62,10 +63,57 @@ impl Settings {
     }
 }
 
+pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
+    let config_file_path = get_config_file();
+    let content = std::fs::read_to_string(config_file_path)?;
+    let mut result = HashMap::new();
+    let lines = content.lines();
+    let mut current_section_lines: Vec<String> = vec![];
+    let mut current_section_name: Option<String> = Option::None;
+    for line in lines {
+        if line.starts_with("[") && line.ends_with("]") {
+            add_sections(&current_section_name, &current_section_lines, &mut result);
+            //new section
+            current_section_name = Some(line[1..line.len() - 1].to_string());
+        } else {
+            current_section_lines.push(line.to_string());
+        }
+    }
+    
+    add_sections(&current_section_name, &current_section_lines, &mut result);
+    
+    Ok(result)
+}
+
+fn add_sections(current_section_name: &Option<String>, current_section_lines: &Vec<String>, result: &mut HashMap<String, String>) {
+    if let Some(old_section_name) = current_section_name {
+        let mut section_string = String::new();
+        for line in current_section_lines {
+            section_string.push_str(line);
+            section_string.push('\n');
+        }
+        result.insert(old_section_name.to_string(), section_string);
+    }
+}
+
 fn sanitize_auth_key(result: &mut Settings) {
     if let Some(auth_key) = result.steamgrid_db.auth_key.as_ref() {
         if auth_key == "Write your authentication key between these quotes" {
             result.steamgrid_db.auth_key = None;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    pub fn load_sections() {
+        let sections = load_setting_sections();
+
+        dbg!(&sections);
+        assert!(sections.is_ok())
     }
 }

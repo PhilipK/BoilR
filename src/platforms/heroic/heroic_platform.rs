@@ -105,7 +105,6 @@ self.settings.default_launch_through_heroic{
                                    ui.label("Some games must be started from the Heroic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Heroic Launcher.");
                     
                 }
-                #[cfg(target_family = "unix")]{
                   let manifests =self.heroic_games.get_or_insert_with(||{
                         let heroic_setting = self.settings.clone();
         
@@ -129,7 +128,6 @@ self.settings.default_launch_through_heroic{
                             }
                         }                  
                         }
-                    }
                 })        ;
     }
 

@@ -51,7 +51,7 @@ impl NeedsPorton<ItchPlatform> for ItchGame{
     }
 
     #[cfg(not(target_family = "unix"))]
-    fn create_symlinks(&self, platform: &ItchPlatform) -> bool {
+    fn create_symlinks(&self, _platform: &ItchPlatform) -> bool {
         false
     }
 }

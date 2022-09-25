@@ -190,7 +190,13 @@ impl NeedsPorton<GogPlatform> for GogShortcut{
     fn needs_proton(&self, _platform: &GogPlatform) -> bool {
         false
     }
+    
+    #[cfg(not(target_family = "unix"))]
+    fn create_symlinks(&self, _platform: &GogPlatform) -> bool {
+        false
+    }
 
+    #[cfg(target_family = "unix")]
     fn create_symlinks(&self, platform: &GogPlatform) -> bool {
         platform.settings.create_symlinks
     }

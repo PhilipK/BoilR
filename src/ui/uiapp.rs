@@ -1,5 +1,8 @@
 use std::{collections::HashMap, error::Error};
 
+#[cfg(target_family = "unix")]
+use crate::heroic::HeroicGameType;
+
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
 use steam_shortcuts_util::shortcut::ShortcutOwned;
@@ -9,7 +12,7 @@ use tokio::{
 };
 
 use crate::{
-    config::get_renames_file,    
+    config::get_renames_file,
     platforms::{get_platforms, Platforms},
     settings::Settings,
     sync::SyncProgress,
@@ -41,6 +44,8 @@ pub struct MyEguiApp {
     ui_images: UiImages,
     pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
     pub(crate) status_reciever: Receiver<SyncProgress>,
+    #[cfg(target_family = "unix")]
+    pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
     pub(crate) disconect_state: DiconnectState,
@@ -53,20 +58,21 @@ impl MyEguiApp {
     pub fn new() -> Self {
         let runtime = Runtime::new().unwrap();
         let settings = Settings::new().expect("We must be able to load our settings");
-        let platforms = get_platforms(&settings);
         Self {
             selected_menu: Menues::Import,
-            settings,
+            settings: settings.clone(),
             rt: runtime,
             games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
             ui_images: UiImages::default(),
-            status_reciever: watch::channel(SyncProgress::NotStarted).1,            
+            status_reciever: watch::channel(SyncProgress::NotStarted).1,
+            #[cfg(target_family = "unix")]
+            heroic_games: None,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
-            platforms,
+            platforms: get_platforms(&settings),
         }
     }
 }
