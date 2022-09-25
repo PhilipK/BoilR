@@ -1,10 +1,5 @@
 use crate::{
     config::get_config_file,
-    platforms::{GogSettings, HeroicSettings, OriginSettings},
-    platforms::{
-        FlatpakSettings, ItchSettings, LegendarySettings,
-        LutrisSettings, UplaySettings,
-    },
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
 };
@@ -19,16 +14,8 @@ pub struct Settings {
     pub debug: bool,
     pub config_version: Option<usize>,
     pub blacklisted_games: Vec<u32>,
-    pub legendary: LegendarySettings,
-    pub itch: ItchSettings,
     pub steamgrid_db: SteamGridDbSettings,
     pub steam: SteamSettings,
-    pub origin: OriginSettings,
-    pub gog: GogSettings,
-    pub uplay: UplaySettings,
-    pub lutris: LutrisSettings,
-    pub heroic: HeroicSettings,
-    pub flatpak: FlatpakSettings,
 }
 
 impl Settings {

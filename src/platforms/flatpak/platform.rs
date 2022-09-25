@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::platforms::{NeedsPorton, to_shortcuts, ShortcutToImport};
+use crate::platforms::{NeedsPorton, to_shortcuts, ShortcutToImport, GamesPlatform, FromSettingsString, load_settings};
 
 use super::FlatpakSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
@@ -34,16 +34,7 @@ impl NeedsPorton<FlatpakPlatform> for FlatpakApp{
 }
 
 impl FlatpakPlatform {
-    pub fn render_flatpak_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Flatpak");
-        ui.checkbox(&mut self.settings.enabled, "Import from Flatpak");
-    }
 
-
-    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>{
-        to_shortcuts(self, self.get_flatpak_apps())
-
-    }
     fn get_flatpak_apps(&self) -> eyre::Result<Vec<FlatpakApp>> {
         use std::process::Command;
         let mut command = Command::new("flatpak");
@@ -66,5 +57,33 @@ impl FlatpakPlatform {
             }
         }
         Ok(result)
+    }
+}
+
+
+impl FromSettingsString for FlatpakPlatform{
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        FlatpakPlatform {
+            settings: load_settings(s),
+        }
+    }
+} 
+
+impl GamesPlatform for FlatpakPlatform{
+    fn name(&self) -> &str {
+        "Flatpak"
+    }
+
+    fn enabled(&self) -> bool {
+        self.settings.enabled
+    }
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, self.get_flatpak_apps())
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Flatpak");
+        ui.checkbox(&mut self.settings.enabled, "Import from Flatpak");
     }
 }

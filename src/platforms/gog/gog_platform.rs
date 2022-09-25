@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::platforms::{to_shortcuts, ShortcutToImport, NeedsPorton};
+use crate::platforms::{to_shortcuts, ShortcutToImport, NeedsPorton, GamesPlatform, FromSettingsString, load_settings};
 
 use super::{
     gog_config::GogConfig,
@@ -14,25 +14,6 @@ pub struct GogPlatform {
 }
 
 impl GogPlatform {
-    pub fn render_gog_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("GoG Galaxy");
-        ui.checkbox(&mut self.settings.enabled, "Import from GoG Galaxy");
-        if self.settings.enabled {
-            ui.horizontal(|ui| {
-                let mut empty_string = "".to_string();
-                let gog_location = self.settings.location.as_mut().unwrap_or(&mut empty_string);
-                ui.label("GoG Galaxy Folder: ");
-                if ui.text_edit_singleline(gog_location).changed() {
-                    self.settings.location = Some(gog_location.to_string());
-                }
-            });
-        }
-    }
-
-    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
-        to_shortcuts(self, self.get_shortcuts())
-    }
-
     fn get_shortcuts(&self) -> eyre::Result<Vec<GogShortcut>> {
         let gog_location = self
             .settings
@@ -238,5 +219,43 @@ pub fn default_location() -> PathBuf {
     {
         let home = std::env::var("HOME").expect("Expected a home variable to be defined");
         Path::new(&home).join("Games/gog-galaxy/drive_c/ProgramData/GOG.com/Galaxy")
+    }
+}
+
+
+impl FromSettingsString for GogPlatform{
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        GogPlatform {
+            settings: load_settings(s),
+        }
+    }
+}
+
+impl GamesPlatform for GogPlatform{
+    fn name(&self) -> &str {
+        "GOG"
+    }
+
+    fn enabled(&self) -> bool {
+        self.settings.enabled
+    }
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, self.get_shortcuts())
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
+        ui.heading("GoG Galaxy");
+        ui.checkbox(&mut self.settings.enabled, "Import from GoG Galaxy");
+        if self.settings.enabled {
+            ui.horizontal(|ui| {
+                let mut empty_string = "".to_string();
+                let gog_location = self.settings.location.as_mut().unwrap_or(&mut empty_string);
+                ui.label("GoG Galaxy Folder: ");
+                if ui.text_edit_singleline(gog_location).changed() {
+                    self.settings.location = Some(gog_location.to_string());
+                }
+            });
+        }
     }
 }

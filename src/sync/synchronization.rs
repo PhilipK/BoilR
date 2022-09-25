@@ -4,7 +4,7 @@ use steam_shortcuts_util::{
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::{PlatformEnum, GamesPlatform},
+    platforms::{GamesPlatform},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,

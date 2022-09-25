@@ -2,8 +2,6 @@ use copypasta::ClipboardProvider;
 use eframe::egui;
 use egui::ScrollArea;
 
-use crate::platforms::GamesPlatform;
-
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,

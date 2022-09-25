@@ -1,4 +1,4 @@
-use crate::platforms::{NeedsPorton, to_shortcuts, ShortcutToImport};
+use crate::platforms::{to_shortcuts, GamesPlatform, NeedsPorton, ShortcutToImport, FromSettingsString, load_settings};
 use nom::bytes::complete::take_until;
 use std::{
     fs::DirEntry,
@@ -23,17 +23,12 @@ impl NeedsPorton<OriginPlatform> for OriginGame {
         true
     }
 
-
     fn create_symlinks(&self, _platform: &OriginPlatform) -> bool {
         false
     }
 }
 
 impl OriginPlatform {
-    pub fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
-        to_shortcuts(self, self.get_shortcuts())
-    }
-
     fn get_shortcuts(&self) -> eyre::Result<Vec<OriginGame>> {
         let origin_folders = get_default_locations();
         if origin_folders.is_none() {
@@ -62,11 +57,6 @@ impl OriginPlatform {
                 })
             });
         Ok(games.collect())
-    }
-
-    pub fn render_origin_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Origin");
-        ui.checkbox(&mut self.settings.enabled, "Import from Origin");
     }
 }
 
@@ -188,4 +178,30 @@ fn get_exe_path() -> Option<PathBuf> {
         }
     }
     None
+}
+
+impl GamesPlatform for OriginPlatform {
+    fn name(&self) -> &str {
+        "Origin"
+    }
+
+    fn enabled(&self) -> bool {
+        self.settings.enabled
+    }
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        to_shortcuts(self, self.get_shortcuts())
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Origin");
+        ui.checkbox(&mut self.settings.enabled, "Import from Origin");
+    }
+}
+
+
+impl FromSettingsString for OriginPlatform{
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        OriginPlatform { settings: load_settings(s) }
+    }
 }
