@@ -5,6 +5,7 @@ use futures::executor::block_on;
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
+use crate::platforms::get_platforms;
 use crate::settings::Settings;
 use crate::sync;
 
@@ -126,7 +127,7 @@ impl MyEguiApp {
             self.image_selected_state = ImageSelectState::default();
             let (tx, rx) = watch::channel(FetcStatus::NeedsFetched);
             self.games_to_sync = rx;
-            let platforms = self.platforms.clone();
+            let platforms = get_platforms();
             self.rt.spawn_blocking(move || {
                 let _ = tx.send(FetcStatus::Fetching);
                 let games_to_sync = sync::get_enum_platform_shortcuts(&platforms);
@@ -144,6 +145,7 @@ impl MyEguiApp {
 
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
+        //todo use platforms from self
         let platforms = self.platforms.clone();
         let handle = self.rt.spawn_blocking(move || {
             MyEguiApp::save_settings_to_file(&settings);

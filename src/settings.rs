@@ -1,15 +1,14 @@
 use crate::{
     config::get_config_file,
-    platforms::{AmazonSettings, GogSettings, HeroicSettings, OriginSettings},
+    platforms::{GogSettings, HeroicSettings, OriginSettings},
     platforms::{
-        EpicGamesLauncherSettings, FlatpakSettings, ItchSettings, LegendarySettings,
+        FlatpakSettings, ItchSettings, LegendarySettings,
         LutrisSettings, UplaySettings,
     },
     steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
 };
 
-use crate::platforms::BottlesSettings;
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
@@ -20,7 +19,6 @@ pub struct Settings {
     pub debug: bool,
     pub config_version: Option<usize>,
     pub blacklisted_games: Vec<u32>,
-    pub epic_games: EpicGamesLauncherSettings,
     pub legendary: LegendarySettings,
     pub itch: ItchSettings,
     pub steamgrid_db: SteamGridDbSettings,
@@ -30,9 +28,7 @@ pub struct Settings {
     pub uplay: UplaySettings,
     pub lutris: LutrisSettings,
     pub heroic: HeroicSettings,
-    pub amazon: AmazonSettings,
     pub flatpak: FlatpakSettings,
-    pub bottles: BottlesSettings,
 }
 
 impl Settings {
@@ -74,6 +70,7 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
         if line.starts_with("[") && line.ends_with("]") {
             add_sections(&current_section_name, &current_section_lines, &mut result);
             current_section_name = Some(line[1..line.len() - 1].to_string());
+            current_section_lines.clear();
         } else {
             current_section_lines.push(line.to_string());
         }

@@ -66,7 +66,7 @@ impl MyEguiApp {
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
-            platforms: get_platforms(&settings),
+            platforms: get_platforms(),
         }
     }
 }

@@ -4,7 +4,7 @@ use steam_shortcuts_util::{
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::PlatformEnum,
+    platforms::{PlatformEnum, GamesPlatform},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -51,7 +51,7 @@ pub fn run_sync(
     settings: &Settings,
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32, String>,
-    platforms: &[PlatformEnum],
+    platforms: &[Box<dyn GamesPlatform>],
 ) -> Result<Vec<SteamUsersInfo>, String> {
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::Starting);
@@ -211,14 +211,14 @@ fn write_shortcut_collections<S: AsRef<str>>(
 }
 
 pub fn get_enum_platform_shortcuts(
-    platforms: &[PlatformEnum],
+    platforms: &[Box<dyn GamesPlatform>],
 ) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut result = vec![];
     let mut shortcuts_to_proton = vec![];
     for p in platforms {
         if p.enabled() {
             let name = p.name();
-            let shortcut_infos = p.get_shortcuts();
+            let shortcut_infos = p.get_shortcut_info();
             let mut platform_shortcuts = vec![];
             match shortcut_infos {
                 Ok(shortcut_infos) => {

@@ -10,4 +10,3 @@ use get_manifests::get_egs_manifests;
 pub(crate) use manifest_item::*;
 use paths::*;
 
-pub use settings::EpicGamesLauncherSettings;

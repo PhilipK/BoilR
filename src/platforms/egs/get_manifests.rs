@@ -1,4 +1,5 @@
-use super::{EpicGamesLauncherSettings, ManifestItem};
+use super::settings::EpicGamesLauncherSettings;
+use super::{ManifestItem};
 
 use std::fs::{DirEntry, File};
 use std::io::BufReader;

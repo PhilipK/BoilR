@@ -5,11 +5,17 @@ use serde::{Deserialize, Serialize};
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport};
+use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesPlatform {
     pub settings: BottlesSettings,
+}
+
+impl FromSettingsString for BottlesPlatform{
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        BottlesPlatform { settings: load_settings(s) }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -18,7 +24,7 @@ pub struct BottlesApp {
     pub bottle: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Default, Serialize, Clone)]
 pub struct BottlesSettings {
     pub enabled: bool,
 }

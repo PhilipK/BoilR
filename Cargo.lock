@@ -200,6 +200,7 @@ dependencies = [
  "config",
  "copypasta",
  "dashmap",
+ "dyn-clone",
  "eframe",
  "egui",
  "eyre",
@@ -721,6 +722,12 @@ dependencies = [
  "winapi",
  "wio",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f94fa09c2aeea5b8839e414b7b841bf429fd25b9c522116ac97ee87856d88b2"
 
 [[package]]
 name = "eframe"

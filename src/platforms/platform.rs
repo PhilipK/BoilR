@@ -1,4 +1,9 @@
+use std::collections::HashMap;
+
+use serde::de::DeserializeOwned;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
+
+use crate::settings::load_setting_sections;
 
 use super::amazon::AmazonPlatform;
 use super::bottles::BottlesPlatform;
@@ -27,16 +32,26 @@ pub enum PlatformEnum {
     Legendary(LegendaryPlatform),
 }
 
-impl PlatformEnum {
-    pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(name: A, settings_string: B) -> Self {
-        todo!("Implement loading settings")
-    }
+pub trait FromSettingsString {
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self;
+}
 
-    pub fn serialize_settings(&self) -> (String, String) {
-        todo!("Implement saving settings");
+pub(crate) fn load_settings<Setting, S: AsRef<str>>(input: S) -> Setting
+where
+    Setting: Default,
+    Setting: DeserializeOwned,
+{
+    match toml::from_str(input.as_ref()) {
+        Ok(k) => k,
+        Err(err) => {
+            eprintln!("Error reading settings file {:?}", err);
+            Setting::default()
+        }
     }
+}
 
-    pub fn name(&self) -> &str {
+impl GamesPlatform for PlatformEnum {
+    fn name(&self) -> &str {
         match self {
             PlatformEnum::Amazon(_) => "Amazon",
             PlatformEnum::Bottles(_) => "Bottles",
@@ -52,7 +67,7 @@ impl PlatformEnum {
         }
     }
 
-    pub fn enabled(&self) -> bool {
+    fn enabled(&self) -> bool {
         match self {
             PlatformEnum::Amazon(p) => p.settings.enabled,
             PlatformEnum::Bottles(p) => p.settings.enabled,
@@ -68,7 +83,23 @@ impl PlatformEnum {
         }
     }
 
-    pub fn render_ui(&mut self, ui: &mut egui::Ui) {
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
+        match self {
+            PlatformEnum::Amazon(p) => p.get_shortcut_info(),
+            PlatformEnum::Bottles(p) => p.get_shortcut_info(),
+            PlatformEnum::Epic(p) => p.get_shortcut_info(),
+            PlatformEnum::Uplay(p) => p.get_shortcut_info(),
+            PlatformEnum::Itch(p) => p.get_shortcut_info(),
+            PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
+            PlatformEnum::Origin(p) => p.get_shortcut_info(),
+            PlatformEnum::Gog(p) => p.get_shortcut_info(),
+            PlatformEnum::Heroic(p) => p.get_shortcut_info(),
+            PlatformEnum::Lutris(p) => p.get_shortcut_info(),
+            PlatformEnum::Legendary(p) => p.get_shortcut_info(),
+        }
+    }
+
+    fn render_ui(&mut self, ui: &mut egui::Ui) {
         match self {
             PlatformEnum::Amazon(p) => p.render_amazon_settings(ui),
             PlatformEnum::Bottles(p) => p.render_bottles_settings(ui),
@@ -83,20 +114,26 @@ impl PlatformEnum {
             PlatformEnum::Legendary(p) => p.render_legendary_settings(ui),
         }
     }
+}
 
-    pub fn get_shortcuts(&self) -> eyre::Result<Vec<ShortcutToImport>> {
-        match self {
-            PlatformEnum::Amazon(p) => p.get_shortcut_info(),
-            PlatformEnum::Bottles(p) => p.get_shortcut_info(),
-            PlatformEnum::Epic(p) => p.get_shortcut_info(),
-            PlatformEnum::Uplay(p) => p.get_shortcut_info(),
-            PlatformEnum::Itch(p) => p.get_shortcut_info(),
-            PlatformEnum::Flatpak(p) => p.get_shortcut_info(),
-            PlatformEnum::Origin(p) => p.get_shortcut_info(),
-            PlatformEnum::Gog(p) => p.get_shortcut_info(),
-            PlatformEnum::Heroic(p) => p.get_shortcut_info(),
-            PlatformEnum::Lutris(p) => p.get_shortcut_info(),
-            PlatformEnum::Legendary(p) => p.get_shortcut_info(),
+impl PlatformEnum {
+    pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
+        name: A,
+        settings_string: B,
+    ) -> eyre::Result<Box<dyn GamesPlatform>> {
+        let name = name.as_ref();
+        match name {
+            "amazon" => Ok(Box::new(PlatformEnum::Amazon(
+                AmazonPlatform::from_settings_string(settings_string),
+            ))),
+            "bottles" => Ok(Box::new(PlatformEnum::Bottles(
+                BottlesPlatform::from_settings_string(settings_string),
+            ))),
+            "epic_games" => Ok(Box::new(PlatformEnum::Epic(
+                EpicPlatform::from_settings_string(settings_string),
+            ))),
+
+            _ => Err(eyre::format_err!("Unknown platform named {name}")),
         }
     }
 }
@@ -151,46 +188,30 @@ where
     Ok(shortcut_info)
 }
 
-pub type Platforms = Vec<PlatformEnum>;
+pub type Platforms = Vec<Box<dyn GamesPlatform>>;
 
-pub fn get_platforms(settings: &crate::settings::Settings) -> Platforms {
-    vec![
-        PlatformEnum::Epic(EpicPlatform {
-            epic_manifests: None,
-            settings: settings.epic_games.clone(),
-        }),
-        PlatformEnum::Amazon(AmazonPlatform {
-            settings: settings.amazon.clone(),
-        }),
-        PlatformEnum::Bottles(BottlesPlatform {
-            settings: settings.bottles.clone(),
-        }),
-        PlatformEnum::Uplay(UplayPlatform {
-            settings: settings.uplay.clone(),
-        }),
-        PlatformEnum::Itch(ItchPlatform {
-            settings: settings.itch.clone(),
-        }),
-        PlatformEnum::Flatpak(FlatpakPlatform {
-            settings: settings.flatpak.clone(),
-        }),
-        PlatformEnum::Origin(OriginPlatform {
-            settings: settings.origin.clone(),
-        }),
-        PlatformEnum::Gog(GogPlatform {
-            settings: settings.gog.clone(),
-        }),
-        PlatformEnum::Heroic(HeroicPlatform {
-            settings: settings.heroic.clone(),
-            heroic_games: None,
-        }),
-        PlatformEnum::Lutris(LutrisPlatform {
-            settings: settings.lutris.clone(),
-        }),
-        PlatformEnum::Legendary(LegendaryPlatform {
-            settings: settings.legendary.clone(),
-        }),
-    ]
+pub fn get_platforms() -> Platforms {
+    let sections = load_setting_sections();
+    let sections = match sections {
+        Ok(s) => s,
+        Err(err) => {
+            eprintln!(
+                "Could not load platform settings, using defaults: Error: {:?}",
+                err
+            );
+            HashMap::new()
+        }
+    };
+
+    let mut platforms = vec![];
+    for (name, settings) in &sections {
+        match PlatformEnum::load_platform(name, settings) {
+            Ok(platform) => platforms.push(platform),
+            Err(e) => eprintln!("Could not load platoform {name}, gave error: {e}"),
+        }
+    }
+
+    platforms
 }
 
 pub trait NeedsPorton<P> {
@@ -198,3 +219,22 @@ pub trait NeedsPorton<P> {
 
     fn create_symlinks(&self, platform: &P) -> bool;
 }
+
+use dyn_clone::DynClone;
+
+pub trait GamesPlatform
+where
+    Self: std::marker::Send,
+    Self: std::marker::Sync,
+    Self: DynClone
+{
+    fn name(&self) -> &str;
+
+    fn enabled(&self) -> bool;
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>;
+
+    fn render_ui(&mut self, ui: &mut egui::Ui);
+}
+
+dyn_clone::clone_trait_object!(GamesPlatform);

@@ -1,11 +1,22 @@
-use crate::platforms::{to_shortcuts, NeedsPorton, ShortcutToImport};
+use crate::platforms::{
+    load_settings, to_shortcuts, FromSettingsString, NeedsPorton, ShortcutToImport,
+};
 
-use super::{get_egs_manifests, EpicGamesLauncherSettings, ManifestItem};
+use super::{get_egs_manifests, settings::EpicGamesLauncherSettings, ManifestItem};
 
 #[derive(Clone)]
 pub struct EpicPlatform {
     pub(crate) settings: EpicGamesLauncherSettings,
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
+}
+
+impl FromSettingsString for EpicPlatform {
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        EpicPlatform {
+            settings: load_settings(s),
+            epic_manifests: None,
+        }
+    }
 }
 
 impl EpicPlatform {

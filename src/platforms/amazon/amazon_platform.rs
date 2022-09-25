@@ -3,11 +3,18 @@ use sqlite::State;
 use std::path::{Path, PathBuf};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport};
+use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings};
 
 #[derive(Clone)]
 pub struct AmazonPlatform {
     pub settings: AmazonSettings,
+}
+
+
+impl FromSettingsString for AmazonPlatform{
+    fn from_settings_string<S:AsRef<str>>(s:S) -> Self {        
+        AmazonPlatform { settings: load_settings(s) }
+    }
 }
 
 fn get_sqlite_path() -> eyre::Result<PathBuf> {
@@ -107,7 +114,7 @@ impl From<AmazonGame> for ShortcutOwned {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Default,Deserialize, Serialize, Clone)]
 pub struct AmazonSettings {
     pub enabled: bool,
     pub launcher_location: Option<String>,
