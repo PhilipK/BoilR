@@ -4,7 +4,7 @@ use steam_shortcuts_util::{
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::{GamesPlatform},
+    platforms::GamesPlatform,
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -47,20 +47,7 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
     Ok(())
 }
 
-pub fn run_sync(
-    settings: &Settings,
-    sender: &mut Option<Sender<SyncProgress>>,
-    renames: &HashMap<u32, String>,
-    platforms: &[Box<dyn GamesPlatform>],
-) -> Result<Vec<SteamUsersInfo>, String> {
-    if let Some(sender) = &sender {
-        let _ = sender.send(SyncProgress::Starting);
-    }
-    let platform_enum_shortcuts = get_enum_platform_shortcuts(platforms);
-    sync_shortcuts(settings, &platform_enum_shortcuts, sender, renames)
-}
-
-fn sync_shortcuts(
+pub fn sync_shortcuts(
     settings: &Settings,
     platform_shortcuts: &Vec<(String, Vec<ShortcutOwned>)>,
     sender: &mut Option<Sender<SyncProgress>>,
@@ -73,6 +60,9 @@ fn sync_shortcuts(
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
+    for shortcut in &mut all_shortcuts{
+        shortcut.dev_kit_game_id = BOILR_TAG.to_string();
+    }
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::FoundGames {
             games_found: all_shortcuts.len(),
@@ -210,49 +200,44 @@ fn write_shortcut_collections<S: AsRef<str>>(
     Ok(())
 }
 
-pub fn get_enum_platform_shortcuts(
-    platforms: &[Box<dyn GamesPlatform>],
-) -> Vec<(String, Vec<ShortcutOwned>)> {
-    let mut result = vec![];
-    let mut shortcuts_to_proton = vec![];
-    for p in platforms {
-        if p.enabled() {
-            let name = p.name();
-            let shortcut_infos = p.get_shortcut_info();
-            let mut platform_shortcuts = vec![];
-            match shortcut_infos {
-                Ok(shortcut_infos) => {
-                    for shortcut_info in shortcut_infos {
-                        #[cfg(target_family = "unix")]
-                        if shortcut_info.needs_proton {
-                            super::symlinks::ensure_links_folder_created(name);
-                        }
-                        if shortcut_info.needs_proton {
-                            shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
-                        }
-
-                        let shortcut_owned = shortcut_info.shortcut;
-                        #[cfg(target_family = "unix")]
-                        let shortcut_owned = if shortcut_info.needs_symlinks {
-                            crate::sync::symlinks::create_sym_links(&shortcut_owned)
-                        } else {
-                            shortcut_owned
-                        };
-
-                        platform_shortcuts.push(shortcut_owned)
+pub fn get_platform_shortcuts(
+    platform: Box<dyn GamesPlatform>,
+) -> eyre::Result<Vec<ShortcutOwned>> {
+    let p = platform;
+    let name = p.name();
+    let mut platform_shortcuts = vec![];
+    if p.enabled() {
+        let mut shortcuts_to_proton = vec![];        
+        match p.get_shortcut_info() {
+            Ok(shortcut_infos) => {
+                for shortcut_info in shortcut_infos {
+                    #[cfg(target_family = "unix")]
+                    if shortcut_info.needs_proton {
+                        super::symlinks::ensure_links_folder_created(name);
                     }
-                }
-                Err(error) => {
-                    eprintln!("Error importing {name} games, error: {error}");
+                    if shortcut_info.needs_proton {
+                        shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
+                    }
+
+                    let shortcut_owned = shortcut_info.shortcut;
+                    #[cfg(target_family = "unix")]
+                    let shortcut_owned = if shortcut_info.needs_symlinks {
+                        crate::sync::symlinks::create_sym_links(&shortcut_owned)
+                    } else {
+                        shortcut_owned
+                    };
+
+                    platform_shortcuts.push(shortcut_owned)
                 }
             }
-            if !platform_shortcuts.is_empty() {
-                result.push((name.to_owned(), platform_shortcuts));
+            Err(error) => {
+                return Err(error);
             }
         }
+        setup_proton_games(&shortcuts_to_proton);
     }
-    setup_proton_games(&shortcuts_to_proton);
-    result
+
+    Ok(platform_shortcuts)
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {

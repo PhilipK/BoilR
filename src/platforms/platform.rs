@@ -17,6 +17,20 @@ use super::lutris::LutrisPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
 
+const PLATFORM_NAMES: [&str; 11] = [
+    "amazon",
+    "bottles",
+    "epic_games",
+    "flatpak",
+    "gog",
+    "heroic",
+    "itch",
+    "legendary",
+    "lutris",
+    "origin",
+    "uplay",
+];
+
 pub trait FromSettingsString {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self;
 }
@@ -26,10 +40,13 @@ where
     Setting: Default,
     Setting: DeserializeOwned,
 {
-    match toml::from_str(input.as_ref()) {
+    let str = input.as_ref();
+    match toml::from_str(str) {
         Ok(k) => k,
         Err(err) => {
-            eprintln!("Error reading settings file {:?}", err);
+            if !str.is_empty(){
+                eprintln!("Error reading settings file {:?}", err);
+            }
             Setting::default()
         }
     }
@@ -132,13 +149,14 @@ pub fn get_platforms() -> Platforms {
     };
 
     let mut platforms = vec![];
-    for (name, settings) in &sections {
+    for name in PLATFORM_NAMES {
+        let default =String::from("");
+        let settings = sections.get(name).unwrap_or(&default);
         match load_platform(name, settings) {
             Ok(platform) => platforms.push(platform),
             Err(e) => eprintln!("Could not load platform {name}, gave error: {e}"),
         }
     }
-
     platforms
 }
 

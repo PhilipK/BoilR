@@ -1,6 +1,5 @@
 use std::{collections::HashMap, error::Error};
 
-
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
 use steam_shortcuts_util::shortcut::ShortcutOwned;
@@ -11,9 +10,9 @@ use tokio::{
 
 use crate::{
     config::get_renames_file,
-    platforms::{get_platforms, Platforms},
+    platforms::{get_platforms, GamesPlatform, Platforms},
     settings::Settings,
-    sync::SyncProgress,
+    sync::{self, SyncProgress},
 };
 
 use super::{
@@ -34,13 +33,35 @@ struct UiImages {
     save_button: Option<egui::TextureHandle>,
     logo_32: Option<egui::TextureHandle>,
 }
+type GamesToSync = Vec<(
+    String,
+    Receiver<FetcStatus<eyre::Result<Vec<ShortcutOwned>>>>,
+)>;
+
+pub(crate) fn all_ready(games: &GamesToSync) -> bool {
+    games.iter().all(|(_name, rx)| rx.borrow().is_some())
+}
+
+pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutOwned>)> {
+    games
+        .iter()
+        .filter_map(|(name, rx)| match &*rx.borrow() {
+            FetcStatus::NeedsFetched => None,
+            FetcStatus::Fetching => None,
+            FetcStatus::Fetched(data) => match data {
+                Ok(ok_data) => Some((name.to_owned(), ok_data.to_owned())),
+                Err(_) => None,
+            },
+        })
+        .collect()
+}
 
 pub struct MyEguiApp {
     selected_menu: Menues,
     pub(crate) settings: Settings,
     pub(crate) rt: Runtime,
     ui_images: UiImages,
-    pub(crate) games_to_sync: Receiver<FetcStatus<Vec<(String, Vec<ShortcutOwned>)>>>,
+    pub(crate) games_to_sync: GamesToSync,
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
@@ -52,13 +73,15 @@ pub struct MyEguiApp {
 
 impl MyEguiApp {
     pub fn new() -> Self {
-        let runtime = Runtime::new().unwrap();
+        let mut runtime = Runtime::new().unwrap();
         let settings = Settings::new().expect("We must be able to load our settings");
+        let platforms = get_platforms();
+        let games_to_sync = create_games_to_sync(&mut runtime, &platforms);
         Self {
             selected_menu: Menues::Import,
             settings: settings.clone(),
             rt: runtime,
-            games_to_sync: watch::channel(FetcStatus::NeedsFetched).1,
+            games_to_sync,
             ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             image_selected_state: ImageSelectState::default(),
@@ -66,7 +89,7 @@ impl MyEguiApp {
             disconect_state: DiconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
-            platforms: get_platforms(),
+            platforms,
         }
     }
 }
@@ -82,7 +105,7 @@ fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
     Ok(deserialized)
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum Menues {
     Import,
     Settings,
@@ -95,6 +118,23 @@ impl Default for Menues {
     fn default() -> Menues {
         Menues::Import
     }
+}
+
+fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) -> GamesToSync {
+    let mut to_sync = vec![];
+    for platform in platforms {
+        if platform.enabled() {
+            let (tx, rx) = watch::channel(FetcStatus::NeedsFetched);
+            to_sync.push((platform.name().to_string(), rx));
+            let platform = platform.clone();
+            rt.spawn_blocking(move || {
+                let _ = tx.send(FetcStatus::Fetching);
+                let games_to_sync = sync::get_platform_shortcuts(platform);
+                let _ = tx.send(FetcStatus::Fetched(games_to_sync));
+            });
+        }
+    }
+    to_sync
 }
 
 impl App for MyEguiApp {
@@ -110,6 +150,8 @@ impl App for MyEguiApp {
                 let size = texture.size_vec2();
                 ui.image(texture, size);
                 ui.add_space(SECTION_SPACING);
+
+                let menu_before = self.selected_menu.clone();
 
                 let mut changed = ui
                     .selectable_value(&mut self.selected_menu, Menues::Import, "Import Games")
@@ -138,9 +180,12 @@ impl App for MyEguiApp {
                 if changed {
                     self.backup_state.available_backups = None;
                 }
-                if changed && self.selected_menu == Menues::Settings {
+                if changed
+                    && menu_before == Menues::Settings
+                    && self.selected_menu == Menues::Import
+                {
                     //We reset games here, since user might change settings
-                    self.games_to_sync = watch::channel(FetcStatus::NeedsFetched).1;
+                    self.games_to_sync = create_games_to_sync(&mut self.rt, &self.platforms);
                 }
             });
 
@@ -157,7 +202,7 @@ impl App for MyEguiApp {
                     }
                 });
         }
-        if self.games_to_sync.borrow().is_some() {
+        if self.selected_menu == Menues::Import {
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
                 .frame(frame)
                 .show(ctx, |ui| {
@@ -186,14 +231,16 @@ impl App for MyEguiApp {
                             ui.label(&status_string);
                         }
                     }
+                    let all_ready = all_ready(&self.games_to_sync);
 
                     let texture = self.get_import_image(ui);
                     let size = texture.size_vec2();
                     let image_button = ImageButton::new(texture, size * 0.5);
-                    if ui
-                        .add(image_button)
-                        .on_hover_text("Import your games into steam")
-                        .clicked()
+                    if all_ready
+                        && ui
+                            .add(image_button)
+                            .on_hover_text("Import your games into steam")
+                            .clicked()
                         && !syncing
                     {
                         self.run_sync(false);

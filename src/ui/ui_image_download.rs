@@ -353,7 +353,6 @@ impl MyEguiApp {
     }
 
     pub(crate) fn render_ui_images(&mut self, ui: &mut egui::Ui) {
-        self.ensure_games_loaded();
         self.ensure_steam_users_loaded();
 
         if let Some(error_message) = &self.image_selected_state.settings_error {

@@ -63,6 +63,11 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
         }
     }
     add_sections(&current_section_name, &current_section_lines, &mut result);
+
+    let blacklisted_sections = ["steamgrid_db","steam"];
+    for section in blacklisted_sections{
+        let _ = result.remove(section);
+    }
     Ok(result)
 }
 
