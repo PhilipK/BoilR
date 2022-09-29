@@ -21,7 +21,6 @@ pub(crate) fn get_egs_manifests(
                         .filter_map(get_manifest_item);
                     let mut manifests = vec![];
                     for mut manifest in all_manifests {
-                        manifest.manifest_location = manifest.manifest_location;
                         #[cfg(target_family = "unix")]
                         {
                             if let Some(compat_folder) = locations.compat_folder_path.as_ref() {

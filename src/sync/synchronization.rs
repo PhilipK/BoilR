@@ -49,7 +49,7 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
 
 pub fn sync_shortcuts(
     settings: &Settings,
-    platform_shortcuts: &Vec<(String, Vec<ShortcutOwned>)>,
+    platform_shortcuts: &[(String, Vec<ShortcutOwned>)],
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32, String>,
 ) -> Result<Vec<SteamUsersInfo>, String> {
