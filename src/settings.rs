@@ -54,7 +54,7 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     let mut current_section_lines: Vec<String> = vec![];
     let mut current_section_name: Option<String> = Option::None;
     for line in lines {
-        if line.starts_with("[") && line.ends_with("]") {
+        if line.starts_with('[') && line.ends_with(']') {
             add_sections(&current_section_name, &current_section_lines, &mut result);
             current_section_name = Some(line[1..line.len() - 1].to_string());
             current_section_lines.clear();

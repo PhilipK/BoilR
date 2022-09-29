@@ -79,7 +79,7 @@ impl MyEguiApp {
         let games_to_sync = create_games_to_sync(&mut runtime, &platforms);
         Self {
             selected_menu: Menues::Import,
-            settings: settings.clone(),
+            settings,
             rt: runtime,
             games_to_sync,
             ui_images: UiImages::default(),
