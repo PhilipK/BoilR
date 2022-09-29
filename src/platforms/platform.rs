@@ -1,10 +1,29 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
+use dyn_clone::DynClone;
+
+pub trait GamesPlatform
+where
+    Self: std::marker::Send,
+    Self: std::marker::Sync,
+    Self: DynClone,
+{
+    fn name(&self) -> &str;
+
+    fn enabled(&self) -> bool;
+
+    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>;
+
+    fn render_ui(&mut self, ui: &mut egui::Ui);
+}
+
+dyn_clone::clone_trait_object!(GamesPlatform);
 
 pub struct ShortcutToImport {
     pub shortcut: ShortcutOwned,
     pub needs_proton: bool,
     pub needs_symlinks: bool,
 }
+
 
 pub(crate) fn to_shortcuts<T, P>(
     platform: &P,
@@ -56,21 +75,3 @@ pub trait NeedsPorton<P> {
     fn create_symlinks(&self, platform: &P) -> bool;
 }
 
-use dyn_clone::DynClone;
-
-pub trait GamesPlatform
-where
-    Self: std::marker::Send,
-    Self: std::marker::Sync,
-    Self: DynClone,
-{
-    fn name(&self) -> &str;
-
-    fn enabled(&self) -> bool;
-
-    fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>;
-
-    fn render_ui(&mut self, ui: &mut egui::Ui);
-}
-
-dyn_clone::clone_trait_object!(GamesPlatform);
