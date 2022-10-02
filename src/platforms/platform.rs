@@ -22,6 +22,7 @@ where
 
 dyn_clone::clone_trait_object!(GamesPlatform);
 
+#[derive(Clone)]
 pub struct ShortcutToImport {
     pub shortcut: ShortcutOwned,
     pub needs_proton: bool,

@@ -2,10 +2,13 @@ use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
 
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
+use crate::platforms::ShortcutToImport;
 use crate::settings::{save_settings};
+use crate::steam::setup_proton_games;
 use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
@@ -67,7 +70,8 @@ impl MyEguiApp {
                                 if shortcuts.is_empty(){
                                     ui.label("Did not find any games");
                                 }
-                                for shortcut in shortcuts {
+                                for shortcut_to_import in shortcuts {
+                                    let shortcut = &shortcut_to_import.shortcut;
                                     let mut import_game = !self.settings.blacklisted_games.contains(&shortcut.app_id);
                                     ui.horizontal(|ui|{
                                         if self.current_edit == Option::Some(shortcut.app_id){
@@ -137,16 +141,21 @@ impl MyEguiApp {
         let platforms = self.platforms.clone();
         let _ = sender.send(SyncProgress::Starting);
         if all_ready{
-            let games = get_all_games(&self.games_to_sync);
+            let shortcuts_to_import = get_all_games(&self.games_to_sync);            
             let handle = self.rt.spawn_blocking(move || {
-                save_settings(&settings,&platforms);                
+
+                #[cfg(target_family = "unix")]
+                setup_proton(shortcuts_to_import.iter().flat_map(|(_name,infos)| infos));
+
+                let import_games = to_shortcut_owned(shortcuts_to_import);
+                
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
-                let usersinfo = sync::sync_shortcuts(&settings, &games, &mut some_sender,&renames).unwrap();
+                let usersinfo = sync::sync_shortcuts(&settings, &import_games, &mut some_sender,&renames).unwrap();
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
-                sync::sync_shortcuts(&settings, &games, &mut some_sender,&renames).unwrap();
+                sync::sync_shortcuts(&settings, &import_games, &mut some_sender,&renames).unwrap();
     
                 if let Some(sender) = some_sender {
                     let _ = sender.send(SyncProgress::Done);
@@ -161,4 +170,42 @@ impl MyEguiApp {
         }
     }
 
+
 }
+
+fn to_shortcut_owned(shortcuts_to_import: Vec<(String, Vec<ShortcutToImport>)>) -> Vec<(String, Vec<ShortcutOwned>)> {
+    let mut import_games = vec![];
+    for(name,infos) in shortcuts_to_import{
+        let mut shortcuts = vec![];
+        for info in infos{
+            shortcuts.push(info.shortcut);
+        }
+        import_games.push((name,shortcuts));
+    }
+    import_games
+}
+
+
+    #[cfg(target_family = "unix")]
+    fn setup_proton<'a, I>(shortcut_infos: I)
+        where         I: IntoIterator<Item = &'a ShortcutToImport>
+        {
+        let mut shortcuts_to_proton = vec![];        
+        
+        for shortcut_info in shortcut_infos {
+           if shortcut_info.needs_proton {
+               super::symlinks::ensure_links_folder_created(p.name());
+           }
+           if shortcut_info.needs_proton {
+               shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
+           }
+
+           let shortcut_owned = shortcut_info.shortcut;
+           let shortcut_owned = if shortcut_info.needs_symlinks {
+               crate::sync::symlinks::create_sym_links(&shortcut_owned)
+           } else {
+               shortcut_owned
+           };
+       }
+       setup_proton_games(&shortcuts_to_proton);
+   }

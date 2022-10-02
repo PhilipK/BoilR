@@ -7,7 +7,7 @@ use crate::{
     platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
-        get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
+        get_shortcuts_for_user, get_shortcuts_paths, write_collections,
         Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
@@ -208,37 +208,6 @@ pub fn get_platform_shortcuts(
     }else{
         Ok(vec![])
     }
-        // let mut shortcuts_to_proton = vec![];        
-        // match p.get_shortcut_info() {
-        //     Ok(shortcut_infos) => {
-        //         for shortcut_info in shortcut_infos {
-        //             #[cfg(target_family = "unix")]
-        //             if shortcut_info.needs_proton {
-        //                 super::symlinks::ensure_links_folder_created(p.name());
-        //             }
-        //             if shortcut_info.needs_proton {
-        //                 shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
-        //             }
-
-        //             let shortcut_owned = shortcut_info.shortcut;
-        //             #[cfg(target_family = "unix")]
-        //             let shortcut_owned = if shortcut_info.needs_symlinks {
-        //                 crate::sync::symlinks::create_sym_links(&shortcut_owned)
-        //             } else {
-        //                 shortcut_owned
-        //             };
-
-        //             platform_shortcuts.push(shortcut_owned)
-        //         }
-        //     }
-        //     Err(error) => {
-        //         return Err(error);
-        //     }
-        // }
-        // setup_proton_games(&shortcuts_to_proton);
-    // }
-
-    // Ok(platform_shortcuts)
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {

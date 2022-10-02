@@ -2,7 +2,6 @@ use std::{collections::HashMap, error::Error};
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
-use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
@@ -10,9 +9,9 @@ use tokio::{
 
 use crate::{
     config::get_renames_file,
-    platforms::{get_platforms, GamesPlatform, Platforms},
-    settings::{Settings, save_settings},
-    sync::{self, SyncProgress}, steam::ShortcutInfo,
+    platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport},
+    settings::{save_settings, Settings},
+    sync::{self, SyncProgress},
 };
 
 use super::{
@@ -35,23 +34,22 @@ struct UiImages {
 }
 type GamesToSync = Vec<(
     String,
-    Receiver<FetcStatus<eyre::Result<Vec<ShortcutInfo>>>>,
+    Receiver<FetcStatus<eyre::Result<Vec<ShortcutToImport>>>>,
 )>;
 
 pub(crate) fn all_ready(games: &GamesToSync) -> bool {
     games.iter().all(|(_name, rx)| rx.borrow().is_some())
 }
 
-pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutInfo>)> {
+pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutToImport>)> {
     games
         .iter()
-        .filter_map(|(name, rx)| match &*rx.borrow() {
-            FetcStatus::NeedsFetched => None,
-            FetcStatus::Fetching => None,
-            FetcStatus::Fetched(data) => match data {
-                Ok(ok_data) => Some((name.to_owned(), ok_data.to_owned())),
-                Err(_) => None,
-            },
+        .filter_map(|(name, rx)| {
+            if let FetcStatus::Fetched(Ok(data)) = &*rx.borrow() {
+                Some((name.to_owned(), data.to_owned()))
+            } else {
+                None
+            }
         })
         .collect()
 }
