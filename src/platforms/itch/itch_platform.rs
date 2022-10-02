@@ -145,4 +145,12 @@ impl GamesPlatform for ItchPlatform{
             }
         }
     }
+    
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "itch"
+    }
 }

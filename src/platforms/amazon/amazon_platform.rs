@@ -55,6 +55,7 @@ impl GamesPlatform for AmazonPlatform{
     fn name(&self) -> &str {
         "Amazon"
     }
+    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -68,7 +69,15 @@ impl GamesPlatform for AmazonPlatform{
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Amazon");
         ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
-        }
+    }
+    
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "amazon"
+    }
 }
 
 
@@ -126,8 +135,20 @@ impl From<AmazonGame> for ShortcutOwned {
     }
 }
 
-#[derive(Debug, Default,Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct AmazonSettings {
     pub enabled: bool,
     pub launcher_location: Option<String>,
+}
+
+impl Default for AmazonSettings{
+    fn default() -> Self {
+        #[cfg(target_family = "unix")]
+        let enabled = false;
+
+        #[cfg(not(target_family = "unix"))]
+        let enabled = false;
+
+        Self { enabled, launcher_location: Default::default() }
+    }
 }

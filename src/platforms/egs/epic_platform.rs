@@ -37,6 +37,10 @@ impl GamesPlatform for EpicPlatform{
         "Epic"
     }
 
+    fn code_name(&self) -> &str {
+        "epic_games"
+    }
+
     fn enabled(&self) -> bool {
         self.settings.enabled
     }
@@ -47,5 +51,9 @@ impl GamesPlatform for EpicPlatform{
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         self.render_epic_settings(ui)
+    }
+    
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
     }
 }

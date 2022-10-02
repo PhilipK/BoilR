@@ -63,6 +63,14 @@ impl GamesPlatform for LegendaryPlatform {
             });
         }
     }
+
+    fn get_settings_serilizable(&self) -> String {         
+         toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "legendary"
+    }
 }
 
 impl FromSettingsString for LegendaryPlatform{

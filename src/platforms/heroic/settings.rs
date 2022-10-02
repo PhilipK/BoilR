@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct HeroicSettings {
     pub enabled: bool,
     pub launch_games_through_heroic: Vec<String>,
@@ -16,6 +16,22 @@ impl HeroicSettings {
             !contains
         } else {
             contains
+        }
+    }
+}
+
+impl Default for HeroicSettings {
+    fn default() -> Self {
+        #[cfg(target_family = "unix")]
+        let enabled = true;
+
+        #[cfg(not(target_family = "unix"))]
+        let enabled = false;
+
+        Self {
+            enabled,
+            launch_games_through_heroic: Default::default(),
+            default_launch_through_heroic: true,
         }
     }
 }

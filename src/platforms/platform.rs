@@ -9,9 +9,13 @@ where
 {
     fn name(&self) -> &str;
 
+    fn code_name(&self) -> &str;
+
     fn enabled(&self) -> bool;
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>;
+    
+    fn get_settings_serilizable(&self) -> String;
 
     fn render_ui(&mut self, ui: &mut egui::Ui);
 }

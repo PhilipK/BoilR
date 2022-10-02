@@ -67,6 +67,7 @@ impl GamesPlatform for LutrisPlatform{
     fn name(&self) -> &str {
         "Lutris"
     }
+    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -97,4 +98,13 @@ impl GamesPlatform for LutrisPlatform{
             }
         }
     }
+
+    fn get_settings_serilizable(&self) -> String {
+            toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "lutris"
+    }
+    
 }

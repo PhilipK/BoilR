@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use crate::{settings::save_settings, platforms::get_platforms};
+
 pub fn migrate_config() {
     let version = &crate::settings::Settings::new()
         .map(|s| s.config_version)
@@ -35,7 +37,8 @@ pub fn migrate_config() {
     if save_version {
         if let Ok(mut settings) = crate::settings::Settings::new() {
             settings.config_version = Some(1);
-            crate::ui::MyEguiApp::save_settings_to_file(&settings);
+            let platforms = get_platforms();
+            save_settings(&settings, &platforms);
         }
     }
 }

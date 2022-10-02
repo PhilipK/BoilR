@@ -197,6 +197,16 @@ impl GamesPlatform for OriginPlatform {
         ui.heading("Origin");
         ui.checkbox(&mut self.settings.enabled, "Import from Origin");
     }
+
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "origin"
+    }
+
+    
 }
 
 

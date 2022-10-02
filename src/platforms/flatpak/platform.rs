@@ -73,6 +73,7 @@ impl GamesPlatform for FlatpakPlatform{
     fn name(&self) -> &str {
         "Flatpak"
     }
+    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -85,5 +86,13 @@ impl GamesPlatform for FlatpakPlatform{
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Flatpak");
         ui.checkbox(&mut self.settings.enabled, "Import from Flatpak");
+    }
+    
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "flatpak"
     }
 }

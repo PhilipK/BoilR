@@ -11,7 +11,7 @@ use tokio::{
 use crate::{
     config::get_renames_file,
     platforms::{get_platforms, GamesPlatform, Platforms},
-    settings::Settings,
+    settings::{Settings, save_settings},
     sync::{self, SyncProgress},
 };
 
@@ -198,7 +198,7 @@ impl App for MyEguiApp {
                     let save_button = ImageButton::new(texture, size * 0.5);
 
                     if ui.add(save_button).on_hover_text("Save settings").clicked() {
-                        MyEguiApp::save_settings_to_file(&self.settings.clone());
+                        save_settings(&self.settings, &self.platforms);
                     }
                 });
         }

@@ -5,7 +5,7 @@ use futures::executor::block_on;
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
-use crate::settings::Settings;
+use crate::settings::{save_settings};
 use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
@@ -133,13 +133,13 @@ impl MyEguiApp {
 
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
-        //todo use platforms from self
         let all_ready= all_ready(&self.games_to_sync);
+        let platforms = self.platforms.clone();
         let _ = sender.send(SyncProgress::Starting);
         if all_ready{
             let games = get_all_games(&self.games_to_sync);
             let handle = self.rt.spawn_blocking(move || {
-                MyEguiApp::save_settings_to_file(&settings);
+                save_settings(&settings,&platforms);                
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
                 let usersinfo = sync::sync_shortcuts(&settings, &games, &mut some_sender,&renames).unwrap();
@@ -159,11 +159,6 @@ impl MyEguiApp {
                 self.rt.block_on(handle).unwrap();
             }
         }
-}
-
-    pub fn save_settings_to_file(settings: &Settings) {
-        let toml = toml::to_string(&settings).unwrap();
-        let config_path = crate::config::get_config_file();
-        std::fs::write(config_path, toml).unwrap();
     }
+
 }

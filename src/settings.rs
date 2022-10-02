@@ -1,9 +1,7 @@
 use crate::{
-    config::get_config_file,
-    steam::SteamSettings,
+    config::get_config_file, platforms::Platforms, steam::SteamSettings,
     steamgriddb::SteamGridDbSettings,
 };
-
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
@@ -64,14 +62,34 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     }
     add_sections(&current_section_name, &current_section_lines, &mut result);
 
-    let blacklisted_sections = ["steamgrid_db","steam"];
-    for section in blacklisted_sections{
+    let blacklisted_sections = ["steamgrid_db", "steam"];
+    for section in blacklisted_sections {
         let _ = result.remove(section);
     }
     Ok(result)
 }
 
-fn add_sections(current_section_name: &Option<String>, current_section_lines: &Vec<String>, result: &mut HashMap<String, String>) {
+pub fn save_settings(settings: &Settings, platforms: &Platforms) {
+    let mut toml = toml::to_string(&settings).unwrap();
+
+    for platform in platforms {
+        let section_name = format!("[{}]", platform.code_name());
+        toml.push('\n');
+        toml.push_str(section_name.as_str());
+        toml.push('\n');
+        let platform_string = platform.get_settings_serilizable();
+        toml.push_str(platform_string.as_str());
+    }
+
+    let config_path = crate::config::get_config_file();
+    std::fs::write(config_path, toml).unwrap();
+}
+
+fn add_sections(
+    current_section_name: &Option<String>,
+    current_section_lines: &Vec<String>,
+    result: &mut HashMap<String, String>,
+) {
     if let Some(old_section_name) = current_section_name {
         let mut section_string = String::new();
         for line in current_section_lines {

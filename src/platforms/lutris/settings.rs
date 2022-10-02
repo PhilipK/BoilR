@@ -1,9 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct LutrisSettings {
     pub enabled: bool,
     pub executable: String,
     pub flatpak: bool,
     pub flatpak_image: String,
+}
+
+impl Default for LutrisSettings {
+    fn default() -> Self {
+        #[cfg(target_family = "unix")]
+        let enabled = true;
+
+        #[cfg(not(target_family = "unix"))]
+        let enabled = false;
+
+        Self {
+            enabled,
+            executable: "lutris".to_string(),
+            flatpak: true,
+            flatpak_image: "net.lutris.Lutris//beta".to_string(),
+        }
+    }
 }

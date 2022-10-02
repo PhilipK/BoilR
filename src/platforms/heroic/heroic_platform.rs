@@ -213,6 +213,7 @@ impl GamesPlatform for HeroicPlatform{
     fn name(&self) -> &str {
         "Heroic"
     }
+    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -272,5 +273,13 @@ self.settings.default_launch_through_heroic{
                         }
                 })    ; 
                  
+    }
+
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "heroic"
     }
 }

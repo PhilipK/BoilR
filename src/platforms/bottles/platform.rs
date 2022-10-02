@@ -24,9 +24,21 @@ pub struct BottlesApp {
     pub bottle: String,
 }
 
-#[derive(Debug, Deserialize, Default, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesSettings {
     pub enabled: bool,
+}
+
+impl Default for BottlesSettings{
+    fn default() -> Self {
+        #[cfg(target_family = "unix")]
+        let enabled = true;
+
+        #[cfg(not(target_family = "unix"))]
+        let enabled = false;
+
+        Self { enabled }
+    }
 }
 
 impl From<BottlesApp> for ShortcutOwned {
@@ -129,5 +141,13 @@ impl GamesPlatform for BottlesPlatform{
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Bottles");
         ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
+    }
+    
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
+    }
+
+    fn code_name(&self) -> &str {
+        "bottles"
     }
 }
