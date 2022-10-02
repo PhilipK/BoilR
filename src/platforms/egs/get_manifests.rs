@@ -16,12 +16,12 @@ pub(crate) fn get_egs_manifests(
 
             match manifest_dir_result {
                 Ok(manifest_dir) => {
-                    let all_manifests = manifest_dir
+                    let mut all_manifests = manifest_dir
                         .filter_map(|dir| dir.ok())
                         .filter_map(get_manifest_item);
                     #[cfg(target_family = "unix")]
                     {
-                        for mut manifest in all_manifests {
+                        for mut manifest in &mut all_manifests {
                             if let Some(compat_folder) = locations.compat_folder_path.as_ref() {
                                 //Strip off the c:\\
                                 manifest.manifest_location = compat_folder
