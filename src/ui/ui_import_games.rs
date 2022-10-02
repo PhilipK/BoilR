@@ -7,6 +7,7 @@ use tokio::sync::watch;
 
 use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
+#[cfg(target_family = "unix")]
 use crate::steam::setup_proton_games;
 use crate::sync;
 
