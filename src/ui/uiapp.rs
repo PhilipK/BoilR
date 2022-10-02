@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error, time::Duration};
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, TextureHandle};
@@ -338,6 +338,10 @@ fn setup(ctx: &egui::Context) {
 }
 pub fn run_sync() {
     let mut app = MyEguiApp::new();
+    while !all_ready(&app.games_to_sync) {
+        println!("Finding games, trying again in 500ms");
+        std::thread::sleep(Duration::from_secs_f32(0.5));
+    }
     app.run_sync(true);
 }
 
