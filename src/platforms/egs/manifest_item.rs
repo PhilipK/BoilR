@@ -163,6 +163,13 @@ impl ManifestItem {
             self.catalog_namespace, self.catalog_item_id, self.app_name
         )
     }
+    
+    pub fn dedupe_key(&self)-> String {
+        format!(
+            "{}-{}-{}",
+            self.install_location, self.launch_executable, self.is_managed
+        )
+    }
 
     fn needs_launcher(&self) -> bool {
         if self.safe_launch {

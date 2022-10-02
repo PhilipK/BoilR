@@ -1,5 +1,5 @@
 use super::settings::EpicGamesLauncherSettings;
-use super::{ManifestItem};
+use super::ManifestItem;
 
 use std::fs::{DirEntry, File};
 use std::io::BufReader;
@@ -19,10 +19,9 @@ pub(crate) fn get_egs_manifests(
                     let all_manifests = manifest_dir
                         .filter_map(|dir| dir.ok())
                         .filter_map(get_manifest_item);
-                    let mut manifests = vec![];
-                    for mut manifest in all_manifests {
-                        #[cfg(target_family = "unix")]
-                        {
+                    #[cfg(target_family = "unix")]
+                    {
+                        for mut manifest in all_manifests {
                             if let Some(compat_folder) = locations.compat_folder_path.as_ref() {
                                 //Strip off the c:\\
                                 manifest.manifest_location = compat_folder
@@ -42,23 +41,14 @@ pub(crate) fn get_egs_manifests(
                                     .to_string();
                             }
                         }
-                        if is_game_installed(&manifest) && is_game_launchable(&manifest) {
-                            manifests.push(manifest);
-                        }
                     }
+                    let mut manifests :Vec<ManifestItem> = all_manifests                        
+                        .filter(is_game_installed)
+                        .filter(is_game_launchable)
+                        .collect();
 
-                    manifests.sort_by_key(|m| {
-                        format!(
-                            "{}-{}-{}",
-                            m.install_location, m.launch_executable, m.is_managed
-                        )
-                    });
-                    manifests.dedup_by_key(|m| {
-                        format!(
-                            "{}-{}-{}",
-                            m.install_location, m.launch_executable, m.is_managed
-                        )
-                    });
+                    manifests.sort_by_key(|m| m.dedupe_key());
+                    manifests.dedup_by_key(|m| m.dedupe_key());
                     for mut manifest in &mut manifests {
                         manifest.launcher_path = Some(locations.launcher_path.clone());
                         manifest.compat_folder = locations.compat_folder_path.clone();
@@ -72,13 +62,15 @@ pub(crate) fn get_egs_manifests(
                 }
                 Err(err) => Err(eyre::format_err!(
                     "Could not read dir at: {:?} error: {:?}",
-                    manifest_dir_path, err
+                    manifest_dir_path,
+                    err
                 )),
             }
         }
         None => Err(eyre::format_err!("Manifests not found")),
     }
 }
+
 
 fn is_game_installed(manifest: &ManifestItem) -> bool {
     Path::new(manifest.manifest_location.as_str()).exists()

@@ -203,8 +203,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
 pub fn get_platform_shortcuts(
     platform: Box<dyn GamesPlatform>,
 ) -> eyre::Result<Vec<ShortcutOwned>> {
-    let p = platform;
-    let name = p.name();
+    let p = platform;    
     let mut platform_shortcuts = vec![];
     if p.enabled() {
         let mut shortcuts_to_proton = vec![];        
@@ -213,7 +212,7 @@ pub fn get_platform_shortcuts(
                 for shortcut_info in shortcut_infos {
                     #[cfg(target_family = "unix")]
                     if shortcut_info.needs_proton {
-                        super::symlinks::ensure_links_folder_created(name);
+                        super::symlinks::ensure_links_folder_created(p.name());
                     }
                     if shortcut_info.needs_proton {
                         shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
