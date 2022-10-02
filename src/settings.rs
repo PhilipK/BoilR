@@ -107,17 +107,3 @@ fn sanitize_auth_key(result: &mut Settings) {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    #[test]
-    pub fn load_sections() {
-        let sections = load_setting_sections();
-
-        dbg!(&sections);
-        assert!(sections.is_ok())
-    }
-}
