@@ -147,7 +147,7 @@ impl Default for AmazonSettings{
         let enabled = false;
 
         #[cfg(not(target_family = "unix"))]
-        let enabled = false;
+        let enabled = true;
 
         Self { enabled, launcher_location: Default::default() }
     }
