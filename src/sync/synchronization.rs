@@ -4,7 +4,7 @@ use steam_shortcuts_util::{
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::GamesPlatform,
+    platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
@@ -202,41 +202,43 @@ fn write_shortcut_collections<S: AsRef<str>>(
 
 pub fn get_platform_shortcuts(
     platform: Box<dyn GamesPlatform>,
-) -> eyre::Result<Vec<ShortcutOwned>> {
-    let p = platform;    
-    let mut platform_shortcuts = vec![];
-    if p.enabled() {
-        let mut shortcuts_to_proton = vec![];        
-        match p.get_shortcut_info() {
-            Ok(shortcut_infos) => {
-                for shortcut_info in shortcut_infos {
-                    #[cfg(target_family = "unix")]
-                    if shortcut_info.needs_proton {
-                        super::symlinks::ensure_links_folder_created(p.name());
-                    }
-                    if shortcut_info.needs_proton {
-                        shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
-                    }
-
-                    let shortcut_owned = shortcut_info.shortcut;
-                    #[cfg(target_family = "unix")]
-                    let shortcut_owned = if shortcut_info.needs_symlinks {
-                        crate::sync::symlinks::create_sym_links(&shortcut_owned)
-                    } else {
-                        shortcut_owned
-                    };
-
-                    platform_shortcuts.push(shortcut_owned)
-                }
-            }
-            Err(error) => {
-                return Err(error);
-            }
-        }
-        setup_proton_games(&shortcuts_to_proton);
+) -> eyre::Result<Vec<ShortcutToImport>> {
+    if platform.enabled() {
+        platform.get_shortcut_info()
+    }else{
+        Ok(vec![])
     }
+        // let mut shortcuts_to_proton = vec![];        
+        // match p.get_shortcut_info() {
+        //     Ok(shortcut_infos) => {
+        //         for shortcut_info in shortcut_infos {
+        //             #[cfg(target_family = "unix")]
+        //             if shortcut_info.needs_proton {
+        //                 super::symlinks::ensure_links_folder_created(p.name());
+        //             }
+        //             if shortcut_info.needs_proton {
+        //                 shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
+        //             }
 
-    Ok(platform_shortcuts)
+        //             let shortcut_owned = shortcut_info.shortcut;
+        //             #[cfg(target_family = "unix")]
+        //             let shortcut_owned = if shortcut_info.needs_symlinks {
+        //                 crate::sync::symlinks::create_sym_links(&shortcut_owned)
+        //             } else {
+        //                 shortcut_owned
+        //             };
+
+        //             platform_shortcuts.push(shortcut_owned)
+        //         }
+        //     }
+        //     Err(error) => {
+        //         return Err(error);
+        //     }
+        // }
+        // setup_proton_games(&shortcuts_to_proton);
+    // }
+
+    // Ok(platform_shortcuts)
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {

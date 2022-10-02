@@ -12,7 +12,7 @@ use crate::{
     config::get_renames_file,
     platforms::{get_platforms, GamesPlatform, Platforms},
     settings::{Settings, save_settings},
-    sync::{self, SyncProgress},
+    sync::{self, SyncProgress}, steam::ShortcutInfo,
 };
 
 use super::{
@@ -35,14 +35,14 @@ struct UiImages {
 }
 type GamesToSync = Vec<(
     String,
-    Receiver<FetcStatus<eyre::Result<Vec<ShortcutOwned>>>>,
+    Receiver<FetcStatus<eyre::Result<Vec<ShortcutInfo>>>>,
 )>;
 
 pub(crate) fn all_ready(games: &GamesToSync) -> bool {
     games.iter().all(|(_name, rx)| rx.borrow().is_some())
 }
 
-pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutOwned>)> {
+pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutInfo>)> {
     games
         .iter()
         .filter_map(|(name, rx)| match &*rx.borrow() {
