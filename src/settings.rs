@@ -1,40 +1,19 @@
 use crate::{
-    amazon::AmazonSettings, config::get_config_file, egs::EpicGamesLauncherSettings,
-    flatpak::FlatpakSettings, gog::GogSettings, itch::ItchSettings, legendary::LegendarySettings,
-    lutris::settings::LutrisSettings, origin::OriginSettings, steam::SteamSettings,
-    steamgriddb::SteamGridDbSettings, uplay::UplaySettings,
+    config::get_config_file, platforms::Platforms, steam::SteamSettings,
+    steamgriddb::SteamGridDbSettings,
 };
-
-#[cfg(target_family = "unix")]
-use crate::heroic::HeroicSettings;
-
-#[cfg(target_family = "unix")]
-use crate::bottles::BottlesSettings;
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
-use std::env;
+use std::{collections::HashMap, env};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub debug: bool,
     pub config_version: Option<usize>,
     pub blacklisted_games: Vec<u32>,
-    pub epic_games: EpicGamesLauncherSettings,
-    pub legendary: LegendarySettings,
-    pub itch: ItchSettings,
     pub steamgrid_db: SteamGridDbSettings,
     pub steam: SteamSettings,
-    pub origin: OriginSettings,
-    pub gog: GogSettings,
-    pub uplay: UplaySettings,
-    pub lutris: LutrisSettings,
-    #[cfg(target_family = "unix")]
-    pub heroic: HeroicSettings,
-    pub amazon: AmazonSettings,
-    pub flatpak: FlatpakSettings,
-    #[cfg(target_family = "unix")]
-    pub bottles: BottlesSettings,
 }
 
 impl Settings {
@@ -62,6 +41,62 @@ impl Settings {
         let mut settings = config.try_deserialize::<Settings>()?;
         sanitize_auth_key(&mut settings);
         Ok(settings)
+    }
+}
+
+pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
+    let config_file_path = get_config_file();
+    let content = std::fs::read_to_string(config_file_path)?;
+    let mut result = HashMap::new();
+    let lines = content.lines();
+    let mut current_section_lines: Vec<String> = vec![];
+    let mut current_section_name: Option<String> = Option::None;
+    for line in lines {
+        if line.starts_with('[') && line.ends_with(']') {
+            add_sections(&current_section_name, &current_section_lines, &mut result);
+            current_section_name = Some(line[1..line.len() - 1].to_string());
+            current_section_lines.clear();
+        } else {
+            current_section_lines.push(line.to_string());
+        }
+    }
+    add_sections(&current_section_name, &current_section_lines, &mut result);
+
+    let blacklisted_sections = ["steamgrid_db", "steam"];
+    for section in blacklisted_sections {
+        let _ = result.remove(section);
+    }
+    Ok(result)
+}
+
+pub fn save_settings(settings: &Settings, platforms: &Platforms) {
+    let mut toml = toml::to_string(&settings).unwrap();
+
+    for platform in platforms {
+        let section_name = format!("[{}]", platform.code_name());
+        toml.push('\n');
+        toml.push_str(section_name.as_str());
+        toml.push('\n');
+        let platform_string = platform.get_settings_serilizable();
+        toml.push_str(platform_string.as_str());
+    }
+
+    let config_path = crate::config::get_config_file();
+    std::fs::write(config_path, toml).unwrap();
+}
+
+fn add_sections(
+    current_section_name: &Option<String>,
+    current_section_lines: &Vec<String>,
+    result: &mut HashMap<String, String>,
+) {
+    if let Some(old_section_name) = current_section_name {
+        let mut section_string = String::new();
+        for line in current_section_lines {
+            section_string.push_str(line);
+            section_string.push('\n');
+        }
+        result.insert(old_section_name.to_string(), section_string);
     }
 }
 

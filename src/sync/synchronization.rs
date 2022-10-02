@@ -1,29 +1,20 @@
-use steam_shortcuts_util::{shortcut::ShortcutOwned, shortcuts_to_bytes, calculate_app_id_for_shortcut, Shortcut};
+use steam_shortcuts_util::{
+    calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
+};
 use tokio::sync::watch::Sender;
 
 use crate::{
-    egs::EpicPlatform,
-    legendary::LegendaryPlatform,
-    lutris::lutris_platform::LutrisPlatform,
-    platform::Platform,
+    platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
-        get_shortcuts_for_user, get_shortcuts_paths, setup_proton_games, write_collections,
+        get_shortcuts_for_user, get_shortcuts_paths, write_collections,
         Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
-    uplay::Uplay,
 };
 
-#[cfg(target_family = "unix")]
-use crate::heroic::HeroicPlatform;
+use std::{collections::HashMap, error::Error};
 
-#[cfg(target_family = "unix")]
-use crate::flatpak::FlatpakPlatform;
-
-use std::{error::Error, collections::HashMap};
-
-use crate::{gog::GogPlatform, itch::ItchPlatform, origin::OriginPlatform};
 use std::{fs::File, io::Write, path::Path};
 
 pub const BOILR_TAG: &str = "boilr";
@@ -56,30 +47,29 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
     Ok(())
 }
 
-pub fn run_sync(
+pub fn sync_shortcuts(
     settings: &Settings,
+    platform_shortcuts: &[(String, Vec<ShortcutOwned>)],
     sender: &mut Option<Sender<SyncProgress>>,
-    renames: &HashMap<u32,String>
+    renames: &HashMap<u32, String>,
 ) -> Result<Vec<SteamUsersInfo>, String> {
-    if let Some(sender) = &sender {
-        let _ = sender.send(SyncProgress::Starting);
-    }
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
         .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
-
-    let platform_shortcuts = get_platform_shortcuts(settings);
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
+    for shortcut in &mut all_shortcuts{
+        shortcut.dev_kit_game_id = BOILR_TAG.to_string();
+    }
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::FoundGames {
             games_found: all_shortcuts.len(),
         });
     }
     for shortcut in &mut all_shortcuts {
-        if let Some(rename) = renames.get(&shortcut.app_id){
+        if let Some(rename) = renames.get(&shortcut.app_id) {
             shortcut.app_name = rename.clone();
             let new_shortcut = Shortcut::new(
                 "0",
@@ -88,7 +78,7 @@ pub fn run_sync(
                 "",
                 "",
                 "",
-                ""
+                "",
             );
             shortcut.app_id = calculate_app_id_for_shortcut(&new_shortcut);
         }
@@ -118,7 +108,7 @@ pub fn run_sync(
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
         if settings.steam.create_collections {
-            match write_shortcut_collections(&user.user_id, &platform_shortcuts) {
+            match write_shortcut_collections(&user.user_id, platform_shortcuts) {
                 Ok(_) => (),
                 Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
             }
@@ -127,7 +117,6 @@ pub fn run_sync(
         let duration = start_time.elapsed();
         println!("Finished synchronizing games in: {:?}", duration);
     }
-
     Ok(userinfo_shortcuts)
 }
 
@@ -211,47 +200,14 @@ fn write_shortcut_collections<S: AsRef<str>>(
     Ok(())
 }
 
-pub fn get_platform_shortcuts(settings: &Settings) -> Vec<(String, Vec<ShortcutOwned>)> {
-    let mut platform_results = vec![
-        update_platform_shortcuts(&EpicPlatform::new(&settings.epic_games)),
-        update_platform_shortcuts(&LegendaryPlatform::new(settings.legendary.clone())),
-        update_platform_shortcuts(&ItchPlatform::new(settings.itch.clone())),
-        update_platform_shortcuts(&OriginPlatform {
-            settings: settings.origin.clone(),
-        }),
-        update_platform_shortcuts(&GogPlatform {
-            settings: settings.gog.clone(),
-        }),
-        update_platform_shortcuts(&Uplay {
-            settings: settings.uplay.clone(),
-        }),
-        update_platform_shortcuts(&LutrisPlatform {
-            settings: settings.lutris.clone(),
-        }),
-    ];
-    #[cfg(target_family = "unix")]
-    {
-        platform_results.push(update_platform_shortcuts(&HeroicPlatform {
-            settings: settings.heroic.clone(),
-        }));
-
-        platform_results.push(update_platform_shortcuts(&FlatpakPlatform {
-            settings: settings.flatpak.clone(),
-        }));
-        platform_results.push(update_platform_shortcuts(&crate::bottles::BottlesPlatform {
-            settings: settings.bottles.clone(),
-        }));
-
-        
+pub fn get_platform_shortcuts(
+    platform: Box<dyn GamesPlatform>,
+) -> eyre::Result<Vec<ShortcutToImport>> {
+    if platform.enabled() {
+        platform.get_shortcut_info()
+    }else{
+        Ok(vec![])
     }
-
-    #[cfg(windows)]
-    {
-        platform_results.push(update_platform_shortcuts(&crate::amazon::AmazonPlatform {
-            settings: settings.amazon.clone(),
-        }));
-    }
-    platform_results.iter().filter_map(|p| p.clone()).collect()
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
@@ -279,78 +235,4 @@ fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
             );
         }
     }
-}
-
-fn update_platform_shortcuts<P, T, E>(platform: &P) -> Option<(String, Vec<ShortcutOwned>)>
-where
-    P: Platform<T, E>,
-    E: std::fmt::Debug + std::fmt::Display,
-    T: Into<ShortcutOwned>,
-    T: Clone,
-{
-    if platform.enabled() {
-        if let crate::platform::SettingsValidity::Invalid { reason } = platform.settings_valid() {
-            eprintln!(
-                "Setting for platform {} are invalid, reason: {}",
-                platform.name(),
-                reason
-            );
-            return None;
-        }
-
-        let mut current_shortcuts = vec![];
-
-        #[cfg(target_family = "unix")]
-        if platform.create_symlinks() {
-            let name = platform.name();
-            super::symlinks::ensure_links_folder_created(name);
-        }
-
-        let shortcuts_to_add_result = platform.get_shortcuts();
-
-        match shortcuts_to_add_result {
-            Ok(shortcuts_to_add) => {
-                let mut shortcuts_to_proton = vec![];
-                let mut shortcuts_to_add_transformed = vec![];
-                for shortcut in shortcuts_to_add {
-                    let mut shortcut_owned: ShortcutOwned = shortcut.clone().into();
-                    shortcut_owned.dev_kit_game_id =
-                        format!("{}-{}", BOILR_TAG, shortcut_owned.app_id);
-                    shortcuts_to_add_transformed.push((shortcut, shortcut_owned));
-                }
-
-                let shortcuts_to_add = shortcuts_to_add_transformed;
-
-                println!(
-                    "Found {} game(s) for platform {}",
-                    shortcuts_to_add.len(),
-                    platform.name()
-                );
-
-                for (orign_shortcut, shortcut_owned) in shortcuts_to_add {
-                    #[cfg(target_family = "unix")]
-                    let shortcut_owned = if platform.create_symlinks() {
-                        crate::sync::symlinks::create_sym_links(&shortcut_owned)
-                    } else {
-                        shortcut_owned
-                    };
-                    if platform.needs_proton(&orign_shortcut) {
-                        shortcuts_to_proton.push(format!("{}", shortcut_owned.app_id));
-                    }
-                    current_shortcuts.push(shortcut_owned.clone());
-                }
-                if !shortcuts_to_proton.is_empty() {
-                    setup_proton_games(shortcuts_to_proton.as_slice());
-                }
-
-                let name = platform.name();
-                return Some((name.to_string(), current_shortcuts));
-            }
-            Err(err) => {
-                eprintln!("Error getting shortcuts from platform: {}", platform.name());
-                eprintln!("{}", err);
-            }
-        }
-    }
-    None
 }

@@ -8,47 +8,6 @@ prefer_animated = false
 banned_images = []
 only_download_boilr_images = false
 
-[origin]
-enabled = true
-
-[gog]
-enabled = true
-create_symlinks = true
-
-[epic_games]
-enabled = true
-safe_launch = []
-
-[uplay]
-enabled = true
-
-[legendary]
-enabled = true
-
-[itch]
-enabled = true
-create_symlinks = true
-
-[lutris]
-enabled = false
-executable = "lutris"
-flatpak_image = "net.lutris.Lutris//beta"
-flatpak = false
-
-[heroic]
-enabled = true
-launch_games_through_heroic =[]
-default_launch_through_heroic = true
-
-[amazon]
-enabled = true
-
-[flatpak]
-enabled = true
-
-[bottles]
-enabled = true
-
 [steam]
 create_collections = false
 optimize_for_big_picture = false

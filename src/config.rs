@@ -9,7 +9,7 @@ pub fn get_config_folder() -> PathBuf {
     let home = std::env::var("HOME");
     match (config_home, home) {
         (Ok(p), _) => Path::new(&p).to_path_buf(),
-        (Err(_), Ok(home)) => Path::new(&home).join(".config").join("boilr").to_path_buf(),
+        (Err(_), Ok(home)) => Path::new(&home).join(".config").join("boilr"),
         _ => Path::new("").to_path_buf(),
     }
 }
@@ -49,5 +49,5 @@ pub fn get_backups_flder() -> PathBuf {
 
 #[cfg(target_family = "unix")]
 pub fn get_boilr_links_path() -> PathBuf {
-    get_config_folder().join("links").to_path_buf()
+    get_config_folder().join("links")
 }
