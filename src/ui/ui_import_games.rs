@@ -7,7 +7,6 @@ use tokio::sync::watch;
 
 use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
-use crate::settings::{save_settings};
 use crate::steam::setup_proton_games;
 use crate::sync;
 
@@ -138,14 +137,13 @@ impl MyEguiApp {
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
         let all_ready= all_ready(&self.games_to_sync);
-        let platforms = self.platforms.clone();
         let _ = sender.send(SyncProgress::Starting);
         if all_ready{
             let shortcuts_to_import = get_all_games(&self.games_to_sync);            
             let handle = self.rt.spawn_blocking(move || {
 
                 #[cfg(target_family = "unix")]
-                setup_proton(shortcuts_to_import.iter().flat_map(|(_name,infos)| infos));
+                setup_proton(shortcuts_to_import.iter());
 
                 let import_games = to_shortcut_owned(shortcuts_to_import);
                 
@@ -188,24 +186,23 @@ fn to_shortcut_owned(shortcuts_to_import: Vec<(String, Vec<ShortcutToImport>)>) 
 
     #[cfg(target_family = "unix")]
     fn setup_proton<'a, I>(shortcut_infos: I)
-        where         I: IntoIterator<Item = &'a ShortcutToImport>
+        where         I: IntoIterator<Item = &'a (String,Vec<ShortcutToImport>)>
         {
         let mut shortcuts_to_proton = vec![];        
         
-        for shortcut_info in shortcut_infos {
-           if shortcut_info.needs_proton {
-               super::symlinks::ensure_links_folder_created(p.name());
-           }
-           if shortcut_info.needs_proton {
-               shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
-           }
+        for (name,shortcuts) in shortcut_infos {
+            for shortcut_info in shortcuts{
+            if shortcut_info.needs_proton {
+                crate::sync::symlinks::ensure_links_folder_created(&name);
+            }
+            if shortcut_info.needs_proton {
+                shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
+            }
 
-           let shortcut_owned = shortcut_info.shortcut;
-           let shortcut_owned = if shortcut_info.needs_symlinks {
-               crate::sync::symlinks::create_sym_links(&shortcut_owned)
-           } else {
-               shortcut_owned
-           };
+            if shortcut_info.needs_symlinks {
+                crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
+            }
        }
        setup_proton_games(&shortcuts_to_proton);
    }
+}
