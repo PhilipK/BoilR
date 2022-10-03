@@ -1,3 +1,4 @@
+use eframe::epaint::ahash::HashSet;
 use steam_shortcuts_util::{
     calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
@@ -7,8 +8,8 @@ use crate::{
     platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
-        get_shortcuts_for_user, get_shortcuts_paths, write_collections,
-        Collection, ShortcutInfo, SteamUsersInfo,
+        get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
+        SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
 };
@@ -60,7 +61,7 @@ pub fn sync_shortcuts(
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
-    for shortcut in &mut all_shortcuts{
+    for shortcut in &mut all_shortcuts {
         shortcut.dev_kit_game_id = BOILR_TAG.to_string();
     }
     if let Some(sender) = &sender {
@@ -96,6 +97,7 @@ pub fn sync_shortcuts(
         );
 
         remove_old_shortcuts(&mut shortcut_info);
+        remove_shortcuts_with_same_appid(&mut shortcut_info, &all_shortcuts);
 
         shortcut_info.shortcuts.extend(all_shortcuts.clone());
 
@@ -145,6 +147,16 @@ impl IsBoilRShortcut for ShortcutOwned {
     }
 }
 
+fn remove_shortcuts_with_same_appid(
+    shortcut_info: &mut ShortcutInfo,
+    new_shortcuts: &[ShortcutOwned],
+) {
+    let app_ids: HashSet<u32> = new_shortcuts.iter().map(|s| s.app_id).collect();
+    shortcut_info
+        .shortcuts
+        .retain(|shortcut| !app_ids.contains(&shortcut.app_id));
+}
+
 fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
     shortcut_info
         .shortcuts
@@ -174,7 +186,7 @@ fn fix_shortcut_icons(
             for ext in ["ico", "png", "jpg", "webp"] {
                 let path = image_folder.join(image_type.file_name(app_id, ext));
                 if path.exists() {
-                    shortcut.icon = path.to_string_lossy().to_string();
+                    shortcut.icon = format!("\"{}\"", path.to_string_lossy().to_string());
                     break;
                 }
             }
@@ -205,7 +217,7 @@ pub fn get_platform_shortcuts(
 ) -> eyre::Result<Vec<ShortcutToImport>> {
     if platform.enabled() {
         platform.get_shortcut_info()
-    }else{
+    } else {
         Ok(vec![])
     }
 }
