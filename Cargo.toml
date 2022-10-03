@@ -65,3 +65,9 @@ winreg = "^0.10.1"
 [features]
 # This feature is enabled when building for a flatpak environment
 flatpak = []
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z"  # Optimize for size.
+lto = true
+codegen-units = 1
