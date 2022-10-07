@@ -185,25 +185,25 @@ fn to_shortcut_owned(shortcuts_to_import: Vec<(String, Vec<ShortcutToImport>)>) 
 }
 
 
-    #[cfg(target_family = "unix")]
-    fn setup_proton<'a, I>(shortcut_infos: I)
-        where         I: IntoIterator<Item = &'a (String,Vec<ShortcutToImport>)>
-        {
-        let mut shortcuts_to_proton = vec![];        
+#[cfg(target_family = "unix")]
+fn setup_proton<'a, I>(shortcut_infos: I)
+where
+I: IntoIterator<Item = &'a (String,Vec<ShortcutToImport>)>{
+    let mut shortcuts_to_proton = vec![];        
         
-        for (name,shortcuts) in shortcut_infos {
-            for shortcut_info in shortcuts{
-            if shortcut_info.needs_proton {
-                crate::sync::symlinks::ensure_links_folder_created(&name);
-            }
-            if shortcut_info.needs_proton {
-                shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
-            }
+    for (name,shortcuts) in shortcut_infos {
+        for shortcut_info in shortcuts{
+        if shortcut_info.needs_proton {
+            crate::sync::symlinks::ensure_links_folder_created(name);
+        }
+        if shortcut_info.needs_proton {
+            shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
+        }
 
-            if shortcut_info.needs_symlinks {
-                crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
-            }
-       }
-       setup_proton_games(&shortcuts_to_proton);
+        if shortcut_info.needs_symlinks {
+            crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
+        }
+    }
+    setup_proton_games(&shortcuts_to_proton);
    }
 }

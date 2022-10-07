@@ -183,7 +183,7 @@ fn fix_shortcut_icons(
         for ext in ["ico", "png", "jpg", "webp"] {
             let path = image_folder.join(image_type.file_name(app_id, ext));
             if !icon_exsists && path.exists() {
-                shortcut.icon = format!("\"{}\"", path.to_string_lossy().to_string());
+                shortcut.icon = format!("\"{}\"", path.to_string_lossy());
                 break;
             }
         }
