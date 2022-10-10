@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 
-use crate::platforms::{to_shortcuts, ShortcutToImport, NeedsPorton, GamesPlatform, FromSettingsString, load_settings};
+use crate::platforms::{
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+};
 
 use super::{
     gog_config::GogConfig,
@@ -161,7 +163,7 @@ fn get_games_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<(GogGame, Path
     games
 }
 
-impl NeedsPorton<GogPlatform> for GogShortcut{
+impl NeedsPorton<GogPlatform> for GogShortcut {
     #[cfg(target_family = "unix")]
     fn needs_proton(&self, _platform: &GogPlatform) -> bool {
         true
@@ -171,7 +173,7 @@ impl NeedsPorton<GogPlatform> for GogShortcut{
     fn needs_proton(&self, _platform: &GogPlatform) -> bool {
         false
     }
-    
+
     #[cfg(not(target_family = "unix"))]
     fn create_symlinks(&self, _platform: &GogPlatform) -> bool {
         false
@@ -222,8 +224,7 @@ pub fn default_location() -> PathBuf {
     }
 }
 
-
-impl FromSettingsString for GogPlatform{
+impl FromSettingsString for GogPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
         GogPlatform {
             settings: load_settings(s),
@@ -231,7 +232,7 @@ impl FromSettingsString for GogPlatform{
     }
 }
 
-impl GamesPlatform for GogPlatform{
+impl GamesPlatform for GogPlatform {
     fn name(&self) -> &str {
         "GOG"
     }
@@ -258,7 +259,7 @@ impl GamesPlatform for GogPlatform{
             });
         }
     }
-    
+
     fn get_settings_serilizable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }

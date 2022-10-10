@@ -124,7 +124,6 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     .to_owned()
 }
 
-
 impl From<ManifestItem> for ShortcutOwned {
     fn from(manifest: ManifestItem) -> Self {
         let mut owned_shortcut = if manifest.needs_launcher() {
@@ -163,8 +162,8 @@ impl ManifestItem {
             self.catalog_namespace, self.catalog_item_id, self.app_name
         )
     }
-    
-    pub fn dedupe_key(&self)-> String {
+
+    pub fn dedupe_key(&self) -> String {
         format!(
             "{}-{}-{}",
             self.install_location, self.launch_executable, self.is_managed

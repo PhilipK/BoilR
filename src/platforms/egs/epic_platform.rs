@@ -1,5 +1,5 @@
 use crate::platforms::{
-    load_settings, to_shortcuts, FromSettingsString, NeedsPorton, ShortcutToImport, GamesPlatform,
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
 };
 
 use super::{get_egs_manifests, settings::EpicGamesLauncherSettings, ManifestItem};
@@ -32,7 +32,7 @@ impl NeedsPorton<EpicPlatform> for ManifestItem {
     }
 }
 
-impl GamesPlatform for EpicPlatform{
+impl GamesPlatform for EpicPlatform {
     fn name(&self) -> &str {
         "Epic"
     }
@@ -52,7 +52,7 @@ impl GamesPlatform for EpicPlatform{
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         self.render_epic_settings(ui)
     }
-    
+
     fn get_settings_serilizable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }

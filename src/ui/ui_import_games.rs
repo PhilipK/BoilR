@@ -13,7 +13,7 @@ use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
 
-use super::{backup_shortcuts, all_ready, get_all_games};
+use super::{all_ready, backup_shortcuts, get_all_games};
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,
@@ -60,7 +60,7 @@ impl MyEguiApp {
                     FetcStatus::NeedsFetched => {ui.label("Need to find games");},
                     FetcStatus::Fetching => {
                         ui.horizontal(|ui|{
-                            ui.spinner();                            
+                            ui.spinner();
                             ui.label("Finding installed games");
                         });
                     },
@@ -90,31 +90,29 @@ impl MyEguiApp {
                                                     }
                                                 }
                                             }
-                                        }  else {                                                          
-                                        let name = self.rename_map.get(&shortcut.app_id).unwrap_or(&shortcut.app_name);
-                                        let checkbox = egui::Checkbox::new(&mut import_game,name);
-                                        let response = ui.add(checkbox);                                
-                                        if response.double_clicked(){
-                                            self.rename_map.entry(shortcut.app_id).or_insert_with(|| shortcut.app_name.to_owned());                                    
-                                            self.current_edit = Option::Some(shortcut.app_id);
-                                        }
-                                        if response.clicked(){
-                                            if !self.settings.blacklisted_games.contains(&shortcut.app_id){
-                                                self.settings.blacklisted_games.push(shortcut.app_id);
-                                            }else{
-                                                self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
+                                        }  else {
+                                            let name = self.rename_map.get(&shortcut.app_id).unwrap_or(&shortcut.app_name);
+                                            let checkbox = egui::Checkbox::new(&mut import_game,name);
+                                            let response = ui.add(checkbox);
+                                            if response.double_clicked(){
+                                                self.rename_map.entry(shortcut.app_id).or_insert_with(|| shortcut.app_name.to_owned());
+                                                self.current_edit = Option::Some(shortcut.app_id);
+                                            }
+                                            if response.clicked(){
+                                                if !self.settings.blacklisted_games.contains(&shortcut.app_id){
+                                                    self.settings.blacklisted_games.push(shortcut.app_id);
+                                                } else {
+                                                    self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
+                                                }
                                             }
                                         }
-                                    }   
-                                        
-                                    });                                                 
+                                    });
                                 }
                             },
                             Err(err) => {
                                 ui.label("Failed finding games").on_hover_text(format!("Error message: {err}"));
                             },
                         };
-                        
                     },
                 }
 
@@ -125,8 +123,7 @@ impl MyEguiApp {
         });
     }
 
-   
-    pub fn run_sync(&mut self, wait: bool ) {
+    pub fn run_sync(&mut self, wait: bool) {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
@@ -137,25 +134,26 @@ impl MyEguiApp {
 
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
-        let all_ready= all_ready(&self.games_to_sync);
+        let all_ready = all_ready(&self.games_to_sync);
         let _ = sender.send(SyncProgress::Starting);
-        if all_ready{
-            let shortcuts_to_import = get_all_games(&self.games_to_sync);            
+        if all_ready {
+            let shortcuts_to_import = get_all_games(&self.games_to_sync);
             let handle = self.rt.spawn_blocking(move || {
-
                 #[cfg(target_family = "unix")]
                 setup_proton(shortcuts_to_import.iter());
 
                 let import_games = to_shortcut_owned(shortcuts_to_import);
-                
+
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
-                let usersinfo = sync::sync_shortcuts(&settings, &import_games, &mut some_sender,&renames).unwrap();
+                let usersinfo =
+                    sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)
+                        .unwrap();
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
-                sync::sync_shortcuts(&settings, &import_games, &mut some_sender,&renames).unwrap();
-    
+                sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames).unwrap();
+
                 if let Some(sender) = some_sender {
                     let _ = sender.send(SyncProgress::Done);
                 }
@@ -168,42 +166,42 @@ impl MyEguiApp {
             }
         }
     }
-
-
 }
 
-fn to_shortcut_owned(shortcuts_to_import: Vec<(String, Vec<ShortcutToImport>)>) -> Vec<(String, Vec<ShortcutOwned>)> {
+fn to_shortcut_owned(
+    shortcuts_to_import: Vec<(String, Vec<ShortcutToImport>)>,
+) -> Vec<(String, Vec<ShortcutOwned>)> {
     let mut import_games = vec![];
-    for(name,infos) in shortcuts_to_import{
+    for (name, infos) in shortcuts_to_import {
         let mut shortcuts = vec![];
-        for info in infos{
+        for info in infos {
             shortcuts.push(info.shortcut);
         }
-        import_games.push((name,shortcuts));
+        import_games.push((name, shortcuts));
     }
     import_games
 }
 
-
 #[cfg(target_family = "unix")]
 fn setup_proton<'a, I>(shortcut_infos: I)
 where
-I: IntoIterator<Item = &'a (String,Vec<ShortcutToImport>)>{
-    let mut shortcuts_to_proton = vec![];        
-        
-    for (name,shortcuts) in shortcut_infos {
-        for shortcut_info in shortcuts{
-        if shortcut_info.needs_proton {
-            crate::sync::symlinks::ensure_links_folder_created(name);
-        }
-        if shortcut_info.needs_proton {
-            shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
-        }
+    I: IntoIterator<Item = &'a (String, Vec<ShortcutToImport>)>,
+{
+    let mut shortcuts_to_proton = vec![];
 
-        if shortcut_info.needs_symlinks {
-            crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
+    for (name, shortcuts) in shortcut_infos {
+        for shortcut_info in shortcuts {
+            if shortcut_info.needs_proton {
+                crate::sync::symlinks::ensure_links_folder_created(name);
+            }
+            if shortcut_info.needs_proton {
+                shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
+            }
+
+            if shortcut_info.needs_symlinks {
+                crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
+            }
         }
+        setup_proton_games(&shortcuts_to_proton);
     }
-    setup_proton_games(&shortcuts_to_proton);
-   }
 }

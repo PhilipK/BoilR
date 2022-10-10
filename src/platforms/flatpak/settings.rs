@@ -5,7 +5,7 @@ pub struct FlatpakSettings {
     pub enabled: bool,
 }
 
-impl Default for FlatpakSettings{
+impl Default for FlatpakSettings {
     fn default() -> Self {
         #[cfg(target_family = "unix")]
         let enabled = true;

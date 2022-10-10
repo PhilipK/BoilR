@@ -106,6 +106,15 @@ If you want to revert back to the original name, just clear the name and click r
 
 ### How can I help/contribute?
 If you are a coder, you are very welcome! You can fork this repo and then create a pull request.
+
+To check formats and errors of code before run the code:
+
+```shell
+cargo fmt
+
+cargo check
+```
+
 To run BoilR just write:
 
 ```shell

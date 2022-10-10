@@ -1,7 +1,9 @@
 use super::game_list_parser::parse_lutris_games;
 use super::lutris_game::LutrisGame;
 use super::settings::LutrisSettings;
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings, GamesPlatform};
+use crate::platforms::{
+    load_settings, to_shortcuts_simple, FromSettingsString, GamesPlatform, ShortcutToImport,
+};
 use std::process::Command;
 
 #[derive(Clone)]
@@ -57,17 +59,18 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
-impl FromSettingsString for LutrisPlatform{
+impl FromSettingsString for LutrisPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        LutrisPlatform { settings: load_settings(s) }
+        LutrisPlatform {
+            settings: load_settings(s),
+        }
     }
 }
 
-impl GamesPlatform for LutrisPlatform{
+impl GamesPlatform for LutrisPlatform {
     fn name(&self) -> &str {
         "Lutris"
     }
-    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -75,7 +78,6 @@ impl GamesPlatform for LutrisPlatform{
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
         to_shortcuts_simple(self.get_shortcuts())
-        
     }
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
@@ -100,11 +102,10 @@ impl GamesPlatform for LutrisPlatform{
     }
 
     fn get_settings_serilizable(&self) -> String {
-            toml::to_string(&self.settings).unwrap_or_default()
+        toml::to_string(&self.settings).unwrap_or_default()
     }
 
     fn code_name(&self) -> &str {
         "lutris"
     }
-    
 }

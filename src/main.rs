@@ -9,7 +9,7 @@ mod ui;
 
 use color_eyre::eyre::Result;
 
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     color_eyre::install()?;
     ensure_config_folder();
     migration::migrate_config();

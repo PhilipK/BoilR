@@ -52,39 +52,39 @@ pub fn get_boilr_links_path() -> PathBuf {
     get_config_folder().join("links")
 }
 
-
 #[cfg(test)]
-mod tests{
+mod tests {
     use std::path::PathBuf;
 
     use super::get_config_folder;
 
     #[test]
-
     #[cfg(target_family = "unix")]
-    fn check_return_xdg_config_path(){
-
+    fn check_return_xdg_config_path() {
         // Parameters for set environment 'XDG_CONFIG_HOME'
-        std::env::set_var("XDG_CONFIG_HOME", std::env::var("HOME").unwrap()+"/.config/boilr");
+        std::env::set_var(
+            "XDG_CONFIG_HOME",
+            std::env::var("HOME").unwrap() + "/.config/boilr",
+        );
 
-        let xdg_config_home=std::env::var("XDG_CONFIG_HOME").unwrap();
-        let config_path=get_config_folder();
-        let test_path=PathBuf::from(xdg_config_home);
+        let xdg_config_home = std::env::var("XDG_CONFIG_HOME").unwrap();
+        let config_path = get_config_folder();
+        let test_path = PathBuf::from(xdg_config_home);
 
-        assert_eq!(config_path,test_path);
+        assert_eq!(config_path, test_path);
     }
 
-
     #[test]
-
     #[cfg(target_family = "unix")]
-    fn check_return_config_path(){
+    fn check_return_config_path() {
+        std::env::set_var(
+            "XDG_CONFIG_HOME",
+            std::env::var("HOME").unwrap() + "/.config/boilr",
+        );
 
-        std::env::set_var("XDG_CONFIG_HOME", std::env::var("HOME").unwrap()+"/.config/boilr");
-        
-        let config_path=get_config_folder();
-        let current_path=std::env::var("HOME").unwrap()+"/.config/boilr";
+        let config_path = get_config_folder();
+        let current_path = std::env::var("HOME").unwrap() + "/.config/boilr";
 
-        assert_eq!(config_path,PathBuf::from(current_path));
+        assert_eq!(config_path, PathBuf::from(current_path));
     }
 }

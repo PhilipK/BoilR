@@ -1,22 +1,22 @@
-mod platform;
-mod egs;
 mod amazon;
 mod bottles;
-mod uplay;
-mod itch;
+mod egs;
 mod flatpak;
-mod origin;
 mod gog;
 mod heroic;
-mod lutris;
+mod itch;
 mod legendary;
+mod lutris;
+mod origin;
+mod platform;
 mod platforms_load;
+mod uplay;
 
 pub(crate) use platform::*;
 
 pub(crate) use gog::get_gog_shortcuts_from_game_folders;
 pub(crate) use gog::GogShortcut;
-pub(crate) use platforms_load::FromSettingsString;
-pub(crate) use platforms_load::load_settings;
-pub use platforms_load::Platforms;
 pub use platforms_load::get_platforms;
+pub(crate) use platforms_load::load_settings;
+pub(crate) use platforms_load::FromSettingsString;
+pub use platforms_load::Platforms;

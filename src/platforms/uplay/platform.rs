@@ -3,10 +3,10 @@ use std::path::Path;
 #[cfg(target_os = "windows")]
 use std::path::PathBuf;
 
-use crate::platforms::FromSettingsString;
-use crate::platforms::GamesPlatform;
 use crate::platforms::load_settings;
 use crate::platforms::to_shortcuts_simple;
+use crate::platforms::FromSettingsString;
+use crate::platforms::GamesPlatform;
 use crate::platforms::ShortcutToImport;
 
 use super::{game::UplayGame, settings::UplaySettings};
@@ -98,8 +98,7 @@ impl FromSettingsString for UplayPlatform {
     }
 }
 
-
-impl GamesPlatform for UplayPlatform{
+impl GamesPlatform for UplayPlatform {
     fn name(&self) -> &str {
         "Uplay"
     }
@@ -124,5 +123,4 @@ impl GamesPlatform for UplayPlatform{
     fn code_name(&self) -> &str {
         "uplay"
     }
-
 }

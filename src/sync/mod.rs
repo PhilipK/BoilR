@@ -7,5 +7,3 @@ pub use synchronization::download_images;
 pub use synchronization::IsBoilRShortcut;
 pub use synchronization::SyncProgress;
 pub use synchronization::*;
-
-

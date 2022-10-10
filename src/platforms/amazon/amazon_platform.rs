@@ -3,17 +3,20 @@ use sqlite::State;
 use std::path::{Path, PathBuf};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings, GamesPlatform};
+use crate::platforms::{
+    load_settings, to_shortcuts_simple, FromSettingsString, GamesPlatform, ShortcutToImport,
+};
 
 #[derive(Clone)]
 pub struct AmazonPlatform {
     pub settings: AmazonSettings,
 }
 
-
-impl FromSettingsString for AmazonPlatform{
-    fn from_settings_string<S:AsRef<str>>(s:S) -> Self {        
-        AmazonPlatform { settings: load_settings(s) }
+impl FromSettingsString for AmazonPlatform {
+    fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
+        AmazonPlatform {
+            settings: load_settings(s),
+        }
     }
 }
 
@@ -51,11 +54,10 @@ fn get_launcher_path() -> eyre::Result<PathBuf> {
     }
 }
 
-impl GamesPlatform for AmazonPlatform{
+impl GamesPlatform for AmazonPlatform {
     fn name(&self) -> &str {
         "Amazon"
     }
-    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -63,14 +65,13 @@ impl GamesPlatform for AmazonPlatform{
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
         to_shortcuts_simple(self.get_amazon_games())
-
     }
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Amazon");
         ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
     }
-    
+
     fn get_settings_serilizable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }
@@ -80,9 +81,7 @@ impl GamesPlatform for AmazonPlatform{
     }
 }
 
-
 impl AmazonPlatform {
-
     fn get_amazon_games(&self) -> eyre::Result<Vec<AmazonGame>> {
         let sqllite_path = get_sqlite_path()?;
         let launcher_path = get_launcher_path()?;
@@ -141,7 +140,7 @@ pub struct AmazonSettings {
     pub launcher_location: Option<String>,
 }
 
-impl Default for AmazonSettings{
+impl Default for AmazonSettings {
     fn default() -> Self {
         #[cfg(target_family = "unix")]
         let enabled = false;
@@ -149,6 +148,9 @@ impl Default for AmazonSettings{
         #[cfg(not(target_family = "unix"))]
         let enabled = true;
 
-        Self { enabled, launcher_location: Default::default() }
+        Self {
+            enabled,
+            launcher_location: Default::default(),
+        }
     }
 }
