@@ -25,6 +25,16 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+  <release version="1.7.0" date="2022-10-11">
+      <description>
+        <ul>
+          <li>Add support for MiniGalaxy</li>
+          <li>Find games in parallel (speeding up imports)</li>
+          <li>Show error messages in UI when not able to find games</li>
+          <li>Performance optimizations</li>
+        </ul>
+      </description>
+  </release>
   <release version="1.5.1" date="2022-09-21">
       <description>
         <ul>
