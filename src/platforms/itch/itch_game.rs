@@ -38,13 +38,11 @@ impl From<ItchGame> for ShortcutOwned {
     }
 }
 
-
-
-impl NeedsPorton<ItchPlatform> for ItchGame{
+impl NeedsPorton<ItchPlatform> for ItchGame {
     fn needs_proton(&self, _platform: &ItchPlatform) -> bool {
         self.executable.ends_with("exe")
     }
-    
+
     #[cfg(target_family = "unix")]
     fn create_symlinks(&self, platform: &ItchPlatform) -> bool {
         platform.settings.create_symlinks

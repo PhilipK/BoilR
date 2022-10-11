@@ -1,11 +1,9 @@
-
 use std::collections::HashMap;
 
 use serde::de::DeserializeOwned;
 
 use crate::settings::load_setting_sections;
 
-use super::GamesPlatform;
 use super::amazon::AmazonPlatform;
 use super::bottles::BottlesPlatform;
 use super::egs::EpicPlatform;
@@ -17,6 +15,7 @@ use super::legendary::LegendaryPlatform;
 use super::lutris::LutrisPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
+use super::GamesPlatform;
 
 const PLATFORM_NAMES: [&str; 11] = [
     "amazon",
@@ -56,7 +55,6 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     }
 }
 
-
 pub fn get_platforms() -> Platforms {
     let sections = load_setting_sections();
     let sections = match sections {
@@ -72,7 +70,7 @@ pub fn get_platforms() -> Platforms {
 
     let mut platforms = vec![];
     for name in PLATFORM_NAMES {
-        let default =String::from("");
+        let default = String::from("");
         let settings = sections.get(name).unwrap_or(&default);
         match load_platform(name, settings) {
             Ok(platform) => platforms.push(platform),
@@ -91,14 +89,13 @@ where
     match toml::from_str(str) {
         Ok(k) => k,
         Err(err) => {
-            if !str.is_empty(){
+            if !str.is_empty() {
                 eprintln!("Error reading settings file {:?}", err);
             }
             Setting::default()
         }
     }
 }
-
 
 fn load<T>(s: &str) -> eyre::Result<Box<dyn GamesPlatform>>
 where
@@ -108,7 +105,6 @@ where
 {
     Ok(Box::new(T::from_settings_string(s)))
 }
-
 
 pub trait FromSettingsString {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self;

@@ -13,12 +13,10 @@ pub struct OriginGame {
 impl From<OriginGame> for ShortcutOwned {
     fn from(game: OriginGame) -> Self {
         let launch = match game.origin_compat_folder{
-            Some(compat_folder) => 
-                format!("STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"", compat_folder.to_string_lossy(), game.id)
-            ,
-            None => format!(
-            "\"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"",
-            game.id)
+            Some(compat_folder) => format!
+            ("STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"",
+             compat_folder.to_string_lossy(), game.id),
+            None => format!("\"origin2://game/launch?offerIds={}&autoDownload=1&authCode=&cmdParams=\"",game.id)
         };
         let origin_location = format!("\"{}\"", game.origin_location.to_string_lossy());
         let mut owned_shortcut = Shortcut::new(

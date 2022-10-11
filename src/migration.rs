@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{settings::save_settings, platforms::get_platforms};
+use crate::{platforms::get_platforms, settings::save_settings};
 
 pub fn migrate_config() {
     let version = &crate::settings::Settings::new()

@@ -21,9 +21,9 @@ impl HeroicGameType {
             HeroicGameType::Epic(g) => g.app_name.as_ref(),
             HeroicGameType::Gog(g, _) => g.game_id.as_ref(),
             HeroicGameType::Heroic {
-                title:_,
+                title: _,
                 app_name,
-                install_mode:_,
+                install_mode: _,
             } => app_name,
         }
     }
@@ -34,8 +34,8 @@ impl HeroicGameType {
             HeroicGameType::Gog(g, _) => g.name.as_ref(),
             HeroicGameType::Heroic {
                 title,
-                app_name:_,
-                install_mode:_,
+                app_name: _,
+                install_mode: _,
             } => title.as_ref(),
         }
     }

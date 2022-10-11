@@ -1,4 +1,6 @@
-use crate::platforms::{to_shortcuts, GamesPlatform, NeedsPorton, ShortcutToImport, FromSettingsString, load_settings};
+use crate::platforms::{
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+};
 use nom::bytes::complete::take_until;
 use std::{
     fs::DirEntry,
@@ -205,13 +207,12 @@ impl GamesPlatform for OriginPlatform {
     fn code_name(&self) -> &str {
         "origin"
     }
-
-    
 }
 
-
-impl FromSettingsString for OriginPlatform{
+impl FromSettingsString for OriginPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        OriginPlatform { settings: load_settings(s) }
+        OriginPlatform {
+            settings: load_settings(s),
+        }
     }
 }

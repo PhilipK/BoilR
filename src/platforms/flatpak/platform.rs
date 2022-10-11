@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::platforms::{NeedsPorton, to_shortcuts, ShortcutToImport, GamesPlatform, FromSettingsString, load_settings};
+use crate::platforms::{
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+};
 
 use super::FlatpakSettings;
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
@@ -23,7 +25,7 @@ impl From<FlatpakApp> for ShortcutOwned {
     }
 }
 
-impl NeedsPorton<FlatpakPlatform> for FlatpakApp{
+impl NeedsPorton<FlatpakPlatform> for FlatpakApp {
     fn needs_proton(&self, _platform: &FlatpakPlatform) -> bool {
         false
     }
@@ -34,7 +36,6 @@ impl NeedsPorton<FlatpakPlatform> for FlatpakApp{
 }
 
 impl FlatpakPlatform {
-
     fn get_flatpak_apps(&self) -> eyre::Result<Vec<FlatpakApp>> {
         use std::process::Command;
         let mut command = Command::new("flatpak");
@@ -60,20 +61,18 @@ impl FlatpakPlatform {
     }
 }
 
-
-impl FromSettingsString for FlatpakPlatform{
+impl FromSettingsString for FlatpakPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
         FlatpakPlatform {
             settings: load_settings(s),
         }
     }
-} 
+}
 
-impl GamesPlatform for FlatpakPlatform{
+impl GamesPlatform for FlatpakPlatform {
     fn name(&self) -> &str {
         "Flatpak"
     }
-    
 
     fn enabled(&self) -> bool {
         self.settings.enabled
@@ -87,7 +86,7 @@ impl GamesPlatform for FlatpakPlatform{
         ui.heading("Flatpak");
         ui.checkbox(&mut self.settings.enabled, "Import from Flatpak");
     }
-    
+
     fn get_settings_serilizable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }

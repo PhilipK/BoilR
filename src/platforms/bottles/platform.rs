@@ -5,16 +5,20 @@ use serde::{Deserialize, Serialize};
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::{to_shortcuts_simple, ShortcutToImport, FromSettingsString, load_settings, GamesPlatform};
+use crate::platforms::{
+    load_settings, to_shortcuts_simple, FromSettingsString, GamesPlatform, ShortcutToImport,
+};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesPlatform {
     pub settings: BottlesSettings,
 }
 
-impl FromSettingsString for BottlesPlatform{
+impl FromSettingsString for BottlesPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        BottlesPlatform { settings: load_settings(s) }
+        BottlesPlatform {
+            settings: load_settings(s),
+        }
     }
 }
 
@@ -29,7 +33,7 @@ pub struct BottlesSettings {
     pub enabled: bool,
 }
 
-impl Default for BottlesSettings{
+impl Default for BottlesSettings {
     fn default() -> Self {
         #[cfg(target_family = "unix")]
         let enabled = true;
@@ -124,8 +128,7 @@ impl BottlesPlatform {
     }
 }
 
-
-impl GamesPlatform for BottlesPlatform{
+impl GamesPlatform for BottlesPlatform {
     fn name(&self) -> &str {
         "Bottles"
     }
@@ -142,7 +145,7 @@ impl GamesPlatform for BottlesPlatform{
         ui.heading("Bottles");
         ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
     }
-    
+
     fn get_settings_serilizable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }

@@ -1,6 +1,8 @@
 use super::legendary_game::LegendaryGame;
 use super::LegendarySettings;
-use crate::platforms::{to_shortcuts_simple, GamesPlatform, ShortcutToImport, FromSettingsString, load_settings};
+use crate::platforms::{
+    load_settings, to_shortcuts_simple, FromSettingsString, GamesPlatform, ShortcutToImport,
+};
 use serde_json::from_str;
 use std::process::Command;
 
@@ -64,8 +66,8 @@ impl GamesPlatform for LegendaryPlatform {
         }
     }
 
-    fn get_settings_serilizable(&self) -> String {         
-         toml::to_string(&self.settings).unwrap_or_default()
+    fn get_settings_serilizable(&self) -> String {
+        toml::to_string(&self.settings).unwrap_or_default()
     }
 
     fn code_name(&self) -> &str {
@@ -73,10 +75,10 @@ impl GamesPlatform for LegendaryPlatform {
     }
 }
 
-impl FromSettingsString for LegendaryPlatform{
+impl FromSettingsString for LegendaryPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        LegendaryPlatform{
-            settings:load_settings(s)
+        LegendaryPlatform {
+            settings: load_settings(s),
         }
     }
 }

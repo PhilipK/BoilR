@@ -42,7 +42,7 @@ pub(crate) fn get_egs_manifests(
                             }
                         }
                     }
-                    let mut manifests :Vec<ManifestItem> = all_manifests                        
+                    let mut manifests: Vec<ManifestItem> = all_manifests
                         .filter(is_game_installed)
                         .filter(is_game_launchable)
                         .collect();
@@ -70,7 +70,6 @@ pub(crate) fn get_egs_manifests(
         None => Err(eyre::format_err!("Manifests not found")),
     }
 }
-
 
 fn is_game_installed(manifest: &ManifestItem) -> bool {
     Path::new(manifest.manifest_location.as_str()).exists()

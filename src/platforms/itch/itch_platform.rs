@@ -1,8 +1,10 @@
-use crate::platforms::{to_shortcuts, ShortcutToImport, load_settings, FromSettingsString, GamesPlatform};
+use super::butler_db_parser::*;
 use super::itch_game::ItchGame;
 use super::receipt::Receipt;
 use super::ItchSettings;
-use super::{butler_db_parser::*};
+use crate::platforms::{
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, ShortcutToImport,
+};
 use flate2::read::GzDecoder;
 use is_executable::IsExecutable;
 use std::collections::HashSet;
@@ -87,10 +89,8 @@ pub fn get_default_location() -> String {
         .to_str()
         .unwrap()
         .to_string()
-        //C:\Users\phili\AppData\Local\itch
+    //C:\Users\phili\AppData\Local\itch
 }
-
-
 
 impl FromSettingsString for ItchPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
@@ -100,8 +100,7 @@ impl FromSettingsString for ItchPlatform {
     }
 }
 
-
-impl GamesPlatform for ItchPlatform{
+impl GamesPlatform for ItchPlatform {
     fn name(&self) -> &str {
         "Itch"
     }
@@ -120,11 +119,7 @@ impl GamesPlatform for ItchPlatform{
         if self.settings.enabled {
             ui.horizontal(|ui| {
                 let mut empty_string = "".to_string();
-                let itch_location = self
-                    .settings                    
-                    .location
-                    .as_mut()
-                    .unwrap_or(&mut empty_string);
+                let itch_location = self.settings.location.as_mut().unwrap_or(&mut empty_string);
                 ui.label("Itch.io Folder: ");
                 if ui.text_edit_singleline(itch_location).changed() {
                     self.settings.location = if itch_location.is_empty() {
@@ -132,10 +127,12 @@ impl GamesPlatform for ItchPlatform{
                     } else {
                         Some(itch_location.to_string())
                     };
-                } else if !itch_location.is_empty() && ui
+                } else if !itch_location.is_empty()
+                    && ui
                         .button("Reset")
                         .on_hover_text("Reset the itch path, let BoilR guess again")
-                        .clicked() {
+                        .clicked()
+                {
                     self.settings.location = None;
                 }
             });
@@ -145,7 +142,7 @@ impl GamesPlatform for ItchPlatform{
             }
         }
     }
-    
+
     fn get_settings_serilizable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }
