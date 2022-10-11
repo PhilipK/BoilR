@@ -13,11 +13,12 @@ use super::heroic::HeroicPlatform;
 use super::itch::ItchPlatform;
 use super::legendary::LegendaryPlatform;
 use super::lutris::LutrisPlatform;
+use super::minigalaxy::MiniGalaxyPlatform;
 use super::origin::OriginPlatform;
 use super::uplay::UplayPlatform;
 use super::GamesPlatform;
 
-const PLATFORM_NAMES: [&str; 11] = [
+const PLATFORM_NAMES: [&str; 12] = [
     "amazon",
     "bottles",
     "epic_games",
@@ -29,6 +30,7 @@ const PLATFORM_NAMES: [&str; 11] = [
     "lutris",
     "origin",
     "uplay",
+    "minigalaxy"
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -51,6 +53,7 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
         "legendary" => load::<LegendaryPlatform>(s),
         "lutris" => load::<LutrisPlatform>(s),
         "origin" => load::<OriginPlatform>(s),
+        "minigalaxy" => load::<MiniGalaxyPlatform>(s),
         _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
 }
