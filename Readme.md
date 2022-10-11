@@ -72,6 +72,7 @@ BoilR can import games from many platforms, but there are limits based
 | [Amazon Games](https://gaming.amazon.com)                                       | Yes     | No                          | No                                                                        |
 | [Flatpaks](https://flathub.org/)                                                | No      | Yes                         | [No](https://github.com/PhilipK/BoilR/issues/184#issuecomment-1192680467) |
 | [Bottles](https://usebottles.com/)                                              | No      | Yes                         | Yes                                                                       |
+| [MiniGalaxy](https://sharkwouter.github.io/minigalaxy/)                         | No      | Yes                         | Yes                                                                       |
 
 ## Getting cover art for your shortcuts
 
