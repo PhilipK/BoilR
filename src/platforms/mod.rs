@@ -11,6 +11,7 @@ mod origin;
 mod platform;
 mod platforms_load;
 mod uplay;
+mod minigalaxy;
 
 pub(crate) use platform::*;
 
