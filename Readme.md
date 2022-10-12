@@ -62,7 +62,7 @@ BoilR can import games from many platforms, but there are limits based
 | [Itch.io](https://itch.io/app) (Windows Games)                                  | Yes     | No                          | No                                                                        |
 | [Itch.io](https://itch.io/app) (Linux Games)                                    | No      | Yes                         | Yes                                                                       |
 | [Origin](https://www.origin.com)                                                | Yes     | Yes, install through proton | Yes, install through proton                                               |
-| [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic)             | No (Use Heroic)                                                           |
+| [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic or MiniGalaxy)             | No (Use Heroic or MiniGalaxy)                                                           |
 | [UPlay](https://ubisoftconnect.com)                                             | Yes     | No                          | No                                                                        |
 | [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                         | Yes (make sure Lutris is shut down first)                                 |
 | [Lutris](https://github.com/lutris/lutris) (Non-Flatpak)                        | No      | Yes                         | Yes                                                                       |
