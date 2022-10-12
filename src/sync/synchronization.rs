@@ -99,13 +99,7 @@ pub fn sync_shortcuts(
         remove_old_shortcuts(&mut shortcut_info);
         remove_shortcuts_with_same_appid(&mut shortcut_info, &all_shortcuts);
 
-        shortcut_info.shortcuts.extend(all_shortcuts.clone());
-
-        fix_shortcut_icons(
-            user,
-            &mut shortcut_info.shortcuts,
-            settings.steam.optimize_for_big_picture,
-        );
+        shortcut_info.shortcuts.extend(all_shortcuts.clone());     
 
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
@@ -163,11 +157,26 @@ fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
         .retain(|shortcut| !shortcut.is_boilr_shortcut());
 }
 
+pub fn fix_all_shortcut_icons (
+    settings: &Settings,
+) -> eyre::Result<()>{
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam).map_err(|e|eyre::format_err!("Could not find steam shortcuts; {e}"))?;
+    for user in userinfo_shortcuts.iter_mut() {
+        let mut shortcut_info = get_shortcuts_for_user(user);
+        let changes = fix_shortcut_icons(user,&mut shortcut_info.shortcuts,settings.steam.optimize_for_big_picture);
+        if changes{
+            save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+        }
+    }
+    Ok(())
+}
+
+
 fn fix_shortcut_icons(
     user: &SteamUsersInfo,
     shortcuts: &mut Vec<ShortcutOwned>,
     big_picture_mode: bool,
-) {
+) -> bool {
     let image_folder = Path::new(&user.steam_user_data_folder)
         .join("config")
         .join("grid");
@@ -177,17 +186,20 @@ fn fix_shortcut_icons(
         ImageType::Icon
     };
 
+    let mut has_changes = false;
     for shortcut in shortcuts {
         let app_id = shortcut.app_id;
         let icon_exsists = Path::new(&shortcut.icon).exists() && !shortcut.icon.is_empty();
         for ext in ["ico", "png", "jpg", "webp"] {
             let path = image_folder.join(image_type.file_name(app_id, ext));
             if !icon_exsists && path.exists() {
-                shortcut.icon = format!("\"{}\"", path.to_string_lossy());
+                shortcut.icon = path.to_string_lossy().to_string();
+                has_changes= true;
                 break;
             }
         }
     }
+    has_changes
 }
 
 fn write_shortcut_collections<S: AsRef<str>>(

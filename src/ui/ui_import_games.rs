@@ -152,7 +152,9 @@ impl MyEguiApp {
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
-                sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames).unwrap();
+                if let Err(e) = sync::fix_all_shortcut_icons(&settings){
+                    eprintln!("Could not fix shortcuts with error {e}");
+                }
 
                 if let Some(sender) = some_sender {
                     let _ = sender.send(SyncProgress::Done);
