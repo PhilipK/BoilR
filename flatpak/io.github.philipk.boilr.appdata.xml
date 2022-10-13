@@ -25,6 +25,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+  <release version="1.7.1" date="2022-10-13">
+      <description>
+        <ul>
+          <li>Find more Epic games installed through Proton</li>
+          <li>Fix icons not being set in Steam</li>
+        </ul>
+      </description>
+  </release>  
   <release version="1.7.0" date="2022-10-11">
       <description>
         <ul>
