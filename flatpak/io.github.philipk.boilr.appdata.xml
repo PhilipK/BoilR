@@ -25,6 +25,13 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+  <release version="1.7.2" date="2022-10-14">
+      <description>
+        <ul>
+          <li>Avoid a crash when loading certain animated WebP images</li>
+        </ul>
+      </description>
+  </release>  
   <release version="1.7.1" date="2022-10-13">
       <description>
         <ul>
