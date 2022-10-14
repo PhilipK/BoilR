@@ -12,6 +12,8 @@ pub mod ui_colors {
 
 pub mod ui_images {
 
+    use std::thread::JoinHandle;
+
     use eframe::IconData;
     use egui::{ColorImage, ImageData};
 
@@ -43,19 +45,24 @@ pub mod ui_images {
         }
     }
 
-    pub fn load_image_from_path(
-        path: &std::path::Path,
-    ) -> Result<egui::ColorImage, image::ImageError> {
-        let image = image::io::Reader::open(path)?
-            .with_guessed_format()?
-            .decode()?;
-        let size = [image.width() as _, image.height() as _];
-        let image_buffer = image.to_rgba8();
-        let pixels = image_buffer.as_flat_samples();
-        Ok(egui::ColorImage::from_rgba_unmultiplied(
-            size,
-            pixels.as_slice(),
-        ))
+    pub fn load_image_from_path(path: &std::path::Path) -> eyre::Result<egui::ColorImage> {
+        let path_owned = path.to_owned();
+        let handle: JoinHandle<eyre::Result<egui::ColorImage>> = std::thread::spawn(move || {
+            let image = image::io::Reader::open(&path_owned)?
+                .with_guessed_format()?
+                .decode()?;
+            let size = [image.width() as _, image.height() as _];
+            let image_buffer = image.to_rgba8();
+            let pixels = image_buffer.as_flat_samples();
+            Ok(egui::ColorImage::from_rgba_unmultiplied(
+                size,
+                pixels.as_slice(),
+            ))
+        });
+        match handle.join() {
+            Ok(thread_result) => thread_result,
+            Err(_e) => Err(eyre::format_err!("Failed to load image at {:?} ", path)),
+        }
     }
 
     pub fn load_image_from_memory(image_data: &[u8]) -> Result<ColorImage, image::ImageError> {
