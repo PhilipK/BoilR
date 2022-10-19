@@ -14,6 +14,7 @@ build-options:
 
 command: boilr
 finish-args:
+  - --filesystem=~/.config/legendary:rw # Legendary
   - --filesystem=xdg-data/Steam:rw
   - --filesystem=~/.steam:rw # Steam (Non-flatpak)
   - --filesystem=~/.var/app/com.valvesoftware.Steam:rw # Steam (Flatpak)
