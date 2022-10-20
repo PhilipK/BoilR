@@ -10,7 +10,7 @@ use crate::{
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
 };
 use dashmap::DashMap;
-use egui::{ImageButton, ScrollArea};
+use egui::{Button, ImageButton, ScrollArea};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::images::MimeTypes;
@@ -188,37 +188,78 @@ impl MyEguiApp {
     fn render_shortcut_select(&self, ui: &mut egui::Ui) -> Option<UserAction> {
         let shortcuts = &self.image_selected_state.user_shortcuts;
 
+        let width = ui.available_size().x;
+        let column_width = 100.;
+        let column_padding = 23. ;
+        let columns = (width / (column_width + column_padding)).floor() as u32;
+        let mut cur_column = 0;
         match shortcuts {
             Some(shortcuts) => {
                 let user_info = &self.image_selected_state.steam_user.as_ref().unwrap();
-                for shortcut in shortcuts {
-                    let (_, key) = shortcut.key(
-                        &ImageType::Grid,
-                        Path::new(&user_info.steam_user_data_folder),
-                    );
-                    let texture = self.image_selected_state.image_handles.get(&key);
-                    let mut clicked = false;
-                    if let Some(texture) = texture {
-                        if let TextureState::Loaded(texture) = &texture.value() {
-                            let mut size = texture.size_vec2();
-                            clamp_to_width(&mut size, 100.);
-                            let image_button = ImageButton::new(texture, size);
-                            clicked = clicked || ui.add(image_button).clicked();
+                if let Some(action) = egui::Grid::new("ui_images")
+                    .show(ui, |ui| {
+                        for shortcut in shortcuts {
+                            let action = self.render_image(shortcut, user_info, column_width, ui);
+                            if action.is_some() {
+                                return action;
+                            }
+                            cur_column += 1;
+                            if cur_column >= columns {
+                                cur_column = 0;
+                                ui.end_row();
+                            }
                         }
-                    }
-
-                    let button = ui.button(&shortcut.app_name);
-                    clicked = clicked || button.clicked();
-                    if clicked {
-                        return Some(UserAction::ShortcutSelected(GameType::Shortcut(
-                            shortcut.clone(),
-                        )));
-                    }
+                        ui.end_row();
+                        None
+                    })
+                    .inner
+                {
+                    return action;
                 }
             }
             None => {
                 ui.label("Could not find any shortcuts");
             }
+        }
+        None
+    }
+
+    fn render_image(
+        &self,
+        shortcut: &ShortcutOwned,
+        user_info: &&SteamUsersInfo,
+        column_width: f32,
+        ui: &mut egui::Ui,
+    ) -> Option<Option<UserAction>> {
+        let (_, key) = shortcut.key(
+            &ImageType::Grid,
+            Path::new(&user_info.steam_user_data_folder),
+        );
+        let mut clicked = false;
+
+        let texture = self.image_selected_state.image_handles.get(&key);
+        if let Some(texture) = texture {
+            if let TextureState::Loaded(texture) = &texture.value() {
+                let mut size = texture.size_vec2();
+                clamp_to_width(&mut size, column_width);
+                let image_button = ImageButton::new(texture, size);
+                clicked = ui
+                    .add(image_button)
+                    .on_hover_text(&shortcut.app_name)
+                    .clicked();
+            }
+        } else {
+            let button = ui.add_sized(
+                [column_width, column_width * 1.6],
+                Button::new(&shortcut.app_name).wrap(true),
+            );
+            clicked = clicked || button.clicked();
+        }
+
+        if clicked {
+            return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
+                shortcut.clone(),
+            ))));
         }
         None
     }
