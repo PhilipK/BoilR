@@ -190,7 +190,7 @@ impl MyEguiApp {
 
         let width = ui.available_size().x;
         let column_width = 100.;
-        let column_padding = 23. ;
+        let column_padding = 23.;
         let columns = (width / (column_width + column_padding)).floor() as u32;
         let mut cur_column = 0;
         match shortcuts {
@@ -773,19 +773,39 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
 
     let shortcut = state.selected_shortcut.as_ref().unwrap();
     let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
-    for image_type in ImageType::all() {
-        ui.label(image_type.name());
-        let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
-        let texture = state.image_handles.get(&key).and_then(|k| match k.value() {
-            TextureState::Loaded(texture) => Some(texture.clone()),
-            _ => None,
-        });
-        let clicked = render_thumbnail(ui, texture);
-        if clicked {
-            return Some(UserAction::ImageTypeSelected(*image_type));
-        }
-    }
-    None
+
+    let types = [
+        ImageType::Grid,
+        ImageType::Hero,
+        ImageType::WideGrid,
+        ImageType::Logo,
+        ImageType::BigPicture,
+        ImageType::Icon,
+    ];
+
+    egui::Grid::new("selected_shortcut_images")
+        .show(ui, |ui| {            
+            for image_type in &types {
+                
+                let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
+                let texture = state.image_handles.get(&key).and_then(|k| match k.value() {
+                    TextureState::Loaded(texture) => Some(texture.clone()),
+                    _ => None,
+                });
+                let response = ui.vertical(|ui|{
+                    // ui.label(image_type.name());
+                    render_thumbnail(ui, texture)
+                }).inner;    
+                if ui.available_size().x < MAX_WIDTH {                    
+                    ui.end_row();
+                }
+                if response.clicked() {
+                    return Some(UserAction::ImageTypeSelected(*image_type));
+                }
+            }
+            None
+        })
+        .inner
 }
 
 fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction {
@@ -801,17 +821,17 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction
     UserAction::NoAction
 }
 
-const MAX_WIDTH: f32 = 300.;
+const MAX_WIDTH: f32 = 100.;
 
-fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>) -> bool {
+fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>) -> egui::Response {
     if let Some(texture) = image {
         let mut size = texture.size_vec2();
         clamp_to_width(&mut size, MAX_WIDTH);
         let image_button = ImageButton::new(&texture, size);
         let added = ui.add(image_button);
-        added.on_hover_text("Click to change image").clicked()
+        added.on_hover_text("Click to change image")
     } else {
-        ui.button("Pick an image").clicked()
+        ui.button("Pick an image")
     }
 }
 
