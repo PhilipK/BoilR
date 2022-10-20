@@ -69,16 +69,16 @@ winreg = "^0.10.1"
 # This feature is enabled when building for a flatpak environment
 flatpak = []
 
-# [profile.release]
-# strip = true  # Automatically strip symbols from the binary.
-# opt-level = "z"  # Optimize for size.
-# lto = true
-# codegen-units = 1
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z"  # Optimize for size.
+lto = true
+codegen-units = 1
 
-# # Enable a small amount of optimization in debug mode
-# [profile.dev]
-# opt-level = 1
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
 
-# # # Enable high optimizations for dependencies but not for BoilR code:
-# # [profile.dev.package."*"]
-# # opt-level = 3
+# # Enable high optimizations for dependencies but not for BoilR code:
+[profile.dev.package."*"]
+opt-level = 3
