@@ -10,7 +10,7 @@ use crate::{
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
 };
 use dashmap::DashMap;
-use egui::{ImageButton, ScrollArea};
+use egui::{Button, ImageButton, ScrollArea};
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use steamgriddb_api::images::MimeTypes;
@@ -188,37 +188,78 @@ impl MyEguiApp {
     fn render_shortcut_select(&self, ui: &mut egui::Ui) -> Option<UserAction> {
         let shortcuts = &self.image_selected_state.user_shortcuts;
 
+        let width = ui.available_size().x;
+        let column_width = 100.;
+        let column_padding = 23.;
+        let columns = (width / (column_width + column_padding)).floor() as u32;
+        let mut cur_column = 0;
         match shortcuts {
             Some(shortcuts) => {
                 let user_info = &self.image_selected_state.steam_user.as_ref().unwrap();
-                for shortcut in shortcuts {
-                    let (_, key) = shortcut.key(
-                        &ImageType::Grid,
-                        Path::new(&user_info.steam_user_data_folder),
-                    );
-                    let texture = self.image_selected_state.image_handles.get(&key);
-                    let mut clicked = false;
-                    if let Some(texture) = texture {
-                        if let TextureState::Loaded(texture) = &texture.value() {
-                            let mut size = texture.size_vec2();
-                            clamp_to_width(&mut size, 100.);
-                            let image_button = ImageButton::new(texture, size);
-                            clicked = clicked || ui.add(image_button).clicked();
+                if let Some(action) = egui::Grid::new("ui_images")
+                    .show(ui, |ui| {
+                        for shortcut in shortcuts {
+                            let action = self.render_image(shortcut, user_info, column_width, ui);
+                            if action.is_some() {
+                                return action;
+                            }
+                            cur_column += 1;
+                            if cur_column >= columns {
+                                cur_column = 0;
+                                ui.end_row();
+                            }
                         }
-                    }
-
-                    let button = ui.button(&shortcut.app_name);
-                    clicked = clicked || button.clicked();
-                    if clicked {
-                        return Some(UserAction::ShortcutSelected(GameType::Shortcut(
-                            shortcut.clone(),
-                        )));
-                    }
+                        ui.end_row();
+                        None
+                    })
+                    .inner
+                {
+                    return action;
                 }
             }
             None => {
                 ui.label("Could not find any shortcuts");
             }
+        }
+        None
+    }
+
+    fn render_image(
+        &self,
+        shortcut: &ShortcutOwned,
+        user_info: &&SteamUsersInfo,
+        column_width: f32,
+        ui: &mut egui::Ui,
+    ) -> Option<Option<UserAction>> {
+        let (_, key) = shortcut.key(
+            &ImageType::Grid,
+            Path::new(&user_info.steam_user_data_folder),
+        );
+        let mut clicked = false;
+
+        let texture = self.image_selected_state.image_handles.get(&key);
+        if let Some(texture) = texture {
+            if let TextureState::Loaded(texture) = &texture.value() {
+                let mut size = texture.size_vec2();
+                clamp_to_width(&mut size, column_width);
+                let image_button = ImageButton::new(texture, size);
+                clicked = ui
+                    .add(image_button)
+                    .on_hover_text(&shortcut.app_name)
+                    .clicked();
+            }
+        } else {
+            let button = ui.add_sized(
+                [column_width, column_width * 1.6],
+                Button::new(&shortcut.app_name).wrap(true),
+            );
+            clicked = clicked || button.clicked();
+        }
+
+        if clicked {
+            return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
+                shortcut.clone(),
+            ))));
         }
         None
     }
@@ -732,19 +773,92 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
 
     let shortcut = state.selected_shortcut.as_ref().unwrap();
     let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
-    for image_type in ImageType::all() {
-        ui.label(image_type.name());
-        let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
-        let texture = state.image_handles.get(&key).and_then(|k| match k.value() {
-            TextureState::Loaded(texture) => Some(texture.clone()),
-            _ => None,
-        });
-        let clicked = render_thumbnail(ui, texture);
-        if clicked {
+
+    if ui.available_width() > MAX_WIDTH * 3. {
+        ui.horizontal(|ui| {
+            let x = ui.vertical(|ui| {
+                let texture = texture_from_iamge_type(shortcut, &ImageType::Grid, user_path, state);
+                ui.label(ImageType::Grid.name());
+                if render_thumbnail(ui, texture).clicked(){
+                    return Some(UserAction::ImageTypeSelected(ImageType::Grid));
+                }
+                None
+            }).inner;
+            if x.is_some(){
+                return x;
+            }
+            let x = ui.vertical(|ui| {
+                let texture = texture_from_iamge_type(shortcut, &ImageType::Hero, user_path, state);
+                ui.label(ImageType::Hero.name());
+                if render_thumbnail(ui, texture).clicked(){
+                    return Some(UserAction::ImageTypeSelected(ImageType::Hero));
+                }
+                let texture =
+                    texture_from_iamge_type(shortcut, &ImageType::WideGrid, user_path, state);
+                ui.label(ImageType::WideGrid.name());
+                if render_thumbnail(ui, texture).clicked(){
+                    return Some(UserAction::ImageTypeSelected(ImageType::WideGrid));
+                }
+
+                let texture = texture_from_iamge_type(shortcut, &ImageType::Logo, user_path, state);
+                ui.label(ImageType::Logo.name());
+                if render_thumbnail(ui, texture).clicked(){
+                    return Some(UserAction::ImageTypeSelected(ImageType::Logo));
+                }
+                None
+            }).inner;
+            if x.is_some(){
+                return x;
+            }
+            ui.vertical(|ui| {
+                let texture = texture_from_iamge_type(shortcut, &ImageType::Icon, user_path, state);
+                ui.label(ImageType::Icon.name());
+                if render_thumbnail(ui, texture).clicked(){
+                    return Some(UserAction::ImageTypeSelected(ImageType::Icon));
+                }
+
+                let texture =
+                    texture_from_iamge_type(shortcut, &ImageType::BigPicture, user_path, state);
+                ui.label(ImageType::BigPicture.name());
+                if render_thumbnail(ui, texture).clicked(){
+                    return Some(UserAction::ImageTypeSelected(ImageType::BigPicture));
+                }
+                None
+            }).inner
+        }).inner
+    } else {
+        render_image_types_as_list(shortcut, user_path, state, ui)
+    }        
+}
+
+fn render_image_types_as_list(shortcut: &GameType, user_path: &String, state: &ImageSelectState, ui: &mut egui::Ui) -> Option<UserAction> {
+    let types = ImageType::all();
+    for image_type in types {
+        let texture = texture_from_iamge_type(shortcut, image_type, user_path, state);
+        let response = ui
+            .vertical(|ui| {
+                ui.label(image_type.name());
+                render_thumbnail(ui, texture)
+            })
+            .inner;
+        if response.clicked() {
             return Some(UserAction::ImageTypeSelected(*image_type));
         }
     }
     None
+}
+
+fn texture_from_iamge_type(
+    shortcut: &GameType,
+    image_type: &ImageType,
+    user_path: &String,
+    state: &ImageSelectState,
+) -> Option<egui::TextureHandle> {
+    let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
+    state.image_handles.get(&key).and_then(|k| match k.value() {
+        TextureState::Loaded(texture) => Some(texture.clone()),
+        _ => None,
+    })
 }
 
 fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction {
@@ -762,15 +876,14 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> UserAction
 
 const MAX_WIDTH: f32 = 300.;
 
-fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>) -> bool {
+fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>) -> egui::Response {
     if let Some(texture) = image {
         let mut size = texture.size_vec2();
         clamp_to_width(&mut size, MAX_WIDTH);
         let image_button = ImageButton::new(&texture, size);
-        let added = ui.add(image_button);
-        added.on_hover_text("Click to change image").clicked()
+        ui.add(image_button)
     } else {
-        ui.button("Pick an image").clicked()
+        ui.button("Pick an image")
     }
 }
 

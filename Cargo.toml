@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.7.2"
+version = "1.7.3"
 
 [dependencies]
 base64 = "^0.13.0"
@@ -13,13 +13,16 @@ is_executable = "^1.0.1"
 nom = "^7.1.1"
 rusty-leveldb = "^1.0.4"
 serde_json = "^1.0.83"
-sqlite = "^0.27.0"
+
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
 sysinfo = "^0.26.4"
 eyre = "^0.6.8"
 color-eyre = "^0.6"
 dyn-clone = "^1.0.9"
+
+[dependencies.sqlite]
+version = "^0.27.0"
 
 [dependencies.dashmap]
 features = ["serde"]
@@ -66,8 +69,16 @@ winreg = "^0.10.1"
 # This feature is enabled when building for a flatpak environment
 flatpak = []
 
-[profile.release]
-strip = true  # Automatically strip symbols from the binary.
-opt-level = "z"  # Optimize for size.
-lto = true
-codegen-units = 1
+# [profile.release]
+# strip = true  # Automatically strip symbols from the binary.
+# opt-level = "z"  # Optimize for size.
+# lto = true
+# codegen-units = 1
+
+# # Enable a small amount of optimization in debug mode
+# [profile.dev]
+# opt-level = 1
+
+# # # Enable high optimizations for dependencies but not for BoilR code:
+# # [profile.dev.package."*"]
+# # opt-level = 3
