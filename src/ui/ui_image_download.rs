@@ -133,8 +133,6 @@ enum UserAction {
 impl MyEguiApp {
     fn render_ui_image_action(&self, ui: &mut egui::Ui) -> UserAction {
         let state = &self.image_selected_state;
-        ui.heading("Images");
-
         if let Some(action) = ui
             .horizontal(|ui| {
                 let render_back =
@@ -144,7 +142,7 @@ impl MyEguiApp {
                         return Some(UserAction::BackButton);
                     }
                     None
-                }else{
+                } else {
                     if let Some(value) = render_user_select(state, ui) {
                         return Some(value);
                     }
@@ -784,17 +782,9 @@ fn render_steam_game_select(ui: &mut egui::Ui, state: &ImageSelectState) -> Opti
 }
 
 fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option<UserAction> {
-    if ui
-        .button("Click here if the images are for a wrong game")
-        .clicked()
-    {
-        return Some(UserAction::CorrectGridId);
-    }
-
     let shortcut = state.selected_shortcut.as_ref().unwrap();
     let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
-
-    if ui.available_width() > MAX_WIDTH * 3. {
+    let x = if ui.available_width() > MAX_WIDTH * 3. {
         ui.horizontal(|ui| {
             let x = ui
                 .vertical(|ui| {
@@ -857,7 +847,15 @@ fn render_shortcut_images(ui: &mut egui::Ui, state: &ImageSelectState) -> Option
         .inner
     } else {
         render_image_types_as_list(shortcut, user_path, state, ui)
+    };
+
+    if ui
+        .button("Click here if the images are for a wrong game")
+        .clicked()
+    {
+        return Some(UserAction::CorrectGridId);
     }
+    x
 }
 
 fn render_image_types_as_list(
@@ -908,7 +906,7 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<Use
         if let Some(steam_users) = &state.steam_users {
             if steam_users.len() > 0 {
                 let combo_box = egui::ComboBox::new("ImageUserSelect", "")
-                    .selected_text(format!("Steam user id: {}",&selected_user.user_id));
+                    .selected_text(format!("Steam user id: {}", &selected_user.user_id));
                 combo_box.show_ui(ui, |ui| {
                     for user in steam_users {
                         ui.selectable_value(&mut selected_user, user.clone(), &user.user_id);
