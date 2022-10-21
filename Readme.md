@@ -3,6 +3,7 @@
 BoilR automatically adds (almost) all your games to your Steam library (including image art).
 
 ![BoilR Screenshot](screenshot_1.png)
+![BoilR Images Screenshot](screenshot_2.png)
 
 It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
 The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
