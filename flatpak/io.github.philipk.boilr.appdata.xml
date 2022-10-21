@@ -25,6 +25,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+  <release version="1.7.3" date="2022-10-21">
+      <description>
+        <ul>
+          <li>Improve UI for image selection</li>
+          <li>Add read access to legendary folder</li>
+        </ul>
+      </description>
+  </release>  
   <release version="1.7.2" date="2022-10-14">
       <description>
         <ul>
