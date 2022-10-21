@@ -20,7 +20,7 @@ impl Default for LutrisSettings {
             enabled,
             executable: "lutris".to_string(),
             flatpak: true,
-            flatpak_image: "net.lutris.Lutris//beta".to_string(),
+            flatpak_image: "net.lutris.Lutris".to_string(),
         }
     }
 }
