@@ -8,6 +8,7 @@ use crate::{
     steam::{get_installed_games, SteamGameInfo},
     steam::{get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
+    sync::{download_images, SyncProgress},
 };
 use dashmap::DashMap;
 use egui::{Button, Grid, ImageButton, ScrollArea};
@@ -128,6 +129,8 @@ enum UserAction {
     BackButton,
     NoAction,
     ClearImages,
+    DownloadAllImages,
+    RefreshImages,
 }
 
 impl MyEguiApp {
@@ -178,6 +181,29 @@ impl MyEguiApp {
                 return action;
             }
         }
+
+        match *self.status_reciever.borrow() {
+            crate::sync::SyncProgress::FindingImages => {
+                ui.spinner();
+                ui.label("Finding images to download");
+                ui.ctx().request_repaint();
+            }
+            crate::sync::SyncProgress::DownloadingImages { to_download } => {
+                ui.spinner();
+                ui.label(format!("Downloading {to_download} images"));
+                ui.ctx().request_repaint();
+            }
+            crate::sync::SyncProgress::Done => {
+                ui.ctx().request_repaint();
+                return UserAction::RefreshImages;
+            }
+            _ => {
+                if ui.button("Download images for all games").clicked() {
+                    return UserAction::DownloadAllImages;
+                }
+            }
+        }
+
         UserAction::NoAction
     }
 
@@ -298,95 +324,103 @@ impl MyEguiApp {
         let mut column = 0;
         match &*state.image_options.borrow() {
             FetcStatus::Fetched(images) => {
-                let x =  Grid::new("ImageThumbnailSelectGrid").spacing([column_padding,column_padding]).show(ui, |ui| {
-                    for image in images {
-                       
-                        let image_key =
-                            image.thumbnail_path.as_path().to_string_lossy().to_string();
+                let x = Grid::new("ImageThumbnailSelectGrid")
+                    .spacing([column_padding, column_padding])
+                    .show(ui, |ui| {
+                        for image in images {
+                            let image_key =
+                                image.thumbnail_path.as_path().to_string_lossy().to_string();
 
-                        match state.image_handles.get_mut(&image_key) {
-                            Some(mut state) => {
-                                match state.value() {
-                                    TextureState::Downloading => {
-                                        ui.ctx().request_repaint();
-                                        //nothing to do,just wait
-                                        ui.spinner();
-                                    }
-                                    TextureState::Downloaded => {
-                                        //Need to load
-                                        let image_data =
-                                            load_image_from_path(&image.thumbnail_path);
-                                        match image_data {
-                                            Ok(image_data) => {
-                                                let handle = ui.ctx().load_texture(
-                                                    &image_key,
-                                                    image_data,
-                                                    egui::TextureFilter::Linear,
-                                                );
-                                                *state.value_mut() = TextureState::Loaded(handle);
-                                                ui.spinner();
+                            match state.image_handles.get_mut(&image_key) {
+                                Some(mut state) => {
+                                    match state.value() {
+                                        TextureState::Downloading => {
+                                            ui.ctx().request_repaint();
+                                            //nothing to do,just wait
+                                            ui.spinner();
+                                        }
+                                        TextureState::Downloaded => {
+                                            //Need to load
+                                            let image_data =
+                                                load_image_from_path(&image.thumbnail_path);
+                                            match image_data {
+                                                Ok(image_data) => {
+                                                    let handle = ui.ctx().load_texture(
+                                                        &image_key,
+                                                        image_data,
+                                                        egui::TextureFilter::Linear,
+                                                    );
+                                                    *state.value_mut() =
+                                                        TextureState::Loaded(handle);
+                                                    ui.spinner();
+                                                }
+                                                Err(_) => *state.value_mut() = TextureState::Failed,
                                             }
-                                            Err(_) => *state.value_mut() = TextureState::Failed,
+                                            ui.ctx().request_repaint();
                                         }
-                                        ui.ctx().request_repaint();
-                                    }
-                                    TextureState::Loaded(texture_handle) => {
-                                        //need to show
-                                        let mut size = texture_handle.size_vec2();
-                                        clamp_to_width(&mut size, column_width);
-                                        let image_button = ImageButton::new(texture_handle, size);
-                                        if ui.add_sized(size,image_button).clicked() {
-                                            return Some(UserAction::ImageSelected(image.clone()));
+                                        TextureState::Loaded(texture_handle) => {
+                                            //need to show
+                                            let mut size = texture_handle.size_vec2();
+                                            clamp_to_width(&mut size, column_width);
+                                            let image_button =
+                                                ImageButton::new(texture_handle, size);
+                                            if ui.add_sized(size, image_button).clicked() {
+                                                return Some(UserAction::ImageSelected(
+                                                    image.clone(),
+                                                ));
+                                            }
+                                        }
+                                        TextureState::Failed => {
+                                            ui.label("Failed to load image");
                                         }
                                     }
-                                    TextureState::Failed => {
-                                        ui.label("Failed to load image");
+                                }
+                                None => {
+                                    //We need to start a download
+                                    let image_handles = &self.image_selected_state.image_handles;
+                                    let path = &image.thumbnail_path;
+                                    //Redownload if file is too small
+                                    if !path.exists()
+                                        || std::fs::metadata(path)
+                                            .map(|m| m.len())
+                                            .unwrap_or_default()
+                                            < 2
+                                    {
+                                        image_handles
+                                            .insert(image_key.clone(), TextureState::Downloading);
+                                        let to_download = ToDownload {
+                                            path: path.clone(),
+                                            url: image.thumbnail_url.clone(),
+                                            app_name: "Thumbnail".to_string(),
+                                            image_type: *image_type,
+                                        };
+                                        let image_handles = image_handles.clone();
+                                        let image_key = image_key.clone();
+                                        self.rt.spawn_blocking(move || {
+                                            block_on(crate::steamgriddb::download_to_download(
+                                                &to_download,
+                                            ))
+                                            .unwrap();
+                                            image_handles
+                                                .insert(image_key, TextureState::Downloaded);
+                                        });
+                                    } else {
+                                        image_handles
+                                            .insert(image_key.clone(), TextureState::Downloaded);
                                     }
                                 }
                             }
-                            None => {
-                                //We need to start a download
-                                let image_handles = &self.image_selected_state.image_handles;
-                                let path = &image.thumbnail_path;
-                                //Redownload if file is too small
-                                if !path.exists()
-                                    || std::fs::metadata(path).map(|m| m.len()).unwrap_or_default()
-                                        < 2
-                                {
-                                    image_handles
-                                        .insert(image_key.clone(), TextureState::Downloading);
-                                    let to_download = ToDownload {
-                                        path: path.clone(),
-                                        url: image.thumbnail_url.clone(),
-                                        app_name: "Thumbnail".to_string(),
-                                        image_type: *image_type,
-                                    };
-                                    let image_handles = image_handles.clone();
-                                    let image_key = image_key.clone();
-                                    self.rt.spawn_blocking(move || {
-                                        block_on(crate::steamgriddb::download_to_download(
-                                            &to_download,
-                                        ))
-                                        .unwrap();
-                                        image_handles.insert(image_key, TextureState::Downloaded);
-                                    });
-                                } else {
-                                    image_handles
-                                        .insert(image_key.clone(), TextureState::Downloaded);
-                                }
+                            column += 1;
+                            if column >= columns {
+                                column = 0;
+                                ui.end_row();
                             }
                         }
-                        column += 1;
-                        if column >= columns{
-                            column=0;
-                            ui.end_row();
-                        }
-                        
-                    }
-                  
-                    None
-                }).inner;
-                if x.is_some(){
+
+                        None
+                    })
+                    .inner;
+                if x.is_some() {
                     return x;
                 }
             }
@@ -475,6 +509,29 @@ impl MyEguiApp {
                 }
                 self.handle_back_button_action();
             }
+            UserAction::DownloadAllImages => {
+                if let Some(users) = &self.image_selected_state.steam_users {
+                    let (sender, reciever) = watch::channel(SyncProgress::FindingImages);
+                    self.status_reciever = reciever;
+                    let mut sender_op = Some(sender);
+                    let settings = self.settings.clone();
+                    let users = users.clone();                                                         
+                    self.rt.spawn_blocking(move || {
+                        let task = download_images(&settings, &users, &mut sender_op);
+                        block_on(task);
+                        let _ = sender_op.unwrap().send(SyncProgress::Done);
+                    });
+                        
+                }
+            }
+            UserAction::RefreshImages => {
+                let (_, reciever) = watch::channel(SyncProgress::NotStarted);            
+                let user = self.image_selected_state.steam_user.clone();
+                if let Some(user) = &user{
+                    load_image_grids(user,&mut self.image_selected_state,ui);
+                }
+                self.status_reciever = reciever;                
+            },
         };
     }
 
@@ -544,30 +601,7 @@ impl MyEguiApp {
 
     fn handle_user_selected(&mut self, user: SteamUsersInfo, ui: &mut egui::Ui) {
         let state = &mut self.image_selected_state;
-        let user_info = crate::steam::get_shortcuts_for_user(&user);
-        let mut user_folder = user_info.path.clone();
-        user_folder.pop();
-        user_folder.pop();
-        let mut shortcuts = user_info.shortcuts;
-        shortcuts.sort_by_key(|s| s.app_name.clone());
-
-        let image_type = &ImageType::Grid;
-        for shortcut in &shortcuts {
-            let (path, key) = shortcut.key(image_type, &user_folder);
-            let loaded = state.image_handles.contains_key(&key);
-            if !loaded && path.exists() {
-                let image = load_image_from_path(&path);
-                if let Ok(image) = image {
-                    let texture = ui
-                        .ctx()
-                        .load_texture(&key, image, egui::TextureFilter::Linear);
-                    state
-                        .image_handles
-                        .insert(key, TextureState::Loaded(texture));
-                }
-            }
-        }
-
+        let shortcuts = load_image_grids(&user, state, ui);
         state.user_shortcuts = Some(shortcuts);
         state.steam_user = Some(user);
     }
@@ -739,6 +773,32 @@ impl MyEguiApp {
             state.steam_user = None;
         }
     }
+}
+
+fn load_image_grids(user: &SteamUsersInfo, state: &mut ImageSelectState, ui: &mut egui::Ui) -> Vec<ShortcutOwned> {
+    let user_info = crate::steam::get_shortcuts_for_user(user);
+    let mut user_folder = user_info.path.clone();
+    user_folder.pop();
+    user_folder.pop();
+    let mut shortcuts = user_info.shortcuts;
+    shortcuts.sort_by_key(|s| s.app_name.clone());
+    let image_type = &ImageType::Grid;
+    for shortcut in &shortcuts {
+        let (path, key) = shortcut.key(image_type, &user_folder);
+        let loaded = state.image_handles.contains_key(&key);
+        if !loaded && path.exists() {
+            let image = load_image_from_path(&path);
+            if let Ok(image) = image {
+                let texture = ui
+                    .ctx()
+                    .load_texture(&key, image, egui::TextureFilter::Linear);
+                state
+                    .image_handles
+                    .insert(key, TextureState::Loaded(texture));
+            }
+        }
+    }
+    shortcuts
 }
 
 fn render_shortcut_mode_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<UserAction> {
