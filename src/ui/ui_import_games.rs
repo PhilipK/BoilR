@@ -130,8 +130,6 @@ impl MyEguiApp {
             crate::steam::ensure_steam_stopped();
         }
 
-        //TODO This might break cli sync, test it
-
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
         let all_ready = all_ready(&self.games_to_sync);
