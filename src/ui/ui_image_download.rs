@@ -198,7 +198,7 @@ impl MyEguiApp {
                 return UserAction::RefreshImages;
             }
             _ => {
-                if ui.button("Sync all images").clicked() {
+                if ui.button("Download images for all games").clicked() {
                     return UserAction::DownloadAllImages;
                 }
             }
