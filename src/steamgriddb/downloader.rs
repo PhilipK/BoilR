@@ -204,7 +204,7 @@ async fn search_for_images_to_download(
 
         for image_ids in image_ids.chunks(99) {
             let image_search_result =
-                get_images_for_ids(client, image_ids, &image_type, download_animated).await;
+                get_images_for_ids(client, image_ids, &image_type, download_animated, settings.steamgrid_db.allow_nsfw).await;
             match image_search_result {
                 Ok(images) => {
                     let images = images
@@ -261,9 +261,10 @@ async fn get_images_for_ids(
     image_ids: &[usize],
     image_type: &ImageType,
     download_animated: bool,
+    allow_nsfw: bool,
 ) -> Result<Vec<steamgriddb_api::response::SteamGridDbResult<steamgriddb_api::images::Image>>, String>
 {
-    let query_type = get_query_type(download_animated, image_type);
+    let query_type = get_query_type(download_animated, image_type, allow_nsfw);
 
     let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
 
@@ -275,6 +276,7 @@ const BIG_PICTURE_DIMS: [GridDimentions; 2] = [GridDimentions::D920x430, GridDim
 pub fn get_query_type(
     download_animated: bool,
     image_type: &ImageType,
+    allow_nsfw: bool,
 ) -> steamgriddb_api::QueryType {
     let anymation_type = if download_animated {
         Some(&[steamgriddb_api::query_parameters::AnimtionType::Animated][..])
@@ -282,33 +284,37 @@ pub fn get_query_type(
         None
     };
     use steamgriddb_api::query_parameters::GridQueryParameters;
+    let allow_nsfw_enum = match allow_nsfw {
+        true => Some(&Nsfw::Any),
+        false => Some(&Nsfw::False),
+    };
     let big_picture_parameters = GridQueryParameters {
         dimentions: Some(&BIG_PICTURE_DIMS),
         types: anymation_type,
-        nsfw: Some(&Nsfw::False),
+        nsfw: allow_nsfw_enum,
         ..Default::default()
     };
     use steamgriddb_api::query_parameters::HeroQueryParameters;
     let hero_parameters = HeroQueryParameters {
         types: anymation_type,
-        nsfw: Some(&Nsfw::False),
+        nsfw: allow_nsfw_enum,
         ..Default::default()
     };
     let grid_parameters = GridQueryParameters {
         types: anymation_type,
-        nsfw: Some(&Nsfw::False),
+        nsfw: allow_nsfw_enum,
         ..Default::default()
     };
     use steamgriddb_api::query_parameters::LogoQueryParameters;
     let logo_parameters = LogoQueryParameters {
         types: anymation_type,
-        nsfw: Some(&Nsfw::False),
+        nsfw: allow_nsfw_enum,
         ..Default::default()
     };
 
     use steamgriddb_api::query_parameters::IconQueryParameters;
     let icon_parameters = IconQueryParameters {
-        nsfw: Some(&Nsfw::False),
+        nsfw: allow_nsfw_enum,
         ..Default::default()
     };
     let query_type = match image_type {
