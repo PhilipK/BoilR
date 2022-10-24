@@ -619,7 +619,7 @@ impl MyEguiApp {
                 self.rt.spawn_blocking(move || {
                     let thumbnails_folder = get_thumbnails_folder();
                     let client = steamgriddb_api::Client::new(auth_key);
-                    let query = get_query_type(false, &image_type);
+                    let query = get_query_type(false, &image_type, settings.steamgrid_db.allow_nsfw);
                     let search_res = block_on(client.get_images_for_id(grid_id, &query));
                     if let Ok(possible_images) = search_res {
                         let mut result = vec![];

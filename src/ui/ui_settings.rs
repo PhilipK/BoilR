@@ -117,6 +117,7 @@ impl MyEguiApp {
                 &mut self.settings.steamgrid_db.only_download_boilr_images,
                 "Only download images for BoilR shortcuts",
             );
+            ui.checkbox(&mut self.settings.steamgrid_db.allow_nsfw, "Allow NSFW images");
         }
         ui.add_space(SECTION_SPACING);
     }
