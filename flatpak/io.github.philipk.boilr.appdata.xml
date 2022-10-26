@@ -25,6 +25,15 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.7.5" date="2022-10-26">
+      <description>
+        <ul>
+          <li>Add a setting to allow nsfw images</li>
+          <li>Add a button that downloads all images only</li>
+          <li>Improve text</li>
+        </ul>
+      </description>
+    </release>  
    <release version="1.7.4" date="2022-10-21">
       <description>
         <ul>
