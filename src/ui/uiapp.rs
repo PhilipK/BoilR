@@ -241,6 +241,7 @@ impl App for MyEguiApp {
                             .clicked()
                         && !syncing
                     {
+                        save_settings(&self.settings, &self.platforms);
                         self.run_sync(false);
                     }
                 });
