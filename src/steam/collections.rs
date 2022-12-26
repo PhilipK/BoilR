@@ -331,8 +331,12 @@ fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Str
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
     let base64 = base64::encode(name.as_ref());
-    let key = format!("{}-{}", BOILR_TAG, base64);
-    key
+    let base64_no_end = if base64.ends_with("==") {
+        &base64[..base64.len() - 2]
+    } else {
+        &base64
+    };
+    format!("{}-{}", BOILR_TAG, base64_no_end)
 }
 
 fn parse_steam_collections<S: AsRef<str>>(
