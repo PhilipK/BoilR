@@ -32,6 +32,7 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
     - [Configuration](#configuration)
     - [Run as CLI](#run-as-cli)
     - [Rename shortcuts](#rename-shortcuts)
+    - [Try the native version over the flatpak](#try-the-native-version-over-the-flatpak)
   - [Contributions](#contributions)
     - [How can I help/contribute?](#how-can-i-helpcontribute)
     - [I found a bug, what do I do?](#i-found-a-bug-what-do-i-do)
@@ -103,6 +104,11 @@ This saves some CO2 from not having to build 2 versions of BoilR for each platfo
 
 You can rename a shortcut from BoilR by double clicking it from the import list and picking a new name.
 If you want to revert back to the original name, just clear the name and click rename.
+
+### Try the native version over the flatpak
+
+In general, the native (downloaded form the releases page) version of BoilR is the more reliable one.
+If you experience bugs or errors please try the native version and see if that fixes your problem.
 
 ## Contributions 
 
