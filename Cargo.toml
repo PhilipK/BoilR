@@ -1,61 +1,62 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.7.6"
+version = "1.7.8"
 
 [dependencies]
-base64 = "^0.13.0"
-chrono = "^0.4.22"
-config = "^0.13.2"
+base64 = "^0.20.0"
+chrono = "^0.4.23"
+config = "^0.13.3"
 copypasta = "^0.8.1"
-flate2 = "^1.0.24"
+flate2 = "^1.0.25"
 is_executable = "^1.0.1"
 nom = "^7.1.1"
 rusty-leveldb = "^1.0.4"
-serde_json = "^1.0.83"
+serde_json = "^1.0.91"
 
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
-sysinfo = "^0.26.4"
+sysinfo = "^0.27.1"
 eyre = "^0.6.8"
-color-eyre = "^0.6"
-dyn-clone = "^1.0.9"
+color-eyre = "^0.6.2"
+dyn-clone = "^1.0.10"
 
 [dependencies.sqlite]
-version = "^0.27.0"
+version = "^0.30.3"
 
 [dependencies.dashmap]
 features = ["serde"]
-version = "^5.3.4"
+version = "^5.4.0"
 
 [dependencies.eframe]
-version = "^0.19.0"
+version = "^0.20.1"
 
 [dependencies.egui]
-version = "^0.19.0"
+version = "^0.20.1"
 
 [dependencies.futures]
-version = "^0.3.23"
+version = "^0.3.25"
 
 [dependencies.image]
 features = ["png","webp","jpeg"]
-git = "https://github.com/PhilipK/image"
-rev = "55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
+version ="^0.24.5"
+#git = "https://github.com/PhilipK/image"
+#rev = "55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
 
 [dependencies.reqwest]
 default_features = false
-version = "^0.11.11"
+version = "^0.11.13"
 
 [dependencies.serde]
 features = ["derive"]
-version = "^1.0.144"
+version = "^1.0.151"
 
 [dependencies.tokio]
 features = ["full"]
-version = "^1.20.1"
+version = "^1.23.0"
 
 [dependencies.toml]
-version = "^0.5.9"
+version = "^0.5.10"
 
 [target]
 [target."cfg(windows)"]

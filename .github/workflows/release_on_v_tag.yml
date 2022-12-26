@@ -40,17 +40,17 @@ jobs:
             asset_name: windows_BoilR.exe
             args: -9
             strip: false      
-          - os: macos-latest
-            file: target/release/boilr
-            asset_name: macos_x86_64_BoilR
-            args: -9
-            strip: false
-          - os: macos-latest
-            file: target/aarch64-apple-darwin/release/boilr
-            asset_name: macos_darwin_BoilR
-            args: -9
-            strip: false
-            target: aarch64-apple-darwin
+          #- os: macos-latest
+          #  file: target/release/boilr
+          #  asset_name: macos_x86_64_BoilR
+          #  args: -9
+          #  strip: false
+          #- os: macos-latest
+          #  file: target/aarch64-apple-darwin/release/boilr
+          #  asset_name: macos_darwin_BoilR
+          #  args: -9
+          #  strip: false
+          #  target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
