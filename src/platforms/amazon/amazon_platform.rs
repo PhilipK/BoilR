@@ -90,8 +90,8 @@ impl AmazonPlatform {
         let mut statement =
             connection.prepare("SELECT Id, ProductTitle FROM DbSet WHERE Installed = 1")?;
         while let State::Row = statement.next().unwrap() {
-            let id = statement.read::<String>(0);
-            let title = statement.read::<String>(1);
+            let id = statement.read::<String,usize>(0);
+            let title = statement.read::<String,usize>(1);
             if let (Ok(id), Ok(title)) = (id, title) {
                 result.push(AmazonGame {
                     title,

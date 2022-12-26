@@ -307,7 +307,7 @@ impl MyEguiApp {
             ui.ctx().load_texture(
                 "import_image",
                 get_import_image(),
-                egui::TextureFilter::Linear,
+                egui::TextureOptions::LINEAR,
             )
         })
     }
@@ -316,7 +316,7 @@ impl MyEguiApp {
         self.ui_images.save_button.get_or_insert_with(|| {
             // Load the texture only once.
             ui.ctx()
-                .load_texture("save_image", get_save_image(), egui::TextureFilter::Linear)
+                .load_texture("save_image", get_save_image(), egui::TextureOptions::LINEAR)
         })
     }
 
@@ -324,7 +324,7 @@ impl MyEguiApp {
         self.ui_images.logo_32.get_or_insert_with(|| {
             // Load the texture only once.
             ui.ctx()
-                .load_texture("logo32", get_logo(), egui::TextureFilter::Linear)
+                .load_texture("logo32", get_logo(), egui::TextureOptions::LINEAR)
         })
     }
 }

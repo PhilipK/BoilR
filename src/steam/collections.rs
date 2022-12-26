@@ -330,8 +330,7 @@ fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Str
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
-    let config = base64::Config::new(base64::CharacterSet::Standard, false);
-    let base64 = base64::encode_config(name.as_ref(), config);
+    let base64 = base64::encode(name.as_ref());
     let key = format!("{}-{}", BOILR_TAG, base64);
     key
 }

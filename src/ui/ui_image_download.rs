@@ -348,7 +348,7 @@ impl MyEguiApp {
                                                     let handle = ui.ctx().load_texture(
                                                         &image_key,
                                                         image_data,
-                                                        egui::TextureFilter::Linear,
+                                                        egui::TextureOptions::LINEAR,
                                                     );
                                                     *state.value_mut() =
                                                         TextureState::Loaded(handle);
@@ -750,7 +750,7 @@ impl MyEguiApp {
             if let Ok(image) = image {
                 let texture = ui
                     .ctx()
-                    .load_texture(&key, image, egui::TextureFilter::Linear);
+                    .load_texture(&key, image, egui::TextureOptions::LINEAR);
                 state
                     .image_handles
                     .insert(key, TextureState::Loaded(texture));
@@ -791,7 +791,7 @@ fn load_image_grids(user: &SteamUsersInfo, state: &mut ImageSelectState, ui: &mu
             if let Ok(image) = image {
                 let texture = ui
                     .ctx()
-                    .load_texture(&key, image, egui::TextureFilter::Linear);
+                    .load_texture(&key, image, egui::TextureOptions::LINEAR);
                 state
                     .image_handles
                     .insert(key, TextureState::Loaded(texture));
