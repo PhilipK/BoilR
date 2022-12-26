@@ -350,8 +350,11 @@ pub fn run_sync() {
 pub fn run_ui(args: Vec<String>) {
     let app = MyEguiApp::new();
     let no_v_sync = args.contains(&"--no-vsync".to_string());
+    let fullscreen = args.contains(&"--fullscreen".to_string());
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some(egui::Vec2 { x: 1280., y: 800. }),
+        fullscreen,
+        maximized:true,
+        //initial_window_size: Some(egui::Vec2 { x: 1280., y: 800. }),
         icon_data: Some(get_logo_icon()),
         vsync: !no_v_sync,
         ..Default::default()
