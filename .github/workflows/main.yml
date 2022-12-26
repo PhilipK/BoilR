@@ -34,7 +34,7 @@ jobs:
       run: |
         sudo apt-get update 
         sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
-        cargo install cross
+        cargo install cross --target x86_64-unknown-linux-musl
     - name: Test
       run: |        
         cross test
