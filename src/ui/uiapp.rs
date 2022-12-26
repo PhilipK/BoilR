@@ -273,6 +273,7 @@ fn create_style(style: &mut egui::Style) {
     style.spacing.item_spacing = egui::vec2(15.0, 15.0);
     style.visuals.button_frame = false;
     style.visuals.dark_mode = true;
+    style.visuals.panel_fill = BACKGROUND_COLOR;
     style.visuals.override_text_color = Some(TEXT_COLOR);
     style.visuals.widgets.noninteractive.rounding = Rounding {
         ne: 0.0,
