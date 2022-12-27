@@ -35,33 +35,13 @@ jobs:
             asset_name: linux_BoilR
             args: --best --lzma
             strip: true
-          - os: ubuntu-latest
-            file: target/x86_64-unknown-linux-musl/release/boilr
-            asset_name: linux_BoilR_musl
-            args: -+
-            target: x86_64-unknown-linux-musl
-            strip: false
           - os: windows-latest
             file: target/release/boilr.exe
             asset_name: windows_BoilR.exe
             args: -9
             strip: false      
-          #- os: macos-latest
-          #  file: target/release/boilr
-          #  asset_name: macos_x86_64_BoilR
-          #  args: -9
-          #  strip: false
-          #- os: macos-latest
-          #  file: target/aarch64-apple-darwin/release/boilr
-          #  asset_name: macos_darwin_BoilR
-          #  args: -9
-          #  strip: false
-          #  target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
-      - name: Install cross
-        if: ${{  matrix.target == 'x86_64-unknown-linux-musl'}}
-        run: cargo install cross
       - name: Install dependencies
         if: ${{ matrix.os == 'ubuntu-latest'}}
         run: |
@@ -71,14 +51,7 @@ jobs:
         id: rust_cache
         uses: Swatinem/rust-cache@v2
       - name: Build Release Version
-        if: ${{ matrix.target != 'aarch64-apple-darwin' && matrix.target != 'x86_64-unknown-linux-musl'}}
         run: cargo build --release     
-      - name: Build aarch64 Release Version 
-        if: ${{matrix.target == 'aarch64-apple-darwin' }}
-        run: rustup target add aarch64-apple-darwin && cargo build --release --target aarch64-apple-darwin
-      - name: Build musl Release Version
-        if: ${{ matrix.target == 'x86_64-unknown-linux-musl'}}
-        run: cross build --release
       - name: Compress binaries
         uses: svenstaro/upx-action@v2
         with:

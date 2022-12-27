@@ -24,33 +24,6 @@ jobs:
     - name: Test
       run: |        
         cargo test
-  test_Ubuntu_musl:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2    
-    - name: dependencies
-      run: |
-        sudo apt-get update 
-        sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
-        cargo install cross
-    - name: Test
-      run: |        
-        cross test
-  test_Flatpak:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3   
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2    
-    - name: dependencies
-      run: |
-        sudo apt-get update 
-        sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
-    - name: Test
-      run: |        
-        cargo test --features flatpak
   test_Windows:
     runs-on: windows-latest    
     steps:
