@@ -332,7 +332,7 @@ impl MyEguiApp {
 
 fn setup(ctx: &egui::Context) {
     #[cfg(target_family = "unix")]
-    ctx.set_pixels_per_point(1.0);
+    ctx.set_pixels_per_point(0.999);
 
     let mut style: egui::Style = (*ctx.style()).clone();
     create_style(&mut style);
