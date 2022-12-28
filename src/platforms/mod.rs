@@ -1,18 +1,28 @@
-mod amazon;
+#[cfg(target_family = "unix")]
 mod bottles;
-mod egs;
+#[cfg(target_family = "unix")]
 mod flatpak;
-mod gog;
+#[cfg(target_family = "unix")]
 mod heroic;
-mod itch;
+#[cfg(target_family = "unix")]
 mod legendary;
+#[cfg(target_family = "unix")]
 mod lutris;
+#[cfg(target_family = "unix")]
+mod minigalaxy;
+
+#[cfg(not(target_family = "unix"))]
+mod amazon;
+
+
+mod gog;
+mod itch;
 mod origin;
 mod platform;
 mod platforms_load;
 mod uplay;
-mod minigalaxy;
 
+mod egs;
 pub(crate) use platform::*;
 
 pub(crate) use gog::get_gog_shortcuts_from_game_folders;
