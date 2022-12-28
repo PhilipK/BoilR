@@ -180,26 +180,26 @@ impl MyEguiApp {
             } else if let Some(action) = render_steam_game_select(ui, state) {
                 return action;
             }
-        }
 
-        match *self.status_reciever.borrow() {
-            crate::sync::SyncProgress::FindingImages => {
-                ui.spinner();
-                ui.label("Finding images to download");
-                ui.ctx().request_repaint();
-            }
-            crate::sync::SyncProgress::DownloadingImages { to_download } => {
-                ui.spinner();
-                ui.label(format!("Downloading {to_download} images"));
-                ui.ctx().request_repaint();
-            }
-            crate::sync::SyncProgress::Done => {
-                ui.ctx().request_repaint();
-                return UserAction::RefreshImages;
-            }
-            _ => {
-                if ui.button("Download images for all games").clicked() {
-                    return UserAction::DownloadAllImages;
+            match *self.status_reciever.borrow() {
+                crate::sync::SyncProgress::FindingImages => {
+                    ui.spinner();
+                    ui.label("Finding images to download");
+                    ui.ctx().request_repaint();
+                }
+                crate::sync::SyncProgress::DownloadingImages { to_download } => {
+                    ui.spinner();
+                    ui.label(format!("Downloading {to_download} images"));
+                    ui.ctx().request_repaint();
+                }
+                crate::sync::SyncProgress::Done => {
+                    ui.ctx().request_repaint();
+                    return UserAction::RefreshImages;
+                }
+                _ => {
+                    if ui.button("Download images for all games").clicked() {
+                        return UserAction::DownloadAllImages;
+                    }
                 }
             }
         }
@@ -515,23 +515,22 @@ impl MyEguiApp {
                     self.status_reciever = reciever;
                     let mut sender_op = Some(sender);
                     let settings = self.settings.clone();
-                    let users = users.clone();                                                         
+                    let users = users.clone();
                     self.rt.spawn_blocking(move || {
                         let task = download_images(&settings, &users, &mut sender_op);
                         block_on(task);
                         let _ = sender_op.unwrap().send(SyncProgress::Done);
                     });
-                        
                 }
             }
             UserAction::RefreshImages => {
-                let (_, reciever) = watch::channel(SyncProgress::NotStarted);            
+                let (_, reciever) = watch::channel(SyncProgress::NotStarted);
                 let user = self.image_selected_state.steam_user.clone();
-                if let Some(user) = &user{
-                    load_image_grids(user,&mut self.image_selected_state,ui);
+                if let Some(user) = &user {
+                    load_image_grids(user, &mut self.image_selected_state, ui);
                 }
-                self.status_reciever = reciever;                
-            },
+                self.status_reciever = reciever;
+            }
         };
     }
 
@@ -619,7 +618,8 @@ impl MyEguiApp {
                 self.rt.spawn_blocking(move || {
                     let thumbnails_folder = get_thumbnails_folder();
                     let client = steamgriddb_api::Client::new(auth_key);
-                    let query = get_query_type(false, &image_type, settings.steamgrid_db.allow_nsfw);
+                    let query =
+                        get_query_type(false, &image_type, settings.steamgrid_db.allow_nsfw);
                     let search_res = block_on(client.get_images_for_id(grid_id, &query));
                     if let Ok(possible_images) = search_res {
                         let mut result = vec![];
@@ -775,7 +775,11 @@ impl MyEguiApp {
     }
 }
 
-fn load_image_grids(user: &SteamUsersInfo, state: &mut ImageSelectState, ui: &mut egui::Ui) -> Vec<ShortcutOwned> {
+fn load_image_grids(
+    user: &SteamUsersInfo,
+    state: &mut ImageSelectState,
+    ui: &mut egui::Ui,
+) -> Vec<ShortcutOwned> {
     let user_info = crate::steam::get_shortcuts_for_user(user);
     let mut user_folder = user_info.path.clone();
     user_folder.pop();
