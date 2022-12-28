@@ -72,7 +72,6 @@ pub struct PossibleImage {
     thumbnail_url: String,
     mime: MimeTypes,
     full_url: String,
-    id: u32,
 }
 
 impl Default for ImageSelectState {
@@ -632,7 +631,6 @@ impl MyEguiApp {
                                 mime: possible_image.mime.clone(),
                                 thumbnail_url: possible_image.thumb.clone(),
                                 full_url: possible_image.url.clone(),
-                                id: possible_image.id,
                             });
                         }
                         let _ = tx.send(FetcStatus::Fetched(result));
