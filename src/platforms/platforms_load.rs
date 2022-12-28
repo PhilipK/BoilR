@@ -1,23 +1,9 @@
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
-use serde::de::DeserializeOwned;
-
-use crate::settings::load_setting_sections;
-
-use super::amazon::AmazonPlatform;
-use super::bottles::BottlesPlatform;
-use super::egs::EpicPlatform;
-use super::flatpak::FlatpakPlatform;
-use super::gog::GogPlatform;
-use super::heroic::HeroicPlatform;
-use super::itch::ItchPlatform;
-use super::legendary::LegendaryPlatform;
-use super::lutris::LutrisPlatform;
-use super::minigalaxy::MiniGalaxyPlatform;
-use super::origin::OriginPlatform;
-use super::uplay::UplayPlatform;
 use super::GamesPlatform;
 
+use crate::settings::load_setting_sections;
 const PLATFORM_NAMES: [&str; 12] = [
     "amazon",
     "bottles",
@@ -30,7 +16,7 @@ const PLATFORM_NAMES: [&str; 12] = [
     "lutris",
     "origin",
     "uplay",
-    "minigalaxy"
+    "minigalaxy",
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -41,19 +27,50 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
 ) -> eyre::Result<Box<dyn GamesPlatform>> {
     let name = name.as_ref();
     let s = settings_string.as_ref();
+
+    #[cfg(not(target_family = "unix"))]
+    {
+        //Windows only platforms
+        use super::amazon::AmazonPlatform;
+        match name {
+            "amazon" => return load::<AmazonPlatform>(s),
+            _ => {}
+        }
+    }
+
+    #[cfg(target_family = "unix")]
+    {
+        use super::bottles::BottlesPlatform;
+        use super::flatpak::FlatpakPlatform;
+        use super::heroic::HeroicPlatform;
+        use super::legendary::LegendaryPlatform;
+        use super::lutris::LutrisPlatform;
+        use super::minigalaxy::MiniGalaxyPlatform;
+        //Linux only platforms
+        match name {
+            "bottles" => return load::<BottlesPlatform>(s),
+            "flatpak" => return load::<FlatpakPlatform>(s),
+            "minigalaxy" => return load::<MiniGalaxyPlatform>(s),
+            "legendary" => return load::<LegendaryPlatform>(s),
+            "lutris" => return load::<LutrisPlatform>(s),
+            "heroic" => return load::<HeroicPlatform>(s),
+            _ => {}
+        }
+    }
+
+        //Common platforms
+    use super::egs::EpicPlatform;
+    use super::gog::GogPlatform;
+    use super::itch::ItchPlatform;
+    use super::origin::OriginPlatform;
+    use super::uplay::UplayPlatform;
+
     match name {
-        "amazon" => load::<AmazonPlatform>(s),
-        "bottles" => load::<BottlesPlatform>(s),
         "epic_games" => load::<EpicPlatform>(s),
         "uplay" => load::<UplayPlatform>(s),
         "itch" => load::<ItchPlatform>(s),
-        "flatpak" => load::<FlatpakPlatform>(s),
         "gog" => load::<GogPlatform>(s),
-        "heroic" => load::<HeroicPlatform>(s),
-        "legendary" => load::<LegendaryPlatform>(s),
-        "lutris" => load::<LutrisPlatform>(s),
         "origin" => load::<OriginPlatform>(s),
-        "minigalaxy" => load::<MiniGalaxyPlatform>(s),
         _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
 }
