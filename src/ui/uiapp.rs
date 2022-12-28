@@ -353,7 +353,7 @@ pub fn run_sync() {
 pub fn run_ui(args: Vec<String>) {
     let app = MyEguiApp::new();
     let no_v_sync = args.contains(&"--no-vsync".to_string());
-    let fullscreen = args.contains(&"--fullscreen".to_string());
+    let fullscreen = is_fullscreen(&args);
     let native_options = eframe::NativeOptions {
         fullscreen,
         maximized: true,
@@ -370,4 +370,12 @@ pub fn run_ui(args: Vec<String>) {
             Box::new(app)
         }),
     );
+}
+
+fn is_fullscreen(args: &Vec<String>) -> bool {
+    let is_steam_mode = match std::env::var("SteamAppId") {
+        Ok(value) => !value.is_empty(),
+        Err(_) => false,
+    };
+   is_steam_mode || args.contains(&"--fullscreen".to_string())
 }

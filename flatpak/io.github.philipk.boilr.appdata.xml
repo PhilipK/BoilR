@@ -25,7 +25,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
-  <release version="1.7.10" date="2022-12-28">
+  <release version="1.7.11" date="2022-12-28">
+      <description>
+        <ul>
+          <li>Automatically go fullscreen when in steam mode</li>
+        </ul>
+      </description>
+    </release>
+   <release version="1.7.10" date="2022-12-28">
       <description>
         <ul>
           <li>Only load platforms that are available for OS</li>
