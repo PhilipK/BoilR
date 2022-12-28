@@ -90,6 +90,51 @@ impl MyEguiApp {
             platforms,
         }
     }
+
+    fn render_import_button(&mut self, ui: &mut egui::Ui) {
+        let (status_string, syncing) = match &*self.status_reciever.borrow() {
+            SyncProgress::NotStarted => ("".to_string(), false),
+            SyncProgress::Starting => ("Starting Import".to_string(), true),
+            SyncProgress::FoundGames { games_found } => {
+                (format!("Found {} games to  import", games_found), true)
+            }
+            SyncProgress::FindingImages => ("Searching for images".to_string(), true),
+            SyncProgress::DownloadingImages { to_download } => {
+                (format!("Downloading {} images ", to_download), true)
+            }
+            SyncProgress::Done => ("Done importing games".to_string(), false),
+        };
+        if syncing {
+            ui.ctx().request_repaint();
+        }
+        if !status_string.is_empty() {
+            if syncing {
+                ui.horizontal(|c| {
+                    c.spinner();
+                    c.label(&status_string);
+                });
+            } else {
+                ui.label(&status_string);
+            }
+        }
+        let all_ready = all_ready(&self.games_to_sync);
+        let texture = self.get_import_image(ui);
+        let size = texture.size_vec2();
+        let image_button = ImageButton::new(texture, size * 0.40);
+        if all_ready && !syncing{
+            if ui
+                .add(image_button)
+                .on_hover_text("Import your games into steam")
+                .clicked(){
+save_settings(&self.settings, &self.platforms);
+            self.run_sync(false);
+                }
+        }else{
+                ui
+                .add(image_button)
+                .on_hover_text("Waiting for sync to finish");
+        }
+    }
 }
 
 fn get_rename_map() -> HashMap<u32, String> {
@@ -174,7 +219,11 @@ impl App for MyEguiApp {
                     || ui
                         .selectable_value(&mut self.selected_menu, Menues::Disconnect, "Disconnect")
                         .changed();
-
+                if self.selected_menu == Menues::Import {
+                    ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                        self.render_import_button(ui);
+                    });
+                }
                 if changed {
                     self.backup_state.available_backups = None;
                 }
@@ -186,66 +235,6 @@ impl App for MyEguiApp {
                     self.games_to_sync = create_games_to_sync(&mut self.rt, &self.platforms);
                 }
             });
-
-        if self.selected_menu == Menues::Settings {
-            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
-                .frame(frame)
-                .show(ctx, |ui| {
-                    let texture = self.get_save_image(ui);
-                    let size = texture.size_vec2();
-                    let save_button = ImageButton::new(texture, size * 0.5);
-
-                    if ui.add(save_button).on_hover_text("Save settings").clicked() {
-                        save_settings(&self.settings, &self.platforms);
-                    }
-                });
-        }
-        if self.selected_menu == Menues::Import {
-            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
-                .frame(frame)
-                .show(ctx, |ui| {
-                    let (status_string, syncing) = match &*self.status_reciever.borrow() {
-                        SyncProgress::NotStarted => ("".to_string(), false),
-                        SyncProgress::Starting => ("Starting Import".to_string(), true),
-                        SyncProgress::FoundGames { games_found } => {
-                            (format!("Found {} games to  import", games_found), true)
-                        }
-                        SyncProgress::FindingImages => ("Searching for images".to_string(), true),
-                        SyncProgress::DownloadingImages { to_download } => {
-                            (format!("Downloading {} images ", to_download), true)
-                        }
-                        SyncProgress::Done => ("Done importing games".to_string(), false),
-                    };
-                    if syncing {
-                        ui.ctx().request_repaint();
-                    }
-                    if !status_string.is_empty() {
-                        if syncing {
-                            ui.horizontal(|c| {
-                                c.spinner();
-                                c.label(&status_string);
-                            });
-                        } else {
-                            ui.label(&status_string);
-                        }
-                    }
-                    let all_ready = all_ready(&self.games_to_sync);
-
-                    let texture = self.get_import_image(ui);
-                    let size = texture.size_vec2();
-                    let image_button = ImageButton::new(texture, size * 0.5);
-                    if all_ready
-                        && ui
-                            .add(image_button)
-                            .on_hover_text("Import your games into steam")
-                            .clicked()
-                        && !syncing
-                    {
-                        save_settings(&self.settings, &self.platforms);
-                        self.run_sync(false);
-                    }
-                });
-        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             match self.selected_menu {
@@ -266,6 +255,20 @@ impl App for MyEguiApp {
                 }
             };
         });
+
+        if self.selected_menu == Menues::Settings {
+            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
+                .frame(frame)
+                .show(ctx, |ui| {
+                    let texture = self.get_save_image(ui);
+                    let size = texture.size_vec2();
+                    let save_button = ImageButton::new(texture, size * 0.5);
+
+                    if ui.add(save_button).on_hover_text("Save settings").clicked() {
+                        save_settings(&self.settings, &self.platforms);
+                    }
+                });
+        }
     }
 }
 
@@ -353,7 +356,7 @@ pub fn run_ui(args: Vec<String>) {
     let fullscreen = args.contains(&"--fullscreen".to_string());
     let native_options = eframe::NativeOptions {
         fullscreen,
-        maximized:true,
+        maximized: true,
         //initial_window_size: Some(egui::Vec2 { x: 1280., y: 800. }),
         icon_data: Some(get_logo_icon()),
         vsync: !no_v_sync,

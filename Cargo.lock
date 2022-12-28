@@ -265,7 +265,7 @@ dependencies = [
 
 [[package]]
 name = "boilr"
-version = "1.7.8"
+version = "1.7.9"
 dependencies = [
  "base64 0.20.0",
  "chrono",
