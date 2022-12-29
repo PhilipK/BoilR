@@ -6,7 +6,7 @@ use super::{
     pages::{
         handle_correct_grid_request, handle_grid_change, handle_shortcut_selected,
         render_page_pick_image, render_page_shortcut_images_overview,
-        render_page_shortcut_select_image_type, render_page_steam_images_overview,
+        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_image_selected,
     },
     possible_image::PossibleImage,
     texturestate::TextureDownloadState,
@@ -157,7 +157,7 @@ impl MyEguiApp {
                 self.handle_image_type_selected(image_type);
             }
             UserAction::ImageSelected(image) => {
-                self.handle_image_selected(image);
+                handle_image_selected(self,image);
             }
             UserAction::BackButton => {
                 self.handle_back_button_action();
@@ -304,93 +304,11 @@ impl MyEguiApp {
         };
     }
 
-    fn handle_image_selected(&mut self, image: PossibleImage) {
-        //We must have a user here
-        let user = self.image_selected_state.steam_user.as_ref().unwrap();
-        let selected_image_type = self
-            .image_selected_state
-            .image_type_selected
-            .as_ref()
-            .unwrap();
-        let selected_shortcut = self
-            .image_selected_state
-            .selected_shortcut
-            .as_ref()
-            .unwrap();
+    
 
-        let ext = get_image_extension(&image.mime);
-        let to_download_to_path = Path::new(&user.steam_user_data_folder)
-            .join("config")
-            .join("grid")
-            .join(selected_image_type.file_name(selected_shortcut.app_id(), ext));
+    
 
-        //Delete old possible images
-
-        let data_folder = Path::new(&user.steam_user_data_folder);
-
-        //Keep deleting images of this type untill we don't find any more
-        let mut path = self.get_shortcut_image_path(data_folder);
-        while Path::new(&path).exists() {
-            let _ = std::fs::remove_file(&path);
-            path = self.get_shortcut_image_path(data_folder);
-        }
-
-        //Put the loaded thumbnail into the image handler map, we can use that for preview
-        let full_image_key = to_download_to_path.to_string_lossy().to_string();
-        let _ = self
-            .image_selected_state
-            .image_handles
-            .remove(&full_image_key);
-        let thumbnail_key = image.thumbnail_path.to_string_lossy().to_string();
-        let thumbnail = self
-            .image_selected_state
-            .image_handles
-            .remove(&thumbnail_key);
-        if let Some((_key, thumbnail)) = thumbnail {
-            self.image_selected_state
-                .image_handles
-                .insert(full_image_key, thumbnail);
-        }
-
-        let app_name = selected_shortcut.name();
-        let to_download = ToDownload {
-            path: to_download_to_path,
-            url: image.full_url.clone(),
-            app_name: app_name.to_string(),
-            image_type: *selected_image_type,
-        };
-        self.rt.spawn_blocking(move || {
-            let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
-        });
-
-        self.clear_loaded_images();
-        {
-            self.image_selected_state.image_type_selected = None;
-            self.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
-        }
-    }
-
-    fn get_shortcut_image_path(&self, data_folder: &Path) -> String {
-        self.image_selected_state
-            .selected_shortcut
-            .as_ref()
-            .unwrap()
-            .key(
-                &self.image_selected_state.image_type_selected.unwrap(),
-                data_folder,
-            )
-            .1
-    }
-
-    fn clear_loaded_images(&mut self) {
-        if let FetcStatus::Fetched(options) = &*self.image_selected_state.image_options.borrow() {
-            for option in options {
-                let key = option.thumbnail_path.to_string_lossy().to_string();
-                self.image_selected_state.image_handles.remove(&key);
-            }
-        }
-    }
-
+    
     fn handle_back_button_action(&mut self) {
         let state = &mut self.image_selected_state;
         if state.possible_names.is_some() {
