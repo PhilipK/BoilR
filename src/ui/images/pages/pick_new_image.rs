@@ -62,85 +62,8 @@ pub fn render_page_pick_image(
                         let image_key =
                             image.thumbnail_path.as_path().to_string_lossy().to_string();
 
-                        match state.image_handles.get_mut(&image_key) {
-                            Some(mut state) => {
-                                match state.value() {
-                                    TextureDownloadState::Downloading => {
-                                        ui.ctx().request_repaint();
-                                        //nothing to do,just wait
-                                        ui.spinner();
-                                    }
-                                    TextureDownloadState::Downloaded => {
-                                        //Need to load
-                                        let image_data =
-                                            load_image_from_path(&image.thumbnail_path);
-                                        match image_data {
-                                            Ok(image_data) => {
-                                                let handle = ui.ctx().load_texture(
-                                                    &image_key,
-                                                    image_data,
-                                                    egui::TextureOptions::LINEAR,
-                                                );
-                                                *state.value_mut() =
-                                                    TextureDownloadState::Loaded(handle);
-                                                ui.spinner();
-                                            }
-                                            Err(_) => {
-                                                *state.value_mut() = TextureDownloadState::Failed
-                                            }
-                                        }
-                                        ui.ctx().request_repaint();
-                                    }
-                                    TextureDownloadState::Loaded(texture_handle) => {
-                                        //need to show
-                                        let mut size = texture_handle.size_vec2();
-                                        clamp_to_width(&mut size, column_width);
-                                        let image_button = ImageButton::new(texture_handle, size);
-                                        if ui.add_sized(size, image_button).clicked() {
-                                            return Some(UserAction::ImageSelected(image.clone()));
-                                        }
-                                    }
-                                    TextureDownloadState::Failed => {
-                                        ui.label("Failed to load image");
-                                    }
-                                }
-                            }
-                            None => {
-                                //We need to start a download
-                                let image_handles = &app.image_selected_state.image_handles;
-                                let path = &image.thumbnail_path;
-                                //Redownload if file is too small
-                                if !path.exists()
-                                    || std::fs::metadata(path).map(|m| m.len()).unwrap_or_default()
-                                        < 2
-                                {
-                                    image_handles.insert(
-                                        image_key.clone(),
-                                        TextureDownloadState::Downloading,
-                                    );
-                                    let to_download = ToDownload {
-                                        path: path.clone(),
-                                        url: image.thumbnail_url.clone(),
-                                        app_name: "Thumbnail".to_string(),
-                                        image_type: *image_type,
-                                    };
-                                    let image_handles = image_handles.clone();
-                                    let image_key = image_key.clone();
-                                    app.rt.spawn_blocking(move || {
-                                        block_on(crate::steamgriddb::download_to_download(
-                                            &to_download,
-                                        ))
-                                        .unwrap();
-                                        image_handles
-                                            .insert(image_key, TextureDownloadState::Downloaded);
-                                    });
-                                } else {
-                                    image_handles.insert(
-                                        image_key.clone(),
-                                        TextureDownloadState::Downloaded,
-                                    );
-                                }
-                            }
+                        if let Some(value) = render_possible_image(state, image_key, ui, image, column_width, app, image_type) {
+                            return value;
                         }
                         column += 1;
                         if column >= columns {
@@ -162,6 +85,90 @@ pub fn render_page_pick_image(
                 ui.label("Finding possible images");
             });
             ui.ctx().request_repaint();
+        }
+    }
+    None
+}
+
+fn render_possible_image(state: &ImageSelectState, image_key: String, ui: &mut egui::Ui, image: &PossibleImage, column_width: f32, app: &MyEguiApp, image_type: &ImageType) -> Option<Option<UserAction>> {
+    match state.image_handles.get_mut(&image_key) {
+        Some(mut state) => {
+            match state.value() {
+                TextureDownloadState::Downloading => {
+                    ui.ctx().request_repaint();
+                    //nothing to do,just wait
+                    ui.spinner();
+                }
+                TextureDownloadState::Downloaded => {
+                    //Need to load
+                    let image_data =
+                        load_image_from_path(&image.thumbnail_path);
+                    match image_data {
+                        Ok(image_data) => {
+                            let handle = ui.ctx().load_texture(
+                                &image_key,
+                                image_data,
+                                egui::TextureOptions::LINEAR,
+                            );
+                            *state.value_mut() =
+                                TextureDownloadState::Loaded(handle);
+                            ui.spinner();
+                        }
+                        Err(_) => {
+                            *state.value_mut() = TextureDownloadState::Failed
+                        }
+                    }
+                    ui.ctx().request_repaint();
+                }
+                TextureDownloadState::Loaded(texture_handle) => {
+                    //need to show
+                    let mut size = texture_handle.size_vec2();
+                    clamp_to_width(&mut size, column_width);
+                    let image_button = ImageButton::new(texture_handle, size);
+                    if ui.add_sized(size, image_button).clicked() {
+                        return Some(Some(UserAction::ImageSelected(image.clone())));
+                    }
+                }
+                TextureDownloadState::Failed => {
+                    ui.label("Failed to load image");
+                }
+            }
+        }
+        None => {
+            //We need to start a download
+            let image_handles = &app.image_selected_state.image_handles;
+            let path = &image.thumbnail_path;
+            //Redownload if file is too small
+            if !path.exists()
+                || std::fs::metadata(path).map(|m| m.len()).unwrap_or_default()
+                    < 2
+            {
+                image_handles.insert(
+                    image_key.clone(),
+                    TextureDownloadState::Downloading,
+                );
+                let to_download = ToDownload {
+                    path: path.clone(),
+                    url: image.thumbnail_url.clone(),
+                    app_name: "Thumbnail".to_string(),
+                    image_type: *image_type,
+                };
+                let image_handles = image_handles.clone();
+                let image_key = image_key.clone();
+                app.rt.spawn_blocking(move || {
+                    block_on(crate::steamgriddb::download_to_download(
+                        &to_download,
+                    ))
+                    .unwrap();
+                    image_handles
+                        .insert(image_key, TextureDownloadState::Downloaded);
+                });
+            } else {
+                image_handles.insert(
+                    image_key.clone(),
+                    TextureDownloadState::Downloaded,
+                );
+            }
         }
     }
     None
