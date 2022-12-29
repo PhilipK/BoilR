@@ -53,6 +53,7 @@ jobs:
       - name: Build Release Version
         run: cargo build --release     
       - name: Compress binaries
+        if: ${{ matrix.os != 'ubuntu-latest'}}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
