@@ -6,7 +6,7 @@ use super::{
     image_select_state::ImageSelectState,
     pages::{
         render_page_pick_image, render_page_shortcut_images_overview,
-        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_grid_change, handle_correct_grid_request,
+        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_grid_change, handle_correct_grid_request, handle_shortcut_selected,
     },
     possible_image::PossibleImage,
     texturestate::TextureDownloadState,
@@ -146,7 +146,7 @@ impl MyEguiApp {
                 self.handle_user_selected(user, ui);
             }
             UserAction::ShortcutSelected(shortcut) => {
-                self.handle_shortcut_selected(shortcut, ui);
+                handle_shortcut_selected(self,shortcut, ui);
             }
             UserAction::ImageTypeSelected(image_type) => {
                 self.handle_image_type_selected(image_type);
@@ -376,36 +376,7 @@ impl MyEguiApp {
         }
     }
 
-    fn handle_shortcut_selected(&mut self, shortcut: GameType, ui: &mut egui::Ui) {
-        let state = &mut self.image_selected_state;
-        //We must have a user to make see this action;
-        let user = state.steam_user.as_ref().unwrap();
-        if let Some(auth_key) = &self.settings.steamgrid_db.auth_key {
-            let client = steamgriddb_api::Client::new(auth_key);
-            let search = CachedSearch::new(&client);
-            state.grid_id = self
-                .rt
-                .block_on(search.search(shortcut.app_id(), shortcut.name()))
-                .ok()
-                .flatten();
-        }
-        state.selected_shortcut = Some(shortcut.clone());
-
-        for image_type in ImageType::all() {
-            let (path, key) = shortcut.key(image_type, Path::new(&user.steam_user_data_folder));
-            let image = load_image_from_path(&path);
-            if let Ok(image) = image {
-                let texture = ui
-                    .ctx()
-                    .load_texture(&key, image, egui::TextureOptions::LINEAR);
-                state
-                    .image_handles
-                    .insert(key, TextureDownloadState::Loaded(texture));
-            }
-        }
-        state.selected_shortcut = Some(shortcut);
-    }
-
+ 
     fn handle_back_button_action(&mut self) {
         let state = &mut self.image_selected_state;
         if state.possible_names.is_some() {
