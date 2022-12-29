@@ -14,14 +14,15 @@ nom = "^7.1.1"
 rusty-leveldb = "^1.0.4"
 serde_json = "^1.0.91"
 
-openssl = { version = "*", features = ["vendored"] }
-
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
 sysinfo = "^0.27.1"
 eyre = "^0.6.8"
 color-eyre = "^0.6.2"
 dyn-clone = "^1.0.10"
+
+[target."cfg(not(windows))".dependencies]
+openssl = { version = "*", features = ["vendored"] }
 
 [dependencies.dashmap]
 features = ["serde"]
