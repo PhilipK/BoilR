@@ -6,7 +6,7 @@ use super::{
     image_select_state::ImageSelectState,
     pages::{
         render_page_pick_image, render_page_shortcut_images_overview,
-        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_grid_change,
+        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_grid_change, handle_correct_grid_request,
     },
     possible_image::PossibleImage,
     texturestate::TextureDownloadState,
@@ -165,7 +165,7 @@ impl MyEguiApp {
             }
             UserAction::NoAction => {}
             UserAction::CorrectGridId => {
-                self.handle_correct_grid_request();
+                handle_correct_grid_request(self);
             }
             UserAction::ImageTypeCleared(image_type, should_ban) => {
                 let app_id = self
@@ -239,23 +239,7 @@ impl MyEguiApp {
         self.image_selected_state.image_type_selected = None;
     }
 
-    fn handle_correct_grid_request(&mut self) {
-        let app_name = self
-            .image_selected_state
-            .selected_shortcut
-            .as_ref()
-            .map(|s| s.name())
-            .unwrap_or_default();
-        let auth_key = self
-            .settings
-            .steamgrid_db
-            .auth_key
-            .clone()
-            .unwrap_or_default();
-        let client = steamgriddb_api::Client::new(&auth_key);
-        let search_results = self.rt.block_on(client.search(app_name));
-        self.image_selected_state.possible_names = search_results.ok();
-    }
+    
 
     fn handle_set_game_mode(&mut self, game_mode: GameMode) {
         self.image_selected_state.game_mode = game_mode;
