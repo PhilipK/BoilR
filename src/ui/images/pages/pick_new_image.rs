@@ -1,13 +1,16 @@
+use std::path::Path;
+
 use egui::{Grid, ImageButton};
 use futures::executor::block_on;
+use tokio::sync::watch;
 
 use crate::{
-    steamgriddb::{ImageType, ToDownload},
+    steamgriddb::{get_image_extension, ImageType, ToDownload},
     ui::{
         images::{
             constants::MAX_WIDTH, image_resize::clamp_to_width,
-            image_select_state::ImageSelectState, texturestate::TextureDownloadState,
-            useraction::UserAction,
+            image_select_state::ImageSelectState, possible_image::PossibleImage,
+            texturestate::TextureDownloadState, useraction::UserAction, hasimagekey::HasImageKey,
         },
         ui_images::load_image_from_path,
         FetcStatus, MyEguiApp,
@@ -163,3 +166,86 @@ pub fn render_page_pick_image(
     }
     None
 }
+
+pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
+    //We must have a user here
+    let user = app.image_selected_state.steam_user.as_ref().unwrap();
+    let selected_image_type = app
+        .image_selected_state
+        .image_type_selected
+        .as_ref()
+        .unwrap();
+    let selected_shortcut = app.image_selected_state.selected_shortcut.as_ref().unwrap();
+
+    let ext = get_image_extension(&image.mime);
+    let to_download_to_path = Path::new(&user.steam_user_data_folder)
+        .join("config")
+        .join("grid")
+        .join(selected_image_type.file_name(selected_shortcut.app_id(), ext));
+
+    //Delete old possible images
+
+    let data_folder = Path::new(&user.steam_user_data_folder);
+
+    //Keep deleting images of this type untill we don't find any more
+    let mut path = get_shortcut_image_path(app,data_folder);
+    while Path::new(&path).exists() {
+        let _ = std::fs::remove_file(&path);
+        path = get_shortcut_image_path(app,data_folder);
+    }
+
+    //Put the loaded thumbnail into the image handler map, we can use that for preview
+    let full_image_key = to_download_to_path.to_string_lossy().to_string();
+    let _ = app
+        .image_selected_state
+        .image_handles
+        .remove(&full_image_key);
+    let thumbnail_key = image.thumbnail_path.to_string_lossy().to_string();
+    let thumbnail = app
+        .image_selected_state
+        .image_handles
+        .remove(&thumbnail_key);
+    if let Some((_key, thumbnail)) = thumbnail {
+        app.image_selected_state
+            .image_handles
+            .insert(full_image_key, thumbnail);
+    }
+
+    let app_name = selected_shortcut.name();
+    let to_download = ToDownload {
+        path: to_download_to_path,
+        url: image.full_url.clone(),
+        app_name: app_name.to_string(),
+        image_type: *selected_image_type,
+    };
+    app.rt.spawn_blocking(move || {
+        let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
+    });
+
+    clear_loaded_images(app);
+    {
+        app.image_selected_state.image_type_selected = None;
+        app.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
+    }
+}
+
+fn get_shortcut_image_path(app:&MyEguiApp, data_folder: &Path) -> String {
+    app.image_selected_state
+        .selected_shortcut
+        .as_ref()
+        .unwrap()
+        .key(
+            &app.image_selected_state.image_type_selected.unwrap(),
+            data_folder,
+        )
+        .1
+}
+
+fn clear_loaded_images(app: &mut MyEguiApp) {
+        if let FetcStatus::Fetched(options) = &*app.image_selected_state.image_options.borrow() {
+            for option in options {
+                let key = option.thumbnail_path.to_string_lossy().to_string();
+                app.image_selected_state.image_handles.remove(&key);
+            }
+        }
+    }
