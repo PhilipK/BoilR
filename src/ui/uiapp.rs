@@ -21,7 +21,7 @@ use super::{
     },
     ui_images::{get_import_image, get_logo, get_logo_icon, get_save_image},
     ui_import_games::FetcStatus,
-    BackupState, DiconnectState, ImageSelectState,
+    BackupState, DiconnectState, images::ImageSelectState, 
 };
 
 const SECTION_SPACING: f32 = 25.0;
