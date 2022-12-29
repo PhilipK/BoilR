@@ -4,8 +4,9 @@ use super::{
     hasimagekey::HasImageKey,
     image_select_state::ImageSelectState,
     pages::{
+        handle_correct_grid_request, handle_grid_change, handle_shortcut_selected,
         render_page_pick_image, render_page_shortcut_images_overview,
-        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_grid_change, handle_correct_grid_request, handle_shortcut_selected,
+        render_page_shortcut_select_image_type, render_page_steam_images_overview,
     },
     possible_image::PossibleImage,
     texturestate::TextureDownloadState,
@@ -14,13 +15,13 @@ use super::{
 
 use std::path::Path;
 
-    use crate::{
+use crate::{
     config::get_thumbnails_folder,
     steam::get_shortcuts_paths,
     steam::{get_installed_games, SteamUsersInfo},
-    steamgriddb::{get_image_extension, get_query_type,  ImageType, ToDownload},
+    steamgriddb::{get_image_extension, get_query_type, ImageType, ToDownload},
     sync::{download_images, SyncProgress},
-    ui::{ui_images::load_image_from_path, FetcStatus, MyEguiApp},
+    ui::{components::render_user_select, ui_images::load_image_from_path, FetcStatus, MyEguiApp},
 };
 use egui::ScrollArea;
 use futures::executor::block_on;
@@ -40,8 +41,13 @@ impl MyEguiApp {
                     }
                     None
                 } else {
-                    if let Some(value) = render_user_select(state, ui) {
-                        return Some(value);
+                    let users = state.steam_users.as_ref();
+                    if let Some(users) = users {
+                        if let Some(value) =
+                            render_user_select(state.steam_user.as_ref(), &users, ui)
+                        {
+                            return Some(UserAction::UserSelected(value.clone()));
+                        }
                     }
                     render_shortcut_mode_select(state, ui)
                 }
@@ -145,7 +151,7 @@ impl MyEguiApp {
                 self.handle_user_selected(user, ui);
             }
             UserAction::ShortcutSelected(shortcut) => {
-                handle_shortcut_selected(self,shortcut, ui);
+                handle_shortcut_selected(self, shortcut, ui);
             }
             UserAction::ImageTypeSelected(image_type) => {
                 self.handle_image_type_selected(image_type);
@@ -157,7 +163,7 @@ impl MyEguiApp {
                 self.handle_back_button_action();
             }
             UserAction::GridIdChanged(grid_id) => {
-                handle_grid_change(self,grid_id);
+                handle_grid_change(self, grid_id);
             }
             UserAction::SetGamesMode(game_mode) => {
                 self.handle_set_game_mode(game_mode);
@@ -167,36 +173,13 @@ impl MyEguiApp {
                 handle_correct_grid_request(self);
             }
             UserAction::ImageTypeCleared(image_type, should_ban) => {
-                let app_id = self
-                    .image_selected_state
-                    .selected_shortcut
-                    .as_ref()
-                    .unwrap()
-                    .app_id();
-                self.settings
-                    .steamgrid_db
-                    .set_image_banned(&image_type, app_id, should_ban);
-                self.handle_image_type_clear(image_type);
+                self.handle_image_type_cleared(image_type, should_ban)
             }
             UserAction::ClearImages => {
-                for image_type in ImageType::all() {
-                    self.handle_image_type_clear(*image_type);
-                }
-                self.handle_back_button_action();
+                self.handle_clear_all_images();
             }
             UserAction::DownloadAllImages => {
-                if let Some(users) = &self.image_selected_state.steam_users {
-                    let (sender, reciever) = watch::channel(SyncProgress::FindingImages);
-                    self.status_reciever = reciever;
-                    let mut sender_op = Some(sender);
-                    let settings = self.settings.clone();
-                    let users = users.clone();
-                    self.rt.spawn_blocking(move || {
-                        let task = download_images(&settings, &users, &mut sender_op);
-                        block_on(task);
-                        let _ = sender_op.unwrap().send(SyncProgress::Done);
-                    });
-                }
+                self.handle_download_all_images();
             }
             UserAction::RefreshImages => {
                 let (_, reciever) = watch::channel(SyncProgress::NotStarted);
@@ -207,6 +190,41 @@ impl MyEguiApp {
                 self.status_reciever = reciever;
             }
         };
+    }
+
+    fn handle_image_type_cleared(&mut self, image_type: ImageType, should_ban: bool) {
+        let app_id = self
+            .image_selected_state
+            .selected_shortcut
+            .as_ref()
+            .unwrap()
+            .app_id();
+        self.settings
+            .steamgrid_db
+            .set_image_banned(&image_type, app_id, should_ban);
+        self.handle_image_type_clear(image_type);
+    }
+
+    fn handle_clear_all_images(&mut self) {
+        for image_type in ImageType::all() {
+            self.handle_image_type_clear(*image_type);
+        }
+        self.handle_back_button_action();
+    }
+
+    fn handle_download_all_images(&mut self) {
+        if let Some(users) = &self.image_selected_state.steam_users {
+            let (sender, reciever) = watch::channel(SyncProgress::FindingImages);
+            self.status_reciever = reciever;
+            let mut sender_op = Some(sender);
+            let settings = self.settings.clone();
+            let users = users.clone();
+            self.rt.spawn_blocking(move || {
+                let task = download_images(&settings, &users, &mut sender_op);
+                block_on(task);
+                let _ = sender_op.unwrap().send(SyncProgress::Done);
+            });
+        }
     }
 
     fn handle_image_type_clear(&mut self, image_type: ImageType) {
@@ -237,8 +255,6 @@ impl MyEguiApp {
         }
         self.image_selected_state.image_type_selected = None;
     }
-
-    
 
     fn handle_set_game_mode(&mut self, game_mode: GameMode) {
         self.image_selected_state.game_mode = game_mode;
@@ -375,7 +391,6 @@ impl MyEguiApp {
         }
     }
 
- 
     fn handle_back_button_action(&mut self) {
         let state = &mut self.image_selected_state;
         if state.possible_names.is_some() {
@@ -441,35 +456,5 @@ fn render_shortcut_mode_select(state: &ImageSelectState, ui: &mut egui::Ui) -> O
     if !mode_after.eq(&mode_before) {
         return Some(UserAction::SetGamesMode(mode_after));
     }
-    None
-}
-
-fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<UserAction> {
-    if state.steam_user.is_none() {
-        if let Some(users) = &state.steam_users {
-            if users.len() > 0 {
-                return Some(UserAction::UserSelected(users[0].clone()));
-            }
-        }
-    } else {
-        let mut selected_user = state.steam_user.as_ref().unwrap().clone();
-        let id_before = selected_user.user_id.clone();
-        if let Some(steam_users) = &state.steam_users {
-            if steam_users.len() > 0 {
-                let combo_box = egui::ComboBox::new("ImageUserSelect", "")
-                    .selected_text(format!("Steam user id: {}", &selected_user.user_id));
-                combo_box.show_ui(ui, |ui| {
-                    for user in steam_users {
-                        ui.selectable_value(&mut selected_user, user.clone(), &user.user_id);
-                    }
-                });
-            }
-        }
-        let id_now = selected_user.user_id.clone();
-        if !id_before.eq(&id_now) {
-            return Some(UserAction::UserSelected(selected_user.clone()));
-        }
-    }
-
     None
 }
