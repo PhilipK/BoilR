@@ -19,7 +19,7 @@ use crate::{
     config::get_thumbnails_folder,
     steam::get_shortcuts_paths,
     steam::{get_installed_games, SteamUsersInfo},
-    steamgriddb::{get_image_extension, get_query_type, ImageType, ToDownload},
+    steamgriddb::{get_image_extension, get_query_type, ImageType},
     sync::{download_images, SyncProgress},
     ui::{components::render_user_select, ui_images::load_image_from_path, FetcStatus, MyEguiApp},
 };

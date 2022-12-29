@@ -25,8 +25,12 @@ mod uplay;
 mod egs;
 pub(crate) use platform::*;
 
+#[cfg(target_family = "unix")]
 pub(crate) use gog::get_gog_shortcuts_from_game_folders;
+#[cfg(target_family = "unix")]
 pub(crate) use gog::GogShortcut;
+
+
 pub use platforms_load::get_platforms;
 pub(crate) use platforms_load::load_settings;
 pub(crate) use platforms_load::FromSettingsString;
