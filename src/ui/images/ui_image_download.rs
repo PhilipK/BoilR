@@ -1,23 +1,32 @@
-use super::{texturestate::TextureDownloadState, gamemode::GameMode, possible_image::PossibleImage, gametype::GameType, pages::{render_page_shortcut_images_overview, render_page_steam_images_overview, render_page_pick_image, render_page_shortcut_select_image_type}, useraction::UserAction, constants::POSSIBLE_EXTENSIONS, hasimagekey::HasImageKey, image_select_state::ImageSelectState};
-
-use std::{
-    path::{Path},
+use super::{
+    constants::POSSIBLE_EXTENSIONS,
+    gamemode::GameMode,
+    gametype::GameType,
+    hasimagekey::HasImageKey,
+    image_select_state::ImageSelectState,
+    pages::{
+        render_page_pick_image, render_page_shortcut_images_overview,
+        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_grid_change,
+    },
+    possible_image::PossibleImage,
+    texturestate::TextureDownloadState,
+    useraction::UserAction,
 };
 
-use crate::{
+use std::path::Path;
+
+    use crate::{
     config::get_thumbnails_folder,
-    steam::{get_installed_games, SteamUsersInfo,},
-    steam::{get_shortcuts_paths },
+    steam::get_shortcuts_paths,
+    steam::{get_installed_games, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, CachedSearch, ImageType, ToDownload},
-    sync::{download_images, SyncProgress}, ui::{MyEguiApp, FetcStatus, ui_images::load_image_from_path},
+    sync::{download_images, SyncProgress},
+    ui::{ui_images::load_image_from_path, FetcStatus, MyEguiApp},
 };
-use egui::{ScrollArea};
+use egui::ScrollArea;
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
-
-
-
 
 impl MyEguiApp {
     fn render_ui_image_action(&self, ui: &mut egui::Ui) -> UserAction {
@@ -47,11 +56,13 @@ impl MyEguiApp {
             ui.heading(shortcut.name());
 
             if let Some(possible_names) = state.possible_names.as_ref() {
-                if let Some(value) = super::pages::render_page_change_grid_db_id(possible_names, ui, state) {
+                if let Some(value) =
+                    super::pages::render_page_change_grid_db_id(possible_names, ui, state)
+                {
                     return value;
                 }
             } else if let Some(image_type) = state.image_type_selected.as_ref() {
-                if let Some(action) = render_page_pick_image(&self,ui, image_type, state) {
+                if let Some(action) = render_page_pick_image(&self, ui, image_type, state) {
                     return action;
                 }
             } else if let Some(action) = render_page_shortcut_select_image_type(ui, state) {
@@ -60,7 +71,7 @@ impl MyEguiApp {
         } else {
             let is_shortcut = state.game_mode.is_shortcuts();
             if is_shortcut {
-                if let Some(action) = render_page_shortcut_images_overview(&self,ui) {
+                if let Some(action) = render_page_shortcut_images_overview(&self, ui) {
                     return action;
                 }
             } else if let Some(action) = render_page_steam_images_overview(ui, state) {
@@ -99,9 +110,6 @@ impl MyEguiApp {
         }
         None
     }
-
-
-    
 
     fn ensure_steam_users_loaded(&mut self) {
         if self.image_selected_state.settings_error.is_none()
@@ -150,7 +158,7 @@ impl MyEguiApp {
                 self.handle_back_button_action();
             }
             UserAction::GridIdChanged(grid_id) => {
-                self.handle_grid_change(grid_id);
+                handle_grid_change(self,grid_id);
             }
             UserAction::SetGamesMode(game_mode) => {
                 self.handle_set_game_mode(game_mode);
@@ -252,18 +260,6 @@ impl MyEguiApp {
     fn handle_set_game_mode(&mut self, game_mode: GameMode) {
         self.image_selected_state.game_mode = game_mode;
         self.image_selected_state.steam_games = Some(get_installed_games(&self.settings.steam));
-    }
-    fn handle_grid_change(&mut self, grid_id: usize) {
-        self.image_selected_state.grid_id = Some(grid_id);
-        self.image_selected_state.possible_names = None;
-        if let Some(auth_key) = &self.settings.steamgrid_db.auth_key {
-            let client = steamgriddb_api::Client::new(auth_key);
-            let mut cache = CachedSearch::new(&client);
-            if let Some(shortcut) = &self.image_selected_state.selected_shortcut {
-                cache.set_cache(shortcut.app_id(), shortcut.name(), grid_id);
-                cache.save();
-            }
-        }
     }
 
     fn handle_user_selected(&mut self, user: SteamUsersInfo, ui: &mut egui::Ui) {
@@ -494,7 +490,6 @@ fn render_shortcut_mode_select(state: &ImageSelectState, ui: &mut egui::Ui) -> O
     None
 }
 
-
 fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<UserAction> {
     if state.steam_user.is_none() {
         if let Some(users) = &state.steam_users {
@@ -524,5 +519,3 @@ fn render_user_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<Use
 
     None
 }
-
-const MAX_WIDTH: f32 = 300.;

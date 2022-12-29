@@ -6,6 +6,7 @@ mod pick_new_image;
 
 
 pub use change_grid_db_id::render_page_change_grid_db_id;
+pub use change_grid_db_id::handle_grid_change;
 pub use shortcut_images_overview::render_page_shortcut_images_overview;
 pub use steam_images_overview::render_page_steam_images_overview;
 pub use select_image_type::render_page_shortcut_select_image_type;
