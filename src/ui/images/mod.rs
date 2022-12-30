@@ -15,3 +15,4 @@ pub use image_select_state::ImageSelectState;
 pub use image_select_state::ImageHandles;
 pub use texturestate::TextureDownloadState;
 pub use image_resize::clamp_to_width;
+pub use hasimagekey::HasImageKey;

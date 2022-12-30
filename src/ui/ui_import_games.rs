@@ -1,18 +1,23 @@
+use std::path::Path;
+
 use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
 
-use steam_shortcuts_util::shortcut::ShortcutOwned;
+use steam_shortcuts_util::shortcut::{ShortcutOwned};
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
 #[cfg(target_family = "unix")]
 use crate::steam::setup_proton_games;
+use crate::steamgriddb::ImageType;
 use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
 
+use super::components::{render_image_from_path, render_user_select};
+use super::images::HasImageKey;
 use super::{all_ready, backup_shortcuts, get_all_games};
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
@@ -39,8 +44,21 @@ impl<T> FetcStatus<T> {
 
 impl MyEguiApp {
     pub(crate) fn render_import_games(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Import Games");
-
+        let user_path = {
+            match self.render_user_select(ui){
+                Some(user) =>  Some(user.steam_user_data_folder.clone()),
+                None => None
+            }
+        };
+        let image_handles = &self.image_selected_state.image_handles;
+        let thumbnail = |ui: &mut egui::Ui, shortcut: &ShortcutOwned| {
+            if let Some(user_path) = &user_path {
+                let (path, _key) = shortcut.key(&ImageType::Grid, Path::new(&user_path));
+                render_image_from_path(ui, image_handles, &path, 100.0, &shortcut.app_name)
+            } else {
+                false
+            }
+        };
         let mut scroll_style = ui.style_mut();
         scroll_style.visuals.extreme_bg_color = BACKGROUND_COLOR;
         scroll_style.visuals.widgets.inactive.bg_fill = EXTRA_BACKGROUND_COLOR;
@@ -94,6 +112,7 @@ impl MyEguiApp {
                                             let name = self.rename_map.get(&shortcut.app_id).unwrap_or(&shortcut.app_name);
                                             let checkbox = egui::Checkbox::new(&mut import_game,name);
                                             let response = ui.add(checkbox);
+                                            thumbnail(ui,shortcut);
                                             if response.double_clicked(){
                                                 self.rename_map.entry(shortcut.app_id).or_insert_with(|| shortcut.app_name.to_owned());
                                                 self.current_edit = Option::Some(shortcut.app_id);
@@ -123,6 +142,19 @@ impl MyEguiApp {
         });
     }
 
+    fn render_user_select(&mut self, ui: &mut egui::Ui) -> Option<&crate::steam::SteamUsersInfo> {
+        if let Some(error) = &self.image_selected_state.settings_error{
+            ui.heading(error);
+        }
+        self.ensure_steam_users_loaded();
+        let users = self.image_selected_state.steam_users.as_ref();
+        if let Some(users) = users {
+            render_user_select(self.image_selected_state.steam_user.as_ref(), &users, ui)
+        } else {
+            None
+        }
+    }
+
     pub fn run_sync(&mut self, wait: bool) {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
@@ -150,7 +182,7 @@ impl MyEguiApp {
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
-                if let Err(e) = sync::fix_all_shortcut_icons(&settings){
+                if let Err(e) = sync::fix_all_shortcut_icons(&settings) {
                     eprintln!("Could not fix shortcuts with error {e}");
                 }
 

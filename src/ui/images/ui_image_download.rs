@@ -116,7 +116,7 @@ impl MyEguiApp {
         None
     }
 
-    fn ensure_steam_users_loaded(&mut self) {
+    pub fn ensure_steam_users_loaded(&mut self) {
         if self.image_selected_state.settings_error.is_none()
             && self.image_selected_state.steam_users.is_none()
         {
