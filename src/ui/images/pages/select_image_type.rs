@@ -24,63 +24,37 @@ pub fn render_page_shortcut_select_image_type(
     let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
 
     let thumbnail = |ui: &mut egui::Ui, image_type: &ImageType| {
-        render_thumbnail_new(ui, &state.image_handles, shortcut, image_type, user_path)
+        ui.label(image_type.name());
+        if render_thumbnail_new(ui, &state.image_handles, shortcut, image_type, user_path) {
+            Some(UserAction::ImageTypeSelected(*image_type))
+        } else {
+            None
+        }
     };
     let x = if ui.available_width() > MAX_WIDTH * 3. {
         ui.horizontal(|ui| {
-            let x = ui
-                .vertical(|ui| {
-                    ui.label(ImageType::Grid.name());
-                    if thumbnail(ui, &ImageType::Grid) {
-                        return Some(UserAction::ImageTypeSelected(ImageType::Grid));
-                    }
-                    None
-                })
-                .inner;
+            let x = ui.vertical(|ui| thumbnail(ui, &ImageType::Grid)).inner;
             if x.is_some() {
                 return x;
             }
             let x = ui
                 .vertical(|ui| {
-                    let texture =
-                        texture_from_iamge_type(shortcut, &ImageType::Hero, user_path, state);
-                    ui.label(ImageType::Hero.name());
-                    if render_thumbnail(ui, texture).clicked() {
-                        return Some(UserAction::ImageTypeSelected(ImageType::Hero));
-                    }
-                    let texture =
-                        texture_from_iamge_type(shortcut, &ImageType::WideGrid, user_path, state);
-                    ui.label(ImageType::WideGrid.name());
-                    if render_thumbnail(ui, texture).clicked() {
-                        return Some(UserAction::ImageTypeSelected(ImageType::WideGrid));
-                    }
-
-                    let texture =
-                        texture_from_iamge_type(shortcut, &ImageType::Logo, user_path, state);
-                    ui.label(ImageType::Logo.name());
-                    if render_thumbnail(ui, texture).clicked() {
-                        return Some(UserAction::ImageTypeSelected(ImageType::Logo));
-                    }
-                    None
+                    let types = &[ImageType::Hero, ImageType::WideGrid, ImageType::Logo];
+                    types
+                        .iter()
+                        .flat_map(|image_type| thumbnail(ui, image_type))
+                        .next()
                 })
                 .inner;
             if x.is_some() {
                 return x;
             }
             ui.vertical(|ui| {
-                let texture = texture_from_iamge_type(shortcut, &ImageType::Icon, user_path, state);
-                ui.label(ImageType::Icon.name());
-                if render_thumbnail(ui, texture).clicked() {
-                    return Some(UserAction::ImageTypeSelected(ImageType::Icon));
-                }
-
-                let texture =
-                    texture_from_iamge_type(shortcut, &ImageType::BigPicture, user_path, state);
-                ui.label(ImageType::BigPicture.name());
-                if render_thumbnail(ui, texture).clicked() {
-                    return Some(UserAction::ImageTypeSelected(ImageType::BigPicture));
-                }
-                None
+                let types = &[ImageType::Icon, ImageType::BigPicture];
+                types
+                    .iter()
+                    .flat_map(|image_type| thumbnail(ui, image_type))
+                    .next()
             })
             .inner
         })
