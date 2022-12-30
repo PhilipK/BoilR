@@ -8,6 +8,7 @@ use crate::steamgriddb::{ImageType, ToDownload};
 use crate::ui::images::{clamp_to_width, ImageHandles, TextureDownloadState};
 use crate::ui::ui_images::load_image_from_path;
 
+
 pub fn render_image_from_path(
     ui: &mut egui::Ui,
     image_handles: &ImageHandles,

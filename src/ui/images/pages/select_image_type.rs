@@ -2,22 +2,36 @@ use std::path::Path;
 
 use egui::ImageButton;
 
-use crate::{ui::images::{image_select_state::ImageSelectState, useraction::UserAction, gametype::GameType, texturestate::TextureDownloadState, hasimagekey::HasImageKey, image_resize::clamp_to_width}, steamgriddb::ImageType};
+use crate::{
+    steamgriddb::ImageType,
+    ui::{
+        components::render_image_from_path,
+        images::{
+            gametype::GameType, hasimagekey::HasImageKey, image_resize::clamp_to_width,
+            image_select_state::ImageSelectState, texturestate::TextureDownloadState,
+            useraction::UserAction, ImageHandles,
+        },
+    },
+};
 
 const MAX_WIDTH: f32 = 300.;
 
-
-pub fn render_page_shortcut_select_image_type(ui: &mut egui::Ui, state: &ImageSelectState) -> Option<UserAction> {
+pub fn render_page_shortcut_select_image_type(
+    ui: &mut egui::Ui,
+    state: &ImageSelectState,
+) -> Option<UserAction> {
     let shortcut = state.selected_shortcut.as_ref().unwrap();
     let user_path = &state.steam_user.as_ref().unwrap().steam_user_data_folder;
+
+    let thumbnail = |ui: &mut egui::Ui, image_type: &ImageType| {
+        render_thumbnail_new(ui, &state.image_handles, shortcut, image_type, user_path)
+    };
     let x = if ui.available_width() > MAX_WIDTH * 3. {
         ui.horizontal(|ui| {
             let x = ui
                 .vertical(|ui| {
-                    let texture =
-                        texture_from_iamge_type(shortcut, &ImageType::Grid, user_path, state);
                     ui.label(ImageType::Grid.name());
-                    if render_thumbnail(ui, texture).clicked() {
+                    if thumbnail(ui, &ImageType::Grid) {
                         return Some(UserAction::ImageTypeSelected(ImageType::Grid));
                     }
                     None
@@ -117,6 +131,23 @@ fn texture_from_iamge_type(
         TextureDownloadState::Loaded(texture) => Some(texture.clone()),
         _ => None,
     })
+}
+
+fn render_thumbnail_new(
+    ui: &mut egui::Ui,
+    image_handles: &ImageHandles,
+    shortcut: &GameType,
+    image_type: &ImageType,
+    user_path: &String,
+) -> bool {
+    let (path, _key) = shortcut.key(image_type, Path::new(&user_path));
+    render_image_from_path(
+        ui,
+        image_handles,
+        path.as_path(),
+        MAX_WIDTH,
+        "Pick an image",
+    )
 }
 
 fn render_thumbnail(ui: &mut egui::Ui, image: Option<egui::TextureHandle>) -> egui::Response {
