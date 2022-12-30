@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use egui::ImageButton;
+use egui::{Button, ImageButton};
 use futures::executor::block_on;
 use tokio::runtime::Runtime;
 
@@ -13,8 +13,9 @@ pub fn render_image_from_path(
     image_handles: &ImageHandles,
     path: &Path,
     max_width: f32,
+    text: &str,
 ) -> bool {
-    render_possible_image(ui, image_handles, path, max_width, None, None, None)
+    render_possible_image(ui, image_handles, path, max_width, text, None, None, None)
 }
 
 pub fn render_image_from_path_or_url(
@@ -22,6 +23,7 @@ pub fn render_image_from_path_or_url(
     image_handles: &ImageHandles,
     path: &Path,
     max_width: f32,
+    text: &str,
     image_type: &ImageType,
     rt: &Runtime,
     url: &str,
@@ -31,6 +33,7 @@ pub fn render_image_from_path_or_url(
         image_handles,
         path,
         max_width,
+        text,
         Some(image_type),
         Some(rt),
         Some(url),
@@ -42,6 +45,7 @@ fn render_possible_image(
     image_handles: &ImageHandles,
     path: &Path,
     max_width: f32,
+    text: &str,
     image_type: Option<&ImageType>,
     rt: Option<&Runtime>,
     url: Option<&str>,
@@ -78,12 +82,20 @@ fn render_possible_image(
                     let mut size = texture_handle.size_vec2();
                     clamp_to_width(&mut size, max_width);
                     let image_button = ImageButton::new(texture_handle, size);
-                    if ui.add_sized(size, image_button).clicked() {
+                    if ui
+                        .add_sized(size, image_button)
+                        .on_hover_text(text)
+                        .clicked()
+                    {
                         return true;
                     }
                 }
                 TextureDownloadState::Failed => {
-                    ui.label("Failed to load image");
+                    let button =
+                        ui.add_sized([max_width, max_width * 1.6], Button::new(text).wrap(true));
+                    if button.clicked() {
+                        return true;
+                    }
                 }
             }
         }

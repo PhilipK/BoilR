@@ -66,6 +66,7 @@ pub fn render_page_pick_image(
                             &state.image_handles,
                             &path,
                             column_width,
+                            &image.full_url,
                             image_type,
                             &app.rt,
                             &image.thumbnail_url,
