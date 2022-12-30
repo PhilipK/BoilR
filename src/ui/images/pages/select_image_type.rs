@@ -5,7 +5,7 @@ use egui::ImageButton;
 use crate::{
     steamgriddb::ImageType,
     ui::{
-        components::render_image_from_path,
+        components::render_image_from_path_image_type,
         images::{
             gametype::GameType, hasimagekey::HasImageKey, image_resize::clamp_to_width,
             image_select_state::ImageSelectState, texturestate::TextureDownloadState,
@@ -115,12 +115,14 @@ fn render_thumbnail_new(
     user_path: &String,
 ) -> bool {
     let (path, _key) = shortcut.key(image_type, Path::new(&user_path));
-    render_image_from_path(
+    let text = format!("Pick {} image", image_type.name());
+    render_image_from_path_image_type(
         ui,
         image_handles,
         path.as_path(),
         MAX_WIDTH,
-        "Pick an image",
+        &text,
+        image_type,
     )
 }
 
