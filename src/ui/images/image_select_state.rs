@@ -8,6 +8,9 @@ use crate::{steam::SteamUsersInfo, steamgriddb::ImageType, ui::FetcStatus};
 use super::{ gamemode::GameMode, possible_image::PossibleImage, texturestate::TextureDownloadState, gametype::GameType};
 
 use tokio::sync::watch::{self, Receiver};
+
+pub type ImageHandles = std::sync::Arc<DashMap<String, TextureDownloadState>>;
+
 pub struct ImageSelectState {
     pub selected_shortcut: Option<GameType>,
     pub grid_id: Option<usize>,
@@ -20,7 +23,7 @@ pub struct ImageSelectState {
     pub image_type_selected: Option<ImageType>,
     pub image_options: Receiver<FetcStatus<Vec<PossibleImage>>>,
     pub steam_games: Option<Vec<crate::steam::SteamGameInfo>>,
-    pub image_handles: std::sync::Arc<DashMap<String, TextureDownloadState>>,
+    pub image_handles: ImageHandles,
 
     pub possible_names: Option<Vec<steamgriddb_api::search::SearchResult>>,
 }
