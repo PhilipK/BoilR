@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use egui::{Button, ImageButton};
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{
@@ -8,10 +7,10 @@ use crate::{
     steamgriddb::{ImageType, CachedSearch},
     ui::{
         images::{
-            gametype::GameType, hasimagekey::HasImageKey, image_resize::clamp_to_width,
+            gametype::GameType, hasimagekey::HasImageKey,
             texturestate::TextureDownloadState, useraction::UserAction,
         },
-        MyEguiApp, ui_images::load_image_from_path,
+        MyEguiApp, ui_images::load_image_from_path, components::render_image_from_path,
     },
 };
 
@@ -65,27 +64,8 @@ fn render_image(
         &ImageType::Grid,
         Path::new(&user_info.steam_user_data_folder),
     );
-    let mut clicked = false;
 
-    let texture = app.image_selected_state.image_handles.get(&key);
-    if let Some(texture) = texture {
-        if let TextureDownloadState::Loaded(texture) = &texture.value() {
-            let mut size = texture.size_vec2();
-            clamp_to_width(&mut size, column_width);
-            let image_button = ImageButton::new(texture, size);
-            clicked = ui
-                .add(image_button)
-                .on_hover_text(&shortcut.app_name)
-                .clicked();
-        }
-    } else {
-        let button = ui.add_sized(
-            [column_width, column_width * 1.6],
-            Button::new(&shortcut.app_name).wrap(true),
-        );
-        clicked = clicked || button.clicked();
-    }
-
+    let clicked= render_image_from_path(ui, &app.image_selected_state.image_handles, Path::new(&key), column_width, &shortcut.app_name);
     if clicked {
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             shortcut.clone(),

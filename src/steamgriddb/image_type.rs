@@ -22,6 +22,17 @@ impl ImageType {
         &ALL_TYPES
     }
 
+    pub fn ratio(&self) -> f32{
+        match self {
+            ImageType::Hero => 0.3,
+            ImageType::Grid => 1.6,
+            ImageType::WideGrid => 0.5,
+            ImageType::Logo => 0.2,
+            ImageType::BigPicture => 0.5,
+            ImageType::Icon => 1.0,
+        }
+    }
+
     pub fn name(&self) -> &str {
         match self {
             ImageType::Hero => "Hero",
