@@ -46,13 +46,21 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest'}}
         run: |
           sudo apt-get update 
-          sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
+          sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev upx binutils
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v2
-      - name: Build Release Version
+      - name: Build Release Version Windows
+        if: ${{ matrix.os != 'ubuntu-latest'}}
         run: cargo build --release     
-      - name: Compress binaries
+      - name: Build Release Version Linux 
+        if: ${{ matrix.os == 'ubuntu-latest'}}
+        run: |
+          cargo build --release
+          strip ./target/release/boilr
+          upx ./target/release/boilr -9
+      - name: Compress binaries windows
+        if: ${{ matrix.os != 'ubuntu-latest'}}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
