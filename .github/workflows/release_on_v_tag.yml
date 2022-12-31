@@ -33,7 +33,7 @@ jobs:
           - os: ubuntu-latest
             file: target/release/boilr
             asset_name: linux_BoilR
-            args: --best --lzma
+            args: -9 
             strip: true
           - os: windows-latest
             file: target/release/boilr.exe
@@ -53,7 +53,6 @@ jobs:
       - name: Build Release Version
         run: cargo build --release     
       - name: Compress binaries
-        if: ${{ matrix.os != 'ubuntu-latest'}}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
