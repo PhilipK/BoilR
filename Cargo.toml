@@ -1,11 +1,10 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.7.14"
+version = "1.7.15"
 
 [dependencies]
 base64 = "^0.20.0"
-chrono = "^0.4.23"
 config = "^0.13.3"
 copypasta = "^0.8.1"
 flate2 = "^1.0.25"
@@ -20,6 +19,7 @@ sysinfo = "^0.27.1"
 eyre = "^0.6.8"
 color-eyre = "^0.6.2"
 dyn-clone = "^1.0.10"
+time = {version="^0.3.17", features = ["formatting"]}
 
 [target."cfg(not(windows))".dependencies]
 openssl = { version = "*", features = ["vendored"] }
@@ -57,8 +57,6 @@ version = "^1.23.0"
 
 [dependencies.toml]
 version = "^0.5.10"
-
-[target]
 [target."cfg(windows)"]
 [target."cfg(windows)".build-dependencies]
 winres = "^0.1.12"

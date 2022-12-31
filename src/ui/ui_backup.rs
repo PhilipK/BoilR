@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use chrono::Local;
 use egui::ScrollArea;
+use time::format_description;
 
 use crate::{
     config::get_backups_flder,
@@ -100,11 +100,16 @@ pub fn load_backups() -> Vec<PathBuf> {
     result
 }
 
+const DATE_FORMAT :&str = "[year]-[month]-[day]-[hour]-[minute]-[second]";
+
 pub fn backup_shortcuts(steam_settings: &SteamSettings) {
+    use time::OffsetDateTime;
+
     let backup_folder = get_backups_flder();
     let paths = get_shortcuts_paths(steam_settings);
-    let date = Local::now();
-    let date_string = date.format("%Y-%m-%d-%H-%M-%S");
+    let date = OffsetDateTime::now_utc();
+    let format = format_description::parse(DATE_FORMAT).unwrap();
+    let date_string = date.format(&format).unwrap();
     if let Ok(user_infos) = paths {
         for user_info in user_infos {
             if let Some(shortcut_path) = user_info.shortcut_path {
