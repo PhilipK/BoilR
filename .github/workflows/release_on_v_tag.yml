@@ -58,7 +58,6 @@ jobs:
         run: |
           cargo build --release
           strip ./target/release/boilr
-          upx ./target/release/boilr -9
       - name: Compress binaries windows
         if: ${{ matrix.os != 'ubuntu-latest'}}
         uses: svenstaro/upx-action@v2
