@@ -40,7 +40,7 @@ mod unix {
                         .join("Program Files (x86)")
                         .join("Epic Games")
                         .join("Launcher")
-                        .join("Engine")
+                        .join("Portal")
                         .join("Binaries");
                     if binary_path.exists() {
                         let launcher_path = if binary_path
