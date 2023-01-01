@@ -8,8 +8,9 @@
   <summary>Add non-steam games to your steam library</summary>
   <description>
     <p>BoilR will show games from other games platforms in your Steam library.
-        It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
-        The goal is that you do not have to leave your Steam library to launch games from other launchers/stores, so that you can find all the games that you have available.
+      It uses the Steam 3rd party shortcuts feature and does not require you to set up anything.
+      The goal is that you do not have to leave your Steam library to launch games from other
+      launchers/stores, so that you can find all the games that you have available.
       You can also use BoilR to manually and automatically download custom art from SteamGridDB.</p>
   </description>
   <screenshots>
@@ -19,43 +20,52 @@
     </screenshot>
   </screenshots>
   <url type="homepage">https://github.com/PhilipK/BoilR</url>
-<!--
+  <!--
 Open Age Rating Service
 https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
-  <release version="1.7.13" date="2022-12-30">
+    <release version="1.7.16" date="2022-12-30">
+      <description>
+        <ul>
+          <li>Automatically start Epic games through the launcher (thanks to vkbsb)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.13" date="2022-12-30">
       <description>
         <ul>
           <li>Fix not finding Epic Games (thanks to vkbsb)</li>
         </ul>
       </description>
-    </release>  <release version="1.7.11" date="2022-12-28">
+    </release>
+
+    <release version="1.7.11" date="2022-12-28">
       <description>
         <ul>
           <li>Automatically go fullscreen when in steam mode</li>
         </ul>
       </description>
     </release>
-   <release version="1.7.10" date="2022-12-28">
+    <release version="1.7.10" date="2022-12-28">
       <description>
         <ul>
           <li>Only load platforms that are available for OS</li>
         </ul>
       </description>
     </release>
- 
-  
-  <release version="1.7.9" date="2022-12-28">
+
+
+    <release version="1.7.9" date="2022-12-28">
       <description>
         <ul>
           <li>Fix import button hidden on steam deck in game mode</li>
         </ul>
       </description>
     </release>
-  
-  <release version="1.7.8" date="2022-12-27">
+
+    <release version="1.7.8" date="2022-12-27">
       <description>
         <ul>
           <li>Update all dependencies</li>
@@ -63,13 +73,14 @@ https://hughsie.github.io/oars/index.html
         </ul>
       </description>
     </release>
-   <release version="1.7.6" date="2022-10-29">
+    <release version="1.7.6" date="2022-10-29">
       <description>
         <ul>
-          <li>Fixed a bug where selecting which games to import would not be saved when importing games</li>
+          <li>Fixed a bug where selecting which games to import would not be saved when importing
+            games</li>
         </ul>
       </description>
-    </release>  
+    </release>
     <release version="1.7.5" date="2022-10-26">
       <description>
         <ul>
@@ -78,39 +89,39 @@ https://hughsie.github.io/oars/index.html
           <li>Improve text</li>
         </ul>
       </description>
-    </release>  
-   <release version="1.7.4" date="2022-10-21">
+    </release>
+    <release version="1.7.4" date="2022-10-21">
       <description>
         <ul>
           <li>Improve UI for selecting download images</li>
           <li>Add dropdowns to user selection</li>
         </ul>
       </description>
-  </release>  
-  <release version="1.7.3" date="2022-10-21">
+    </release>
+    <release version="1.7.3" date="2022-10-21">
       <description>
         <ul>
           <li>Improve UI for image selection</li>
           <li>Add read access to legendary folder</li>
         </ul>
       </description>
-  </release>  
-  <release version="1.7.2" date="2022-10-14">
+    </release>
+    <release version="1.7.2" date="2022-10-14">
       <description>
         <ul>
           <li>Avoid a crash when loading certain animated WebP images</li>
         </ul>
       </description>
-  </release>  
-  <release version="1.7.1" date="2022-10-13">
+    </release>
+    <release version="1.7.1" date="2022-10-13">
       <description>
         <ul>
           <li>Find more Epic games installed through Proton</li>
           <li>Fix icons not being set in Steam</li>
         </ul>
       </description>
-  </release>  
-  <release version="1.7.0" date="2022-10-11">
+    </release>
+    <release version="1.7.0" date="2022-10-11">
       <description>
         <ul>
           <li>Add support for MiniGalaxy</li>
@@ -119,166 +130,167 @@ https://hughsie.github.io/oars/index.html
           <li>Performance optimizations</li>
         </ul>
       </description>
-  </release>
-  <release version="1.5.1" date="2022-09-21">
+    </release>
+    <release version="1.5.1" date="2022-09-21">
       <description>
         <ul>
           <li>You can name rename shortcuts by double clicking them</li>
         </ul>
       </description>
-  </release>
-  <release version="1.5.0" date="2022-09-12">
+    </release>
+    <release version="1.5.0" date="2022-09-12">
       <description>
         <ul>
           <li>Enable importing games from Bottles</li>
         </ul>
       </description>
-  </release>
-   <release version="1.4.9" date="2022-09-08">
+    </release>
+    <release version="1.4.9" date="2022-09-08">
       <description>
         <ul>
-          <li>Fixed a crash that would happen when loading specific animated webp images that use alpha blending</li>
+          <li>Fixed a crash that would happen when loading specific animated webp images that use
+            alpha blending</li>
         </ul>
       </description>
-  </release>
-   <release version="1.4.8" date="2022-09-06">
+    </release>
+    <release version="1.4.8" date="2022-09-06">
       <description>
         <ul>
           <li>Itch settings can not be reset</li>
           <li>Delete old images when new ones are selected</li>
         </ul>
       </description>
-  </release>
-   <release version="1.4.7" date="2022-09-01">
+    </release>
+    <release version="1.4.7" date="2022-09-01">
       <description>
         <ul>
-          <li>Load images with wrong extensions</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.4.6" date="2022-08-31">
-      <description>
-        <ul>
-          <li>Support Lutris installed through flatpak</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.4.5" date="2022-08-25">
-      <description>
-        <ul>
-          <li>Fix a crash that could happen when loading certain animated webp images</li>          
-          <li>Updated all dependencies</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.4.4" date="2022-08-15">
-      <description>
-        <ul>
-          <li>Fix a crash that could happen when loading corrupt images</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.4.3" date="2022-08-03">
-      <description>
-        <ul>
-          <li>Fix lutris game import with long names</li>          
-          <li>Fix bug when creating collections</li>          
-          <li>Update all external dependencies</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.4.1" date="2022-07-18">
-      <description>
-        <ul>
-          <li>Add a save button to the settings page</li>          
-          <li>Add option to run without vsync</li>          
-          <li>Prevent crash when settings where invalid</li>          
-        </ul>
-      </description>
-  </release>
-
-  <release version="1.4.0" date="2022-07-11">
-      <description>
-        <ul>
-          <li>Fix running games with long names from lutris</li>          
-          <li>Added option to disable symlinks for Itch.IO</li>          
-        </ul>
-      </description>
-  </release>
-
-
-  <release version="1.3.20" date="2022-06-16">
-      <description>
-        <ul>
-          <li>Update dependency to fix bugs</li>          
-        </ul>
-      </description>
-  </release>
-   <release version="1.3.19" date="2022-06-14">
-      <description>
-        <ul>
-          <li>Improve launching games from Heroic</li>          
-        </ul>
-      </description>
-  </release>
-   <release version="1.3.18" date="2022-06-08">
-      <description>
-        <ul>
-          <li>Launch GOG games through Heroic</li>          
-        </ul>
-      </description>
-  </release>
-   <release version="1.3.17" date="2022-06-07">
-      <description>
-        <ul>
-          <li>Update all dependencies to latest versions</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.3.16" date="2022-06-07">
-      <description>
-        <ul>
-          <li>Removed dependency on unsafe package failure</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.3.14" date="2022-05-30">
-      <description>
-        <ul>
-          <li>Fixed that some Heroic games where not found</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.3.13" date="2022-05-27">
-      <description>
-        <ul>
-          <li>You can now add Flatpak apps</li>          
-        </ul>
-      </description>
-  </release>
-  <release version="1.3.12" date="2022-05-27">
-      <description>
-        <ul>
-          <li>Add option to disconnect a shortcut from BoilR, making it possible to manually edit it</li>          
+          <li>Load images with wrong extensions</li>
         </ul>
       </description>
     </release>
-  <release version="1.3.11" date="2022-05-27">
+    <release version="1.4.6" date="2022-08-31">
       <description>
         <ul>
-          <li>Can now find games installed by Epic Store Launcher installed via Proton</li>          
+          <li>Support Lutris installed through flatpak</li>
         </ul>
       </description>
     </release>
-   <release version="1.3.10" date="2022-05-25">
+    <release version="1.4.5" date="2022-08-25">
+      <description>
+        <ul>
+          <li>Fix a crash that could happen when loading certain animated webp images</li>
+          <li>Updated all dependencies</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.4" date="2022-08-15">
+      <description>
+        <ul>
+          <li>Fix a crash that could happen when loading corrupt images</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.3" date="2022-08-03">
+      <description>
+        <ul>
+          <li>Fix lutris game import with long names</li>
+          <li>Fix bug when creating collections</li>
+          <li>Update all external dependencies</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.1" date="2022-07-18">
+      <description>
+        <ul>
+          <li>Add a save button to the settings page</li>
+          <li>Add option to run without vsync</li>
+          <li>Prevent crash when settings where invalid</li>
+        </ul>
+      </description>
+    </release>
+
+    <release version="1.4.0" date="2022-07-11">
+      <description>
+        <ul>
+          <li>Fix running games with long names from lutris</li>
+          <li>Added option to disable symlinks for Itch.IO</li>
+        </ul>
+      </description>
+    </release>
+
+
+    <release version="1.3.20" date="2022-06-16">
+      <description>
+        <ul>
+          <li>Update dependency to fix bugs</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.19" date="2022-06-14">
+      <description>
+        <ul>
+          <li>Improve launching games from Heroic</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.18" date="2022-06-08">
+      <description>
+        <ul>
+          <li>Launch GOG games through Heroic</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.17" date="2022-06-07">
+      <description>
+        <ul>
+          <li>Update all dependencies to latest versions</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.16" date="2022-06-07">
+      <description>
+        <ul>
+          <li>Removed dependency on unsafe package failure</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.14" date="2022-05-30">
+      <description>
+        <ul>
+          <li>Fixed that some Heroic games where not found</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.13" date="2022-05-27">
+      <description>
+        <ul>
+          <li>You can now add Flatpak apps</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.12" date="2022-05-27">
+      <description>
+        <ul>
+          <li>Add option to disconnect a shortcut from BoilR, making it possible to manually edit it</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.11" date="2022-05-27">
+      <description>
+        <ul>
+          <li>Can now find games installed by Epic Store Launcher installed via Proton</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.10" date="2022-05-25">
       <description>
         <ul>
           <li>Option to always launch games through Heroic Launcher</li>
-          <li>Start Heroic Launcher with the --no-gui parameter</li>          
+          <li>Start Heroic Launcher with the --no-gui parameter</li>
         </ul>
       </description>
     </release>
-  <release version="1.3.9" date="2022-05-20">
+    <release version="1.3.9" date="2022-05-20">
       <description>
         <ul>
           <li>Option to launch games through Heroic Launcher</li>
@@ -287,29 +299,37 @@ https://hughsie.github.io/oars/index.html
         </ul>
       </description>
     </release>
-  <release version="1.3.8" date="2022-05-20">
+    <release version="1.3.8" date="2022-05-20">
       <description>
         <p>Fixed a bug where shortcuts added by Steam ROM Manager could not be parsed</p>
       </description>
     </release>
-  <release version="1.3.7" date="2022-05-20">
+    <release version="1.3.7" date="2022-05-20">
       <description>
         <p>Back up your shortcuts and restore them later</p>
       </description>
     </release>
-  <release version="1.3.6" date="2022-05-17">
+    <release version="1.3.6" date="2022-05-17">
       <description>
         <p>Automatically find Steam installed through flatpak</p>
       </description>
     </release>
     <release version="1.3.5" date="2022-05-15">
       <description>
-        <ul><li>Fix icons not set in GoG games</li><li>Fix Origin (installed via proton) games not being launch correctly</li><li>Show version number in settings</li></ul>
+        <ul>
+          <li>Fix icons not set in GoG games</li>
+          <li>Fix Origin (installed via proton) games not being launch correctly</li>
+          <li>Show version number in settings</li>
+        </ul>
       </description>
     </release>
     <release version="1.3.4" date="2022-05-15">
       <description>
-        <ul><li>Fix icons not being set on games</li><li>Update dependencies to improve performance</li><li>Add progress spinners to ui</li></ul>
+        <ul>
+          <li>Fix icons not being set on games</li>
+          <li>Update dependencies to improve performance</li>
+          <li>Add progress spinners to ui</li>
+        </ul>
       </description>
     </release>
     <release version="1.3.3" date="2022-05-14">
