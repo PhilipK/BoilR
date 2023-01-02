@@ -4,7 +4,7 @@ use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
 
-use steam_shortcuts_util::shortcut::{ShortcutOwned};
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
 use crate::config::get_renames_file;
@@ -45,9 +45,9 @@ impl<T> FetcStatus<T> {
 impl MyEguiApp {
     pub(crate) fn render_import_games(&mut self, ui: &mut egui::Ui) {
         let user_path = {
-            match self.render_user_select(ui){
-                Some(user) =>  Some(user.steam_user_data_folder.clone()),
-                None => None
+            match self.render_user_select(ui) {
+                Some(user) => Some(user.steam_user_data_folder.clone()),
+                None => None,
             }
         };
         let image_handles = &self.image_selected_state.image_handles;
@@ -74,6 +74,7 @@ impl MyEguiApp {
             ui.label("Select the games you want to import into steam");
             for (name,status) in &self.games_to_sync{
                 ui.heading(name);
+                ui.horizontal(|ui|{
                 match &*status.borrow(){
                     FetcStatus::NeedsFetched => {ui.label("Need to find games");},
                     FetcStatus::Fetching => {
@@ -109,21 +110,23 @@ impl MyEguiApp {
                                                 }
                                             }
                                         }  else {
-                                            let name = self.rename_map.get(&shortcut.app_id).unwrap_or(&shortcut.app_name);
-                                            let checkbox = egui::Checkbox::new(&mut import_game,name);
-                                            let response = ui.add(checkbox);
+                                            //let name = self.rename_map.get(&shortcut.app_id).unwrap_or(&shortcut.app_name);
+                                            //let checkbox = egui::Checkbox::new(&mut import_game,name);
+                                            //let response = ui.add(checkbox);
+                                            //if response.double_clicked(){
+                                            //    self.rename_map.entry(shortcut.app_id).or_insert_with(|| shortcut.app_name.to_owned());
+                                            //    self.current_edit = Option::Some(shortcut.app_id);
+                                            //}
+                                            //if response.clicked(){
+                                            //    if !self.settings.blacklisted_games.contains(&shortcut.app_id){
+                                            //        self.settings.blacklisted_games.push(shortcut.app_id);
+                                            //    } else {
+                                            //        self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
+                                            //    }
+                                            //}
+
                                             thumbnail(ui,shortcut);
-                                            if response.double_clicked(){
-                                                self.rename_map.entry(shortcut.app_id).or_insert_with(|| shortcut.app_name.to_owned());
-                                                self.current_edit = Option::Some(shortcut.app_id);
-                                            }
-                                            if response.clicked(){
-                                                if !self.settings.blacklisted_games.contains(&shortcut.app_id){
-                                                    self.settings.blacklisted_games.push(shortcut.app_id);
-                                                } else {
-                                                    self.settings.blacklisted_games.retain(|id| *id != shortcut.app_id);
-                                                }
-                                            }
+
                                         }
                                     });
                                 }
@@ -135,7 +138,8 @@ impl MyEguiApp {
                     },
                 }
 
-            };
+            });
+            }
             ui.add_space(SECTION_SPACING);
 
             ui.label("Check the settings if BoilR didn't find the game you where looking for");
@@ -143,7 +147,7 @@ impl MyEguiApp {
     }
 
     fn render_user_select(&mut self, ui: &mut egui::Ui) -> Option<&crate::steam::SteamUsersInfo> {
-        if let Some(error) = &self.image_selected_state.settings_error{
+        if let Some(error) = &self.image_selected_state.settings_error {
             ui.heading(error);
         }
         self.ensure_steam_users_loaded();
