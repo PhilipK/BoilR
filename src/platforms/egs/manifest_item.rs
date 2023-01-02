@@ -82,7 +82,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let icon = manifest.exe();
     let url = match manifest.compat_folder.as_ref() {
         Some(compat_folder) => format!(
-            "STEAM_COMPAT_DATA_PATH=\"{}\" %command% '{}'",
+            "STEAM_COMPAT_DATA_PATH=\"{}\" %command% -'{}'",
             compat_folder.to_string_lossy(),
             manifest.get_launch_url()
         ),
