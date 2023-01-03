@@ -26,6 +26,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.7.18" date="2023-01-03">
+      <description>
+        <ul>
+          <li>Can now find flatpak apps from flatpak version</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="1.7.17" date="2023-01-02">
       <description>
         <ul>

@@ -37,13 +37,7 @@ impl NeedsPorton<FlatpakPlatform> for FlatpakApp {
 
 impl FlatpakPlatform {
     fn get_flatpak_apps(&self) -> eyre::Result<Vec<FlatpakApp>> {
-        use std::process::Command;
-        let mut command = Command::new("flatpak");
-        let output = command
-            .arg("list")
-            .arg("--app")
-            .arg("--columns=name,application")
-            .output()?;
+        let output = get_flatpak_applications()?;
         let output_string = String::from_utf8_lossy(&output.stdout).to_string();
         let mut result = vec![];
         for line in output_string.lines() {
@@ -58,6 +52,30 @@ impl FlatpakPlatform {
             }
         }
         Ok(result)
+    }
+}
+
+fn get_flatpak_applications() -> std::io::Result<std::process::Output> {
+    use std::process::Command;
+    #[cfg(not(feature = "flatpak"))]
+    {
+        let mut command = Command::new("flatpak");
+        command
+            .arg("list")
+            .arg("--app")
+            .arg("--columns=name,application")
+            .output()
+    }
+    #[cfg(feature = "flatpak")]
+    {
+        let mut command = Command::new("flatpak-spawn");
+        command
+            .arg("--host")
+            .arg("flatpak")
+            .arg("list")
+            .arg("--app")
+            .arg("--columns=name,application")
+            .output()
     }
 }
 
