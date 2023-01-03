@@ -24,6 +24,7 @@ jobs:
     - name: Test
       run: |        
         cargo test
+        cargo test --features flatpak
   test_Windows:
     runs-on: windows-latest    
     steps:
