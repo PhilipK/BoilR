@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use super::GamesPlatform;
 
 use crate::settings::load_setting_sections;
-const PLATFORM_NAMES: [&str; 12] = [
+const PLATFORM_NAMES: [&str; 13] = [
     "amazon",
     "bottles",
     "epic_games",
@@ -17,6 +17,7 @@ const PLATFORM_NAMES: [&str; 12] = [
     "origin",
     "uplay",
     "minigalaxy",
+    "playnite",
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -32,8 +33,10 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     {
         //Windows only platforms
         use super::amazon::AmazonPlatform;
+        use super::playnite::PlaynitePlatform;
         match name {
             "amazon" => return load::<AmazonPlatform>(s),
+            "playnite" => return load::<PlaynitePlatform>(s),
             _ => {}
         }
     }
@@ -58,7 +61,7 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
         }
     }
 
-        //Common platforms
+    //Common platforms
     use super::egs::EpicPlatform;
     use super::gog::GogPlatform;
     use super::itch::ItchPlatform;
