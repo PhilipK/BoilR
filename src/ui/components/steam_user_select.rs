@@ -5,12 +5,7 @@ pub fn render_user_select<'a>(
     steam_users: &'a [SteamUsersInfo],
     ui: &mut egui::Ui,
 ) -> Option<&'a SteamUsersInfo> {
-    if steam_user.is_none() {
-        if !steam_users.is_empty() {
-            return Some(&steam_users[0]);
-        }
-    } else {
-        let mut selected_user = steam_user.as_ref().unwrap().clone();
+    if let Some(mut selected_user) = steam_user {
         let id_before = selected_user.user_id.clone();
         if !steam_users.is_empty() {
             let combo_box = egui::ComboBox::new("ImageUserSelect", "")
@@ -25,6 +20,9 @@ pub fn render_user_select<'a>(
         if !id_before.eq(&id_now) {
             return Some(selected_user);
         }
+    } else if !steam_users.is_empty() {
+        return Some(&steam_users[0]);
     }
+
     None
 }
