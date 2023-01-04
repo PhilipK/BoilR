@@ -39,8 +39,8 @@ pub mod ui_images {
         let image_buffer = image.to_rgba8();
         let pixels = image_buffer.as_flat_samples();
         IconData {
-            height: image.height() as u32,
-            width: image.width() as u32,
+            height: image.height(),
+            width: image.width(),
             rgba: pixels.as_slice().to_vec(),
         }
     }
@@ -48,7 +48,7 @@ pub mod ui_images {
     pub fn load_image_from_path(path: &std::path::Path) -> eyre::Result<egui::ColorImage> {
         let path_owned = path.to_owned();
         let handle: JoinHandle<eyre::Result<egui::ColorImage>> = std::thread::spawn(move || {
-            let image = image::io::Reader::open(&path_owned)?
+            let image = image::io::Reader::open(path_owned)?
                 .with_guessed_format()?
                 .decode()?;
             let size = [image.width() as _, image.height() as _];

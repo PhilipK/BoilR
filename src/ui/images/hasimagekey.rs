@@ -56,7 +56,7 @@ fn key_from_extension(
     ext: &str,
 ) -> (bool, PathBuf, String) {
     let file_name = image_type.file_name(app_id, ext);
-    let path = user_path.join("config").join("grid").join(&file_name);
+    let path = user_path.join("config").join("grid").join(file_name);
     let key = path.to_string_lossy().to_string();
     (path.exists(), path, key)
 }

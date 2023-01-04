@@ -25,5 +25,5 @@ fn main() -> Result<()> {
 
 fn ensure_config_folder() {
     let path = config::get_config_folder();
-    let _ = std::fs::create_dir_all(&path);
+    let _ = std::fs::create_dir_all(path);
 }

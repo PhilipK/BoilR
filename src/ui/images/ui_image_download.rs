@@ -44,7 +44,7 @@ impl MyEguiApp {
                     let users = state.steam_users.as_ref();
                     if let Some(users) = users {
                         if let Some(value) =
-                            render_user_select(state.steam_user.as_ref(), &users, ui)
+                            render_user_select(state.steam_user.as_ref(), users, ui)
                         {
                             return Some(UserAction::UserSelected(value.clone()));
                         }
@@ -67,7 +67,7 @@ impl MyEguiApp {
                     return value;
                 }
             } else if let Some(image_type) = state.image_type_selected.as_ref() {
-                if let Some(action) = render_page_pick_image(&self, ui, image_type, state) {
+                if let Some(action) = render_page_pick_image(self, ui, image_type, state) {
                     return action;
                 }
             } else if let Some(action) = render_page_shortcut_select_image_type(ui, state) {
@@ -76,7 +76,7 @@ impl MyEguiApp {
         } else {
             let is_shortcut = state.game_mode.is_shortcuts();
             if is_shortcut {
-                if let Some(action) = render_page_shortcut_images_overview(&self, ui) {
+                if let Some(action) = render_page_shortcut_images_overview(self, ui) {
                     return action;
                 }
             } else if let Some(action) = render_page_steam_images_overview(ui, state) {
@@ -246,7 +246,7 @@ impl MyEguiApp {
             let path = Path::new(data_folder)
                 .join("config")
                 .join("grid")
-                .join(&file_name);
+                .join(file_name);
             if path.exists() {
                 let _ = std::fs::remove_file(&path);
             }

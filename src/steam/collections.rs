@@ -154,7 +154,7 @@ pub fn write_collections<S: AsRef<str>>(
                 }
 
                 let new_string = write_vdf_collection_to_string(
-                    &path.clone().to_string_lossy(),
+                    path.clone().to_string_lossy(),
                     &vdf_collections,
                 );
                 if let Some(new_string) = new_string {

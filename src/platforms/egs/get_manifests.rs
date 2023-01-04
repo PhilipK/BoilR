@@ -71,18 +71,18 @@ fn get_manifest_item(dir_entry: DirEntry, _path: Option<PathBuf>) -> Option<Mani
                             item.manifest_location = compat_folder
                                 .join("pfx")
                                 .join("dosdevices")
-                                .join(&item.manifest_location[0..2].to_lowercase())
-                                .join(&item.manifest_location[3..].replace('\\', "/"))
-                                .to_path_buf()
+                                .join(item.manifest_location[0..2].to_lowercase())
+                                .join(item.manifest_location[3..].replace('\\', "/"))
+                                
                                 .to_string_lossy()
                                 .to_string();
 
                             item.install_location = compat_folder
                                 .join("pfx")
                                 .join("dosdevices")
-                                .join(&item.install_location[0..2].to_lowercase())
-                                .join(&item.install_location[3..].replace('\\', "/"))
-                                .to_path_buf()
+                                .join(item.install_location[0..2].to_lowercase())
+                                .join(item.install_location[3..].replace('\\', "/"))
+                                
                                 .to_string_lossy()
                                 .to_string();
 

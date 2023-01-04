@@ -80,10 +80,8 @@ impl GamesPlatform for MiniGalaxyPlatform{
         };
         let dirs = games_folder.read_dir()?;
         let mut game_folders = vec![];
-        for game_folder in dirs{
-            if let Ok(game_folder) = game_folder{
-                game_folders.push(game_folder.path().to_owned());
-            }
+        for game_folder in dirs.flatten(){
+            game_folders.push(game_folder.path().to_owned());
         }
         let gog_games = crate::platforms::get_gog_shortcuts_from_game_folders(game_folders);
         crate::platforms::to_shortcuts(self, Ok(gog_games))

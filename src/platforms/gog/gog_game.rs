@@ -40,7 +40,7 @@ impl From<GogShortcut> for ShortcutOwned {
     fn from(gogs: GogShortcut) -> Self {
         let exe = Path::new(&gogs.game_folder).join(gogs.path);
         let icon_file = format!("goggame-{}.ico", gogs.game_id);
-        let icon_path = Path::new(&gogs.game_folder).join(&icon_file);
+        let icon_path = Path::new(&gogs.game_folder).join(icon_file);
         let icon = if icon_path.exists() {
             icon_path.to_str().unwrap().to_string()
         } else {

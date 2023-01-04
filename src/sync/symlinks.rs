@@ -15,8 +15,8 @@ pub fn create_sym_links(shortcut: &ShortcutOwned) -> ShortcutOwned {
 
     use std::os::unix::fs::symlink;
     // If the links exsists, then they must point towards what is needed, otherwise they would have a different app id
-    let target_ok = target_link.exists() || symlink(&target_original, &target_link).is_ok();
-    let workdir_ok = workdir_link.exists() || symlink(&workdir_original, &workdir_link).is_ok();
+    let target_ok = target_link.exists() || symlink(target_original, &target_link).is_ok();
+    let workdir_ok = workdir_link.exists() || symlink(workdir_original, &workdir_link).is_ok();
     match (target_ok, workdir_ok) {
         (true, true) => {
             let exe = target_link.to_string_lossy().to_string();

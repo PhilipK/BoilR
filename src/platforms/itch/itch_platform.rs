@@ -42,7 +42,7 @@ impl ItchPlatform {
 
         //This is done to paths dedupe
         let paths: HashSet<&DbPaths> = paths.iter().collect();
-        let res = paths.iter().filter_map(|e| dbpath_to_game(*e)).collect();
+        let res = paths.iter().filter_map(|e| dbpath_to_game(e)).collect();
         Ok(res)
     }
 }
@@ -57,7 +57,7 @@ fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
     paths
         .paths
         .iter()
-        .filter(|p| Path::new(&paths.base_path).join(&p).is_executable())
+        .filter(|p| Path::new(&paths.base_path).join(p).is_executable())
         .find_map(|executable| {
             let gz_bytes = std::fs::read(&recipt).unwrap();
             let mut d = GzDecoder::new(gz_bytes.as_slice());

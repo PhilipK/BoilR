@@ -372,7 +372,7 @@ pub fn run_ui(args: Vec<String>) {
     );
 }
 
-fn is_fullscreen(args: &Vec<String>) -> bool {
+fn is_fullscreen(args: &[String]) -> bool {
     let is_steam_mode = match std::env::var("SteamAppId") {
         Ok(value) => !value.is_empty(),
         Err(_) => false,
