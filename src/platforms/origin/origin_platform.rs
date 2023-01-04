@@ -68,7 +68,7 @@ fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {
         let mfst_file = game_folder_files
             .filter_map(|file| file.ok())
             .find(is_mfst_file)
-            .map(|file| std::fs::read_to_string(&file.path()));
+            .map(|file| std::fs::read_to_string(file.path()));
         return match mfst_file {
             Some(mfst_file) => mfst_file.ok(),
             None => None,
@@ -111,7 +111,7 @@ fn get_default_locations() -> Option<OriginPathData> {
             .join("steamapps")
             .join("compatdata");
 
-        if let Ok(compat_folder) = std::fs::read_dir(&compat_folder_path) {
+        if let Ok(compat_folder) = std::fs::read_dir(compat_folder_path) {
             for dir in compat_folder.flatten() {
                 let origin_exe_path = dir
                     .path()

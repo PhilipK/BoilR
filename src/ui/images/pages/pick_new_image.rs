@@ -64,7 +64,7 @@ pub fn render_page_pick_image(
                         if render_image_from_path_or_url(
                             ui,
                             &state.image_handles,
-                            &path,
+                            path,
                             column_width,
                             &image.full_url,
                             image_type,

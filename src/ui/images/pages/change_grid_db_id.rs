@@ -64,7 +64,7 @@ pub fn handle_correct_grid_request(app:&mut MyEguiApp) {
             .auth_key
             .clone()
             .unwrap_or_default();
-        let client = steamgriddb_api::Client::new(&auth_key);
+        let client = steamgriddb_api::Client::new(auth_key);
         let search_results = app.rt.block_on(client.search(app_name));
         app.image_selected_state.possible_names = search_results.ok();
     }

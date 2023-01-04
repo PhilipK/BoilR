@@ -31,7 +31,7 @@ mod unix {
                 .join("steamapps")
                 .join("compatdata");
 
-            if let Ok(compat_folder) = std::fs::read_dir(&compat_folder_path) {
+            if let Ok(compat_folder) = std::fs::read_dir(compat_folder_path) {
                 for dir in compat_folder.flatten() {
                     let binary_path = dir
                         .path()

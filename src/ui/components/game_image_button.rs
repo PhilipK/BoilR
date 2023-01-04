@@ -75,7 +75,7 @@ fn render_possible_image(
                 }
                 TextureDownloadState::Downloaded => {
                     //Need to load
-                    let image_data = load_image_from_path(&path);
+                    let image_data = load_image_from_path(path);
                     match image_data {
                         Ok(image_data) => {
                             let handle = ui.ctx().load_texture(

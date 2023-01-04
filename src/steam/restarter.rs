@@ -49,7 +49,7 @@ pub fn ensure_steam_started(_settings: &super::SteamSettings) {
     if processes.next().is_none() {
         //no steam, we need to start it
         println!("Starting steam");
-        let mut command = Command::new(&steam_name);
+        let mut command = Command::new(steam_name);
         if let Err(e) = command.spawn() {
             println!("Failed to start steam: {:?}", e);
         };

@@ -86,7 +86,7 @@ fn get_shortcuts_from_games(games: Vec<(GogGame, PathBuf)>) -> Vec<GogShortcut> 
                             || t.category.as_ref().unwrap_or(&String::from("")) == "game")
                 }) {
                     if let Some(task_path) = &primary_task.path {
-                        let full_path = game_folder.join(&task_path);
+                        let full_path = game_folder.join(task_path);
                         if let Some(full_path) = full_path.to_str() {
                             let folder_path = folder_path.to_string();
 
@@ -201,7 +201,7 @@ fn fix_paths(wine_c_drive: &str, paths: Vec<String>) -> Vec<String> {
 }
 
 fn get_install_locations(path: PathBuf) -> eyre::Result<Vec<String>> {
-    let data_res = std::fs::read_to_string(&path)?;
+    let data_res = std::fs::read_to_string(path)?;
     let config: GogConfig = serde_json::from_str(&data_res)?;
     let path_vec = match config.library_path {
         Some(path) => vec![path],

@@ -80,7 +80,7 @@ pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) -> b
 
 pub fn load_backups() -> Vec<PathBuf> {
     let backup_folder = get_backups_flder();
-    let files = std::fs::read_dir(&backup_folder);
+    let files = std::fs::read_dir(backup_folder);
     let mut result = vec![];
     if let Ok(files) = files {
         for file in files.flatten() {
@@ -118,7 +118,7 @@ pub fn backup_shortcuts(steam_settings: &SteamSettings) {
                     user_info.user_id, date_string
                 ));
                 println!("Backed up shortcut at: {:?}", new_path);
-                std::fs::copy(&shortcut_path, &new_path).unwrap();
+                std::fs::copy(shortcut_path, &new_path).unwrap();
             }
         }
     }
