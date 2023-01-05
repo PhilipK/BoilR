@@ -1,6 +1,6 @@
 use nom::{
     bytes::{
-        complete::{take_until, take_while},
+        complete::{tag, take_until, take_while},
         streaming::take,
     },
     character::is_alphanumeric,
@@ -11,6 +11,7 @@ use nom::{
 pub(crate) struct NamesAndId {
     pub(crate) name: String,
     pub(crate) id: String,
+    pub(crate) installed: bool,
 }
 
 pub(crate) fn parse_db<'a>(content: &'a [u8]) -> nom::IResult<&'a [u8], Vec<NamesAndId>> {
@@ -26,12 +27,24 @@ fn parse_game(i: &[u8]) -> nom::IResult<&[u8], NamesAndId> {
         .last()
         .unwrap_or_default();
     let id = String::from_utf8_lossy(id_bytes).to_string();
-
+    let (i, _taken) = take_until("IsInstalled")(i)?;
+    let (i, _taken) = tag("IsInstalled")(i)?;
+    let installed = match i.get(1) {
+        Some(1u8) => true,
+        _ => false,
+    };
     let (i, _taken) = take_until("InstallSizeGroup")(i)?;
     let (i, _taken) = take_until("Name")(i)?;
     let (i, _taken) = take(4usize)(i)?;
     let (i, _taken) = take_while(|b| !is_alphanumeric(b))(i)?;
     let (i, name_bytes) = take_while(|b| b != 0)(i)?;
     let name = String::from_utf8_lossy(name_bytes).to_string();
-    IResult::Ok((i, NamesAndId { id, name }))
+    IResult::Ok((
+        i,
+        NamesAndId {
+            id,
+            name,
+            installed,
+        },
+    ))
 }
