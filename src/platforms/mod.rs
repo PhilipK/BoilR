@@ -14,6 +14,10 @@ mod minigalaxy;
 #[cfg(not(target_family = "unix"))]
 mod amazon;
 
+#[cfg(not(target_family = "unix"))]
+mod playnite;
+
+
 
 mod gog;
 mod itch;
