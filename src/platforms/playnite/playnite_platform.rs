@@ -26,6 +26,8 @@ pub struct PlaynitePlatform {
 pub struct PlayniteSettings {
     pub enabled: bool,
     pub installed_only: bool,
+    pub use_portalbe_version: bool,
+    pub portable_launcher_path: String,
 }
 
 impl Default for PlayniteSettings {
@@ -33,6 +35,8 @@ impl Default for PlayniteSettings {
         Self {
             enabled: true,
             installed_only: true,
+            portable_launcher_path: String::new(),
+            use_portalbe_version: false,
         }
     }
 }
@@ -66,6 +70,14 @@ impl GamesPlatform for PlaynitePlatform {
                 &mut self.settings.installed_only,
                 "Only import installed games",
             );
+            ui.checkbox(
+                &mut self.settings.use_portalbe_version,
+                "Use Playnite Portable Version",
+            );
+            if self.settings.use_portalbe_version {
+                ui.label("Path to portalbe Playnite.DesktopApp.exe file");
+                ui.text_edit_singleline(&mut self.settings.portable_launcher_path);
+            }
         }
     }
 }
@@ -73,17 +85,7 @@ impl GamesPlatform for PlaynitePlatform {
 impl PlaynitePlatform {
     fn get_playnite_games(&self) -> eyre::Result<Vec<PlayniteGame>> {
         let mut res = vec![];
-        let app_data_path = env::var("APPDATA")?;
-        let app_data_local_path = env::var("LOCALAPPDATA")?;
-        let launcher_path = Path::new(&app_data_local_path)
-            .join("Playnite")
-            .join("Playnite.DesktopApp.exe");
-        if !launcher_path.exists() {
-            return Err(eyre::eyre!("Did not find Playnite installation"));
-        }
-        let launcher_path = launcher_path.to_string_lossy().to_string();
-        let playnite_folder = Path::new(&app_data_path).join("Playnite");
-        let games_file_path = playnite_folder.join("library").join("games.db");
+        let (launcher_path, games_file_path) = self.find_paths()?;
         if games_file_path.exists() {
             let games_bytes = std::fs::read(&games_file_path).unwrap();
             let (_, games) = parse_db(&games_bytes).map_err(|e| eyre::eyre!(e.to_string()))?;
@@ -98,6 +100,28 @@ impl PlaynitePlatform {
             }
         }
         Ok(res)
+    }
+
+    fn find_paths(&self) -> Result<(PathBuf, PathBuf), color_eyre::Report> {
+        if self.settings.use_portalbe_version {
+            let launcher_path = Path::new(&self.settings.portable_launcher_path).to_path_buf();
+            let p = launcher_path.parent().unwrap_or(Path::new(""));
+            let games_file_path = p.join("library").join("games.db");
+            Ok((launcher_path, games_file_path))
+        } else {
+            let app_data_local_path = env::var("LOCALAPPDATA")?;
+            let launcher_path = Path::new(&app_data_local_path)
+                .join("Playnite")
+                .join("Playnite.DesktopApp.exe");
+            if !launcher_path.exists() {
+                return Err(eyre::eyre!("Did not find Playnite installation"));
+            }
+            let app_data_path = env::var("APPDATA")?;
+            let launcher_path = launcher_path.to_path_buf();
+            let playnite_folder = Path::new(&app_data_path).join("Playnite");
+            let games_file_path = playnite_folder.join("library").join("games.db");
+            Ok((launcher_path, games_file_path))
+        }
     }
 }
 
