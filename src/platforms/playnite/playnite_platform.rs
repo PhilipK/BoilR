@@ -25,11 +25,15 @@ pub struct PlaynitePlatform {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PlayniteSettings {
     pub enabled: bool,
+    pub installed_only: bool,
 }
 
 impl Default for PlayniteSettings {
     fn default() -> Self {
-        Self { enabled: true }
+        Self {
+            enabled: true,
+            installed_only: true,
+        }
     }
 }
 
@@ -57,6 +61,12 @@ impl GamesPlatform for PlaynitePlatform {
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Playnite");
         ui.checkbox(&mut self.settings.enabled, "Import from Playnite");
+        if self.settings.enabled {
+            ui.checkbox(
+                &mut self.settings.installed_only,
+                "Only import installed games",
+            );
+        }
     }
 }
 
@@ -78,11 +88,13 @@ impl PlaynitePlatform {
             let games_bytes = std::fs::read(&games_file_path).unwrap();
             let (_, games) = parse_db(&games_bytes).map_err(|e| eyre::eyre!(e.to_string()))?;
             for game in games {
-                res.push(PlayniteGame {
-                    id: game.id,
-                    launcher_path: launcher_path.clone().into(),
-                    name: game.name,
-                });
+                if game.installed || !self.settings.installed_only {
+                    res.push(PlayniteGame {
+                        id: game.id,
+                        launcher_path: launcher_path.clone().into(),
+                        name: game.name,
+                    });
+                }
             }
         }
         Ok(res)
