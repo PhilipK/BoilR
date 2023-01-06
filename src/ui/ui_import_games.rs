@@ -123,7 +123,14 @@ impl MyEguiApp {
         });
     }
 
-    pub fn run_sync(&mut self, wait: bool) {
+    pub fn run_sync_blocking(&mut self) -> eyre::Result<()>{
+        self.run_sync(true)
+    }
+
+    pub fn run_sync_async(&mut self){
+        let _ = self.run_sync(false);
+    }
+    fn run_sync(&mut self, wait: bool) -> eyre::Result<()>{
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
@@ -162,9 +169,10 @@ impl MyEguiApp {
                 }
             });
             if wait {
-                self.rt.block_on(handle).unwrap();
+                self.rt.block_on(handle)?;
             }
         }
+        Ok(())
     }
 }
 
