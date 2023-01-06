@@ -4,17 +4,22 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{
     steam::SteamUsersInfo,
-    steamgriddb::{ImageType, CachedSearch},
+    steamgriddb::{CachedSearch, ImageType},
     ui::{
+        components::render_image_from_path,
         images::{
-            gametype::GameType, hasimagekey::HasImageKey,
-            texturestate::TextureDownloadState, useraction::UserAction,
+            gametype::GameType, hasimagekey::HasImageKey, texturestate::TextureDownloadState,
+            useraction::UserAction,
         },
-        MyEguiApp, ui_images::load_image_from_path, components::render_image_from_path,
+        ui_images::load_image_from_path,
+        MyEguiApp,
     },
 };
 
-pub fn render_page_shortcut_images_overview(app: &MyEguiApp, ui: &mut egui::Ui) -> Option<UserAction> {
+pub fn render_page_shortcut_images_overview(
+    app: &MyEguiApp,
+    ui: &mut egui::Ui,
+) -> Option<UserAction> {
     let shortcuts = &app.image_selected_state.user_shortcuts;
 
     let width = ui.available_size().x;
@@ -65,7 +70,13 @@ fn render_image(
         Path::new(&user_info.steam_user_data_folder),
     );
 
-    let clicked= render_image_from_path(ui, &app.image_selected_state.image_handles, Path::new(&key), column_width, &shortcut.app_name);
+    let clicked = render_image_from_path(
+        ui,
+        &app.image_selected_state.image_handles,
+        Path::new(&key),
+        column_width,
+        &shortcut.app_name,
+    );
     if clicked {
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             shortcut.clone(),
@@ -74,9 +85,9 @@ fn render_image(
     None
 }
 pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType, ui: &mut egui::Ui) {
-        let state = &mut app.image_selected_state;
-        //We must have a user to make see this action;
-        let user = state.steam_user.as_ref().unwrap();
+    let state = &mut app.image_selected_state;
+    //We must have a user to make see this action;
+    if let Some(user) = state.steam_user.as_ref() {
         if let Some(auth_key) = &app.settings.steamgrid_db.auth_key {
             let client = steamgriddb_api::Client::new(auth_key);
             let search = CachedSearch::new(&client);
@@ -102,3 +113,4 @@ pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType, ui: &mu
         }
         state.selected_shortcut = Some(shortcut);
     }
+}
