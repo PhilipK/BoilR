@@ -131,42 +131,51 @@ fn render_possible_image(
             }
         }
         None => {
-            if !path.exists() && url.is_none() {
-                image_handles.insert(image_key, TextureDownloadState::Failed);
-            } else {
-                //We need to start a download
-                //Redownload if file is too small
-                if !path.exists()
-                    || std::fs::metadata(path).map(|m| m.len()).unwrap_or_default() < 2
-                {
-                    image_handles.insert(image_key.clone(), TextureDownloadState::Downloading);
-                    let to_download = ToDownload {
-                        path: path.to_path_buf(),
-                        url: url.unwrap().to_string(),
-                        app_name: "Thumbnail".to_string(),
-                        image_type: *image_type,
-                    };
-                    let image_handles = image_handles.clone();
-                    let image_key = image_key.clone();
-                    if let Some(rt) = rt {
-                        rt.spawn_blocking(move || {
-                            match block_on(crate::steamgriddb::download_to_download(&to_download)) {
-                                Ok(_) => {
-                                    image_handles
-                                        .insert(image_key, TextureDownloadState::Downloaded);
+            match url {
+                Some(url) => {
+                    //We need to start a download
+                    //Redownload if file is too small
+                    if !path.exists()
+                        || std::fs::metadata(path).map(|m| m.len()).unwrap_or_default() < 2
+                    {
+                        image_handles.insert(image_key.clone(), TextureDownloadState::Downloading);
+                        let to_download = ToDownload {
+                            path: path.to_path_buf(),
+                            url: url.to_string(),
+                            app_name: "Thumbnail".to_string(),
+                            image_type: *image_type,
+                        };
+                        let image_handles = image_handles.clone();
+                        let image_key = image_key.clone();
+                        if let Some(rt) = rt {
+                            rt.spawn_blocking(move || {
+                                match block_on(crate::steamgriddb::download_to_download(
+                                    &to_download,
+                                )) {
+                                    Ok(_) => {
+                                        image_handles
+                                            .insert(image_key, TextureDownloadState::Downloaded);
+                                    }
+                                    Err(err) => {
+                                        println!(
+                                            "Failed downloading image {} error: {:?}",
+                                            to_download.url, err
+                                        );
+                                        image_handles
+                                            .insert(image_key, TextureDownloadState::Failed);
+                                    }
                                 }
-                                Err(err) => {
-                                    println!(
-                                        "Failed downloading image {} error: {:?}",
-                                        to_download.url, err
-                                    );
-                                    image_handles.insert(image_key, TextureDownloadState::Failed);
-                                }
-                            }
-                        });
+                            });
+                        }
+                    } else {
+                        image_handles.insert(image_key.clone(), TextureDownloadState::Downloaded);
                     }
-                } else {
-                    image_handles.insert(image_key.clone(), TextureDownloadState::Downloaded);
+                }
+                None => {
+                    //Not possible to download
+                    if !path.exists() {
+                        image_handles.insert(image_key, TextureDownloadState::Failed);
+                    }
                 }
             }
         }
