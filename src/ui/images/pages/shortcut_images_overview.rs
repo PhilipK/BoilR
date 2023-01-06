@@ -20,16 +20,15 @@ pub fn render_page_shortcut_images_overview(
     app: &MyEguiApp,
     ui: &mut egui::Ui,
 ) -> Option<UserAction> {
+    let user_info = &app.image_selected_state.steam_user;
     let shortcuts = &app.image_selected_state.user_shortcuts;
-
     let width = ui.available_size().x;
     let column_width = 100.;
     let column_padding = 23.;
     let columns = (width / (column_width + column_padding)).floor() as u32;
     let mut cur_column = 0;
-    match shortcuts {
-        Some(shortcuts) => {
-            let user_info = &app.image_selected_state.steam_user.as_ref().unwrap();
+    match (user_info,shortcuts) {
+        (Some(user_info),Some(shortcuts)) => {
             if let Some(action) = egui::Grid::new("ui_images")
                 .show(ui, |ui| {
                     for shortcut in shortcuts {
@@ -51,7 +50,7 @@ pub fn render_page_shortcut_images_overview(
                 return action;
             }
         }
-        None => {
+        _ => {
             ui.label("Could not find any shortcuts");
         }
     }
@@ -61,7 +60,7 @@ pub fn render_page_shortcut_images_overview(
 fn render_image(
     app: &MyEguiApp,
     shortcut: &ShortcutOwned,
-    user_info: &&SteamUsersInfo,
+    user_info: &SteamUsersInfo,
     column_width: f32,
     ui: &mut egui::Ui,
 ) -> Option<Option<UserAction>> {
