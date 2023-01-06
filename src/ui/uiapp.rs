@@ -15,13 +15,14 @@ use crate::{
 };
 
 use super::{
+    images::ImageSelectState,
     ui_colors::{
         BACKGROUND_COLOR, BG_STROKE_COLOR, EXTRA_BACKGROUND_COLOR, LIGHT_ORANGE, ORANGE, PURLPLE,
         TEXT_COLOR,
     },
     ui_images::{get_import_image, get_logo, get_logo_icon, get_save_image},
     ui_import_games::FetcStatus,
-    BackupState, DiconnectState, images::ImageSelectState, 
+    BackupState, DiconnectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -70,12 +71,12 @@ pub struct MyEguiApp {
 }
 
 impl MyEguiApp {
-    pub fn new() -> Self {
-        let mut runtime = Runtime::new().unwrap();
-        let settings = Settings::new().expect("We must be able to load our settings");
+    pub fn new() -> eyre::Result<Self> {
+        let mut runtime = Runtime::new()?;
+        let settings = Settings::new()?;
         let platforms = get_platforms();
         let games_to_sync = create_games_to_sync(&mut runtime, &platforms);
-        Self {
+        Ok(Self {
             selected_menu: Menues::Import,
             settings,
             rt: runtime,
@@ -88,7 +89,7 @@ impl MyEguiApp {
             rename_map: get_rename_map(),
             current_edit: Option::None,
             platforms,
-        }
+        })
     }
 
     fn render_import_button(&mut self, ui: &mut egui::Ui) {
@@ -121,17 +122,17 @@ impl MyEguiApp {
         let texture = self.get_import_image(ui);
         let size = texture.size_vec2();
         let image_button = ImageButton::new(texture, size * 0.40);
-        if all_ready && !syncing{
+        if all_ready && !syncing {
             if ui
                 .add(image_button)
                 .on_hover_text("Import your games into steam")
-                .clicked(){
-save_settings(&self.settings, &self.platforms);
-            self.run_sync(false);
-                }
-        }else{
-                ui
-                .add(image_button)
+                .clicked()
+            {
+                save_settings(&self.settings, &self.platforms);
+                self.run_sync(false);
+            }
+        } else {
+            ui.add(image_button)
                 .on_hover_text("Waiting for sync to finish");
         }
     }
@@ -341,17 +342,18 @@ fn setup(ctx: &egui::Context) {
     create_style(&mut style);
     ctx.set_style(style);
 }
-pub fn run_sync() {
-    let mut app = MyEguiApp::new();
+pub fn run_sync() -> eyre::Result<()>{
+    let mut app = MyEguiApp::new()?;
     while !all_ready(&app.games_to_sync) {
         println!("Finding games, trying again in 500ms");
         std::thread::sleep(Duration::from_secs_f32(0.5));
     }
     app.run_sync(true);
+    Ok(())
 }
 
-pub fn run_ui(args: Vec<String>) {
-    let app = MyEguiApp::new();
+pub fn run_ui(args: Vec<String>) -> eyre::Result<()>{
+    let app = MyEguiApp::new()?;
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
     let native_options = eframe::NativeOptions {
@@ -370,6 +372,7 @@ pub fn run_ui(args: Vec<String>) {
             Box::new(app)
         }),
     );
+    Ok(())
 }
 
 fn is_fullscreen(args: &[String]) -> bool {
@@ -377,5 +380,5 @@ fn is_fullscreen(args: &[String]) -> bool {
         Ok(value) => !value.is_empty(),
         Err(_) => false,
     };
-   is_steam_mode || args.contains(&"--fullscreen".to_string())
+    is_steam_mode || args.contains(&"--fullscreen".to_string())
 }
