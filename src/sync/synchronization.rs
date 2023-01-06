@@ -53,9 +53,8 @@ pub fn sync_shortcuts(
     platform_shortcuts: &[(String, Vec<ShortcutOwned>)],
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32, String>,
-) -> Result<Vec<SteamUsersInfo>, String> {
-    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
-        .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
+) -> eyre::Result<Vec<SteamUsersInfo>> {
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())

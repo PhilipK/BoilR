@@ -53,20 +53,16 @@ pub struct SteamUsersInfo {
 /// Get the paths to the steam users shortcuts (one for each user)
 pub fn get_shortcuts_paths(
     settings: &SteamSettings,
-) -> Result<Vec<SteamUsersInfo>, Box<dyn Error + Sync + Send>> {
+) -> eyre::Result<Vec<SteamUsersInfo>> {
     let steam_path_str = get_steam_path(settings)?;
     let steam_path = Path::new(&steam_path_str);
     if !steam_path.exists() {
-        return Result::Err(Box::new(SteamFolderNotFound {
-            location_tried: format!("{:?}", steam_path),
-        }));
+        return Err(eyre::format_err!("Steam folder not found at: {:?}",steam_path));
     }
 
     let user_data_path = steam_path.join("userdata");
     if !user_data_path.exists() {
-        return Result::Err(Box::new(SteamFolderNotFound {
-            location_tried: format!("{:?}", user_data_path),
-        }));
+        return Err(eyre::format_err!("Steam user data folder not found at: {:?}",user_data_path));
     }
 
     if !user_data_path.exists() {}
@@ -104,7 +100,7 @@ pub fn get_shortcuts_paths(
     Ok(users_info)
 }
 
-pub fn get_steam_path(settings: &SteamSettings) -> Result<String, Box<dyn Error + Sync + Send>> {
+pub fn get_steam_path(settings: &SteamSettings) -> eyre::Result<String> {
     let user_location = settings.location.clone();
     let steam_path_str = match user_location {
         Some(location) => location,
@@ -113,7 +109,7 @@ pub fn get_steam_path(settings: &SteamSettings) -> Result<String, Box<dyn Error 
     Ok(steam_path_str)
 }
 
-pub fn get_default_location() -> Result<String, Box<dyn Error + Sync + Send>> {
+pub fn get_default_location() -> eyre::Result<String> {
     #[cfg(target_os = "windows")]
     let path_string = {
         let key = "PROGRAMFILES(X86)";
