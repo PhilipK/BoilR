@@ -1,3 +1,7 @@
+#![deny(clippy::unwrap_in_result)]
+#![deny(clippy::get_unwrap)]
+#![deny(clippy::unwrap_used)]
+
 mod config;
 mod migration;
 mod platforms;
