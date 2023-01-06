@@ -1,20 +1,18 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use egui::{Grid, };
+use egui::Grid;
 use futures::executor::block_on;
-use tokio::{ sync::watch};
+use tokio::sync::watch;
 
 use crate::{
     steamgriddb::{get_image_extension, ImageType, ToDownload},
     ui::{
+        components::render_image_from_path_or_url,
         images::{
-            constants::MAX_WIDTH,
-            hasimagekey::HasImageKey,
-            image_select_state::{ ImageSelectState},
-            possible_image::PossibleImage,
-            useraction::UserAction,
+            constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
+            possible_image::PossibleImage, useraction::UserAction,
         },
-        FetcStatus, MyEguiApp, components::render_image_from_path_or_url,
+        FetcStatus, MyEguiApp,
     },
 };
 
@@ -82,9 +80,9 @@ pub fn render_page_pick_image(
                     None
                 })
                 .inner;
-                if let Some(x) = x {
+            if let Some(x) = x {
                 return Some(UserAction::ImageSelected(x));
-                }
+            }
         }
         _ => {
             ui.horizontal(|ui| {
@@ -116,11 +114,12 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
     //Delete old possible images
 
     let data_folder = Path::new(&user.steam_user_data_folder);
-
     //Keep deleting images of this type untill we don't find any more
     let mut path = get_shortcut_image_path(app, data_folder);
-    while Path::new(&path).exists() {
-        let _ = std::fs::remove_file(&path);
+    while path.as_ref().map(|p| p.exists()).unwrap_or_default() {
+        if let Some(path) = path.as_ref(){
+            let _ = std::fs::remove_file(path);
+        }
         path = get_shortcut_image_path(app, data_folder);
     }
 
@@ -159,16 +158,14 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
     }
 }
 
-fn get_shortcut_image_path(app: &MyEguiApp, data_folder: &Path) -> String {
-    app.image_selected_state
-        .selected_shortcut
-        .as_ref()
-        .unwrap()
-        .key(
-            &app.image_selected_state.image_type_selected.unwrap(),
-            data_folder,
-        )
-        .1
+fn get_shortcut_image_path(app: &MyEguiApp, data_folder: &Path) -> Option<PathBuf> {
+    let state = &app.image_selected_state;
+    match (&state.image_type_selected, &state.selected_shortcut) {
+        (Some(image_type), Some(shortcut)) => {
+            Some(shortcut.key(&image_type, data_folder).0.to_path_buf())
+        }
+        _ => None,
+    }
 }
 
 fn clear_loaded_images(app: &mut MyEguiApp) {
