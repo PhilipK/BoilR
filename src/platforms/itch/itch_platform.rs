@@ -29,7 +29,7 @@ impl ItchPlatform {
             ));
         }
 
-        let shortcut_bytes = std::fs::read(&itch_db_location).unwrap();
+        let shortcut_bytes = std::fs::read(&itch_db_location)?;
 
         let paths = match parse_butler_db(&shortcut_bytes) {
             Ok((_, shortcuts)) => Ok(shortcuts),
@@ -59,17 +59,19 @@ fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
         .iter()
         .filter(|p| Path::new(&paths.base_path).join(p).is_executable())
         .find_map(|executable| {
-            let gz_bytes = std::fs::read(&recipt).unwrap();
-            let mut d = GzDecoder::new(gz_bytes.as_slice());
-            let mut s = String::new();
-            d.read_to_string(&mut s).unwrap();
-
-            let receipt_op: Option<Receipt> = serde_json::from_str(&s).ok();
-            receipt_op.map(|re| ItchGame {
-                install_path: paths.base_path.to_owned(),
-                executable: executable.to_owned(),
-                title: re.game.title,
-            })
+            if let Ok(gz_bytes) = std::fs::read(&recipt) {
+                let mut d = GzDecoder::new(gz_bytes.as_slice());
+                let mut s = String::new();
+                if d.read_to_string(&mut s).is_ok() {
+                    let receipt_op: Option<Receipt> = serde_json::from_str(&s).ok();
+                    return receipt_op.map(|re| ItchGame {
+                        install_path: paths.base_path.to_owned(),
+                        executable: executable.to_owned(),
+                        title: re.game.title,
+                    });
+                }
+            }
+            None
         })
 }
 

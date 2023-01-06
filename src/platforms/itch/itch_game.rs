@@ -18,7 +18,7 @@ pub struct ItchGame {
 impl From<ItchGame> for ShortcutOwned {
     fn from(game: ItchGame) -> Self {
         let exe = Path::new(&game.install_path).join(&game.executable);
-        let exe = exe.to_str().unwrap().to_string();
+        let exe = exe.to_string_lossy().to_string();
         let shortcut = Shortcut::new(
             "0",
             game.title.as_str(),
