@@ -100,7 +100,7 @@ pub fn load_backups() -> Vec<PathBuf> {
     result
 }
 
-const DATE_FORMAT :&str = "[year]-[month]-[day]-[hour]-[minute]-[second]";
+const DATE_FORMAT: &str = "[year]-[month]-[day]-[hour]-[minute]-[second]";
 
 pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     use time::OffsetDateTime;
@@ -117,8 +117,17 @@ pub fn backup_shortcuts(steam_settings: &SteamSettings) {
                     "{}-{}-shortcuts.vdf",
                     user_info.user_id, date_string
                 ));
-                println!("Backed up shortcut at: {:?}", new_path);
-                std::fs::copy(shortcut_path, &new_path).unwrap();
+                match std::fs::copy(shortcut_path, &new_path) {
+                    Ok(_) => {
+                        println!("Backed up shortcut at: {:?}", new_path);
+                    }
+                    Err(err) => {
+                        eprintln!(
+                            "Failed to backup shortcut at: {:?}, error: {:?}",
+                            new_path, err
+                        );
+                    }
+                }
             }
         }
     }
