@@ -171,13 +171,10 @@ async fn search_for_images_to_download(
     let search_results_a = stream::iter(shortcuts_to_search_for)
         .map(|s| async move {
             let search_result = search.search(s.app_id, &s.app_name).await;
-            if search_result.is_err() {
-                return None;
+            match search_result {
+                Ok(Some(search_result)) => Some((s.app_id, search_result)),
+                _ => None,
             }
-            let search_result = search_result.unwrap();
-            search_result?;
-            let search_result = search_result.unwrap();
-            Some((s.app_id, search_result))
         })
         .buffer_unordered(CONCURRENT_REQUESTS)
         .collect::<Vec<Option<(u32, usize)>>>()
@@ -203,8 +200,14 @@ async fn search_for_images_to_download(
         let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
 
         for image_ids in image_ids.chunks(99) {
-            let image_search_result =
-                get_images_for_ids(client, image_ids, &image_type, download_animated, settings.steamgrid_db.allow_nsfw).await;
+            let image_search_result = get_images_for_ids(
+                client,
+                image_ids,
+                &image_type,
+                download_animated,
+                settings.steamgrid_db.allow_nsfw,
+            )
+            .await;
             match image_search_result {
                 Ok(images) => {
                     let images = images
