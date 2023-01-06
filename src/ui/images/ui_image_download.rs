@@ -197,11 +197,13 @@ impl MyEguiApp {
             .image_selected_state
             .selected_shortcut
             .as_ref()
-            .unwrap()
-            .app_id();
-        self.settings
-            .steamgrid_db
-            .set_image_banned(&image_type, app_id, should_ban);
+            .map(|m| m.app_id());
+        if let Some(app_id) = app_id {
+            self.settings
+                .steamgrid_db
+                .set_image_banned(&image_type, app_id, should_ban);
+        }
+
         self.handle_image_type_clear(image_type);
     }
 
@@ -222,7 +224,9 @@ impl MyEguiApp {
             self.rt.spawn_blocking(move || {
                 let task = download_images(&settings, &users, &mut sender_op);
                 block_on(task);
-                let _ = sender_op.unwrap().send(SyncProgress::Done);
+                if let Some(sender_op) = sender_op {
+                    let _ = sender_op.send(SyncProgress::Done);
+                }
             });
         }
     }
