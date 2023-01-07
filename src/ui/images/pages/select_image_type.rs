@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::ui::components::DownloadedGameImageButton;
+use crate::ui::components::GameButton;
 use crate::ui::images::{
     gametype::GameType, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
     useraction::UserAction, ImageHandles,
@@ -83,7 +83,7 @@ fn render_thumbnail(
 ) -> bool {
     let (path, _key) = shortcut.key(image_type, Path::new(&user_path));
     let text = format!("Pick {} image", image_type.name());
-    let mut image = DownloadedGameImageButton::new(&path);
+    let mut image = GameButton::new(&path);
     image
         .width(MAX_WIDTH)
         .text(&text)

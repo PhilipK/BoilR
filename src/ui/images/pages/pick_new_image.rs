@@ -7,7 +7,7 @@ use tokio::sync::watch;
 use crate::{
     steamgriddb::{get_image_extension, ImageType, ToDownload},
     ui::{
-        components::DownloadedGameImageButton,
+        components::GameButton,
         images::{
             constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
             possible_image::PossibleImage, useraction::UserAction,
@@ -59,7 +59,7 @@ pub fn render_page_pick_image(
                 .show(ui, |ui| {
                     for image in images {
                         let path = image.thumbnail_path.as_path();
-                        let mut button = DownloadedGameImageButton::new(path);
+                        let mut button = GameButton::new(path);
                         button.width(column_width);
                         button.text("Pick image");
                         if button.show_download(ui, &state.image_handles, &app.rt,&image.thumbnail_url) {
