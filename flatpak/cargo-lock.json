@@ -3850,14 +3850,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/tokio/tokio-1.23.0.crate",
-        "sha256": "eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46",
-        "dest": "cargo/vendor/tokio-1.23.0"
+        "url": "https://static.crates.io/crates/tokio/tokio-1.23.1.crate",
+        "sha256": "38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8",
+        "dest": "cargo/vendor/tokio-1.23.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46\", \"files\": {}}",
-        "dest": "cargo/vendor/tokio-1.23.0",
+        "contents": "{\"package\": \"38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8\", \"files\": {}}",
+        "dest": "cargo/vendor/tokio-1.23.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
