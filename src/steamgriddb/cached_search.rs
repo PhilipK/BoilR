@@ -58,8 +58,12 @@ impl<'a> CachedSearch<'a> {
 fn get_search_map() -> SearchMap {
     let path = get_cache_file();
     if path.exists() {
-        let string = std::fs::read_to_string(path).unwrap();
-        serde_json::from_str::<SearchMap>(&string).expect("Failed to parse cache.json")
+        std::fs::read_to_string(path)
+            .ok()
+            .and_then(|string| {
+                 serde_json::from_str::<SearchMap>(&string).ok()
+            })
+            .unwrap_or_default()
     } else {
         SearchMap::new()
     }
