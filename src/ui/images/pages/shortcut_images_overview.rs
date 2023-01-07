@@ -74,7 +74,7 @@ fn render_image(
     let clicked = button.show(ui, &app.image_selected_state.image_handles);
     if clicked {
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
-            shortcut.clone(),
+            Box::new(shortcut.clone()),
         ))));
     }
     None

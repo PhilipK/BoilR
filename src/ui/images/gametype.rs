@@ -6,7 +6,7 @@ use crate::{steam::SteamGameInfo};
 
 #[derive(Debug, Clone)]
 pub enum GameType {
-    Shortcut(ShortcutOwned),
+    Shortcut(Box<ShortcutOwned>),
     SteamGame(SteamGameInfo),
 }
 
