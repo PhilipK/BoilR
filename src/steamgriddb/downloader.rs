@@ -23,10 +23,31 @@ use crate::sync::SyncProgress;
 
 const CONCURRENT_REQUESTS: usize = 10;
 
+impl SearchSettings for Settings {
+    fn download_animated(&self) -> bool {
+        self.steamgrid_db.prefer_animated
+    }
+
+    fn download_big_picture(&self) -> bool {
+        self.steam.optimize_for_big_picture
+    }
+
+    fn allow_nsfw(&self) -> bool {
+        self.steamgrid_db.allow_nsfw
+    }
+
+    fn only_download_boilr_images(&self) -> bool {
+        self.steamgrid_db.only_download_boilr_images
+    }
+
+    fn is_image_banned(&self, image_type: &ImageType, app_id: u32) -> bool {
+        self.steamgrid_db.is_image_banned(image_type, app_id)
+    }
+}
+
 pub async fn download_images_for_users<'b>(
     settings: &Settings,
     users: &[SteamUsersInfo],
-    download_animated: bool,
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     let auth_key = &settings.steamgrid_db.auth_key;
@@ -41,31 +62,28 @@ pub async fn download_images_for_users<'b>(
             let _ = sender.send(SyncProgress::FindingImages);
         }
 
-        let users_info = users.iter().filter_map(|user|{
-                let shortcut_info = get_shortcuts_for_user(user);
-                shortcut_info.map(|shortcut_info|{
-                let data_folder = &user.steam_user_data_folder;
-                (shortcut_info,data_folder)
-                }).ok()
-
+        let users_info = users.iter().filter_map(|user| {
+            let shortcut_info = get_shortcuts_for_user(user);
+            shortcut_info
+                .map(|shortcut_info| {
+                    let data_folder = &user.steam_user_data_folder;
+                    (shortcut_info, data_folder)
+                })
+                .ok()
         });
         let to_downloads = stream::iter(users_info)
-            .map(|(shortcut_info,data_folder)| {
-                async move {
-                    let known_images = get_users_images(data_folder).unwrap_or_default();
-                    let res = search_for_images_to_download(
-                        known_images,
-                        data_folder.as_str(),
-                        &shortcut_info.shortcuts,
-                        search,
-                        client,
-                        download_animated,
-                        settings.steam.optimize_for_big_picture,
-                        settings,
-                    )
-                    .await;
-                    res.unwrap_or_default()
-                }
+            .map(|(shortcut_info, data_folder)| async move {
+                let known_images = get_users_images(data_folder).unwrap_or_default();
+                let res = search_for_images_to_download(
+                    known_images,
+                    data_folder.as_str(),
+                    &shortcut_info.shortcuts,
+                    search,
+                    client,
+                    settings,
+                )
+                .await;
+                res.unwrap_or_default()
             })
             .buffer_unordered(CONCURRENT_REQUESTS)
             .collect::<Vec<Vec<ToDownload>>>()
@@ -136,15 +154,21 @@ pub struct PublicGameResponse {
     data: Option<PublicGameResponseData>,
 }
 
-async fn search_for_images_to_download(
+pub trait SearchSettings {
+    fn download_animated(&self) -> bool;
+    fn download_big_picture(&self) -> bool;
+    fn allow_nsfw(&self) -> bool;
+    fn only_download_boilr_images(&self) -> bool;
+    fn is_image_banned(&self, image_type: &ImageType, app_id: u32) -> bool;
+}
+
+async fn search_for_images_to_download<T: SearchSettings>(
     known_images: Vec<String>,
     user_data_folder: &str,
     shortcuts: &[ShortcutOwned],
     search: &CachedSearch<'_>,
     client: &Client,
-    download_animated: bool,
-    download_big_picture: bool,
-    settings: &Settings,
+    search_settins: &T,
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let types = {
         let mut types = vec![
@@ -154,7 +178,7 @@ async fn search_for_images_to_download(
             ImageType::WideGrid,
             ImageType::Icon,
         ];
-        if download_big_picture {
+        if search_settins.download_big_picture() {
             types.push(ImageType::BigPicture);
         }
         types
@@ -162,7 +186,7 @@ async fn search_for_images_to_download(
 
     let shortcuts_to_search_for = shortcuts
         .iter()
-        .filter(|s| !settings.steamgrid_db.only_download_boilr_images || s.is_boilr_shortcut())
+        .filter(|s| !search_settins.only_download_boilr_images() || s.is_boilr_shortcut())
         .filter(|s| {
             // if we are missing any of the images we need to search for them
             types
@@ -197,7 +221,7 @@ async fn search_for_images_to_download(
         let images_needed = shortcuts
             .iter()
             .filter(|s| search_results.contains_key(&s.app_id))
-            .filter(|s| !settings.steamgrid_db.is_image_banned(&image_type, s.app_id))
+            .filter(|s| !search_settins.is_image_banned(&image_type, s.app_id))
             .filter(|s| !known_images.contains(&image_type.file_name_no_extension(s.app_id)));
         let image_ids: Vec<usize> = images_needed
             .clone()
@@ -212,8 +236,8 @@ async fn search_for_images_to_download(
                 client,
                 image_ids,
                 &image_type,
-                download_animated,
-                settings.steamgrid_db.allow_nsfw,
+                search_settins.download_animated(),
+                search_settins.allow_nsfw(),
             )
             .await;
             match image_search_result {
@@ -248,7 +272,7 @@ async fn search_for_images_to_download(
 
                     to_download.extend(download_for_this_type);
                 }
-                Err(err) => println!("Error getting images: {}", err),
+                Err(err) => eprintln!("Error getting images: {}", err),
             }
         }
     }

@@ -6,7 +6,7 @@ use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
-        components::render_image_from_path,
+        components::GameImageButton,
         images::{
             gametype::GameType, hasimagekey::HasImageKey, texturestate::TextureDownloadState,
             useraction::UserAction,
@@ -27,8 +27,8 @@ pub fn render_page_shortcut_images_overview(
     let column_padding = 23.;
     let columns = (width / (column_width + column_padding)).floor() as u32;
     let mut cur_column = 0;
-    match (user_info,shortcuts) {
-        (Some(user_info),Some(shortcuts)) => {
+    match (user_info, shortcuts) {
+        (Some(user_info), Some(shortcuts)) => {
             if let Some(action) = egui::Grid::new("ui_images")
                 .show(ui, |ui| {
                     for shortcut in shortcuts {
@@ -69,13 +69,10 @@ fn render_image(
         Path::new(&user_info.steam_user_data_folder),
     );
 
-    let clicked = render_image_from_path(
-        ui,
-        &app.image_selected_state.image_handles,
-        Path::new(&key),
-        column_width,
-        &shortcut.app_name,
-    );
+    let mut button = GameImageButton::new(Path::new(&key));
+    button.text(&shortcut.app_name);
+    button.width(column_width);
+    let clicked = button.show(ui, &app.image_selected_state.image_handles);
     if clicked {
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             shortcut.clone(),

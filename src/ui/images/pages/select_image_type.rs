@@ -1,10 +1,11 @@
 use std::path::Path;
 
+use crate::ui::components::GameImageButton;
 use crate::ui::images::{
     gametype::GameType, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
     useraction::UserAction, ImageHandles,
 };
-use crate::{steamgriddb::ImageType, ui::components::render_image_from_path_image_type};
+use crate::{steamgriddb::ImageType};
 
 const MAX_WIDTH: f32 = 300.;
 
@@ -82,12 +83,10 @@ fn render_thumbnail(
 ) -> bool {
     let (path, _key) = shortcut.key(image_type, Path::new(&user_path));
     let text = format!("Pick {} image", image_type.name());
-    render_image_from_path_image_type(
-        ui,
-        image_handles,
-        path.as_path(),
-        MAX_WIDTH,
-        &text,
-        image_type,
-    )
+    let mut image = GameImageButton::new(&path);
+    image
+        .width(MAX_WIDTH)
+        .text(&text)
+        .image_type(image_type)
+        .show(ui, image_handles)
 }

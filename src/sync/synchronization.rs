@@ -126,11 +126,12 @@ pub async fn download_images(
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     if settings.steamgrid_db.enabled {
-        if settings.steamgrid_db.prefer_animated {
-            println!("downloading animated images");
-            download_images_for_users(settings, userinfo_shortcuts, true, sender).await;
+        download_images_for_users(settings, userinfo_shortcuts,  sender).await;
+        if settings.steamgrid_db.prefer_animated{
+            let mut set = settings.clone();
+            set.steamgrid_db.prefer_animated = false;
+            download_images_for_users(&set, userinfo_shortcuts,  sender).await;
         }
-        download_images_for_users(settings, userinfo_shortcuts, false, sender).await;
     }
 }
 

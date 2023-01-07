@@ -7,7 +7,7 @@ use tokio::sync::watch;
 use crate::{
     steamgriddb::{get_image_extension, ImageType, ToDownload},
     ui::{
-        components::render_image_from_path_or_url,
+        components::DownloadedGameImageButton,
         images::{
             constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
             possible_image::PossibleImage, useraction::UserAction,
@@ -59,16 +59,10 @@ pub fn render_page_pick_image(
                 .show(ui, |ui| {
                     for image in images {
                         let path = image.thumbnail_path.as_path();
-                        if render_image_from_path_or_url(
-                            ui,
-                            &state.image_handles,
-                            path,
-                            column_width,
-                            &image.full_url,
-                            image_type,
-                            &app.rt,
-                            &image.thumbnail_url,
-                        ) {
+                        let mut button = DownloadedGameImageButton::new(path, &image.thumbnail_url);
+                        button.width(column_width);
+                        button.text("Pick image");
+                        if button.show(ui, &state.image_handles, &app.rt) {
                             return Some(image.clone());
                         }
                         column += 1;
@@ -148,7 +142,11 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
     }
 }
 
-fn delete_images_of_type(user: &crate::steam::SteamUsersInfo, selected_shortcut: &crate::ui::images::gametype::GameType, selected_image_type: &ImageType) {
+fn delete_images_of_type(
+    user: &crate::steam::SteamUsersInfo,
+    selected_shortcut: &crate::ui::images::gametype::GameType,
+    selected_image_type: &ImageType,
+) {
     //Delete old possible images
     let data_folder = Path::new(&user.steam_user_data_folder);
     //Keep deleting images of this type untill we don't find any more
@@ -164,10 +162,7 @@ fn image_path(
     selected_image_type: &ImageType,
     data_folder: &Path,
 ) -> PathBuf {
-    selected_shortcut
-        .key(selected_image_type, data_folder)
-        .0
-        
+    selected_shortcut.key(selected_image_type, data_folder).0
 }
 
 fn clear_loaded_images(app: &mut MyEguiApp) {
