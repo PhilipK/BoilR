@@ -1,3 +1,7 @@
+#![deny(clippy::unwrap_in_result)]
+#![deny(clippy::get_unwrap)]
+#![deny(clippy::unwrap_used)]
+
 mod config;
 mod migration;
 mod platforms;
@@ -16,9 +20,9 @@ fn main() -> Result<()> {
 
     let args: Vec<String> = std::env::args().collect();
     if args.contains(&"--no-ui".to_string()) {
-        ui::run_sync();
+        ui::run_sync()?;
     } else {
-        ui::run_ui(args);
+        ui::run_ui(args)?;
     }
     Ok(())
 }

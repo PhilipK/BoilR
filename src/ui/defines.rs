@@ -23,19 +23,19 @@ pub mod ui_images {
     pub const LOGO_ICON: &[u8] = include_bytes!("../../resources/logo_small.png");
 
     pub fn get_import_image() -> ImageData {
-        ImageData::Color(load_image_from_memory(IMPORT_GAMES_IMAGE).unwrap())
+        ImageData::Color(load_image_from_memory(IMPORT_GAMES_IMAGE).unwrap_or_default())
     }
 
     pub fn get_save_image() -> ImageData {
-        ImageData::Color(load_image_from_memory(SAVE_IMAGE).unwrap())
+        ImageData::Color(load_image_from_memory(SAVE_IMAGE).unwrap_or_default())
     }
 
     pub fn get_logo() -> ImageData {
-        ImageData::Color(load_image_from_memory(LOGO_32).unwrap())
+        ImageData::Color(load_image_from_memory(LOGO_32).unwrap_or_default())
     }
 
     pub fn get_logo_icon() -> IconData {
-        let image = image::load_from_memory(LOGO_ICON).unwrap();
+        let image = image::load_from_memory(LOGO_ICON).unwrap_or_default();
         let image_buffer = image.to_rgba8();
         let pixels = image_buffer.as_flat_samples();
         IconData {

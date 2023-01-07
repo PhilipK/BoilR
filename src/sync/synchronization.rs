@@ -34,15 +34,16 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
         .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
 
     for user in userinfo_shortcuts.iter_mut() {
-        let mut shortcut_info = get_shortcuts_for_user(user);
-
-        for shortcut in shortcut_info.shortcuts.iter_mut() {
-            if shortcut.app_id == app_id {
-                shortcut.dev_kit_game_id = "".to_string();
-                shortcut.tags.retain(|s| s != BOILR_TAG);
+        let shortcut_info = get_shortcuts_for_user(user);
+        if let Ok(mut shortcut_info) = shortcut_info {
+            for shortcut in shortcut_info.shortcuts.iter_mut() {
+                if shortcut.app_id == app_id {
+                    shortcut.dev_kit_game_id = "".to_string();
+                    shortcut.tags.retain(|s| s != BOILR_TAG);
+                }
             }
+            save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
         }
-        save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
     }
 
     Ok(())
@@ -53,9 +54,8 @@ pub fn sync_shortcuts(
     platform_shortcuts: &[(String, Vec<ShortcutOwned>)],
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32, String>,
-) -> Result<Vec<SteamUsersInfo>, String> {
-    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
-        .map_err(|e| format!("Getting shortcut paths failed: {e}"))?;
+) -> eyre::Result<Vec<SteamUsersInfo>> {
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
@@ -86,10 +86,14 @@ pub fn sync_shortcuts(
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
     println!("Found {} user(s)", userinfo_shortcuts.len());
-    for user in userinfo_shortcuts.iter_mut() {
+    let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user|{
+        let shortcut_info = get_shortcuts_for_user(user).ok();
+        shortcut_info.map(|shortcut_info| {
+            (user,shortcut_info)
+        })
+    });
+    for (user,mut shortcut_info) in ok_shorcuts {
         let start_time = std::time::Instant::now();
-
-        let mut shortcut_info = get_shortcuts_for_user(user);
         println!(
             "Found {} shortcuts for user: {}",
             shortcut_info.shortcuts.len(),
@@ -99,7 +103,7 @@ pub fn sync_shortcuts(
         remove_old_shortcuts(&mut shortcut_info);
         remove_shortcuts_with_same_appid(&mut shortcut_info, &all_shortcuts);
 
-        shortcut_info.shortcuts.extend(all_shortcuts.clone());     
+        shortcut_info.shortcuts.extend(all_shortcuts.clone());
 
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
@@ -122,11 +126,12 @@ pub async fn download_images(
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     if settings.steamgrid_db.enabled {
-        if settings.steamgrid_db.prefer_animated {
-            println!("downloading animated images");
-            download_images_for_users(settings, userinfo_shortcuts, true, sender).await;
+        download_images_for_users(settings, userinfo_shortcuts,  sender).await;
+        if settings.steamgrid_db.prefer_animated{
+            let mut set = settings.clone();
+            set.steamgrid_db.prefer_animated = false;
+            download_images_for_users(&set, userinfo_shortcuts,  sender).await;
         }
-        download_images_for_users(settings, userinfo_shortcuts, false, sender).await;
     }
 }
 
@@ -157,20 +162,24 @@ fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
         .retain(|shortcut| !shortcut.is_boilr_shortcut());
 }
 
-pub fn fix_all_shortcut_icons (
-    settings: &Settings,
-) -> eyre::Result<()>{
-    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam).map_err(|e|eyre::format_err!("Could not find steam shortcuts; {e}"))?;
+pub fn fix_all_shortcut_icons(settings: &Settings) -> eyre::Result<()> {
+    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)
+        .map_err(|e| eyre::format_err!("Could not find steam shortcuts; {e}"))?;
     for user in userinfo_shortcuts.iter_mut() {
-        let mut shortcut_info = get_shortcuts_for_user(user);
-        let changes = fix_shortcut_icons(user,&mut shortcut_info.shortcuts,settings.steam.optimize_for_big_picture);
-        if changes{
-            save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+        let shortcut_info = get_shortcuts_for_user(user);
+        if let Ok(mut shortcut_info) = shortcut_info {
+            let changes = fix_shortcut_icons(
+                user,
+                &mut shortcut_info.shortcuts,
+                settings.steam.optimize_for_big_picture,
+            );
+            if changes {
+                save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+            }
         }
     }
     Ok(())
 }
-
 
 fn fix_shortcut_icons(
     user: &SteamUsersInfo,
@@ -194,7 +203,7 @@ fn fix_shortcut_icons(
             let path = image_folder.join(image_type.file_name(app_id, ext));
             if !icon_exsists && path.exists() {
                 shortcut.icon = path.to_string_lossy().to_string();
-                has_changes= true;
+                has_changes = true;
                 break;
             }
         }

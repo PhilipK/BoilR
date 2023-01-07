@@ -19,7 +19,9 @@ impl<'a> CachedSearch<'a> {
     }
 
     pub fn save(&self) {
-        save_search_map(&self.search_map);
+        if let Err(err) = save_search_map(&self.search_map){
+            eprintln!("Failed saving searchmap : {:?}",err);
+        }
     }
 
     pub fn set_cache<S>(&mut self, app_id: u32, name: S, new_grid_id: usize)
@@ -58,16 +60,21 @@ impl<'a> CachedSearch<'a> {
 fn get_search_map() -> SearchMap {
     let path = get_cache_file();
     if path.exists() {
-        let string = std::fs::read_to_string(path).unwrap();
-        serde_json::from_str::<SearchMap>(&string).expect("Failed to parse cache.json")
+        std::fs::read_to_string(path)
+            .ok()
+            .and_then(|string| {
+                 serde_json::from_str::<SearchMap>(&string).ok()
+            })
+            .unwrap_or_default()
     } else {
         SearchMap::new()
     }
 }
 
-fn save_search_map(search_map: &SearchMap) {
-    let string = serde_json::to_string(search_map).unwrap();
+fn save_search_map(search_map: &SearchMap) -> eyre::Result<()> {
+    let string = serde_json::to_string(search_map)?;
     let path = get_cache_file();
-    let mut file = File::create(path).unwrap();
-    file.write_all(string.as_bytes()).unwrap();
+    let mut file = File::create(path)?;
+    file.write_all(string.as_bytes())?;
+    Ok(())
 }

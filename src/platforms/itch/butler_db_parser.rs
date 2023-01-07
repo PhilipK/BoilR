@@ -62,6 +62,9 @@ fn parse_path(i: &[u8]) -> nom::IResult<&[u8], DbPaths> {
 
 #[cfg(test)]
 mod tests {
+    //Okay to unwrap in tests
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
 
     use super::*;
 

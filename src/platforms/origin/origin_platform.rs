@@ -32,11 +32,7 @@ impl NeedsPorton<OriginPlatform> for OriginGame {
 
 impl OriginPlatform {
     fn get_shortcuts(&self) -> eyre::Result<Vec<OriginGame>> {
-        let origin_folders = get_default_locations();
-        if origin_folders.is_none() {
-            return Err(eyre::format_err!("Default path not found"));
-        }
-        let origin_folders = origin_folders.unwrap();
+        let origin_folders = get_default_locations().ok_or(eyre::format_err!("Default path not found"))?;
         let origin_folder = origin_folders.local_content_path;
         let origin_exe = origin_folders.exe_path;
         let game_folders = origin_folder.join("LocalContent").read_dir()?;

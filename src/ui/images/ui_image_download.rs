@@ -4,9 +4,9 @@ use super::{
     hasimagekey::HasImageKey,
     image_select_state::ImageSelectState,
     pages::{
-        handle_correct_grid_request, handle_grid_change, handle_shortcut_selected,
-        render_page_pick_image, render_page_shortcut_images_overview,
-        render_page_shortcut_select_image_type, render_page_steam_images_overview, handle_image_selected,
+        handle_correct_grid_request, handle_grid_change, handle_image_selected,
+        handle_shortcut_selected, render_page_pick_image, render_page_shortcut_images_overview,
+        render_page_shortcut_select_image_type, render_page_steam_images_overview,
     },
     possible_image::PossibleImage,
     texturestate::TextureDownloadState,
@@ -157,7 +157,7 @@ impl MyEguiApp {
                 self.handle_image_type_selected(image_type);
             }
             UserAction::ImageSelected(image) => {
-                handle_image_selected(self,image);
+                handle_image_selected(self, image);
             }
             UserAction::BackButton => {
                 self.handle_back_button_action();
@@ -197,11 +197,13 @@ impl MyEguiApp {
             .image_selected_state
             .selected_shortcut
             .as_ref()
-            .unwrap()
-            .app_id();
-        self.settings
-            .steamgrid_db
-            .set_image_banned(&image_type, app_id, should_ban);
+            .map(|m| m.app_id());
+        if let Some(app_id) = app_id {
+            self.settings
+                .steamgrid_db
+                .set_image_banned(&image_type, app_id, should_ban);
+        }
+
         self.handle_image_type_clear(image_type);
     }
 
@@ -222,38 +224,39 @@ impl MyEguiApp {
             self.rt.spawn_blocking(move || {
                 let task = download_images(&settings, &users, &mut sender_op);
                 block_on(task);
-                let _ = sender_op.unwrap().send(SyncProgress::Done);
+                if let Some(sender_op) = sender_op {
+                    let _ = sender_op.send(SyncProgress::Done);
+                }
             });
         }
     }
 
     fn handle_image_type_clear(&mut self, image_type: ImageType) {
+        let app_id = self
+            .image_selected_state
+            .selected_shortcut
+            .as_ref()
+            .map(|s| s.app_id());
         let data_folder = &self
             .image_selected_state
             .steam_user
             .as_ref()
-            .unwrap()
-            .steam_user_data_folder;
-        for ext in POSSIBLE_EXTENSIONS {
-            let file_name = image_type.file_name(
-                self.image_selected_state
-                    .selected_shortcut
-                    .as_ref()
-                    .unwrap()
-                    .app_id(),
-                ext,
-            );
-            let path = Path::new(data_folder)
-                .join("config")
-                .join("grid")
-                .join(file_name);
-            if path.exists() {
-                let _ = std::fs::remove_file(&path);
+            .map(|s| &s.steam_user_data_folder);
+        if let (Some(app_id), Some(data_folder)) = (app_id, data_folder) {
+            for ext in POSSIBLE_EXTENSIONS {
+                let file_name = image_type.file_name(app_id, ext);
+                let path = Path::new(data_folder)
+                    .join("config")
+                    .join("grid")
+                    .join(file_name);
+                if path.exists() {
+                    let _ = std::fs::remove_file(&path);
+                }
+                let key = path.to_string_lossy().to_string();
+                self.image_selected_state.image_handles.remove(&key);
             }
-            let key = path.to_string_lossy().to_string();
-            self.image_selected_state.image_handles.remove(&key);
+            self.image_selected_state.image_type_selected = None;
         }
-        self.image_selected_state.image_type_selected = None;
     }
 
     fn handle_set_game_mode(&mut self, game_mode: GameMode) {
@@ -304,11 +307,6 @@ impl MyEguiApp {
         };
     }
 
-    
-
-    
-
-    
     fn handle_back_button_action(&mut self) {
         let state = &mut self.image_selected_state;
         if state.possible_names.is_some() {
@@ -331,28 +329,35 @@ fn load_image_grids(
     ui: &mut egui::Ui,
 ) -> Vec<ShortcutOwned> {
     let user_info = crate::steam::get_shortcuts_for_user(user);
-    let mut user_folder = user_info.path.clone();
-    user_folder.pop();
-    user_folder.pop();
-    let mut shortcuts = user_info.shortcuts;
-    shortcuts.sort_by_key(|s| s.app_name.clone());
-    let image_type = &ImageType::Grid;
-    for shortcut in &shortcuts {
-        let (path, key) = shortcut.key(image_type, &user_folder);
-        let loaded = state.image_handles.contains_key(&key);
-        if !loaded && path.exists() {
-            let image = load_image_from_path(&path);
-            if let Ok(image) = image {
-                let texture = ui
-                    .ctx()
-                    .load_texture(&key, image, egui::TextureOptions::LINEAR);
-                state
-                    .image_handles
-                    .insert(key, TextureDownloadState::Loaded(texture));
+    match user_info {
+        Ok(user_info) => {
+            let mut user_folder = user_info.path.clone();
+            user_folder.pop();
+            user_folder.pop();
+            let mut shortcuts = user_info.shortcuts;
+            shortcuts.sort_by_key(|s| s.app_name.clone());
+            let image_type = &ImageType::Grid;
+            for shortcut in &shortcuts {
+                let (path, key) = shortcut.key(image_type, &user_folder);
+                let loaded = state.image_handles.contains_key(&key);
+                if !loaded && path.exists() {
+                    let image = load_image_from_path(&path);
+                    if let Ok(image) = image {
+                        let texture =
+                            ui.ctx()
+                                .load_texture(&key, image, egui::TextureOptions::LINEAR);
+                        state
+                            .image_handles
+                            .insert(key, TextureDownloadState::Loaded(texture));
+                    }
+                }
             }
+            shortcuts
+        }
+        Err(_err) => {
+            vec![]
         }
     }
-    shortcuts
 }
 
 fn render_shortcut_mode_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<UserAction> {

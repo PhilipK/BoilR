@@ -4,6 +4,7 @@ use futures::executor::block_on;
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
+use tokio::task::JoinHandle;
 
 use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
@@ -123,7 +124,14 @@ impl MyEguiApp {
         });
     }
 
-    pub fn run_sync(&mut self, wait: bool) {
+    pub fn run_sync_blocking(&mut self) -> eyre::Result<()> {
+        self.run_sync(true)
+    }
+
+    pub fn run_sync_async(&mut self) {
+        let _ = self.run_sync(false);
+    }
+    fn run_sync(&mut self, wait: bool) -> eyre::Result<()> {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
@@ -136,7 +144,7 @@ impl MyEguiApp {
         let _ = sender.send(SyncProgress::Starting);
         if all_ready {
             let shortcuts_to_import = get_all_games(&self.games_to_sync);
-            let handle = self.rt.spawn_blocking(move || {
+            let handle: JoinHandle<eyre::Result<()>> = self.rt.spawn_blocking(move || {
                 #[cfg(target_family = "unix")]
                 setup_proton(shortcuts_to_import.iter());
 
@@ -145,12 +153,11 @@ impl MyEguiApp {
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
                 let usersinfo =
-                    sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)
-                        .unwrap();
+                    sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)?;
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
-                if let Err(e) = sync::fix_all_shortcut_icons(&settings){
+                if let Err(e) = sync::fix_all_shortcut_icons(&settings) {
                     eprintln!("Could not fix shortcuts with error {e}");
                 }
 
@@ -160,11 +167,13 @@ impl MyEguiApp {
                 if settings.steam.start_steam {
                     crate::steam::ensure_steam_started(&settings.steam);
                 }
+                Ok(())
             });
             if wait {
-                self.rt.block_on(handle).unwrap();
+                self.rt.block_on(handle)??;
             }
         }
+        Ok(())
     }
 }
 
@@ -202,6 +211,8 @@ where
                 crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
             }
         }
-        setup_proton_games(&shortcuts_to_proton);
+        if let Err(err) = setup_proton_games(&shortcuts_to_proton){
+            eprintln!("failed to save proton settings: {:?}",err);
+        }
     }
 }

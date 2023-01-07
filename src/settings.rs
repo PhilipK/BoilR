@@ -69,8 +69,8 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     Ok(result)
 }
 
-pub fn save_settings(settings: &Settings, platforms: &Platforms) {
-    let mut toml = toml::to_string(&settings).unwrap();
+pub fn save_settings(settings: &Settings, platforms: &Platforms) -> eyre::Result<()>{
+    let mut toml = toml::to_string(&settings)?;
 
     for platform in platforms {
         let section_name = format!("[{}]", platform.code_name());
@@ -82,7 +82,8 @@ pub fn save_settings(settings: &Settings, platforms: &Platforms) {
     }
 
     let config_path = crate::config::get_config_file();
-    std::fs::write(config_path, toml).unwrap();
+    std::fs::write(config_path, toml)?;
+    Ok(())
 }
 
 fn add_sections(

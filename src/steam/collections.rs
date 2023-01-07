@@ -158,7 +158,7 @@ pub fn write_collections<S: AsRef<str>>(
                     &vdf_collections,
                 );
                 if let Some(new_string) = new_string {
-                    std::fs::write(path, new_string).unwrap();
+                    std::fs::write(path, new_string)?;
                 }
             }
         }
@@ -242,22 +242,19 @@ fn get_categories<S: AsRef<str>>(
     Ok(res)
 }
 
-fn open_db() -> Result<DB, Box<dyn Error>> {
-    let location = get_level_db_location();
+fn open_db() -> eyre::Result<DB> {
+    use eyre::eyre;
+    let location = get_level_db_location().ok_or(eyre!("Collections db not found"))?;
     let options = Options::default();
-    let open_res = DB::open(location.unwrap(), options);
-    if let Err(e) = &open_res {
-        match &e.code {
-            rusty_leveldb::StatusCode::LockError => {
-                println!("Could not lock the steam level database, make sure steam is turned off when running synchronizations");
-            }
-            rusty_leveldb::StatusCode::NotFound => {
-                println!("Could not find the steam level database, try to open and close steam once and synchronize again");
-            }
-            _ => {}
-        };
-    }
-    Ok(open_res?)
+    let open_res = DB::open(location, options);
+    open_res.map_err(|e|{
+        use rusty_leveldb::StatusCode::*;
+        match e.code{
+            LockError => eyre!("Could not lock the steam level database, make sure steam is turned off when running synchronizations"),
+            NotFound => eyre!("Could not find the steam level database, try to open and close steam once and synchronize again"),
+            _ => eyre!("Failed opening collections file: {}",e.err),
+        }
+    })
 }
 
 fn get_namespace_keys<S: AsRef<str>>(steamid: S, db: &mut DB) -> HashSet<String> {
@@ -394,6 +391,10 @@ pub struct VdfCollection {
 
 #[cfg(test)]
 mod tests {
+    //Allow unwraps in test
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::get_unwrap)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
 
     #[test]

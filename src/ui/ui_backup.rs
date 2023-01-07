@@ -62,14 +62,23 @@ impl MyEguiApp {
 }
 
 pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) -> bool {
-    let file_name = shortcut_path.file_name().unwrap();
+    let file_name = shortcut_path.file_name();
     let paths = get_shortcuts_paths(steam_settings);
-    if let Ok(paths) = paths {
+    if let (Ok(paths), Some(file_name)) = (paths, file_name) {
         for user in paths {
             if let Some(user_shortcut_path) = user.shortcut_path {
                 if file_name.to_string_lossy().starts_with(&user.user_id) {
-                    std::fs::copy(shortcut_path, Path::new(&user_shortcut_path)).unwrap();
-                    println!("Restored shortcut to path : {}", user_shortcut_path);
+                    match std::fs::copy(shortcut_path, Path::new(&user_shortcut_path)) {
+                        Ok(_) => {
+                            println!("Restored shortcut to path : {}", user_shortcut_path);
+                        }
+                        Err(err) => {
+                            eprintln!(
+                                "Failed to restored shortcut to path : {} gave error: {:?}",
+                                user_shortcut_path, err
+                            );
+                        }
+                    }
                     return true;
                 }
             }
@@ -100,7 +109,7 @@ pub fn load_backups() -> Vec<PathBuf> {
     result
 }
 
-const DATE_FORMAT :&str = "[year]-[month]-[day]-[hour]-[minute]-[second]";
+const DATE_FORMAT: &str = "[year]-[month]-[day]-[hour]-[minute]-[second]";
 
 pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     use time::OffsetDateTime;
@@ -108,18 +117,28 @@ pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     let backup_folder = get_backups_flder();
     let paths = get_shortcuts_paths(steam_settings);
     let date = OffsetDateTime::now_utc();
-    let format = format_description::parse(DATE_FORMAT).unwrap();
-    let date_string = date.format(&format).unwrap();
-    if let Ok(user_infos) = paths {
+    let format = format_description::parse(DATE_FORMAT);
+    if let Ok(format) = format{
+    let date_string = date.format(&format);
+    if let (Ok(date_string),Ok(user_infos)) = (date_string,paths) {
         for user_info in user_infos {
             if let Some(shortcut_path) = user_info.shortcut_path {
                 let new_path = backup_folder.join(format!(
                     "{}-{}-shortcuts.vdf",
                     user_info.user_id, date_string
                 ));
-                println!("Backed up shortcut at: {:?}", new_path);
-                std::fs::copy(shortcut_path, &new_path).unwrap();
+                match std::fs::copy(shortcut_path, &new_path) {
+                    Ok(_) => {
+                        println!("Backed up shortcut at: {:?}", new_path);
+                    }
+                    Err(err) => {
+                        eprintln!(
+                            "Failed to backup shortcut at: {:?}, error: {:?}",
+                            new_path, err
+                        );
+                    }
+                }
             }
-        }
+        }}
     }
 }
