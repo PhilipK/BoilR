@@ -8,14 +8,14 @@ use crate::steamgriddb::{ToDownload, ImageType};
 use crate::ui::images::{clamp_to_width, ImageHandles, TextureDownloadState};
 use crate::ui::ui_images::load_image_from_path;
 
-pub struct DownloadedGameImageButton {
+pub struct GmeButton {
     path: PathBuf,
     max_width: f32,
     text: String,
     image_type: ImageType,
 }
 
-impl DownloadedGameImageButton {
+impl GameButton {
     pub fn new(path: &Path) -> Self {
         Self {
             max_width: 200.0,
@@ -137,7 +137,7 @@ impl DownloadedGameImageButton {
         }
     }
 }
-impl Default for DownloadedGameImageButton {
+impl Default for GameButton {
     fn default() -> Self {
         Self::new(Path::new(""))
     }
