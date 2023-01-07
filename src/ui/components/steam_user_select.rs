@@ -7,6 +7,9 @@ pub fn render_user_select<'a>(
 ) -> Option<&'a SteamUsersInfo> {
     if let Some(mut selected_user) = steam_user {
         let id_before = selected_user.user_id.clone();
+        if steam_users.len() <= 1{
+            return None;
+        }
         if !steam_users.is_empty() {
             let combo_box = egui::ComboBox::new("ImageUserSelect", "")
                 .selected_text(format!("Steam user id: {}", &selected_user.user_id));
