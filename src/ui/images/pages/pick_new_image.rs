@@ -59,10 +59,10 @@ pub fn render_page_pick_image(
                 .show(ui, |ui| {
                     for image in images {
                         let path = image.thumbnail_path.as_path();
-                        let mut button = DownloadedGameImageButton::new(path, &image.thumbnail_url);
+                        let mut button = DownloadedGameImageButton::new(path);
                         button.width(column_width);
                         button.text("Pick image");
-                        if button.show(ui, &state.image_handles, &app.rt) {
+                        if button.show_download(ui, &state.image_handles, &app.rt,&image.thumbnail_url) {
                             return Some(image.clone());
                         }
                         column += 1;

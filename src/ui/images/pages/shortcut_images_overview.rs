@@ -6,13 +6,12 @@ use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
-        components::GameImageButton,
         images::{
             gametype::GameType, hasimagekey::HasImageKey, texturestate::TextureDownloadState,
             useraction::UserAction,
         },
         ui_images::load_image_from_path,
-        MyEguiApp,
+        MyEguiApp, components::DownloadedGameImageButton,
     },
 };
 
@@ -69,7 +68,7 @@ fn render_image(
         Path::new(&user_info.steam_user_data_folder),
     );
 
-    let mut button = GameImageButton::new(Path::new(&key));
+    let mut button = DownloadedGameImageButton::new(Path::new(&key));
     button.text(&shortcut.app_name);
     button.width(column_width);
     let clicked = button.show(ui, &app.image_selected_state.image_handles);
