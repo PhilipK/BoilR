@@ -52,7 +52,7 @@ pub async fn download_images_for_users<'b>(
         let to_downloads = stream::iter(users_info)
             .map(|(shortcut_info,data_folder)| {
                 async move {
-                    let known_images = get_users_images(&data_folder).unwrap_or_default();
+                    let known_images = get_users_images(data_folder).unwrap_or_default();
                     let res = search_for_images_to_download(
                         known_images,
                         data_folder.as_str(),

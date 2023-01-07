@@ -38,7 +38,9 @@ pub fn migrate_config() {
         if let Ok(mut settings) = crate::settings::Settings::new() {
             settings.config_version = Some(1);
             let platforms = get_platforms();
-            save_settings(&settings, &platforms);
+            if let Err(err) = save_settings(&settings, &platforms){
+                eprintln!("Failed to load settings {:?}", err);
+            }
         }
     }
 }

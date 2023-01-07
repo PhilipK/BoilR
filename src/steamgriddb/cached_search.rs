@@ -19,7 +19,9 @@ impl<'a> CachedSearch<'a> {
     }
 
     pub fn save(&self) {
-        save_search_map(&self.search_map);
+        if let Err(err) = save_search_map(&self.search_map){
+            eprintln!("Failed saving searchmap : {:?}",err);
+        }
     }
 
     pub fn set_cache<S>(&mut self, app_id: u32, name: S, new_grid_id: usize)
