@@ -329,28 +329,35 @@ fn load_image_grids(
     ui: &mut egui::Ui,
 ) -> Vec<ShortcutOwned> {
     let user_info = crate::steam::get_shortcuts_for_user(user);
-    let mut user_folder = user_info.path.clone();
-    user_folder.pop();
-    user_folder.pop();
-    let mut shortcuts = user_info.shortcuts;
-    shortcuts.sort_by_key(|s| s.app_name.clone());
-    let image_type = &ImageType::Grid;
-    for shortcut in &shortcuts {
-        let (path, key) = shortcut.key(image_type, &user_folder);
-        let loaded = state.image_handles.contains_key(&key);
-        if !loaded && path.exists() {
-            let image = load_image_from_path(&path);
-            if let Ok(image) = image {
-                let texture = ui
-                    .ctx()
-                    .load_texture(&key, image, egui::TextureOptions::LINEAR);
-                state
-                    .image_handles
-                    .insert(key, TextureDownloadState::Loaded(texture));
+    match user_info {
+        Ok(user_info) => {
+            let mut user_folder = user_info.path.clone();
+            user_folder.pop();
+            user_folder.pop();
+            let mut shortcuts = user_info.shortcuts;
+            shortcuts.sort_by_key(|s| s.app_name.clone());
+            let image_type = &ImageType::Grid;
+            for shortcut in &shortcuts {
+                let (path, key) = shortcut.key(image_type, &user_folder);
+                let loaded = state.image_handles.contains_key(&key);
+                if !loaded && path.exists() {
+                    let image = load_image_from_path(&path);
+                    if let Ok(image) = image {
+                        let texture =
+                            ui.ctx()
+                                .load_texture(&key, image, egui::TextureOptions::LINEAR);
+                        state
+                            .image_handles
+                            .insert(key, TextureDownloadState::Loaded(texture));
+                    }
+                }
             }
+            shortcuts
+        }
+        Err(err) => {
+            vec![]
         }
     }
-    shortcuts
 }
 
 fn render_shortcut_mode_select(state: &ImageSelectState, ui: &mut egui::Ui) -> Option<UserAction> {

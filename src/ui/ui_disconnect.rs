@@ -26,7 +26,9 @@ impl MyEguiApp {
                     let mut user_info = vec![];
                     for user in users {
                         let shortcut_info = get_shortcuts_for_user(&user);
-                        user_info.push(shortcut_info);
+                        if let Ok(shortcut_info) = shortcut_info {
+                            user_info.push(shortcut_info);
+                        }
                     }
                     user_info
                 })

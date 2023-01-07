@@ -198,8 +198,8 @@ impl Error for SteamUsersDataEmpty {
         self.location_tried.as_str()
     }
 }
-pub fn get_users_images(user: &SteamUsersInfo) -> Result<Vec<String>, Box<dyn Error>> {
-    let grid_folder = Path::new(user.steam_user_data_folder.as_str()).join("config/grid");
+pub fn get_users_images(data_folder: &str) -> Result<Vec<String>, Box<dyn Error>> {
+    let grid_folder = Path::new(data_folder).join("config/grid");
     if !grid_folder.exists() {
         std::fs::create_dir_all(&grid_folder)?;
     }
