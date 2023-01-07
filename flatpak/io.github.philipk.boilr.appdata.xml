@@ -26,6 +26,15 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.7.20" date="2023-01-07">
+      <description>
+        <ul>
+          <li>Fix many potential crash bugs</li>
+          <li>Do not show user 0</li>
+          <li>Only show user selection if there is more than one user</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.18" date="2023-01-03">
       <description>
         <ul>
