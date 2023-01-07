@@ -128,7 +128,9 @@ impl MyEguiApp {
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
-                save_settings(&self.settings, &self.platforms);
+                if let Err(err) = save_settings(&self.settings, &self.platforms){
+                    eprintln!("Failed to save settings {:?}",err);
+                }
                 self.run_sync_async();
             }
         } else {
@@ -266,7 +268,9 @@ impl App for MyEguiApp {
                     let save_button = ImageButton::new(texture, size * 0.5);
 
                     if ui.add(save_button).on_hover_text("Save settings").clicked() {
-                        save_settings(&self.settings, &self.platforms);
+                        if let Err(err) = save_settings(&self.settings, &self.platforms){
+                            eprintln!("Failed to save settings: {:?}",err);
+                        }
                     }
                 });
         }

@@ -211,6 +211,8 @@ where
                 crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
             }
         }
-        setup_proton_games(&shortcuts_to_proton);
+        if let Err(err) = setup_proton_games(&shortcuts_to_proton){
+            eprintln!("failed to save proton settings: {:?}",err);
+        }
     }
 }
