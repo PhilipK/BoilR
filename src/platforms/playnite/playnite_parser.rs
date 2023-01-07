@@ -14,7 +14,7 @@ pub(crate) struct NamesAndId {
     pub(crate) installed: bool,
 }
 
-pub(crate) fn parse_db<'a>(content: &'a [u8]) -> nom::IResult<&'a [u8], Vec<NamesAndId>> {
+pub(crate) fn parse_db(content: &[u8]) -> nom::IResult<&[u8], Vec<NamesAndId>> {
     many0(parse_game)(content)
 }
 
@@ -29,10 +29,7 @@ fn parse_game(i: &[u8]) -> nom::IResult<&[u8], NamesAndId> {
     let id = String::from_utf8_lossy(id_bytes).to_string();
     let (i, _taken) = take_until("IsInstalled")(i)?;
     let (i, _taken) = tag("IsInstalled")(i)?;
-    let installed = match i.get(1) {
-        Some(1u8) => true,
-        _ => false,
-    };
+    let installed = matches!(i.get(1), Some(1u8));
     let (i, _taken) = take_until("InstallSizeGroup")(i)?;
     let (i, _taken) = take_until("Name")(i)?;
     let (i, _taken) = take(4usize)(i)?;

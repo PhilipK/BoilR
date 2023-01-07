@@ -87,7 +87,7 @@ impl PlaynitePlatform {
         let mut res = vec![];
         let (launcher_path, games_file_path) = self.find_paths()?;
         if games_file_path.exists() {
-            let games_bytes = std::fs::read(&games_file_path).unwrap();
+            let games_bytes = std::fs::read(&games_file_path)?;
             let (_, games) = parse_db(&games_bytes).map_err(|e| eyre::eyre!(e.to_string()))?;
             for game in games {
                 if game.installed || !self.settings.installed_only {
@@ -105,7 +105,7 @@ impl PlaynitePlatform {
     fn find_paths(&self) -> Result<(PathBuf, PathBuf), color_eyre::Report> {
         if self.settings.use_portalbe_version {
             let launcher_path = Path::new(&self.settings.portable_launcher_path).to_path_buf();
-            let p = launcher_path.parent().unwrap_or(Path::new(""));
+            let p = launcher_path.parent().unwrap_or_else(||Path::new(""));
             let games_file_path = p.join("library").join("games.db");
             Ok((launcher_path, games_file_path))
         } else {
