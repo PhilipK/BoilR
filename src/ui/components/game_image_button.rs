@@ -8,7 +8,7 @@ use crate::steamgriddb::{ToDownload, ImageType};
 use crate::ui::images::{clamp_to_width, ImageHandles, TextureDownloadState};
 use crate::ui::ui_images::load_image_from_path;
 
-pub struct GmeButton {
+pub struct GameButton {
     path: PathBuf,
     max_width: f32,
     text: String,
