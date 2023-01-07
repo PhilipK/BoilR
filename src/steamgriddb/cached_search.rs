@@ -69,9 +69,10 @@ fn get_search_map() -> SearchMap {
     }
 }
 
-fn save_search_map(search_map: &SearchMap) {
-    let string = serde_json::to_string(search_map).unwrap();
+fn save_search_map(search_map: &SearchMap) -> eyre::Result<()> {
+    let string = serde_json::to_string(search_map)?;
     let path = get_cache_file();
-    let mut file = File::create(path).unwrap();
-    file.write_all(string.as_bytes()).unwrap();
+    let mut file = File::create(path)?;
+    file.write_all(string.as_bytes())?;
+    Ok(())
 }

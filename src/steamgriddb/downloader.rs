@@ -399,17 +399,17 @@ fn icon_url(steam_app_id: &str, icon_id: &str) -> String {
     )
 }
 
-pub async fn download_to_download(to_download: &ToDownload) -> Result<(), Box<dyn Error>> {
+pub async fn download_to_download(to_download: &ToDownload) -> eyre::Result<()> {
     println!(
         "Downloading {:?} for {} to {:?}",
         to_download.image_type, to_download.app_name, to_download.path
     );
     let path = &to_download.path;
     let url = &to_download.url;
-    let mut file = File::create(path).unwrap();
+    let mut file = File::create(path)?;
     let response = reqwest::get(url).await?;
     let content = response.bytes().await?;
-    file.write_all(&content).unwrap();
+    file.write_all(&content)?;
     Ok(())
 }
 
