@@ -165,9 +165,9 @@ fn image_path(
     data_folder: &Path,
 ) -> PathBuf {
     selected_shortcut
-        .key(&selected_image_type, data_folder)
+        .key(selected_image_type, data_folder)
         .0
-        .to_path_buf()
+        
 }
 
 fn clear_loaded_images(app: &mut MyEguiApp) {

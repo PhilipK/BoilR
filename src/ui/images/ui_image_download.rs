@@ -354,7 +354,7 @@ fn load_image_grids(
             }
             shortcuts
         }
-        Err(err) => {
+        Err(_err) => {
             vec![]
         }
     }

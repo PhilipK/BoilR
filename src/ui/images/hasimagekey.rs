@@ -39,7 +39,7 @@ fn key(app_id: u32, image_type: &ImageType, user_path: &Path) -> (PathBuf, Strin
     let keys = POSSIBLE_EXTENSIONS.map(ext);
     let other = keys.iter().find(|(exsists, _, _)| *exsists);
     let first = ext(POSSIBLE_EXTENSIONS[0]);
-    let (_, path, key) = other.unwrap_or_else(|| &first);
+    let (_, path, key) = other.unwrap_or(&first);
     (path.to_path_buf(), key.to_string())
 }
 
