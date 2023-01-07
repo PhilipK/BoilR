@@ -66,19 +66,25 @@ fn parse_manifest_string<S: AsRef<str>>(string: S) -> Option<SteamGameInfo> {
     let app_id_line = lines.find(|l| l.contains("\"appid\""));
     let name_line = lines.find(|l| l.contains("\"name\""));
     match (app_id_line, name_line) {
-        (Some(app_id_line), Some(name_line)) => Some(SteamGameInfo {
-            name: name_line[10..name_line.len() - 1].to_string(),
-            appid: app_id_line[11..app_id_line.len() - 1]
-                .to_string()
-                .parse()
-                .unwrap(),
-        }),
+        (Some(app_id_line), Some(name_line)) => {
+            let appid = app_id_line[11..app_id_line.len() - 1].to_string().parse();
+            match appid {
+                Ok(appid) => Some(SteamGameInfo {
+                    name: name_line[10..name_line.len() - 1].to_string(),
+                    appid,
+                }),
+                Err(_) => None,
+            }
+        }
         _ => None,
     }
 }
 
 #[cfg(test)]
 mod tests {
+    //Okay to unwrap in tests
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
 
     use super::*;
 

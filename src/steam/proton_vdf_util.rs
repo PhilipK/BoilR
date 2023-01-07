@@ -2,16 +2,17 @@ use std::path::Path;
 
 use nom::FindSubstring;
 
-pub fn setup_proton_games<B: AsRef<str>>(games: &[B]) {
+pub fn setup_proton_games<B: AsRef<str>>(games: &[B]) -> eyre::Result<()>{
     if let Ok(home) = std::env::var("HOME") {
         let config_file = Path::new(&home).join(".local/share/Steam/config/config.vdf");
         if config_file.exists() {
             if let Ok(config_content) = std::fs::read_to_string(&config_file) {
                 let new_string = enable_proton_games(config_content, games);
-                std::fs::write(config_file, new_string).unwrap();
+                std::fs::write(config_file, new_string)?;
             }
         }
     }
+    Ok(())
 }
 
 fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]) -> String {
@@ -96,6 +97,9 @@ fn find_indexes<S: AsRef<str>>(vdf_content: S) -> Option<SectionInfo> {
 #[cfg(target_family = "unix")]
 mod tests {
 
+    //Okay to unwrap in tests
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
 
     #[test]

@@ -1,3 +1,4 @@
+use std::f32::consts::E;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -42,7 +43,7 @@ pub async fn download_images_for_users<'b>(
         }
         let to_downloads = stream::iter(users)
             .map(|user| {
-                let shortcut_info = get_shortcuts_for_user(user);
+                if let Ok(shortcut_info) = get_shortcuts_for_user(user){
                 async move {
                     let known_images = get_users_images(user).unwrap_or_default();
                     let res = search_for_images_to_download(
@@ -57,6 +58,8 @@ pub async fn download_images_for_users<'b>(
                     )
                     .await;
                     res.unwrap_or_default()
+                }}else{
+                    vec![]
                 }
             })
             .buffer_unordered(CONCURRENT_REQUESTS)

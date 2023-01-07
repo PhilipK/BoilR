@@ -8,14 +8,14 @@ use steam_shortcuts_util::{parse_shortcuts, shortcut::ShortcutOwned};
 
 use super::SteamSettings;
 
-pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
+pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> eyre::Result<ShortcutInfo> {
     let mut shortcuts = vec![];
 
     let new_path = match &user.shortcut_path {
         Some(shortcut_path) => {
-            let content = std::fs::read(shortcut_path).unwrap();
+            let content = std::fs::read(shortcut_path)?;
             shortcuts = parse_shortcuts(content.as_slice())
-                .unwrap()
+                .map_err(|e| eyre::format_err!("Could not parse shortcuts: {:?}", e))?
                 .iter()
                 .map(|s| s.to_owned())
                 .collect();
@@ -27,15 +27,15 @@ pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> ShortcutInfo {
                 user.steam_user_data_folder
             );
             let path = Path::new(&user.steam_user_data_folder).join("config");
-            std::fs::create_dir_all(path.clone()).unwrap();
+            std::fs::create_dir_all(path.clone())?;
             path.join("shortcuts.vdf")
         }
     };
 
-    ShortcutInfo {
+    Ok(ShortcutInfo {
         shortcuts,
         path: new_path,
-    }
+    })
 }
 
 pub struct ShortcutInfo {
@@ -51,18 +51,22 @@ pub struct SteamUsersInfo {
 }
 
 /// Get the paths to the steam users shortcuts (one for each user)
-pub fn get_shortcuts_paths(
-    settings: &SteamSettings,
-) -> eyre::Result<Vec<SteamUsersInfo>> {
+pub fn get_shortcuts_paths(settings: &SteamSettings) -> eyre::Result<Vec<SteamUsersInfo>> {
     let steam_path_str = get_steam_path(settings)?;
     let steam_path = Path::new(&steam_path_str);
     if !steam_path.exists() {
-        return Err(eyre::format_err!("Steam folder not found at: {:?}",steam_path));
+        return Err(eyre::format_err!(
+            "Steam folder not found at: {:?}",
+            steam_path
+        ));
     }
 
     let user_data_path = steam_path.join("userdata");
     if !user_data_path.exists() {
-        return Err(eyre::format_err!("Steam user data folder not found at: {:?}",user_data_path));
+        return Err(eyre::format_err!(
+            "Steam user data folder not found at: {:?}",
+            user_data_path
+        ));
     }
 
     if !user_data_path.exists() {}
