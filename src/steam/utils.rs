@@ -77,6 +77,10 @@ pub fn get_shortcuts_paths(settings: &SteamSettings) -> eyre::Result<Vec<SteamUs
             Ok(meta) => meta.is_dir(),
             _ => false,
         })
+        .filter(|folder| {
+            let user_id = folder.file_name().to_string_lossy().to_string();
+            user_id != "0"
+        })
         .map(|folder| {
             let user_id = folder.file_name().to_string_lossy().to_string();
             let folder_path = folder.path();
