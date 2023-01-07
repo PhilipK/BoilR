@@ -69,9 +69,9 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     Shortcut::new(
         "0",
         manifest.display_name.as_str(),
-        &exe,
-        &start_dir,
-        &exe,
+        exe,
+        start_dir,
+        exe,
         "",
         parameters.as_str(),
     )

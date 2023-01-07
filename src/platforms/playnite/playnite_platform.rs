@@ -93,7 +93,7 @@ impl PlaynitePlatform {
                 if game.installed || !self.settings.installed_only {
                     res.push(PlayniteGame {
                         id: game.id,
-                        launcher_path: launcher_path.clone().into(),
+                        launcher_path: launcher_path.clone(),
                         name: game.name,
                     });
                 }
@@ -117,7 +117,7 @@ impl PlaynitePlatform {
                 return Err(eyre::eyre!("Did not find Playnite installation"));
             }
             let app_data_path = env::var("APPDATA")?;
-            let launcher_path = launcher_path.to_path_buf();
+            let launcher_path = launcher_path;
             let playnite_folder = Path::new(&app_data_path).join("Playnite");
             let games_file_path = playnite_folder.join("library").join("games.db");
             Ok((launcher_path, games_file_path))

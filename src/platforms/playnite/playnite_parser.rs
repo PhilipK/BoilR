@@ -23,7 +23,7 @@ fn parse_game(i: &[u8]) -> nom::IResult<&[u8], NamesAndId> {
     let (i, _taken) = take_until("Image")(i)?;
     let (i, prefix_and_id) = take_until("\\")(i)?;
     let id_bytes = prefix_and_id
-        .split(|b| *b == 0 as u8)
+        .split(|b| *b == 0_u8)
         .last()
         .unwrap_or_default();
     let id = String::from_utf8_lossy(id_bytes).to_string();
