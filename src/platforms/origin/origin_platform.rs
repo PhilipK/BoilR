@@ -32,7 +32,8 @@ impl NeedsPorton<OriginPlatform> for OriginGame {
 
 impl OriginPlatform {
     fn get_shortcuts(&self) -> eyre::Result<Vec<OriginGame>> {
-        let origin_folders = get_default_locations().ok_or(eyre::format_err!("Default path not found"))?;
+        let origin_folders =
+            get_default_locations().ok_or(eyre::format_err!("Default path not found"))?;
         let origin_folder = origin_folders.local_content_path;
         let origin_exe = origin_folders.exe_path;
         let game_folders = origin_folder.join("LocalContent").read_dir()?;
@@ -164,18 +165,16 @@ fn get_exe_path() -> Option<PathBuf> {
     use winreg::enums::*;
     use winreg::RegKey;
     //Computer\HKEY_CLASSES_ROOT\eadm\shell\open\command
-
-    let hklm = RegKey::predef(HKEY_CLASSES_ROOT);
-    if let Ok(launcher_key) = hklm.open_subkey("eadm\\shell\\open\\command") {
-        let launcher_string: Result<String, _> = launcher_key.get_value("");
-        if let Ok(launcher_string) = launcher_string {
-            let path = Path::new(&launcher_string[1..launcher_string.len() - 6]);
-            if path.exists() {
-                return Some(path.to_path_buf());
-            }
-        }
-    }
-    None
+    RegKey::predef(HKEY_CLASSES_ROOT)
+        .open_subkey("eadm\\shell\\open\\command")
+        .and_then(|launcher_key| launcher_key.get_value(""))
+        .ok()
+        .and_then(|value: String| {
+            value
+                .get(1..value.len() - 6)
+                .map(|path_str| Path::new(path_str).to_path_buf())
+        })
+        .filter(|path| path.exists())
 }
 
 impl GamesPlatform for OriginPlatform {
