@@ -53,10 +53,14 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let start_dir = start_dir.trim_matches('\"');
 
     #[cfg(target_family = "unix")]
-    let start_dir = format!("\"{}\"", start_dir);
+    let start_dir_string = format!("\"{}\"", start_dir);
+    #[cfg(target_family = "unix")]
+    let start_dir = start_dir_string.as_str();
 
     #[cfg(target_family = "unix")]
-    let exe = format!("\"{}\"", exe);
+    let exe_string = format!("\"{}\"", exe);
+    #[cfg(target_family = "unix")]
+    let exe = exe_string.as_str();
 
     let parameters = match manifest.compat_folder.as_ref() {
         Some(compat_folder) => format!(
