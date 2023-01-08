@@ -26,6 +26,13 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.7.21" date="2023-01-08">
+      <description>
+        <ul>
+          <li>Fix potential crash bugs</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.20" date="2023-01-07">
       <description>
         <ul>
