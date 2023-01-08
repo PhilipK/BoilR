@@ -65,6 +65,7 @@ mod tests {
     //Okay to unwrap in tests
     #![allow(clippy::unwrap_in_result)]
     #![allow(clippy::unwrap_used)]
+    #![allow(clippy::indexing_slicing)]
 
     use super::*;
 

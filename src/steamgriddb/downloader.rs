@@ -242,10 +242,15 @@ async fn search_for_images_to_download<T: SearchSettings>(
             .await;
             match image_search_result {
                 Ok(images) => {
-                    let images = images
-                        .iter()
-                        .enumerate()
-                        .map(|(index, image)| (image, shortcuts[index], image_ids[index]));
+                    let images = images.iter().enumerate().filter_map(|(index, image)| {
+                        if let (Some(shortcut), Some(image_id)) =
+                            (shortcuts.get(index), image_ids.get(index))
+                        {
+                            Some((image, shortcut, image_id))
+                        } else {
+                            None
+                        }
+                    });
                     let download_for_this_type = stream::iter(images)
                         .filter_map(|(image, shortcut, game_id)| {
                             let extension = image
@@ -257,7 +262,7 @@ async fn search_for_images_to_download<T: SearchSettings>(
                             async move {
                                 let image_url = match image {
                                     Ok(img) => Some(img.url.clone()),
-                                    Err(_) => get_steam_image_url(game_id, &image_type).await,
+                                    Err(_) => get_steam_image_url(*game_id, &image_type).await,
                                 };
                                 image_url.map(|url| ToDownload {
                                     path,

@@ -67,25 +67,10 @@ fn get_manifest_item(dir_entry: DirEntry, _path: Option<PathBuf>) -> Option<Mani
                 {
                     if let Ok(mut item) = serde_json::from_reader::<_, ManifestItem>(reader) {
                         if let Some(compat_folder) = _path {
-                            //Strip off the c:\\
-                            item.manifest_location = compat_folder
-                                .join("pfx")
-                                .join("dosdevices")
-                                .join(item.manifest_location[0..2].to_lowercase())
-                                .join(item.manifest_location[3..].replace('\\', "/"))
-                                
-                                .to_string_lossy()
-                                .to_string();
-
-                            item.install_location = compat_folder
-                                .join("pfx")
-                                .join("dosdevices")
-                                .join(item.install_location[0..2].to_lowercase())
-                                .join(item.install_location[3..].replace('\\', "/"))
-                                
-                                .to_string_lossy()
-                                .to_string();
-
+                            item.manifest_location =
+                                replace_with_dosdevices(&compat_folder, &item.manifest_location);
+                            item.install_location =
+                                replace_with_dosdevices(&compat_folder, &item.install_location);
                             return Some(item);
                         }
                     }
@@ -97,6 +82,21 @@ fn get_manifest_item(dir_entry: DirEntry, _path: Option<PathBuf>) -> Option<Mani
         }
     }
     None
+}
+
+fn replace_with_dosdevices(compat_folder: &Path, location: &str) -> String {
+    let drive = location.get(0..2).map(|drive| drive.to_lowercase());
+    let rest_path = location.get(3..).map(|rest| rest.replace('\\', "/"));
+    if let (Some(drive), Some(rest_path)) = (drive, rest_path) {
+        let path_buf = compat_folder
+            .join("pfx")
+            .join("dosdevices")
+            .join(drive)
+            .join(rest_path);
+        path_buf.to_string_lossy().to_string()
+    } else {
+        location.to_string()
+    }
 }
 
 //Commented out because it will change from machine to machine

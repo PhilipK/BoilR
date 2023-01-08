@@ -272,12 +272,9 @@ fn get_namespace_keys<S: AsRef<str>>(steamid: S, db: &mut DB) -> HashSet<String>
 
 fn get_namespaces(db: &mut DB, key_bytes: &[u8]) -> Option<Vec<(i32, String)>> {
     match db.get(key_bytes) {
-        Some(got) => {
-            let collection_bytes = got.as_slice();
-            let collectin_str = String::from_utf8_lossy(collection_bytes)[1..].to_string();
-            let collection = serde_json::from_str(&collectin_str).unwrap_or_default();
-            Some(collection)
-        }
+        Some(got) => String::from_utf8_lossy(got.as_slice())
+            .get(1..)
+            .and_then(|s| serde_json::from_str(s).ok()),
         _ => None,
     }
 }
@@ -329,7 +326,7 @@ fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Str
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
     let base64 = base64::encode(name.as_ref());
     let base64_no_end = if base64.ends_with("==") {
-        &base64[..base64.len() - 2]
+        base64.get(..base64.len() - 2).unwrap_or_default()
     } else {
         &base64
     };
@@ -368,15 +365,20 @@ pub fn write_vdf_collection_to_string<S: AsRef<str>>(
     let key = "\t\"user-collections\"\t\t";
     if let Some(start_index) = input.find_substring(key) {
         let start_index_plus_key = start_index + key.len();
-        if let Some(line_index) = input[start_index_plus_key..].find('\n') {
+        if let Some(line_index) = input.get(start_index_plus_key..).and_then(|i| i.find('\n')) {
             let end_index_in_full = line_index + start_index_plus_key;
-            let result = format!(
-                "{}{}{}",
-                &input[..start_index_plus_key],
-                encoded_json,
-                &input[end_index_in_full..]
-            );
-            return Some(result);
+            if let (Some(before), Some(after)) = (
+                input.get(..start_index_plus_key),
+                input.get(end_index_in_full..),
+            ) {
+                let result = format!(
+                    "{}{}{}",
+                    before,
+                    encoded_json,
+                    after
+                );
+                return Some(result);
+            }
         }
     }
     None

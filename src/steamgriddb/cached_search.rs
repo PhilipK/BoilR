@@ -19,8 +19,8 @@ impl<'a> CachedSearch<'a> {
     }
 
     pub fn save(&self) {
-        if let Err(err) = save_search_map(&self.search_map){
-            eprintln!("Failed saving searchmap : {:?}",err);
+        if let Err(err) = save_search_map(&self.search_map) {
+            eprintln!("Failed saving searchmap : {:?}", err);
         }
     }
 
@@ -46,14 +46,14 @@ impl<'a> CachedSearch<'a> {
         }
         println!("Searching for {}", query.as_ref());
         let search = self.client.search(query.as_ref()).await?;
-        if search.is_empty() {
-            return Ok(None);
+        let first_id = search.get(0).map(|f| f.id);
+        match first_id {
+            Some(assumed_id) => {
+                self.search_map.insert(app_id, (query.into(), assumed_id));
+                Ok(Some(assumed_id))
+            }
+            None => Ok(None),
         }
-        let first_item = &search[0];
-        let assumed_id = first_item.id;
-        self.search_map.insert(app_id, (query.into(), assumed_id));
-
-        Ok(Some(assumed_id))
     }
 }
 
@@ -62,9 +62,7 @@ fn get_search_map() -> SearchMap {
     if path.exists() {
         std::fs::read_to_string(path)
             .ok()
-            .and_then(|string| {
-                 serde_json::from_str::<SearchMap>(&string).ok()
-            })
+            .and_then(|string| serde_json::from_str::<SearchMap>(&string).ok())
             .unwrap_or_default()
     } else {
         SearchMap::new()

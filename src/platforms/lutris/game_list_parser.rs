@@ -10,6 +10,8 @@ pub fn parse_lutris_games(input: &str) -> Vec<LutrisGame> {
 
 #[cfg(test)]
 mod tests {
+
+    #![allow(clippy::indexing_slicing)]
     use super::*;
 
     #[test]

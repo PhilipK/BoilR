@@ -2,7 +2,7 @@ use std::path::Path;
 
 use nom::FindSubstring;
 
-pub fn setup_proton_games<B: AsRef<str>>(games: &[B]) -> eyre::Result<()>{
+pub fn setup_proton_games<B: AsRef<str>>(games: &[B]) -> eyre::Result<()> {
     if let Ok(home) = std::env::var("HOME") {
         let config_file = Path::new(&home).join(".local/share/Steam/config/config.vdf");
         if config_file.exists() {
@@ -30,28 +30,32 @@ fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]
         };
 
         let proton_replace_string = include_str!("proton_string.txt");
-        let section_str = &vdf_content[section_info.start..section_info.append_end];
-        let games_strings_to_add = games
-            .iter()
-            .filter(|g| {
-                let game_section_start = format!("\"{}\"\n", g.as_ref());
-                !section_str.contains(&game_section_start)
-            })
-            .map(|game_id| {
-                let res = proton_replace_string.to_string();
-                let res = res.replace("\"X\"", &format!("\"{}\"", game_id.as_ref()));
-                let res = res.replace('=', &base_indent_string);
-                res.replace('+', &field_indent_string)
-            });
-        let mut new_section = section_str.to_string();
-        for game_string in games_strings_to_add {
-            new_section.push_str(&game_string);
-        }
-        new_section.push_str(&section_info.end_key);
+        let section_str = vdf_content.get(section_info.start..section_info.append_end);
+        if let Some(section_str) = section_str {
+            let games_strings_to_add = games
+                .iter()
+                .filter(|g| {
+                    let game_section_start = format!("\"{}\"\n", g.as_ref());
+                    !section_str.contains(&game_section_start)
+                })
+                .map(|game_id| {
+                    let res = proton_replace_string.to_string();
+                    let res = res.replace("\"X\"", &format!("\"{}\"", game_id.as_ref()));
+                    let res = res.replace('=', &base_indent_string);
+                    res.replace('+', &field_indent_string)
+                });
+            let mut new_section = section_str.to_string();
+            for game_string in games_strings_to_add {
+                new_section.push_str(&game_string);
+            }
+            new_section.push_str(&section_info.end_key);
 
-        let before_section = &vdf_content[..section_info.start];
-        let after_section = &vdf_content[section_info.end..];
-        return format!("{}{}{}", before_section, new_section, after_section);
+            if let Some(before_section) = vdf_content.get(..section_info.start) {
+                if let Some(after_section) = vdf_content.get(section_info.end..) {
+                    return format!("{}{}{}", before_section, new_section, after_section);
+                }
+            }
+        }
     } else {
         //TODO make this an error instead?
         println!("Could not find proton section in steam, try to manually set proton on at least one game and then rerun");
@@ -72,14 +76,14 @@ fn find_indexes<S: AsRef<str>>(vdf_content: S) -> Option<SectionInfo> {
     let vdf_content = vdf_content.as_ref();
     if let Some(compat_index) = vdf_content.find_substring(compat_key) {
         let compat_index = compat_index + compat_key.len();
-        let after_key = vdf_content[compat_index..].to_string();
-        if let Some(base_indentation) = after_key.find('{') {
+        let after_key = vdf_content.get(compat_index..);
+        if let Some(base_indentation) = after_key.and_then(|k| k.find('{')) {
             let mut end_key = "\n".to_string();
             for _i in 0..base_indentation {
                 end_key.push('\t');
             }
             end_key.push('}');
-            if let Some(end_index) = after_key.as_str().find_substring(&end_key) {
+            if let Some(end_index) = after_key.and_then(|a| a.find_substring(&end_key)) {
                 return Some(SectionInfo {
                     start: compat_index,
                     end: compat_index + end_index + end_key.len(),
@@ -100,6 +104,7 @@ mod tests {
     //Okay to unwrap in tests
     #![allow(clippy::unwrap_in_result)]
     #![allow(clippy::unwrap_used)]
+    #![allow(clippy::indexing_slicing)]
     use super::*;
 
     #[test]
