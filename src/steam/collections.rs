@@ -47,9 +47,7 @@ impl ActualSteamCollection {
         let key = format!("user-collections.{}", name_to_key(name));
         let value = serialize_collection_value(name, ids);
         let start = SystemTime::now();
-        let since_the_epoch = start
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
+        let since_the_epoch = start.duration_since(UNIX_EPOCH).unwrap_or_default();
         let timestamp = since_the_epoch.as_secs();
 
         ActualSteamCollection {
@@ -129,8 +127,10 @@ pub fn write_collections<S: AsRef<str>>(
         save_category(category_key, collections, &mut write_batch)?;
 
         if let Some(path) = get_vdf_path(steam_user_id) {
-            let content = std::fs::read_to_string(&path).expect("Should be able to read this file");
-            if let Some(mut vdf_collections) = parse_vdf_collection(content) {
+            let content = std::fs::read_to_string(&path)
+                .ok()
+                .and_then(parse_vdf_collection);
+            if let Some(mut vdf_collections) = content {
                 let boilr_keys: Vec<String> = vdf_collections
                     .keys()
                     .filter(|k| k.contains(BOILR_TAG))
@@ -320,7 +320,7 @@ fn get_level_db_location() -> Option<PathBuf> {
 
 fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> String {
     let value = ValueCollection::new(name, game_ids);
-    serde_json::to_string(&value).expect("Should be able to serialize known type")
+    serde_json::to_string(&value).unwrap_or_default()
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
@@ -360,24 +360,20 @@ pub fn write_vdf_collection_to_string<S: AsRef<str>>(
     vdf: &HashMap<String, VdfCollection>,
 ) -> Option<String> {
     let input = input.as_ref();
-    let str = serde_json::to_string(vdf).expect("Should be able to serialize known type");
-    let encoded_json = format!("\"{}\"", str.replace('\\', "\\\""));
-    let key = "\t\"user-collections\"\t\t";
-    if let Some(start_index) = input.find_substring(key) {
-        let start_index_plus_key = start_index + key.len();
-        if let Some(line_index) = input.get(start_index_plus_key..).and_then(|i| i.find('\n')) {
-            let end_index_in_full = line_index + start_index_plus_key;
-            if let (Some(before), Some(after)) = (
-                input.get(..start_index_plus_key),
-                input.get(end_index_in_full..),
-            ) {
-                let result = format!(
-                    "{}{}{}",
-                    before,
-                    encoded_json,
-                    after
-                );
-                return Some(result);
+    if let Ok(str) = serde_json::to_string(vdf) {
+        let encoded_json = format!("\"{}\"", str.replace('\\', "\\\""));
+        let key = "\t\"user-collections\"\t\t";
+        if let Some(start_index) = input.find_substring(key) {
+            let start_index_plus_key = start_index + key.len();
+            if let Some(line_index) = input.get(start_index_plus_key..).and_then(|i| i.find('\n')) {
+                let end_index_in_full = line_index + start_index_plus_key;
+                if let (Some(before), Some(after)) = (
+                    input.get(..start_index_plus_key),
+                    input.get(end_index_in_full..),
+                ) {
+                    let result = format!("{}{}{}", before, encoded_json, after);
+                    return Some(result);
+                }
             }
         }
     }

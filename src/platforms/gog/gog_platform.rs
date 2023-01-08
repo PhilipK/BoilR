@@ -214,12 +214,12 @@ pub fn default_location() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
         let key = "PROGRAMDATA";
-        let program_data = std::env::var(key).expect("Expected a APPDATA variable to be defined");
+        let program_data = std::env::var(key).unwrap_or_default();
         Path::new(&program_data).join("GOG.com").join("Galaxy")
     }
     #[cfg(target_family = "unix")]
     {
-        let home = std::env::var("HOME").expect("Expected a home variable to be defined");
+        let home = std::env::var("HOME").unwrap_or_default();
         Path::new(&home).join("Games/gog-galaxy/drive_c/ProgramData/GOG.com/Galaxy")
     }
 }

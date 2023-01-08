@@ -2,6 +2,9 @@
 #![deny(clippy::get_unwrap)]
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::indexing_slicing)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![deny(clippy::todo)]
 
 mod config;
 mod migration;

@@ -86,7 +86,7 @@ pub fn get_shortcuts_paths(settings: &SteamSettings) -> eyre::Result<Vec<SteamUs
             let folder_path = folder.path();
             let folder_str = folder_path
                 .to_str()
-                .expect("We just checked that this was there");
+                .unwrap_or_default();
             let path = format!("{}//config//shortcuts.vdf", folder_str);
             let shortcuts_path = Path::new(path.as_str());
             let folder_string = folder_str.to_string();
