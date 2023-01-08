@@ -110,38 +110,31 @@ mod windows {
 
     fn guess_default_launcher_location() -> PathBuf {
         let key = "SYSTEMDRIVE";
-        let system_drive =
-            env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
-
-        let path = Path::new(format!("{}\\", system_drive).as_str())
+        let system_drive = env::var(key).unwrap_or_else(|_| String::from("c:"));
+        Path::new(format!("{}\\", system_drive).as_str())
             .join("Program Files (x86)")
             .join("Epic Games")
             .join("Launcher")
             .join("Portal")
             .join("Binaries")
             .join("Win64")
-            .join("EpicGamesLauncher.exe");
-        path
+            .join("EpicGamesLauncher.exe")
     }
 
     fn launcher_location_from_registry() -> Option<PathBuf> {
         use winreg::enums::*;
         use winreg::RegKey;
 
-        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-
-        if let Ok(launcher) =
-            hklm.open_subkey("SOFTWARE\\Classes\\com.epicgames.launcher\\shell\\open\\command")
-        {
-            let launch_string: Result<String, _> = launcher.get_value("");
-            if let Ok(launch_string) = launch_string {
-                let path = Path::new(&launch_string[1..launch_string.len() - 4]);
-                if path.exists() {
-                    return Some(path.to_path_buf());
-                }
-            }
-        }
-        None
+        RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey("SOFTWARE\\Classes\\com.epicgames.launcher\\shell\\open\\command")
+            .ok()
+            .and_then(|launcher| launcher.get_value("").ok())
+            .and_then(|value: String| {
+                value
+                    .get(1..value.len() - 4)
+                    .map(|path| Path::new(path).to_path_buf())
+            })
+            .filter(|path| path.exists())
     }
 
     fn guess_default_manifest_location() -> PathBuf {

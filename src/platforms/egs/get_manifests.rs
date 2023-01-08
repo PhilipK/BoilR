@@ -84,6 +84,7 @@ fn get_manifest_item(dir_entry: DirEntry, _path: Option<PathBuf>) -> Option<Mani
     None
 }
 
+#[cfg(target_family = "unix")]
 fn replace_with_dosdevices(compat_folder: &Path, location: &str) -> String {
     let drive = location.get(0..2).map(|drive| drive.to_lowercase());
     let rest_path = location.get(3..).map(|rest| rest.replace('\\', "/"));
