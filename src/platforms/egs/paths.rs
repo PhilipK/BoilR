@@ -139,16 +139,13 @@ mod windows {
 
     fn guess_default_manifest_location() -> PathBuf {
         let key = "SYSTEMDRIVE";
-        let system_drive =
-            env::var(key).expect("We are on windows, we must know what the SYSTEMDRIVE is");
-
-        let path = Path::new(format!("{}\\", system_drive).as_str())
+        let system_drive = env::var(key).unwrap_or_else(|_| String::from("c:"));
+        Path::new(format!("{}\\", system_drive).as_str())
             .join("ProgramData")
             .join("Epic")
             .join("EpicGamesLauncher")
             .join("Data")
-            .join("Manifests");
-        path
+            .join("Manifests")
     }
 
     pub fn get_locations() -> Option<EpicPaths> {
