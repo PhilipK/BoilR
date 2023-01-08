@@ -78,7 +78,7 @@ fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
 #[cfg(target_family = "unix")]
 pub fn get_default_location() -> String {
     //If we don't have a home drive we have to just die
-    let home = std::env::var("HOME").expect("Expected a home variable to be defined");
+    let home = std::env::var("HOME").unwrap_or_default();
     format!("{}/.config/itch/", home)
 }
 
