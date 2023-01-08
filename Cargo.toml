@@ -68,3 +68,8 @@ sqlite = "^0.30.3"
 [features]
 # This feature is enabled when building for a flatpak environment
 flatpak = []
+
+#[profile.release]
+#codegen-units = 1
+#opt-level = "z"  # Optimize for size.
+#lto = true

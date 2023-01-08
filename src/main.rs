@@ -1,6 +1,7 @@
 #![deny(clippy::unwrap_in_result)]
 #![deny(clippy::get_unwrap)]
 #![deny(clippy::unwrap_used)]
+#![deny(clippy::indexing_slicing)]
 
 mod config;
 mod migration;

@@ -7,7 +7,7 @@ pub fn render_user_select<'a>(
 ) -> Option<&'a SteamUsersInfo> {
     if let Some(mut selected_user) = steam_user {
         let id_before = selected_user.user_id.clone();
-        if steam_users.len() <= 1{
+        if steam_users.len() <= 1 {
             return None;
         }
         if !steam_users.is_empty() {
@@ -21,11 +21,11 @@ pub fn render_user_select<'a>(
         }
         let id_now = selected_user.user_id.clone();
         if !id_before.eq(&id_now) {
-            return Some(selected_user);
+            Some(selected_user)
+        } else {
+            None
         }
-    } else if !steam_users.is_empty() {
-        return Some(&steam_users[0]);
+    } else {
+        return steam_users.get(0);
     }
-
-    None
 }
