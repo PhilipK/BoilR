@@ -67,7 +67,6 @@ fn get_manifest_item(dir_entry: DirEntry, _path: Option<PathBuf>) -> Option<Mani
                 {
                     if let Ok(mut item) = serde_json::from_reader::<_, ManifestItem>(reader) {
                         if let Some(compat_folder) = _path {
-                            //Strip off the c:\\
                             item.manifest_location =
                                 replace_with_dosdevices(&compat_folder, &item.manifest_location);
                             item.install_location =

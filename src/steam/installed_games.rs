@@ -40,8 +40,9 @@ fn get_install_folders(settings: &SteamSettings) -> Vec<PathBuf> {
         if let Ok(vdf_file) = std::fs::read_to_string(vdf_path) {
             for line in vdf_file.lines() {
                 if line.contains("\"path\"") {
-                    let path_string = &line[11..line.len() - 1];
-                    result.push(Path::new(&path_string).join("steamapps").to_path_buf());
+                    if let Some(path_string) = line.get(11..line.len() - 1) {
+                        result.push(Path::new(&path_string).join("steamapps").to_path_buf());
+                    }
                 }
             }
         }
@@ -63,19 +64,18 @@ fn parse_manifest_file(path: &Path) -> Option<SteamGameInfo> {
 
 fn parse_manifest_string<S: AsRef<str>>(string: S) -> Option<SteamGameInfo> {
     let mut lines = string.as_ref().lines();
-    let app_id_line = lines.find(|l| l.contains("\"appid\""));
-    let name_line = lines.find(|l| l.contains("\"name\""));
-    match (app_id_line, name_line) {
-        (Some(app_id_line), Some(name_line)) => {
-            let appid = app_id_line[11..app_id_line.len() - 1].to_string().parse();
-            match appid {
-                Ok(appid) => Some(SteamGameInfo {
-                    name: name_line[10..name_line.len() - 1].to_string(),
-                    appid,
-                }),
-                Err(_) => None,
-            }
-        }
+    let appid: Option<u32> = lines
+        .find(|l| l.contains("\"appid\""))
+        .and_then(|line| line.get(11..line.len() - 1))
+        .and_then(|app_id_str| app_id_str.parse().ok());
+    let name_line = lines
+        .find(|l| l.contains("\"name\""))
+        .and_then(|line| line.get(10..line.len() - 1));
+    match (appid, name_line) {
+        (Some(appid), Some(name)) => Some(SteamGameInfo {
+            name: name.to_string(),
+            appid,
+        }),
         _ => None,
     }
 }

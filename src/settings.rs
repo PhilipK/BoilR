@@ -54,7 +54,7 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     for line in lines {
         if line.starts_with('[') && line.ends_with(']') {
             add_sections(&current_section_name, &current_section_lines, &mut result);
-            current_section_name = Some(line[1..line.len() - 1].to_string());
+            current_section_name = line.get(1..line.len() - 1).map(|s| s.to_string());
             current_section_lines.clear();
         } else {
             current_section_lines.push(line.to_string());
