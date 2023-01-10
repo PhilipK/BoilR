@@ -86,17 +86,20 @@ impl PlaynitePlatform {
     fn get_playnite_games(&self) -> eyre::Result<Vec<PlayniteGame>> {
         let mut res = vec![];
         let (launcher_path, games_file_path) = self.find_paths()?;
-        if games_file_path.exists() {
-            let games_bytes = std::fs::read(&games_file_path)?;
-            let (_, games) = parse_db(&games_bytes).map_err(|e| eyre::eyre!(e.to_string()))?;
-            for game in games {
-                if game.installed || !self.settings.installed_only {
-                    res.push(PlayniteGame {
-                        id: game.id,
-                        launcher_path: launcher_path.clone(),
-                        name: game.name,
-                    });
-                }
+        let games_bytes = std::fs::read(&games_file_path).map_err(|e| match e.raw_os_error() {
+            Some(32) => {
+                eyre::format_err!("It looks like Playnite is running and preventing BoilR from reading its database, please ensure that Playnite closed.")
+            }
+            _ => eyre::format_err!("Could not get Playnite games: {:?}", e),
+        })?;
+        let (_, games) = parse_db(&games_bytes).map_err(|e| eyre::eyre!(e.to_string()))?;
+        for game in games {
+            if game.installed || !self.settings.installed_only {
+                res.push(PlayniteGame {
+                    id: game.id,
+                    launcher_path: launcher_path.clone(),
+                    name: game.name,
+                });
             }
         }
         Ok(res)
@@ -105,8 +108,11 @@ impl PlaynitePlatform {
     fn find_paths(&self) -> Result<(PathBuf, PathBuf), color_eyre::Report> {
         if self.settings.use_portalbe_version {
             let launcher_path = Path::new(&self.settings.portable_launcher_path).to_path_buf();
-            let p = launcher_path.parent().unwrap_or_else(||Path::new(""));
-            let games_file_path = p.join("library").join("games.db");
+            let games_file_path = launcher_path
+                .parent()
+                .unwrap_or_else(|| Path::new(""))
+                .join("library")
+                .join("games.db");
             Ok((launcher_path, games_file_path))
         } else {
             let app_data_local_path = env::var("LOCALAPPDATA")?;
