@@ -52,7 +52,7 @@ fn enable_proton_games<S: AsRef<str>, B: AsRef<str>>(vdf_content: S, games: &[B]
 
             if let Some(before_section) = vdf_content.get(..section_info.start) {
                 if let Some(after_section) = vdf_content.get(section_info.end..) {
-                    return format!("{}{}{}", before_section, new_section, after_section);
+                    return format!("{before_section}{new_section}{after_section}");
                 }
             }
         }

@@ -51,12 +51,12 @@ impl ImageType {
 
     pub fn file_name_no_extension(&self, app_id: u32) -> String {
         match self {
-            ImageType::Hero => format!("{}_hero", app_id),
-            ImageType::Grid => format!("{}p", app_id),
-            ImageType::WideGrid => format!("{}", app_id),
-            ImageType::Logo => format!("{}_logo", app_id),
-            ImageType::BigPicture => format!("{}_bigpicture", app_id),
-            ImageType::Icon => format!("{}-icon", app_id),
+            ImageType::Hero => format!("{app_id}_hero"),
+            ImageType::Grid => format!("{app_id}p"),
+            ImageType::WideGrid => format!("{app_id}"),
+            ImageType::Logo => format!("{app_id}_logo"),
+            ImageType::BigPicture => format!("{app_id}_bigpicture"),
+            ImageType::Icon => format!("{app_id}-icon"),
         }
     }
 
@@ -64,24 +64,19 @@ impl ImageType {
         let steam_app_id = steam_app_id.as_ref();
         match self {
             ImageType::Hero => format!(
-                "https://cdn.cloudflare.steamstatic.com/steam/apps/{}/library_hero.jpg?t={}",
-                steam_app_id, mtime
+                "https://cdn.cloudflare.steamstatic.com/steam/apps/{steam_app_id}/library_hero.jpg?t={mtime}"
             ),
             ImageType::Grid => format!(
-                "https://cdn.cloudflare.steamstatic.com/steam/apps/{}/library_600x900_2x.jpg?t={}",
-                steam_app_id, mtime
+                "https://cdn.cloudflare.steamstatic.com/steam/apps/{steam_app_id}/library_600x900_2x.jpg?t={mtime}"
             ),
             ImageType::WideGrid => format!(
-                "https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg?t={}",
-                steam_app_id, mtime
+                "https://cdn.cloudflare.steamstatic.com/steam/apps/{steam_app_id}/header.jpg?t={mtime}"
             ),
             ImageType::Logo => format!(
-                "https://cdn.cloudflare.steamstatic.com/steam/apps/{}/logo.png?t={}",
-                steam_app_id, mtime
+                "https://cdn.cloudflare.steamstatic.com/steam/apps/{steam_app_id}/logo.png?t={mtime}"
             ),
             ImageType::BigPicture => format!(
-                "https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg?t={}",
-                steam_app_id, mtime
+                "https://cdn.cloudflare.steamstatic.com/steam/apps/{steam_app_id}/header.jpg?t={mtime}"
             ),
             // This should not happen
             _ => "".to_string(),

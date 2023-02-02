@@ -105,7 +105,7 @@ pub async fn download_images_for_users<'b>(
                 .collect::<Vec<()>>()
                 .await;
             let duration = start_time.elapsed();
-            println!("Finished getting images in: {:?}", duration);
+            println!("Finished getting images in: {duration:?}");
 
             //Validate that the downloads where ok
             for to_download in to_downloads {
@@ -277,7 +277,7 @@ async fn search_for_images_to_download<T: SearchSettings>(
 
                     to_download.extend(download_for_this_type);
                 }
-                Err(err) => eprintln!("Error getting images: {}", err),
+                Err(err) => eprintln!("Error getting images: {err}"),
             }
         }
     }
@@ -308,7 +308,7 @@ async fn get_images_for_ids(
 
     let image_search_result = client.get_images_for_ids(image_ids, &query_type).await;
 
-    image_search_result.map_err(|e| format!("Image search failed {:?}", e))
+    image_search_result.map_err(|e| format!("Image search failed {e:?}"))
 }
 
 const BIG_PICTURE_DIMS: [GridDimentions; 2] = [GridDimentions::D920x430, GridDimentions::D460x215];
@@ -374,7 +374,7 @@ async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<S
             return Some(url);
         }
     }
-    let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
+    let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{game_id}/");
     let response = reqwest::get(steamgriddb_page_url).await;
     if let Ok(response) = response {
         let text_response = response.json::<PublicGameResponse>().await;
@@ -398,7 +398,7 @@ async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<S
 }
 
 async fn get_steam_icon_url(game_id: usize) -> Option<String> {
-    let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{}/", game_id);
+    let steamgriddb_page_url = format!("https://www.steamgriddb.com/api/public/game/{game_id}/");
     let response = reqwest::get(steamgriddb_page_url).await;
     if let Ok(response) = response {
         let text_response = response.json::<PublicGameResponse>().await;
@@ -423,8 +423,7 @@ async fn get_steam_icon_url(game_id: usize) -> Option<String> {
 
 fn icon_url(steam_app_id: &str, icon_id: &str) -> String {
     format!(
-        "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/{}/{}.ico",
-        steam_app_id, icon_id
+        "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/{steam_app_id}/{icon_id}.ico"
     )
 }
 

@@ -48,12 +48,12 @@ impl From<GogShortcut> for ShortcutOwned {
         };
         let mut exe_string = exe.to_string_lossy().to_string();
         if exe_string.contains(' ') && !exe_string.starts_with('\"') {
-            exe_string = format!("\"{}\"", exe_string);
+            exe_string = format!("\"{exe_string}\"");
         }
 
         let mut working_dir_string = gogs.working_dir;
         if working_dir_string.contains(' ') && !working_dir_string.starts_with('\"') {
-            working_dir_string = format!("\"{}\"", working_dir_string);
+            working_dir_string = format!("\"{working_dir_string}\"");
         }
 
         let shortcut = Shortcut::new(

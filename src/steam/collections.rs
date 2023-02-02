@@ -62,7 +62,7 @@ impl ActualSteamCollection {
 
     pub fn is_boilr_collection(&self) -> bool {
         self.key
-            .contains(&format!("user-collections.{}", BOILR_TAG))
+            .contains(&format!("user-collections.{BOILR_TAG}"))
     }
 }
 
@@ -215,7 +215,7 @@ fn save_category<S: AsRef<str>>(
     batch: &mut WriteBatch,
 ) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_string(&category)?;
-    let prefixed = format!("\u{1}{}", json);
+    let prefixed = format!("\u{1}{json}");
     batch.put(category_key.as_ref().as_bytes(), prefixed.as_bytes());
     Ok(())
 }
@@ -260,7 +260,7 @@ fn open_db() -> eyre::Result<DB> {
 fn get_namespace_keys<S: AsRef<str>>(steamid: S, db: &mut DB) -> HashSet<String> {
     let keyprefix = get_steam_user_prefix(steamid);
 
-    let namespaces_key = format!("{}s", keyprefix);
+    let namespaces_key = format!("{keyprefix}s");
     let key_bytes = namespaces_key.as_bytes();
     let namespaces = get_namespaces(db, key_bytes).unwrap_or_default();
     let namespace_keys = namespaces
@@ -330,7 +330,7 @@ fn name_to_key<S: AsRef<str>>(name: S) -> String {
     } else {
         &base64
     };
-    format!("{}-{}", BOILR_TAG, base64_no_end)
+    format!("{BOILR_TAG}-{base64_no_end}")
 }
 
 fn parse_steam_collections<S: AsRef<str>>(
@@ -371,7 +371,7 @@ pub fn write_vdf_collection_to_string<S: AsRef<str>>(
                     input.get(..start_index_plus_key),
                     input.get(end_index_in_full..),
                 ) {
-                    let result = format!("{}{}{}", before, encoded_json, after);
+                    let result = format!("{before}{encoded_json}{after}");
                     return Some(result);
                 }
             }

@@ -115,7 +115,7 @@ pub fn sync_shortcuts(
         }
 
         let duration = start_time.elapsed();
-        println!("Finished synchronizing games in: {:?}", duration);
+        println!("Finished synchronizing games in: {duration:?}");
     }
     Ok(userinfo_shortcuts)
 }

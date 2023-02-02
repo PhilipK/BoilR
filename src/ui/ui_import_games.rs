@@ -87,7 +87,7 @@ impl MyEguiApp {
                                                     let contents = serde_json::to_string(&self.rename_map);
                                                     if let Ok(contents) = contents{
                                                         let res = std::fs::write(&rename_file_path, contents);
-                                                        println!("Write rename file at {:?} with result: {:?}",rename_file_path, res);
+                                                        println!("Write rename file at {rename_file_path:?} with result: {res:?}");
                                                     }
                                                 }
                                             }
@@ -212,7 +212,7 @@ where
             }
         }
         if let Err(err) = setup_proton_games(&shortcuts_to_proton){
-            eprintln!("failed to save proton settings: {:?}",err);
+            eprintln!("failed to save proton settings: {err:?}");
         }
     }
 }

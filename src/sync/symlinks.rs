@@ -54,8 +54,7 @@ pub fn ensure_links_folder_created(name: &str) {
     if !boilr_links_path.exists() {
         if let Err(e) = std::fs::create_dir_all(&boilr_links_path) {
             println!(
-                "Could not create links folder for symlinks at path: {:?} , error: {:?} , you can try to disable creating symlinks for platform {}",
-                boilr_links_path, e, name
+                "Could not create links folder for symlinks at path: {boilr_links_path:?} , error: {e:?} , you can try to disable creating symlinks for platform {name}"
             );
         }
     }

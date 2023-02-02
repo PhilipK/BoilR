@@ -124,7 +124,7 @@ impl MyEguiApp {
             match paths {
                 Ok(paths) => self.image_selected_state.steam_users = Some(paths),
                 Err(err) => {
-                    self.image_selected_state.settings_error = Some(format!("Could not find user steam location, error message: {} , try to clear the steam location field in settings to let BoilR find it itself",err));
+                    self.image_selected_state.settings_error = Some(format!("Could not find user steam location, error message: {err} , try to clear the steam location field in settings to let BoilR find it itself"));
                 }
             }
         }

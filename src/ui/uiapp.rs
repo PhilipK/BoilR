@@ -97,11 +97,11 @@ impl MyEguiApp {
             SyncProgress::NotStarted => ("".to_string(), false),
             SyncProgress::Starting => ("Starting Import".to_string(), true),
             SyncProgress::FoundGames { games_found } => {
-                (format!("Found {} games to  import", games_found), true)
+                (format!("Found {games_found} games to  import"), true)
             }
             SyncProgress::FindingImages => ("Searching for images".to_string(), true),
             SyncProgress::DownloadingImages { to_download } => {
-                (format!("Downloading {} images ", to_download), true)
+                (format!("Downloading {to_download} images "), true)
             }
             SyncProgress::Done => ("Done importing games".to_string(), false),
         };
@@ -129,7 +129,7 @@ impl MyEguiApp {
                 .clicked()
             {
                 if let Err(err) = save_settings(&self.settings, &self.platforms){
-                    eprintln!("Failed to save settings {:?}",err);
+                    eprintln!("Failed to save settings {err:?}");
                 }
                 self.run_sync_async();
             }
@@ -269,7 +269,7 @@ impl App for MyEguiApp {
 
                     if ui.add(save_button).on_hover_text("Save settings").clicked() {
                         if let Err(err) = save_settings(&self.settings, &self.platforms){
-                            eprintln!("Failed to save settings: {:?}",err);
+                            eprintln!("Failed to save settings: {err:?}");
                         }
                     }
                 });

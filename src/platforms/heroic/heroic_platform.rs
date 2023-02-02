@@ -237,11 +237,11 @@ impl GamesPlatform for HeroicPlatform {
         ) {
             (false, 0) => "Force games to launch through Heroic Launcher".to_string(),
             (false, 1) => "One game forced to launch through Heroic Launcher".to_string(),
-            (false, x) => format!("{} games forced to launch through Heroic Launcher", x),
+            (false, x) => format!("{x} games forced to launch through Heroic Launcher"),
 
             (true, 0) => "Force games to launch directly".to_string(),
             (true, 1) => "One game forced to launch directly".to_string(),
-            (true, x) => format!("{} games forced to launch directly", x),
+            (true, x) => format!("{x} games forced to launch directly"),
         };
 
         egui::CollapsingHeader::new(safe_mode_header).id_source("Heroic_Launcher_safe_launch").show(ui, |ui| {
