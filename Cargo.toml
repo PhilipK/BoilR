@@ -4,7 +4,7 @@ name = "boilr"
 version = "1.7.21"
 
 [dependencies]
-base64 = "^0.20.0"
+base64 = "^0.21.0"
 config = "^0.13.3"
 copypasta = "^0.8.1"
 flate2 = "^1.0.25"
@@ -56,7 +56,7 @@ features = ["full"]
 version = "^1.23.1"
 
 [dependencies.toml]
-version = "^0.5.10"
+version = "^0.7.1"
 [target."cfg(windows)"]
 [target."cfg(windows)".build-dependencies]
 winres = "^0.1.12"
