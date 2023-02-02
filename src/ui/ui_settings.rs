@@ -34,7 +34,7 @@ impl MyEguiApp {
                     platform.render_ui(ui);
                     ui.add_space(SECTION_SPACING);
                 }
-                ui.label(format!("Version: {}", VERSION));
+                ui.label(format!("Version: {VERSION}"));
             });
     }
 

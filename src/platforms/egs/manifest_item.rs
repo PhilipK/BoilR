@@ -53,12 +53,12 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
     let start_dir = start_dir.trim_matches('\"');
 
     #[cfg(target_family = "unix")]
-    let start_dir_string = format!("\"{}\"", start_dir);
+    let start_dir_string = format!("\"{start_dir}\"");
     #[cfg(target_family = "unix")]
     let start_dir = start_dir_string.as_str();
 
     #[cfg(target_family = "unix")]
-    let exe_string = format!("\"{}\"", exe);
+    let exe_string = format!("\"{exe}\"");
     #[cfg(target_family = "unix")]
     let exe = exe_string.as_str();
 
@@ -105,7 +105,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
         .unwrap_or_default();
 
     #[cfg(target_family = "unix")]
-    let parent_folder = format!("\"{}\"", parent_folder);
+    let parent_folder = format!("\"{parent_folder}\"");
 
     let launcher_path = manifest
         .launcher_path
@@ -114,7 +114,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
         .unwrap_or_default();
 
     #[cfg(target_family = "unix")]
-    let launcher_path = format!("\"{}\"", launcher_path);
+    let launcher_path = format!("\"{launcher_path}\"");
 
     Shortcut::new(
         "0",
@@ -149,7 +149,7 @@ impl ManifestItem {
             .join(&manifest.launch_executable)
             .to_string_lossy()
             .to_string();
-        let exe = format!("\"{}\"", exe_path);
+        let exe = format!("\"{exe_path}\"");
         exe
     }
 

@@ -29,7 +29,7 @@ impl From<HeroicGame> for ShortcutOwned {
         #[cfg(target_family = "unix")]
         {
             if !target.starts_with('\"') && !target.ends_with('\"') {
-                target = format!("\"{}\"", target);
+                target = format!("\"{target}\"");
             }
         }
 
@@ -38,7 +38,7 @@ impl From<HeroicGame> for ShortcutOwned {
         #[cfg(target_family = "unix")]
         {
             if !install_path.starts_with('\"') && !install_path.ends_with('\"') {
-                install_path = format!("\"{}\"", install_path);
+                install_path = format!("\"{install_path}\"");
             }
         }
         #[cfg(target_os = "windows")]

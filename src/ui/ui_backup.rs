@@ -24,7 +24,7 @@ impl MyEguiApp {
         ui.add_space(15.0);
 
         if let Some(last_restore) = self.backup_state.last_restore.as_ref() {
-            ui.heading(format!("Last restored {:?}", last_restore));
+            ui.heading(format!("Last restored {last_restore:?}"));
         }
 
         if ui.button("Click here to create a new backup").clicked() {
@@ -70,12 +70,11 @@ pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) -> b
                 if file_name.to_string_lossy().starts_with(&user.user_id) {
                     match std::fs::copy(shortcut_path, Path::new(&user_shortcut_path)) {
                         Ok(_) => {
-                            println!("Restored shortcut to path : {}", user_shortcut_path);
+                            println!("Restored shortcut to path : {user_shortcut_path}");
                         }
                         Err(err) => {
                             eprintln!(
-                                "Failed to restored shortcut to path : {} gave error: {:?}",
-                                user_shortcut_path, err
+                                "Failed to restored shortcut to path : {user_shortcut_path} gave error: {err:?}"
                             );
                         }
                     }
@@ -129,12 +128,11 @@ pub fn backup_shortcuts(steam_settings: &SteamSettings) {
                 ));
                 match std::fs::copy(shortcut_path, &new_path) {
                     Ok(_) => {
-                        println!("Backed up shortcut at: {:?}", new_path);
+                        println!("Backed up shortcut at: {new_path:?}");
                     }
                     Err(err) => {
                         eprintln!(
-                            "Failed to backup shortcut at: {:?}, error: {:?}",
-                            new_path, err
+                            "Failed to backup shortcut at: {new_path:?}, error: {err:?}"
                         );
                     }
                 }

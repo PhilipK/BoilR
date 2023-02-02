@@ -20,7 +20,7 @@ impl<'a> CachedSearch<'a> {
 
     pub fn save(&self) {
         if let Err(err) = save_search_map(&self.search_map) {
-            eprintln!("Failed saving searchmap : {:?}", err);
+            eprintln!("Failed saving searchmap : {err:?}");
         }
     }
 

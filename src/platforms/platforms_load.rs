@@ -84,8 +84,7 @@ pub fn get_platforms() -> Platforms {
         Ok(s) => s,
         Err(err) => {
             eprintln!(
-                "Could not load platform settings, using defaults: Error: {:?}",
-                err
+                "Could not load platform settings, using defaults: Error: {err:?}"
             );
             HashMap::new()
         }
@@ -113,7 +112,7 @@ where
         Ok(k) => k,
         Err(err) => {
             if !str.is_empty() {
-                eprintln!("Error reading settings file {:?}", err);
+                eprintln!("Error reading settings file {err:?}");
             }
             Setting::default()
         }
