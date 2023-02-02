@@ -324,7 +324,8 @@ fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Str
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
-    let base64 = base64::encode(name.as_ref());
+    use base64::{Engine as _, engine::general_purpose};
+    let base64 = general_purpose::STANDARD_NO_PAD.encode(name.as_ref());
     let base64_no_end = if base64.ends_with("==") {
         base64.get(..base64.len() - 2).unwrap_or_default()
     } else {
