@@ -14,7 +14,7 @@ pub fn migrate_config() {
         if old_path.exists() {
             println!("Migrating from configuration version 0 to version 1");
             let new_path = crate::config::get_config_file();
-            println!("Your configuration file will be moved to {:?}", new_path);
+            println!("Your configuration file will be moved to {new_path:?}");
             let _ = std::fs::copy(old_path, new_path);
             let _ = std::fs::remove_file(old_path);
         }
@@ -39,7 +39,7 @@ pub fn migrate_config() {
             settings.config_version = Some(1);
             let platforms = get_platforms();
             if let Err(err) = save_settings(&settings, &platforms){
-                eprintln!("Failed to load settings {:?}", err);
+                eprintln!("Failed to load settings {err:?}");
             }
         }
     }

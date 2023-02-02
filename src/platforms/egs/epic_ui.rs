@@ -9,7 +9,7 @@ impl EpicPlatform {
             let safe_mode_header = match epic_settings.safe_launch.len() {
                 0 => "Force games to launch through Epic Launcher".to_string(),
                 1 => "One game forced to launch through Epic Launcher".to_string(),
-                x => format!("{} games forced to launch through Epic Launcher", x),
+                x => format!("{x} games forced to launch through Epic Launcher"),
             };
 
             egui::CollapsingHeader::new(safe_mode_header)
