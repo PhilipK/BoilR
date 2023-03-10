@@ -8,7 +8,7 @@ pub fn get_config_folder() -> PathBuf {
     let config_home = std::env::var("XDG_CONFIG_HOME");
     let home = std::env::var("HOME");
     match (config_home, home) {
-        (Ok(p), _) => Path::new(&p).to_path_buf(),
+        (Ok(p), _) => Path::new(&p).join("boilr"),
         (Err(_), Ok(home)) => Path::new(&home).join(".config").join("boilr"),
         _ => Path::new("").to_path_buf(),
     }
@@ -64,14 +64,13 @@ mod tests {
         // Parameters for set environment 'XDG_CONFIG_HOME'
         std::env::set_var(
             "XDG_CONFIG_HOME",
-            std::env::var("HOME").unwrap_or_default() + "/.config/boilr",
+            std::env::var("HOME").unwrap_or_default() + "/.config",
         );
 
-        let xdg_config_home = std::env::var("XDG_CONFIG_HOME").unwrap_or_default();
+        let xdg_config_home = std::env::var("XDG_CONFIG_HOME").unwrap_or_default() + "/boilr";
         let config_path = get_config_folder();
-        let test_path = PathBuf::from(xdg_config_home);
 
-        assert_eq!(config_path, test_path);
+        assert_eq!(config_path, PathBuf::from(xdg_config_home));
     }
 
     #[test]
@@ -79,7 +78,7 @@ mod tests {
     fn check_return_config_path() {
         std::env::set_var(
             "XDG_CONFIG_HOME",
-            std::env::var("HOME").unwrap_or_default() + "/.config/boilr",
+            std::env::var("HOME").unwrap_or_default() + "/.config",
         );
 
         let config_path = get_config_folder();
