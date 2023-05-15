@@ -50,16 +50,9 @@ jobs:
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v2
-      - name: Build Release Version Windows
-        if: ${{ matrix.os != 'ubuntu-latest'}}
+      - name: Build Release Version
         run: cargo build --release     
-      - name: Build Release Version Linux 
-        if: ${{ matrix.os == 'ubuntu-latest'}}
-        run: |
-          cargo build --release
-          strip ./target/release/boilr
       - name: Compress binaries windows
-        if: ${{ matrix.os != 'ubuntu-latest'}}
         uses: svenstaro/upx-action@v2
         with:
           file: ${{ matrix.file }}
