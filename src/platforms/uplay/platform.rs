@@ -172,17 +172,12 @@ fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
 }
 
 #[cfg(target_family = "unix")]
-fn find_subsequence(haystack: &[u8], needle: &[u8]) -> Option<usize> {
-    haystack.windows(needle.len()).position(|window| 
-        window == needle)
-}
-
-#[cfg(target_family = "unix")]
 fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
     let mut games = vec![];
 
     let launcher_path = get_launcher_path()?;
-    let file = File::open(launcher_path.exe_path.parent().unwrap()
+    let parent = launcher_path.exe_path.parent().unwrap_or_else(|| Path::new("/"));
+    let file = File::open(parent
     .join("cache")
     .join("configuration")
     .join("configurations"))?;
@@ -194,10 +189,10 @@ fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
 
     let mut splits: Vec<String> = Vec::new();
 
-    while buffer.len() > 0 {
-        let foundindex: usize;
-        match find_subsequence(buffer.as_slice(), b"version: 2.0") {
-            Some(index) => {foundindex = index},
+    while !buffer.is_empty() {
+        
+        let foundindex: usize = match find_subsequence(buffer.as_slice(), b"version: 2.0") {
+            Some(index) => {index},
             None => {break;},
         };
         let (mut first, second) = buffer.split_at(foundindex);
@@ -232,37 +227,37 @@ fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
                 break;
             }
             if trimed.starts_with("icon_image: ") {
-                let split = trimed.split_at(trimed.find(": ").expect("Couldn't find icon_image value!")+2).1;
-                if split.len() == 0usize  {break}; // invalid config.
-                icon_image = launcher_path.exe_path.parent().unwrap().join("data").join("games").join(split);
+                let split = trimed.split_at("icon_image: ".len()).1;
+                if split.is_empty()  {break}; // invalid config.
+                icon_image = parent.join("data").join("games").join(split);
             }
             if !inonline {continue};
             if trimed.starts_with("- shortcut_name:") {
-                let split = trimed.split_at(trimed.find(": ").expect("Couldn't find shortcut_name value!")+2).1;
-                if split.len() == 0usize  {break}; // invalid config.
+                let split = trimed.split_at("- shortcut_name:".len()).1;
+                if split.is_empty()  {break}; // invalid config.
                 shortcut_name = split.to_string();
                 continue;
             }
 
             if trimed.starts_with("register: ") {
-                let split = trimed.split_at(trimed.find(": ").expect("Couldn't find register value!")+2).1;
-                if split.len() == 0usize  {break}; // invalid config.
-                game_id = split.to_string()
-                .strip_prefix("HKEY_LOCAL_MACHINE\\SOFTWARE\\Ubisoft\\Launcher\\Installs\\").expect("Game register dind't start with expected value!")
-                .strip_suffix("\\InstallDir").expect("Game register dind't end with expected value!").to_string();
+                let split = trimed.split_at("register: ".len()).1;
+                if split.is_empty()  {break}; // invalid config.
+                game_id = split
+                .strip_prefix("HKEY_LOCAL_MACHINE\\SOFTWARE\\Ubisoft\\Launcher\\Installs\\").unwrap_or_default()
+                .strip_suffix("\\InstallDir").unwrap_or_default().to_string();
                 continue;
             }
 
             if trimed == "denuvo: yes" {
                 games.push(UplayGame {
                     name: shortcut_name.clone(),
-                    icon: icon_image.to_str().unwrap().to_string(),
+                    icon: icon_image.to_string_lossy().to_string(),
                     id: game_id.clone(),
                     launcher: launcher_path.exe_path.clone(),
                     launcher_compat_folder: launcher_path.compat_folder.clone(),
                     launch_id,
                 });
-                launch_id = launch_id + 1;
+                launch_id += 1;
             }
         }
     }
