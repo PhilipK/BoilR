@@ -191,7 +191,7 @@ fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
 
     while !buffer.is_empty() {
         
-        let foundindex: usize = match find_subsequence(buffer.as_slice(), b"version: 2.0") {
+        let foundindex: usize = match buffer.windows(game_header.len()).position(|window| window == game_header) {
             Some(index) => {index},
             None => {break;},
         };
