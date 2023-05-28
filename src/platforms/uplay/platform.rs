@@ -161,7 +161,7 @@ fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
                     icon,
                     id,
                     launcher: launcher_path.clone(),
-                    launcher_compat_folder: None(),
+                    launcher_compat_folder: None,
                     launch_id: 0
                 })
             }
@@ -190,8 +190,8 @@ fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
     let mut splits: Vec<String> = Vec::new();
 
     while !buffer.is_empty() {
-        
-        let foundindex: usize = match find_subsequence(buffer.as_slice(), b"version: 2.0") {
+        let game_header = b"version: 2.0";
+        let foundindex: usize = match buffer.windows(game_header.len()).position(|window| window == game_header) {
             Some(index) => {index},
             None => {break;},
         };
