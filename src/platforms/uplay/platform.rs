@@ -99,7 +99,7 @@ fn get_launcher_path() -> eyre::Result<UplayPathData> {
             }
         }
     }
-    return Err(eyre::eyre!(
+   Err(eyre::eyre!(
         "Could not find uplay launcher"))
 }
 
