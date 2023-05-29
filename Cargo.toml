@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.7.22"
+version = "1.8.0"
 
 [dependencies]
 base64 = "^0.21.0"
@@ -15,7 +15,7 @@ serde_json = "^1.0.91"
 
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
-sysinfo = "^0.27.1"
+sysinfo = "^0.29.0"
 eyre = "^0.6.8"
 color-eyre = "^0.6.2"
 dyn-clone = "^1.0.10"
@@ -29,10 +29,10 @@ features = ["serde"]
 version = "^5.4.0"
 
 [dependencies.eframe]
-version = "^0.20.1"
+version = "^0.22.0"
 
 [dependencies.egui]
-version = "^0.20.1"
+version = "^0.22.0"
 
 [dependencies.futures]
 version = "^0.3.25"
@@ -62,7 +62,7 @@ version = "^0.7.1"
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.10.1"
+winreg = "^0.50.0"
 sqlite = "^0.30.3"
 
 [features]

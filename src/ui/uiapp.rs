@@ -151,19 +151,14 @@ fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
     Ok(deserialized)
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Default)]
 enum Menues {
+    #[default]
     Import,
     Settings,
     Images,
     Backup,
     Disconnect,
-}
-
-impl Default for Menues {
-    fn default() -> Menues {
-        Menues::Import
-    }
 }
 
 fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) -> GamesToSync {
@@ -367,15 +362,14 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()>{
         vsync: !no_v_sync,
         ..Default::default()
     };
-    eframe::run_native(
+    let run_result = eframe::run_native(
         "BoilR",
         native_options,
         Box::new(|cc| {
             setup(&cc.egui_ctx);
             Box::new(app)
-        }),
-    );
-    Ok(())
+        }));
+    run_result.map_err(|e| eyre::eyre!("Could not initialize: {:?}", e))
 }
 
 fn is_fullscreen(args: &[String]) -> bool {
