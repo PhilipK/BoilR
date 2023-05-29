@@ -3,8 +3,13 @@
 use std::path::Path;
 use std::path::PathBuf;
 
+#[cfg(target_family = "unix")]
 use std::io::Read;
+
+#[cfg(target_family = "unix")]
 use std::io::BufReader;
+
+#[cfg(target_family = "unix")]
 use std::fs::File;
 
 use crate::platforms::load_settings;
