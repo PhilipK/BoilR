@@ -9,7 +9,7 @@ pub(crate) struct UplayGame {
     pub(crate) id: String,
     pub(crate) launcher: PathBuf,
     pub(crate) launcher_compat_folder: Option<PathBuf>,
-    pub(crate) launch_id: u8,
+    pub(crate) launch_id: usize,
 }
 
 impl From<UplayGame> for ShortcutOwned {
