@@ -8,11 +8,18 @@ pub(crate) struct UplayGame {
     pub(crate) icon: String,
     pub(crate) id: String,
     pub(crate) launcher: PathBuf,
+    pub(crate) launcher_compat_folder: Option<PathBuf>,
+    pub(crate) launch_id: u8,
 }
 
 impl From<UplayGame> for ShortcutOwned {
     fn from(game: UplayGame) -> Self {
-        let launch = format!("\"uplay://launch/{}/0\"", game.id);
+        let launch = match game.launcher_compat_folder{
+            Some(compat_folder) => format!
+            ("STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"uplay://launch/{}/{}\"",
+             compat_folder.to_string_lossy(), game.id, game.launch_id),
+            None => format!("\"uplay://launch/{}/{}\"", game.id, game.launch_id)
+        };
         let start_dir = game
             .launcher
             .parent()
