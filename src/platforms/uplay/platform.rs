@@ -59,8 +59,10 @@ struct UplayPathData {
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/upc.exe
     exe_path: PathBuf,
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/games/
+    #[cfg(target_family = "unix")]
     games_path: PathBuf,
     //~/.steam/steam/steamapps/compatdata/X
+    #[cfg(target_family = "unix")]
     compat_folder: Option<PathBuf>,
 }
 
