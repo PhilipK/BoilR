@@ -9,21 +9,16 @@ use steam_shortcuts_util::Shortcut;
 
 use crate::platforms::ShortcutToImport;
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Default)]
 pub struct GamePassPlatForm {
     settings: GamePassSettings,
 }
 
-#[derive(Serialize,Deserialize, Clone)]
+#[derive(Serialize,Deserialize, Default, Clone)]
 pub struct GamePassSettings {
     enabled: bool,
 }
 
-impl Default for GamePassSettings {
-    fn default() -> Self {
-        Self { enabled: false }
-    }
-}
 
 impl GamesPlatform for GamePassPlatForm {
     fn name(&self) -> &str {
@@ -121,8 +116,8 @@ impl AppInfo {
 impl AsRef<str> for Kind {
     fn as_ref(&self) -> &str {
         match self {
-            Kind::Null => &"",
-            Kind::Str(s) => &s.as_ref(),
+            Kind::Null => "",
+            Kind::Str(s) => s.as_ref(),
             Kind::Array(array) => array.iter().next().map(|s| s.as_ref()).unwrap_or(""),
         }
     }
@@ -132,7 +127,7 @@ impl Kind {
     fn is_game(&self) -> bool {
         match self {
             Kind::Str(string) => string.eq("Game"),
-            Kind::Array(strings) => strings.iter().any(|s| s == &"Game"),
+            Kind::Array(strings) => strings.iter().any(|s| s == "Game"),
             _ => false,
         }
     }
