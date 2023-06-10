@@ -17,6 +17,10 @@ mod amazon;
 #[cfg(not(target_family = "unix"))]
 mod playnite;
 
+#[cfg(not(target_family = "unix"))]
+mod gamepass;
+
+
 
 
 mod gog;
