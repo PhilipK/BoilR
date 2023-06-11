@@ -14,11 +14,10 @@ pub struct GamePassPlatForm {
     settings: GamePassSettings,
 }
 
-#[derive(Serialize,Deserialize, Default, Clone)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct GamePassSettings {
     enabled: bool,
 }
-
 
 impl GamesPlatform for GamePassPlatForm {
     fn name(&self) -> &str {
@@ -37,39 +36,44 @@ impl GamesPlatform for GamePassPlatForm {
         let command = include_str!("./game_pass_games.ps1");
         let res = run_powershell_command(command)?;
         let apps: Vec<AppInfo> = serde_json::from_str(&res)?;
-        let expanded_search = false;
-
         let windows_dir = std::env::var("WinDir").unwrap_or("C:\\Windows".to_string());
         let explorer = Path::new(&windows_dir)
             .join("explorer.exe")
             .to_string_lossy()
             .to_string();
+
+        let name_getters: [fn(&AppInfo) -> eyre::Result<String>; 3] =
+            [get_name_from_game, get_name_from_config, get_name_from_xml];
+
         let games_iter = apps
             .iter()
             .filter(|app| {
-                app.kind.is_game()
-                    || (expanded_search
-                        && (app.display_name.contains("DisplayName")
-                            || app.display_name.contains("ms-resource")))
+                !(app.display_name.contains("DisplayName")
+                    || app.display_name.contains("ms-resource"))
             })
-            .filter(|game| game.microsoft_game_path().exists() || game.appx_manifest().exists())
-            .map(|game| {
+            .filter_map(|game| {
                 let launch_url = format!("shell:AppsFolder\\{}", game.aum_id());
-                let shortcut = Shortcut::new(
-                    "0",
-                    &game.display_name,
-                    &explorer,
-                    &windows_dir,
-                    "",
-                    "",
-                    &launch_url,
-                );
-                ShortcutToImport {
-                    shortcut: shortcut.to_owned(),
-                    needs_proton: false,
-                    needs_symlinks: false,
-                }
+                name_getters
+                    .iter()
+                    .find_map(|&f| f(game).ok())
+                    .map(|game_name| {
+                        let shortcut = Shortcut::new(
+                            "0",
+                            &game_name,
+                            &explorer,
+                            &windows_dir,
+                            "",
+                            "",
+                            &launch_url,
+                        );
+                        ShortcutToImport {
+                            shortcut: shortcut.to_owned(),
+                            needs_proton: false,
+                            needs_symlinks: false,
+                        }
+                    })
             });
+
         Ok(games_iter.collect())
     }
 
@@ -81,6 +85,38 @@ impl GamesPlatform for GamePassPlatForm {
         ui.heading("Game Pass");
         ui.checkbox(&mut self.settings.enabled, "Import from Game Pass");
     }
+}
+
+fn get_name_from_xml(app_info: &AppInfo) -> eyre::Result<String> {
+    use roxmltree::Document;
+    let path_to_config = app_info.appx_manifest();
+    let xml = std::fs::read_to_string(path_to_config)?;
+    let doc = Document::parse(&xml)?;
+    doc.descendants()
+        .find(|n| n.has_tag_name("uap::VisualElements"))
+        .and_then(|n| n.attribute("DisplayName"))
+        .map(|n| n.to_string())
+        .ok_or(eyre::format_err!("Name not found"))
+}
+
+fn get_name_from_game(app_info: &AppInfo) -> eyre::Result<String> {
+    if !app_info.kind.is_game() {
+        Err(eyre::format_err!("Not a game type"))
+    } else {
+        Ok(app_info.display_name.to_owned())
+    }
+}
+
+fn get_name_from_config(app_info: &AppInfo) -> eyre::Result<String> {
+    use roxmltree::Document;
+    let path_to_config = app_info.microsoft_game_path();
+    let xml = std::fs::read_to_string(path_to_config)?;
+    let doc = Document::parse(&xml)?;
+    doc.descendants()
+        .find(|n| n.has_tag_name("ShellVisuals"))
+        .and_then(|n| n.attribute("DefaultDisplayName"))
+        .map(|n| n.to_string())
+        .ok_or(eyre::format_err!("Name not found"))
 }
 
 #[derive(Deserialize, Debug)]
@@ -105,7 +141,7 @@ impl AppInfo {
     }
 
     fn microsoft_game_path(&self) -> PathBuf {
-        Path::new(&self.install_location).join("MicrosoftGames.config")
+        Path::new(&self.install_location).join("MicrosoftGame.config")
     }
 
     fn appx_manifest(&self) -> PathBuf {
