@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "v.*.*.*" # matches v.1.0.1 etc
-
 jobs:
   once:
     name: Create GitHub release
@@ -33,12 +32,10 @@ jobs:
           - os: ubuntu-latest
             file: target/release/boilr
             asset_name: linux_BoilR
-            args: -9 
             strip: true
           - os: windows-latest
             file: target/release/boilr.exe
             asset_name: windows_BoilR.exe
-            args: -9
             strip: false      
     steps:
       - uses: actions/checkout@v3
@@ -46,18 +43,12 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest'}}
         run: |
           sudo apt-get update 
-          sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev upx binutils
+          sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev binutils
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v2
       - name: Build Release Version
         run: cargo build --release     
-      - name: Compress binaries windows
-        uses: svenstaro/upx-action@v2
-        with:
-          file: ${{ matrix.file }}
-          args: ${{ matrix.args }}
-          strip: ${{ matrix.strip }}
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
