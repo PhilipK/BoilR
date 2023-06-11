@@ -65,7 +65,7 @@ BoilR can import games from many platforms, but there are limits based
 | [Itch.io](https://itch.io/app) (Linux Games)                                    | No      | Yes                           | Yes                                       |
 | [Origin](https://www.origin.com)                                                | Yes     | Yes, install through proton   | Yes, install through proton               |
 | [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic or MiniGalaxy) | No (Use Heroic or MiniGalaxy)             |
-| [UPlay](https://ubisoftconnect.com)                                             | Yes     | No                            | No                                        |
+| [UPlay](https://ubisoftconnect.com)                                             | Yes     | Yes                           | Yes                                       |
 | [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                           | Yes (make sure Lutris is shut down first) |
 | [Lutris](https://github.com/lutris/lutris) (Non-Flatpak)                        | No      | Yes                           | Yes                                       |
 | [Legendary](https://github.com/derrod/legendary)                                | No      | Yes                           | Yes                                       |
@@ -76,6 +76,7 @@ BoilR can import games from many platforms, but there are limits based
 | [Bottles](https://usebottles.com/)                                              | No      | Yes                           | Yes                                       |
 | [MiniGalaxy](https://sharkwouter.github.io/minigalaxy/)                         | No      | Yes                           | Yes                                       |
 | [Playnite](https://playnite.link/)                                              | Yes     | No                            | No                                        |
+| [Game Pass](https://www.xbox.com/en-US/xbox-game-pass)                          | Yes     | No                            | No                                        |
 
 ## Getting cover art for your shortcuts
 
