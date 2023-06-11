@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.9.0"
+version = "1.9.1"
 
 [dependencies]
 base64 = "^0.21.0"
@@ -64,6 +64,7 @@ winres = "^0.1.12"
 [target."cfg(windows)".dependencies]
 winreg = "^0.50.0"
 sqlite = "^0.30.3"
+roxmltree = "^0.18.0"
 
 [features]
 # This feature is enabled when building for a flatpak environment

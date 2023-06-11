@@ -399,7 +399,7 @@ dependencies = [
 
 [[package]]
 name = "boilr"
-version = "1.9.0"
+version = "1.9.1"
 dependencies = [
  "base64 0.21.0",
  "color-eyre",
@@ -417,6 +417,7 @@ dependencies = [
  "nom",
  "openssl",
  "reqwest",
+ "roxmltree",
  "rusty-leveldb",
  "serde",
  "serde_json",
@@ -2614,6 +2615,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "roxmltree"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8f595a457b6b8c6cda66a48503e92ee8d19342f905948f29c383200ec9eb1d8"
+dependencies = [
+ "xmlparser",
+]
+
+[[package]]
 name = "rust-ini"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3969,6 +3979,12 @@ name = "xml-rs"
 version = "0.8.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52839dc911083a8ef63efa4d039d1f58b5e409f923e44c80828f206f66e5541c"
+
+[[package]]
+name = "xmlparser"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d25c75bf9ea12c4040a97f829154768bbbce366287e2dc044af160cd79a13fd"
 
 [[package]]
 name = "yaml-rust"
