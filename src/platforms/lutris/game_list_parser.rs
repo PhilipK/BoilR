@@ -29,7 +29,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[0].id, 1);
+        assert_eq!(games[0].id, 48);
     }
 
     #[test]
@@ -40,7 +40,7 @@ mod tests {
 
         assert_eq!(
             games[5].name,
-            "The Witcher 3: Wild Hunt - Game of the Year Edition"
+            "Wolfenstein: The New Order"
         );
     }
 
@@ -52,7 +52,7 @@ mod tests {
 
         assert_eq!(
             games[5].slug,
-            "the-witcher-3-wild-hunt-game-of-the-year-edition"
+            "wolfenstein_the_new_order"
         );
     }
 
@@ -62,6 +62,6 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[1].runner, "steam");
+        assert_eq!(games[1].service, "steam");
     }
 }

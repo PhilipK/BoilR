@@ -6,6 +6,7 @@ pub struct LutrisSettings {
     pub executable: String,
     pub flatpak: bool,
     pub flatpak_image: String,
+    pub installed: bool,
 }
 
 impl Default for LutrisSettings {
@@ -21,6 +22,7 @@ impl Default for LutrisSettings {
             executable: "lutris".to_string(),
             flatpak: true,
             flatpak_image: "net.lutris.Lutris".to_string(),
+            installed: true,
         }
     }
 }

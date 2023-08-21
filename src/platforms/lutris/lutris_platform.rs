@@ -17,7 +17,7 @@ impl LutrisPlatform {
         let games = parse_lutris_games(output.as_str());
         let mut res = vec![];
         for mut game in games {
-            if game.runner != "steam" {
+            if game.service != "steam" {
                 game.settings = Some(self.settings.clone());
                 res.push(game);
             }
@@ -35,9 +35,13 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
             command
                 .arg("run")
                 .arg(flatpak_image)
-                .arg("-lo")
-                .arg("--json")
-                .output()?
+                .arg("-a")
+                .arg("--json");
+                if settings.installed {
+                    command.arg("-o").output()?
+                } else {
+                    command.output()?
+                }
         }
         #[cfg(feature = "flatpak")]
         {
@@ -47,13 +51,22 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
                 .arg("flatpak")
                 .arg("run")
                 .arg(flatpak_image)
-                .arg("-lo")
-                .arg("--json")
-                .output()?
+                .arg("-a")
+                .arg("--json");
+                if settings.installed {
+                    command.arg("-o").output()?
+                } else {
+                    command.output()?
+                }
         }
     } else {
         let mut command = Command::new(&settings.executable);
-        command.arg("-lo").arg("--json").output()?
+        command.arg("-a").arg("--json");
+        if settings.installed {
+            command.arg("-o").output()?
+        } else {
+            command.output()?
+        }
     };
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -84,6 +97,7 @@ impl GamesPlatform for LutrisPlatform {
         ui.heading("Lutris");
         ui.checkbox(&mut self.settings.enabled, "Import from Lutris");
         if self.settings.enabled {
+            ui.checkbox(&mut self.settings.installed, "Search installed only");
             ui.checkbox(&mut self.settings.flatpak, "Flatpak version");
             if !self.settings.flatpak {
                 ui.horizontal(|ui| {

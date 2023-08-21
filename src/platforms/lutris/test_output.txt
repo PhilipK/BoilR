@@ -1,74 +1,50 @@
 [
   {
-    "id": 1,
-    "slug": "aperture-desk-job",
-    "name": "Aperture Desk Job",
-    "runner": "steam",
-    "platform": "Linux",
-    "year": null,
-    "directory": null,
-    "hidden": false,
-    "playtime": null,
-    "lastplayed": null
+    "id": 48,
+    "slug": "dishonored_2",
+    "name": "Dishonored 2",
+    "service": "gog",
+    "installed": false,
+    "details": "{\"isGalaxyCompatible\": true, \"tags\": [], \"id\": 1431426311, \"availability\": {\"isAvailable\": true, \"isAvailableInAccount\": true}, \"title\": \"Dishonored 2\", \"image\": \"//images-2.gog-statics.com/65811050eda91f39725b29a46ca7c7e68bdd7ec515ab4ef127dc96d77fab0c44\", \"url\": \"/en/game/dishonored_2\", \"worksOn\": {\"Windows\": true, \"Mac\": false, \"Linux\": false}, \"category\": \"Action\", \"rating\": 44, \"isComingSoon\": false, \"isMovie\": false, \"isGame\": true, \"slug\": \"dishonored_2\", \"updates\": 0, \"isNew\": true, \"dlcCount\": 0, \"releaseDate\": {\"date\": \"2016-11-11 00:00:00.000000\", \"timezone_type\": 3, \"timezone\": \"Europe/Nicosia\"}, \"isBaseProductMissing\": false, \"isHidingDisabled\": false, \"isInDevelopment\": false, \"extraInfo\": [], \"isHidden\": false}"
   },
   {
-    "id": 2,
-    "slug": "dark-souls-iii",
-    "name": "DARK SOULS\u2122 III",
-    "runner": "steam",
-    "platform": "Linux",
-    "year": null,
-    "directory": null,
-    "hidden": false,
-    "playtime": null,
-    "lastplayed": null
+    "id": 41,
+    "slug": "middleearth_shadow_of_mordor",
+    "name": "Middle-earth\u2122: Shadow of Mordor\u2122 Game of the Year Edition",
+    "service": "steam",
+    "installed": false,
+    "details": "{\"isGalaxyCompatible\": true, \"tags\": [], \"id\": 1213504814, \"availability\": {\"isAvailable\": true, \"isAvailableInAccount\": true}, \"title\": \"Middle-earth\\u2122: Shadow of Mordor\\u2122 Game of the Year Edition\", \"image\": \"//images-2.gog-statics.com/455ff8097ca01fe893703d38b20f46bc9a539765256f9755ea9e592f48938763\", \"url\": \"/en/game/middleearth_shadow_of_mordor\", \"worksOn\": {\"Windows\": true, \"Mac\": false, \"Linux\": false}, \"category\": \"Action\", \"rating\": 0, \"isComingSoon\": false, \"isMovie\": false, \"isGame\": true, \"slug\": \"middleearth_shadow_of_mordor\", \"updates\": 0, \"isNew\": true, \"dlcCount\": 0, \"releaseDate\": {\"date\": \"2014-09-30 00:00:00.000000\", \"timezone_type\": 3, \"timezone\": \"Europe/Nicosia\"}, \"isBaseProductMissing\": false, \"isHidingDisabled\": false, \"isInDevelopment\": false, \"extraInfo\": [], \"isHidden\": false}"
   },
   {
-    "id": 4,
-    "slug": "disco-elysium",
-    "name": "Disco Elysium",
-    "runner": "wine",
-    "platform": "Windows",
-    "year": 2019,
-    "directory": "/home/deck/Games/gog/disco-elysium",
-    "hidden": false,
-    "playtime": "0:01:16",
-    "lastplayed": "2022-07-25 23:21:56"
+    "id": 10,
+    "slug": "prey",
+    "name": "Prey",
+    "service": "gog",
+    "installed": false,
+    "details": "{\"isGalaxyCompatible\": true, \"tags\": [], \"id\": 1158493447, \"availability\": {\"isAvailable\": true, \"isAvailableInAccount\": true}, \"title\": \"Prey\", \"image\": \"//images-1.gog-statics.com/ed7a5f0cba0e3ee80bc5dd10683f6ce6fe692bb2b1764c4987aa97fbaaf142d1\", \"url\": \"/en/game/prey\", \"worksOn\": {\"Windows\": true, \"Mac\": false, \"Linux\": false}, \"category\": \"Action\", \"rating\": 44, \"isComingSoon\": false, \"isMovie\": false, \"isGame\": true, \"slug\": \"prey\", \"updates\": 1, \"isNew\": true, \"dlcCount\": 0, \"releaseDate\": {\"date\": \"2017-05-04 00:00:00.000000\", \"timezone_type\": 3, \"timezone\": \"Europe/Nicosia\"}, \"isBaseProductMissing\": false, \"isHidingDisabled\": false, \"isInDevelopment\": false, \"extraInfo\": [], \"isHidden\": false}"
   },
   {
-    "id": 3,
-    "slug": "hollow-knight",
-    "name": "Hollow Knight",
-    "runner": "steam",
-    "platform": "Linux",
-    "year": null,
-    "directory": null,
-    "hidden": false,
-    "playtime": null,
-    "lastplayed": null
+    "id": 53,
+    "slug": "the_elder_scrolls_iii_morrowind_goty_edition_game",
+    "name": "The Elder Scrolls III: Morrowind GOTY Edition",
+    "service": "gog",
+    "installed": false,
+    "details": "{\"isGalaxyCompatible\": true, \"tags\": [], \"id\": 1435828767, \"availability\": {\"isAvailable\": false, \"isAvailableInAccount\": true}, \"title\": \"The Elder Scrolls III: Morrowind GOTY Edition\", \"image\": \"//images-2.gog-statics.com/e19e2055ee1d083793a4ea093872f15b749e3d75384bf8c0f3d81002a4a4fd47\", \"url\": \"/en/game/the_elder_scrolls_iii_morrowind_goty_edition\", \"worksOn\": {\"Windows\": true, \"Mac\": false, \"Linux\": false}, \"category\": \"Role-playing\", \"rating\": 0, \"isComingSoon\": false, \"isMovie\": false, \"isGame\": true, \"slug\": \"the_elder_scrolls_iii_morrowind_goty_edition_game\", \"updates\": 0, \"isNew\": true, \"dlcCount\": 0, \"releaseDate\": {\"date\": \"2003-11-07 00:00:00.000000\", \"timezone_type\": 3, \"timezone\": \"Europe/Nicosia\"}, \"isBaseProductMissing\": false, \"isHidingDisabled\": false, \"isInDevelopment\": false, \"extraInfo\": [], \"isHidden\": false}"
   },
   {
-    "id": 7,
-    "slug": "lumino-city",
-    "name": "Lumino City",
-    "runner": "wine",
-    "platform": "Windows",
-    "year": null,
-    "directory": "/home/deck/Games/gog/lumino-city",
-    "hidden": false,
-    "playtime": null,
-    "lastplayed": null
+    "id": 24,
+    "slug": "the_witcher_2",
+    "name": "The Witcher 2: Assassins of Kings Enhanced Edition",
+    "service": "gog",
+    "installed": false,
+    "details": "{\"isGalaxyCompatible\": true, \"tags\": [], \"id\": 1207658930, \"availability\": {\"isAvailable\": true, \"isAvailableInAccount\": true}, \"title\": \"The Witcher 2: Assassins of Kings Enhanced Edition\", \"image\": \"//images-4.gog-statics.com/8355e657a19311b158a3553a154e109199d6991c7791a20c3305af1f84d15ed7\", \"url\": \"/en/game/the_witcher_2\", \"worksOn\": {\"Windows\": true, \"Mac\": true, \"Linux\": true}, \"category\": \"Role-playing\", \"rating\": 47, \"isComingSoon\": false, \"isMovie\": false, \"isGame\": true, \"slug\": \"the_witcher_2\", \"updates\": 1, \"isNew\": true, \"dlcCount\": 0, \"releaseDate\": {\"date\": \"2012-04-17 00:00:00.000000\", \"timezone_type\": 3, \"timezone\": \"Europe/Nicosia\"}, \"isBaseProductMissing\": false, \"isHidingDisabled\": false, \"isInDevelopment\": false, \"extraInfo\": [], \"isHidden\": false}"
   },
   {
-    "id": 5,
-    "slug": "the-witcher-3-wild-hunt-game-of-the-year-edition",
-    "name": "The Witcher 3: Wild Hunt - Game of the Year Edition",
-    "runner": "wine",
-    "platform": "Windows",
-    "year": 2015,
-    "directory": "/home/deck/Games/gog/the-witcher-3-wild-hunt-game-of-the-year-edition",
-    "hidden": false,
-    "playtime": "0:00:54",
-    "lastplayed": "2022-07-25 23:20:40"
+    "id": 70,
+    "slug": "wolfenstein_the_new_order",
+    "name": "Wolfenstein: The New Order",
+    "service": "gog",
+    "installed": false,
+    "details": "{\"isGalaxyCompatible\": true, \"tags\": [], \"id\": 1943729964, \"availability\": {\"isAvailable\": true, \"isAvailableInAccount\": true}, \"title\": \"Wolfenstein: The New Order\", \"image\": \"//images-2.gog-statics.com/b2c4a0bae46c1432da6eddfd2783bfdb5ec91c04c72f712eb1b236aaf0d98519\", \"url\": \"/en/game/wolfenstein_the_new_order\", \"worksOn\": {\"Windows\": true, \"Mac\": false, \"Linux\": false}, \"category\": \"Shooter\", \"rating\": 38, \"isComingSoon\": false, \"isMovie\": false, \"isGame\": true, \"slug\": \"wolfenstein_the_new_order\", \"updates\": 0, \"isNew\": true, \"dlcCount\": 0, \"releaseDate\": {\"date\": \"2014-05-20 00:00:00.000000\", \"timezone_type\": 3, \"timezone\": \"Europe/Nicosia\"}, \"isBaseProductMissing\": false, \"isHidingDisabled\": false, \"isInDevelopment\": false, \"extraInfo\": [], \"isHidden\": false}"
   }
 ]
