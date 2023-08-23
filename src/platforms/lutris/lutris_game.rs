@@ -9,8 +9,9 @@ pub struct LutrisGame {
     pub id: i64,
     pub slug: String,
     pub name: String,
-    pub runner: String,
-    pub platform: String,
+    pub service: String,
+    pub installed: bool,
+    pub details: String,
     pub settings: Option<LutrisSettings>,
 }
 
@@ -40,7 +41,7 @@ impl LutrisGame {
             .unwrap_or_default();
         if is_flatpak {
             format!(
-                "run {} lutris:rungame/{}",
+                "run {} lutris:{}",
                 self.settings
                     .as_ref()
                     .map(|s| s.flatpak_image.clone())
@@ -48,7 +49,7 @@ impl LutrisGame {
                 self.slug
             )
         } else {
-            format!("lutris:rungame/{}", self.slug)
+            format!("lutris:{}", self.slug)
         }
     }
 
