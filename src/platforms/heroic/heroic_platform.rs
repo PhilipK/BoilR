@@ -37,8 +37,8 @@ fn get_installed_json_location(install_mode: &InstallationMode) -> PathBuf {
     let home_dir = std::env::var("HOME").unwrap_or_else(|_| "".to_string());
     match install_mode {
         InstallationMode::FlatPak => Path::new(&home_dir)
-            .join(".var/app/com.heroicgameslauncher.hgl/config/legendary/installed.json"),
-        InstallationMode::UserBin => Path::new(&home_dir).join(".config/legendary/installed.json"),
+            .join(".var/app/com.heroicgameslauncher.hgl/config/heroic/legendaryConfig/legendary/installed.json"),
+        InstallationMode::UserBin => Path::new(&home_dir).join(".config/heroic/legendaryConfig/legendary/installed.json"),
     }
 }
 
