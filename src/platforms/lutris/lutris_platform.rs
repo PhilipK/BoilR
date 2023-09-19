@@ -15,9 +15,11 @@ impl LutrisPlatform {
     fn get_shortcuts(&self) -> eyre::Result<Vec<LutrisGame>> {
         let output = get_lutris_command_output(&self.settings)?;
         let games = parse_lutris_games(output.as_str());
+        let installed = self.settings.installed;
         let mut res = vec![];
         for mut game in games {
-            if game.service != "steam" {
+            let service = if installed { game.runner.clone().unwrap_or_default() } else { game.service.clone().unwrap_or_default() };
+            if service != "steam" {
                 game.settings = Some(self.settings.clone());
                 res.push(game);
             }
@@ -32,16 +34,12 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
         #[cfg(not(feature = "flatpak"))]
         {
             let mut command = Command::new("flatpak");
-            command
-                .arg("run")
-                .arg(flatpak_image)
-                .arg("-a")
-                .arg("--json");
-                if settings.installed {
-                    command.arg("-o").output()?
-                } else {
-                    command.output()?
-                }
+            command.arg("run").arg(flatpak_image).arg("--json");
+            if settings.installed {
+                command.arg("-lo").output()?
+            } else {
+                command.arg("-a").output()?
+            }
         }
         #[cfg(feature = "flatpak")]
         {
@@ -50,22 +48,21 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
                 .arg("--host")
                 .arg("flatpak")
                 .arg("run")
-                .arg(flatpak_image)
-                .arg("-a")
-                .arg("--json");
-                if settings.installed {
-                    command.arg("-o").output()?
-                } else {
-                    command.output()?
-                }
+                .arg(flatpak_image);
+            command.arg("run").arg(flatpak_image).arg("--json");
+            if settings.installed {
+                command.arg("-lo").output()?
+            } else {
+                command.arg("-a").output()?
+            }
         }
     } else {
         let mut command = Command::new(&settings.executable);
-        command.arg("-a").arg("--json");
+        command.arg("--json");
         if settings.installed {
-            command.arg("-o").output()?
+            command.arg("-lo").output()?
         } else {
-            command.output()?
+            command.arg("-a").output()?
         }
     };
 

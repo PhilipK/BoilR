@@ -9,7 +9,8 @@ pub struct LutrisGame {
     pub id: i64,
     pub slug: String,
     pub name: String,
-    pub service: String,
+    pub service: Option<String>,
+    pub runner:Option<String>,
     pub installed: bool,
     pub details: String,
     pub settings: Option<LutrisSettings>,
@@ -39,17 +40,25 @@ impl LutrisGame {
             .as_ref()
             .map(|s| s.flatpak)
             .unwrap_or_default();
+        let run_game = self
+            .settings
+            .as_ref()
+            .map(|s| s.installed)
+            .map(|i| if i { ":rungame/" } else { ":" })
+            .unwrap_or_default();
+
         if is_flatpak {
             format!(
-                "run {} lutris:{}",
+                "run {} lutris{}{}",
                 self.settings
                     .as_ref()
                     .map(|s| s.flatpak_image.clone())
                     .unwrap_or_default(),
+                run_game,
                 self.slug
             )
         } else {
-            format!("lutris:{}", self.slug)
+            format!("lutris{}{}", run_game, self.slug)
         }
     }
 

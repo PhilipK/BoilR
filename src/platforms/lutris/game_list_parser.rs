@@ -62,6 +62,6 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(games[1].service, "steam");
+        assert_eq!(games[1].service.clone().unwrap_or_default(), "steam");
     }
 }
