@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.9.1"
+version = "1.9.4"
 
 [dependencies]
 base64 = "^0.21.0"
@@ -10,7 +10,7 @@ copypasta = "^0.8.1"
 flate2 = "^1.0.25"
 is_executable = "^1.0.1"
 nom = "^7.1.1"
-rusty-leveldb = "^1.0.4"
+rusty-leveldb = "^3.0.0"
 serde_json = "^1.0.91"
 
 steam_shortcuts_util = "^1.1.8"
@@ -56,14 +56,14 @@ features = ["full"]
 version = "^1.24.2"
 
 [dependencies.toml]
-version = "^0.7.1"
+version = "^0.8.0"
 [target."cfg(windows)"]
 [target."cfg(windows)".build-dependencies]
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.50.0"
-sqlite = "^0.30.3"
+winreg = "^0.51.0"
+sqlite = "^0.31.1"
 roxmltree = "^0.18.0"
 
 [features]

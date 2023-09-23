@@ -26,7 +26,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
-
+<release version="1.9.4" date="2023-09-18">
+      <description>
+        <ul>
+          <li>Fix bug where Lutris games would not be found</li>
+          <li>Update dependency versions</li>
+        </ul>
+      </description>
+    </release>
 <release version="1.9.2" date="2023-09-18">
       <description>
         <ul>

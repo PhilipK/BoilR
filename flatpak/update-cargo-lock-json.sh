@@ -1,3 +1,4 @@
+#!/bin/bash
 curl https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py --output flatpak-cargo-generator.py
 cd ..
 pip install toml
