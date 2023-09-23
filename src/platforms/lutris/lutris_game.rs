@@ -10,9 +10,10 @@ pub struct LutrisGame {
     pub slug: String,
     pub name: String,
     pub service: Option<String>,
-    pub runner:Option<String>,
-    pub installed: bool,
-    pub details: String,
+    pub runner: Option<String>,
+    // pub platform: String,
+    // pub installed: bool,
+    // pub details: String,
     pub settings: Option<LutrisSettings>,
 }
 
