@@ -6,7 +6,7 @@ version = "1.9.4"
 [dependencies]
 base64 = "^0.21.0"
 config = "^0.13.3"
-copypasta = "^0.8.1"
+copypasta = "^0.10.0"
 flate2 = "^1.0.25"
 is_executable = "^1.0.1"
 nom = "^7.1.1"
@@ -15,11 +15,12 @@ serde_json = "^1.0.91"
 
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
-sysinfo = "^0.29.0"
+sysinfo = "^0.30.5"
 eyre = "^0.6.8"
 color-eyre = "^0.6.2"
 dyn-clone = "^1.0.10"
 time = {version="^0.3.17", features = ["formatting"]}
+egui_extras = { version = "0.25.0", features = ["all_loaders"] }
 
 [target."cfg(not(windows))".dependencies]
 openssl = { version = "*", features = ["vendored"] }
@@ -29,10 +30,10 @@ features = ["serde"]
 version = "^5.4.0"
 
 [dependencies.eframe]
-version = "^0.22.0"
+version = "^0.25.0"
 
 [dependencies.egui]
-version = "^0.22.0"
+version = "^0.25.0"
 
 [dependencies.futures]
 version = "^0.3.25"
@@ -62,9 +63,9 @@ version = "^0.8.0"
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.51.0"
-sqlite = "^0.31.1"
-roxmltree = "^0.18.0"
+winreg = "^0.52.0"
+sqlite = "^0.32.0"
+roxmltree = "^0.19.0"
 
 [features]
 # This feature is enabled when building for a flatpak environment

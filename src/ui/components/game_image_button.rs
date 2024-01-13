@@ -92,7 +92,7 @@ impl GameButton {
                             //need to show
                             let mut size = texture_handle.size_vec2();
                             clamp_to_width(&mut size, self.max_width);
-                            let image_button = ImageButton::new(texture_handle, size);
+                            let image_button = ImageButton::new(texture_handle);
                             if ui
                                 .add_sized(size, image_button)
                                 .on_hover_text(&self.text)

@@ -1,6 +1,6 @@
 use std::{process::Command, thread::sleep, time::Duration};
 
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::System;
 
 pub fn ensure_steam_stopped() {
     #[cfg(target_os = "windows")]

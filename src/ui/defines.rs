@@ -14,25 +14,9 @@ pub mod ui_images {
 
     use std::thread::JoinHandle;
 
-    use eframe::IconData;
-    use egui::{ColorImage, ImageData};
+    use egui::{ColorImage, IconData };
 
-    pub const IMPORT_GAMES_IMAGE: &[u8] = include_bytes!("../../resources/import_games_button.png");
-    pub const SAVE_IMAGE: &[u8] = include_bytes!("../../resources/save.png");
-    pub const LOGO_32: &[u8] = include_bytes!("../../resources/logo32.png");
     pub const LOGO_ICON: &[u8] = include_bytes!("../../resources/logo_small.png");
-
-    pub fn get_import_image() -> ImageData {
-        ImageData::Color(load_image_from_memory(IMPORT_GAMES_IMAGE).unwrap_or_default())
-    }
-
-    pub fn get_save_image() -> ImageData {
-        ImageData::Color(load_image_from_memory(SAVE_IMAGE).unwrap_or_default())
-    }
-
-    pub fn get_logo() -> ImageData {
-        ImageData::Color(load_image_from_memory(LOGO_32).unwrap_or_default())
-    }
 
     pub fn get_logo_icon() -> IconData {
         let image = image::load_from_memory(LOGO_ICON).unwrap_or_default();
@@ -63,14 +47,6 @@ pub mod ui_images {
             Ok(thread_result) => thread_result,
             Err(_e) => Err(eyre::format_err!("Failed to load image at {:?} ", path)),
         }
-    }
-
-    pub fn load_image_from_memory(image_data: &[u8]) -> Result<ColorImage, image::ImageError> {
-        let image = image::load_from_memory(image_data)?;
-        let size = [image.width() as _, image.height() as _];
-        let image_buffer = image.to_rgba8();
-        let pixels = image_buffer.as_flat_samples();
-        Ok(ColorImage::from_rgba_unmultiplied(size, pixels.as_slice()))
     }
 }
 
