@@ -1,19 +1,16 @@
 use std::path::Path;
 
 use egui::ImageButton;
-use image::ImageBuffer;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
-        components::GameButton,
         images::{
-            gametype::GameType, hasimagekey::HasImageKey, texturestate::TextureDownloadState,
+            gametype::GameType, hasimagekey::HasImageKey, 
             useraction::UserAction,
         },
-        ui_images::load_image_from_path,
         MyEguiApp,
     },
 };
@@ -80,10 +77,9 @@ fn render_image(
     }
     None
 }
-pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType, ui: &mut egui::Ui) {
+pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType ) {
     let state = &mut app.image_selected_state;
-    //We must have a user to make see this action;
-    if let Some(user) = state.steam_user.as_ref() {
+    //We must have a user to get to this action;
         if let Some(auth_key) = &app.settings.steamgrid_db.auth_key {
             let client = steamgriddb_api::Client::new(auth_key);
             let search = CachedSearch::new(&client);
@@ -93,20 +89,5 @@ pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType, ui: &mu
                 .ok()
                 .flatten();
         }
-        state.selected_shortcut = Some(shortcut.clone());
-
-        for image_type in ImageType::all() {
-            let (path, key) = shortcut.key(image_type, Path::new(&user.steam_user_data_folder));
-            let image = load_image_from_path(&path);
-            if let Ok(image) = image {
-                let texture = ui
-                    .ctx()
-                    .load_texture(&key, image, egui::TextureOptions::LINEAR);
-                state
-                    .image_handles
-                    .insert(key, TextureDownloadState::Loaded(texture));
-            }
-        }
         state.selected_shortcut = Some(shortcut);
-    }
 }

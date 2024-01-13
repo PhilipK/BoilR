@@ -12,9 +12,8 @@ pub mod ui_colors {
 
 pub mod ui_images {
 
-    use std::thread::JoinHandle;
 
-    use egui::{ColorImage, IconData };
+    use egui::IconData;
 
     pub const LOGO_ICON: &[u8] = include_bytes!("../../resources/logo_small.png");
 
@@ -29,58 +28,4 @@ pub mod ui_images {
         }
     }
 
-    pub fn load_image_from_path(path: &std::path::Path) -> eyre::Result<egui::ColorImage> {
-        let path_owned = path.to_owned();
-        let handle: JoinHandle<eyre::Result<egui::ColorImage>> = std::thread::spawn(move || {
-            let image = image::io::Reader::open(path_owned)?
-                .with_guessed_format()?
-                .decode()?;
-            let size = [image.width() as _, image.height() as _];
-            let image_buffer = image.to_rgba8();
-            let pixels = image_buffer.as_flat_samples();
-            Ok(egui::ColorImage::from_rgba_unmultiplied(
-                size,
-                pixels.as_slice(),
-            ))
-        });
-        match handle.join() {
-            Ok(thread_result) => thread_result,
-            Err(_e) => Err(eyre::format_err!("Failed to load image at {:?} ", path)),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::ui_images::load_image_from_path;
-
-    #[test]
-    pub fn test_image_load_that_is_broken() {
-        let res = load_image_from_path(std::path::Path::new("src/testdata/brokenimage.webp"));
-        assert!(res.is_err());
-    }
-
-    #[test]
-    pub fn test_image_load_that_works_png() {
-        let res = load_image_from_path(std::path::Path::new("src/testdata/smallpng.png"));
-        assert!(res.is_ok());
-    }
-
-    #[test]
-    pub fn test_image_load_that_works_webp() {
-        let res = load_image_from_path(std::path::Path::new("src/testdata/spider.webp"));
-        assert!(res.is_ok());
-    }
-
-    #[test]
-    pub fn test_image_load_animated_webp() {
-        let res = load_image_from_path(std::path::Path::new("src/testdata/hollow.webp"));
-        assert!(res.is_err());
-    }
-
-    // #[test]
-    // pub fn test_image_load_animated_webp2() {
-    //     let res = load_image_from_path(std::path::Path::new("src/testdata/tunic.webp"));
-    //     assert!(res.is_err());
-    // }
 }

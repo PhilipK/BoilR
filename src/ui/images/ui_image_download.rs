@@ -1,7 +1,6 @@
 use super::{
     constants::POSSIBLE_EXTENSIONS,
     gamemode::GameMode,
-    hasimagekey::HasImageKey,
     image_select_state::ImageSelectState,
     pages::{
         handle_correct_grid_request, handle_grid_change, handle_image_selected,
@@ -9,7 +8,6 @@ use super::{
         render_page_shortcut_select_image_type, render_page_steam_images_overview,
     },
     possible_image::PossibleImage,
-    texturestate::TextureDownloadState,
     useraction::UserAction,
 };
 
@@ -21,7 +19,7 @@ use crate::{
     steam::{get_installed_games, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, ImageType},
     sync::{download_images, SyncProgress},
-    ui::{components::render_user_select, ui_images::load_image_from_path, FetcStatus, MyEguiApp},
+    ui::{components::render_user_select, FetcStatus, MyEguiApp},
 };
 use egui::ScrollArea;
 use futures::executor::block_on;
@@ -67,7 +65,7 @@ impl MyEguiApp {
                     return value;
                 }
             } else if let Some(image_type) = state.image_type_selected.as_ref() {
-                if let Some(action) = render_page_pick_image(self, ui, image_type, state) {
+                if let Some(action) = render_page_pick_image( ui, image_type, state) {
                     return action;
                 }
             } else if let Some(action) = render_page_shortcut_select_image_type(ui, state) {
@@ -148,10 +146,10 @@ impl MyEguiApp {
             });
         match action {
             UserAction::UserSelected(user) => {
-                self.handle_user_selected(user, ui);
+                self.handle_user_selected(user);
             }
             UserAction::ShortcutSelected(shortcut) => {
-                handle_shortcut_selected(self, shortcut, ui);
+                handle_shortcut_selected(self, shortcut);
             }
             UserAction::ImageTypeSelected(image_type) => {
                 self.handle_image_type_selected(image_type);
@@ -182,12 +180,10 @@ impl MyEguiApp {
                 self.handle_download_all_images();
             }
             UserAction::RefreshImages => {
-                let (_, reciever) = watch::channel(SyncProgress::NotStarted);
                 let user = self.image_selected_state.steam_user.clone();
                 if let Some(user) = &user {
-                    load_image_grids(user, &mut self.image_selected_state, ui);
+                    load_image_grids(user);
                 }
-                self.status_reciever = reciever;
             }
         };
     }
@@ -252,8 +248,6 @@ impl MyEguiApp {
                 if path.exists() {
                     let _ = std::fs::remove_file(&path);
                 }
-                let key = path.to_string_lossy().to_string();
-                self.image_selected_state.image_handles.remove(&key);
             }
             self.image_selected_state.image_type_selected = None;
         }
@@ -264,9 +258,9 @@ impl MyEguiApp {
         self.image_selected_state.steam_games = Some(get_installed_games(&self.settings.steam));
     }
 
-    fn handle_user_selected(&mut self, user: SteamUsersInfo, ui: &mut egui::Ui) {
+    fn handle_user_selected(&mut self, user: SteamUsersInfo) {
         let state = &mut self.image_selected_state;
-        let shortcuts = load_image_grids(&user, state, ui);
+        let shortcuts = load_image_grids(&user);
         state.user_shortcuts = Some(shortcuts);
         state.steam_user = Some(user);
     }
@@ -316,17 +310,15 @@ impl MyEguiApp {
         } else if state.selected_shortcut.is_some() {
             state.selected_shortcut = None;
         } else {
-            state.image_handles.clear();
             state.user_shortcuts = None;
             state.steam_user = None;
         }
     }
 }
 
+//TODO remove this
 fn load_image_grids(
     user: &SteamUsersInfo,
-    state: &mut ImageSelectState,
-    ui: &mut egui::Ui,
 ) -> Vec<ShortcutOwned> {
     let user_info = crate::steam::get_shortcuts_for_user(user);
     match user_info {
@@ -336,22 +328,6 @@ fn load_image_grids(
             user_folder.pop();
             let mut shortcuts = user_info.shortcuts;
             shortcuts.sort_by_key(|s| s.app_name.clone());
-            let image_type = &ImageType::Grid;
-            for shortcut in &shortcuts {
-                let (path, key) = shortcut.key(image_type, &user_folder);
-                let loaded = state.image_handles.contains_key(&key);
-                if !loaded && path.exists() {
-                    let image = load_image_from_path(&path);
-                    if let Ok(image) = image {
-                        let texture =
-                            ui.ctx()
-                                .load_texture(&key, image, egui::TextureOptions::LINEAR);
-                        state
-                            .image_handles
-                            .insert(key, TextureDownloadState::Loaded(texture));
-                    }
-                }
-            }
             shortcuts
         }
         Err(_err) => {
