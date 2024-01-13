@@ -55,25 +55,24 @@ pub fn render_page_pick_image(
             let x = Grid::new("ImageThumbnailSelectGrid")
                 .spacing([column_padding, column_padding])
                 .show(ui, |ui| {
-                    for image in images {
-                        if {
-                            let url: &str = &image.thumbnail_url;
-                            let image = egui::Image::new(url)
-                                .max_width(column_width)
-                                .shrink_to_fit();
-                            let calced = image.calc_size(
-                                egui::Vec2 {
-                                    x: column_width,
-                                    y: f32::INFINITY,
-                                },
-                                image.size(),
-                            );
-                            let button = ImageButton::new(image);
-                            ui.add_sized(calced, button)
-                                .on_hover_text("Pick image")
-                                .clicked()
-                        } {
-                            return Some(image.clone());
+                    for possible_image in images {
+                        let image = egui::Image::new(&possible_image.thumbnail_url)
+                            .max_width(column_width)
+                            .shrink_to_fit();
+                        let calced = image.calc_size(
+                            egui::Vec2 {
+                                x: column_width,
+                                y: f32::INFINITY,
+                            },
+                            image.size(),
+                        );
+                        let button = ImageButton::new(image);
+                        let clicked = ui
+                            .add_sized(calced, button)
+                            .on_hover_text("Pick image")
+                            .clicked();
+                        if clicked {
+                            return Some(possible_image);
                         }
                         column += 1;
                         if column >= columns {
@@ -85,7 +84,7 @@ pub fn render_page_pick_image(
                 })
                 .inner;
             if let Some(x) = x {
-                return Some(UserAction::ImageSelected(x));
+                return Some(UserAction::ImageSelected(x.clone()));
             }
         }
         _ => {

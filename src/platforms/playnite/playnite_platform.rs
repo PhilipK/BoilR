@@ -86,7 +86,7 @@ impl PlaynitePlatform {
     fn get_playnite_games(&self) -> eyre::Result<Vec<PlayniteGame>> {
         let mut res = vec![];
         let (launcher_path, games_file_path) = self.find_paths()?;
-        let games_bytes = std::fs::read(&games_file_path).map_err(|e| match e.raw_os_error() {
+        let games_bytes = std::fs::read(games_file_path).map_err(|e| match e.raw_os_error() {
             Some(32) => {
                 eyre::format_err!("It looks like Playnite is running and preventing BoilR from reading its database, please ensure that Playnite closed.")
             }
@@ -123,7 +123,6 @@ impl PlaynitePlatform {
                 return Err(eyre::eyre!("Did not find Playnite installation"));
             }
             let app_data_path = env::var("APPDATA")?;
-            let launcher_path = launcher_path;
             let playnite_folder = Path::new(&app_data_path).join("Playnite");
             let games_file_path = playnite_folder.join("library").join("games.db");
             Ok((launcher_path, games_file_path))

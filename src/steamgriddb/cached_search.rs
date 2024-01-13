@@ -46,7 +46,7 @@ impl<'a> CachedSearch<'a> {
         }
         println!("Searching for {}", query.as_ref());
         let search = self.client.search(query.as_ref()).await?;
-        let first_id = search.get(0).map(|f| f.id);
+        let first_id = search.first().map(|f| f.id);
         match first_id {
             Some(assumed_id) => {
                 self.search_map.insert(app_id, (query.into(), assumed_id));

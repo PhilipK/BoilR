@@ -279,8 +279,6 @@ impl MyEguiApp {
         let settings = self.settings.clone();
         if let Some(auth_key) = settings.steamgrid_db.auth_key {
             if let Some(grid_id) = self.image_selected_state.grid_id {
-                let auth_key = auth_key;
-                let image_type = image_type;
                 self.rt.spawn_blocking(move || {
                     let thumbnails_folder = get_thumbnails_folder();
                     let client = steamgriddb_api::Client::new(auth_key);

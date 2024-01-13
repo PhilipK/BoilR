@@ -322,11 +322,8 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
     let app = MyEguiApp::new()?;
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
-
-    let mut viewport = egui::ViewportBuilder::default();
-    viewport.fullscreen = Some(fullscreen);
     let logo = get_logo_icon();
-    viewport.icon = Some(logo.into());
+    let viewport = egui::ViewportBuilder { fullscreen: Some(fullscreen), icon: Some(logo.into()), ..Default::default() };
     let native_options = eframe::NativeOptions {
         viewport,
         vsync: !no_v_sync,
