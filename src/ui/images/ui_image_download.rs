@@ -11,7 +11,7 @@ use super::{
     useraction::UserAction,
 };
 
-use std::path::Path;
+use std::{ path::Path, thread, time::Duration};
 
 use crate::{
     config::get_thumbnails_folder,
@@ -65,7 +65,7 @@ impl MyEguiApp {
                     return value;
                 }
             } else if let Some(image_type) = state.image_type_selected.as_ref() {
-                if let Some(action) = render_page_pick_image( ui, image_type, state) {
+                if let Some(action) = render_page_pick_image(ui, image_type, state) {
                     return action;
                 }
             } else if let Some(action) = render_page_shortcut_select_image_type(ui, state) {
@@ -156,6 +156,8 @@ impl MyEguiApp {
             }
             UserAction::ImageSelected(image) => {
                 handle_image_selected(self, image);
+                thread::sleep(Duration::from_millis(100));
+                ui.ctx().forget_all_images();
             }
             UserAction::BackButton => {
                 self.handle_back_button_action();
@@ -171,19 +173,23 @@ impl MyEguiApp {
                 handle_correct_grid_request(self);
             }
             UserAction::ImageTypeCleared(image_type, should_ban) => {
-                self.handle_image_type_cleared(image_type, should_ban)
+                self.handle_image_type_cleared(image_type, should_ban);
+                ui.ctx().forget_all_images();
             }
             UserAction::ClearImages => {
                 self.handle_clear_all_images();
+                ui.ctx().forget_all_images();
             }
             UserAction::DownloadAllImages => {
                 self.handle_download_all_images();
+                ui.ctx().forget_all_images();
             }
             UserAction::RefreshImages => {
                 let user = self.image_selected_state.steam_user.clone();
                 if let Some(user) = &user {
                     load_image_grids(user);
                 }
+                ui.ctx().forget_all_images();
             }
         };
     }
@@ -317,9 +323,7 @@ impl MyEguiApp {
 }
 
 //TODO remove this
-fn load_image_grids(
-    user: &SteamUsersInfo,
-) -> Vec<ShortcutOwned> {
+fn load_image_grids(user: &SteamUsersInfo) -> Vec<ShortcutOwned> {
     let user_info = crate::steam::get_shortcuts_for_user(user);
     match user_info {
         Ok(user_info) => {
