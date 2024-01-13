@@ -2,7 +2,7 @@ use std::{collections::HashMap, error::Error, time::Duration};
 
 use eframe::{egui, App, Frame};
 use egui::{
-   ImageButton, Rounding, Stroke
+   ImageButton, Rounding, Stroke, Vec2
 };
 use tokio::{
     runtime::Runtime,
@@ -115,11 +115,11 @@ impl MyEguiApp {
         }
         let all_ready = all_ready(&self.games_to_sync);
         let import_image = egui::include_image!("../../resources/import_games_button.png");
-        let size = import_image.texture_size().unwrap_or_default();
+        let size = Vec2::new(200.,100.);
         let image_button = ImageButton::new(import_image);
         if all_ready && !syncing {
             if ui
-                .add_sized(size * 0.40, image_button)
+                .add_sized(size,image_button)
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
@@ -129,7 +129,7 @@ impl MyEguiApp {
                 self.run_sync_async();
             }
         } else {
-            ui.add(image_button)
+            ui.add_sized(size,image_button)
                 .on_hover_text("Waiting for sync to finish");
         }
     }
@@ -325,7 +325,6 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
 
     let mut viewport = egui::ViewportBuilder::default();
     viewport.fullscreen = Some(fullscreen);
-    viewport.maximized = Some(true);
     let logo = get_logo_icon();
     viewport.icon = Some(logo.into());
     let native_options = eframe::NativeOptions {
