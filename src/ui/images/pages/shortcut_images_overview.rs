@@ -1,17 +1,20 @@
 use std::path::Path;
 
+use egui::ImageButton;
+use image::ImageBuffer;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
+        components::GameButton,
         images::{
             gametype::GameType, hasimagekey::HasImageKey, texturestate::TextureDownloadState,
             useraction::UserAction,
         },
         ui_images::load_image_from_path,
-        MyEguiApp, components::GameButton,
+        MyEguiApp,
     },
 };
 
@@ -31,7 +34,7 @@ pub fn render_page_shortcut_images_overview(
             if let Some(action) = egui::Grid::new("ui_images")
                 .show(ui, |ui| {
                     for shortcut in shortcuts {
-                        let action = render_image(app, shortcut, user_info, column_width, ui);
+                        let action = render_image(shortcut, user_info, column_width, ui);
                         if action.is_some() {
                             return action;
                         }
@@ -57,7 +60,6 @@ pub fn render_page_shortcut_images_overview(
 }
 
 fn render_image(
-    app: &MyEguiApp,
     shortcut: &ShortcutOwned,
     user_info: &SteamUsersInfo,
     column_width: f32,
@@ -67,12 +69,11 @@ fn render_image(
         &ImageType::Grid,
         Path::new(&user_info.steam_user_data_folder),
     );
+    let image = egui::Image::new(format!("file://{}", key)).max_width(column_width).shrink_to_fit();
+    let calced = image.calc_size(egui::Vec2 { x: column_width, y: f32::INFINITY }, image.size());
+    let button = ImageButton::new(image);
 
-    let mut button = GameButton::new(Path::new(&key));
-    button.text(&shortcut.app_name);
-    button.width(column_width);
-    let clicked = button.show(ui, &app.image_selected_state.image_handles);
-    if clicked {
+    if ui.add_sized(calced,button).on_hover_text(&shortcut.app_name).clicked() {
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             Box::new(shortcut.clone()),
         ))));
