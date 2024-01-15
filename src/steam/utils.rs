@@ -69,7 +69,6 @@ pub fn get_shortcuts_paths(settings: &SteamSettings) -> eyre::Result<Vec<SteamUs
         ));
     }
 
-    if !user_data_path.exists() {}
     let user_folders = std::fs::read_dir(&user_data_path)?;
     let users_info = user_folders
         .filter_map(|f| f.ok())

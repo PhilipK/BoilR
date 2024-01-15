@@ -42,7 +42,7 @@ impl MyEguiApp {
     pub(crate) fn render_import_games(&mut self, ui: &mut egui::Ui) {
         ui.heading("Import Games");
 
-        let mut scroll_style = ui.style_mut();
+        let scroll_style = ui.style_mut();
         scroll_style.visuals.extreme_bg_color = BACKGROUND_COLOR;
         scroll_style.visuals.widgets.inactive.bg_fill = EXTRA_BACKGROUND_COLOR;
         scroll_style.visuals.widgets.active.bg_fill = EXTRA_BACKGROUND_COLOR;

@@ -1,13 +1,12 @@
 use std::path::{Path, PathBuf};
 
-use egui::Grid;
+use egui::{Grid, ImageButton};
 use futures::executor::block_on;
 use tokio::sync::watch;
 
 use crate::{
     steamgriddb::{get_image_extension, ImageType, ToDownload},
     ui::{
-        components::GameButton,
         images::{
             constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
             possible_image::PossibleImage, useraction::UserAction,
@@ -17,7 +16,6 @@ use crate::{
 };
 
 pub fn render_page_pick_image(
-    app: &MyEguiApp,
     ui: &mut egui::Ui,
     image_type: &ImageType,
     state: &ImageSelectState,
@@ -57,13 +55,24 @@ pub fn render_page_pick_image(
             let x = Grid::new("ImageThumbnailSelectGrid")
                 .spacing([column_padding, column_padding])
                 .show(ui, |ui| {
-                    for image in images {
-                        let path = image.thumbnail_path.as_path();
-                        let mut button = GameButton::new(path);
-                        button.width(column_width);
-                        button.text("Pick image");
-                        if button.show_download(ui, &state.image_handles, &app.rt,&image.thumbnail_url) {
-                            return Some(image.clone());
+                    for possible_image in images {
+                        let image = egui::Image::new(&possible_image.thumbnail_url)
+                            .max_width(column_width)
+                            .shrink_to_fit();
+                        let calced = image.calc_size(
+                            egui::Vec2 {
+                                x: column_width,
+                                y: f32::INFINITY,
+                            },
+                            image.size(),
+                        );
+                        let button = ImageButton::new(image);
+                        let clicked = ui
+                            .add_sized(calced, button)
+                            .on_hover_text("Pick image")
+                            .clicked();
+                        if clicked {
+                            return Some(possible_image);
                         }
                         column += 1;
                         if column >= columns {
@@ -75,7 +84,7 @@ pub fn render_page_pick_image(
                 })
                 .inner;
             if let Some(x) = x {
-                return Some(UserAction::ImageSelected(x));
+                return Some(UserAction::ImageSelected(x.clone()));
             }
         }
         _ => {
@@ -106,23 +115,6 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
 
         delete_images_of_type(user, selected_shortcut, selected_image_type);
 
-        //Put the loaded thumbnail into the image handler map, we can use that for preview
-        let full_image_key = to_download_to_path.to_string_lossy().to_string();
-        let _ = app
-            .image_selected_state
-            .image_handles
-            .remove(&full_image_key);
-        let thumbnail_key = image.thumbnail_path.to_string_lossy().to_string();
-        let thumbnail = app
-            .image_selected_state
-            .image_handles
-            .remove(&thumbnail_key);
-        if let Some((_key, thumbnail)) = thumbnail {
-            app.image_selected_state
-                .image_handles
-                .insert(full_image_key, thumbnail);
-        }
-
         let app_name = selected_shortcut.name();
         let to_download = ToDownload {
             path: to_download_to_path,
@@ -134,7 +126,6 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
             let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
         });
 
-        clear_loaded_images(app);
         {
             app.image_selected_state.image_type_selected = None;
             app.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
@@ -163,13 +154,4 @@ fn image_path(
     data_folder: &Path,
 ) -> PathBuf {
     selected_shortcut.key(selected_image_type, data_folder).0
-}
-
-fn clear_loaded_images(app: &mut MyEguiApp) {
-    if let FetcStatus::Fetched(options) = &*app.image_selected_state.image_options.borrow() {
-        for option in options {
-            let key = option.thumbnail_path.to_string_lossy().to_string();
-            app.image_selected_state.image_handles.remove(&key);
-        }
-    }
 }

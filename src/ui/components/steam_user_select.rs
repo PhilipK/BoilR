@@ -26,6 +26,6 @@ pub fn render_user_select<'a>(
             None
         }
     } else {
-        return steam_users.get(0);
+        return steam_users.first();
     }
 }

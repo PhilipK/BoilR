@@ -1,11 +1,12 @@
 use std::path::Path;
 
-use crate::ui::components::GameButton;
+use egui::ImageButton;
+
 use crate::ui::images::{
     gametype::GameType, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
-    useraction::UserAction, ImageHandles,
+    useraction::UserAction, 
 };
-use crate::{steamgriddb::ImageType};
+use crate::steamgriddb::ImageType;
 
 const MAX_WIDTH: f32 = 300.;
 
@@ -20,7 +21,7 @@ pub fn render_page_shortcut_select_image_type(
         .map(|user| &user.steam_user_data_folder);
     if let (Some(shortcut), Some(user_path)) = (shortcut, user_path) {
         let thumbnail = |ui: &mut egui::Ui, image_type: &ImageType| {
-            if render_thumbnail(ui, &state.image_handles, shortcut, image_type, user_path) {
+            if render_thumbnail(ui, shortcut, image_type, user_path) {
                 Some(UserAction::ImageTypeSelected(*image_type))
             } else {
                 None
@@ -76,17 +77,14 @@ pub fn render_page_shortcut_select_image_type(
 
 fn render_thumbnail(
     ui: &mut egui::Ui,
-    image_handles: &ImageHandles,
     shortcut: &GameType,
     image_type: &ImageType,
     user_path: &String,
 ) -> bool {
-    let (path, _key) = shortcut.key(image_type, Path::new(&user_path));
+    let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
     let text = format!("Pick {} image", image_type.name());
-    let mut image = GameButton::new(&path);
-    image
-        .width(MAX_WIDTH)
-        .text(&text)
-        .image_type(image_type)
-        .show(ui, image_handles)
+    let image = egui::Image::new(format!("file://{}", key)).max_width(MAX_WIDTH).shrink_to_fit();
+    let calced = image.calc_size(egui::Vec2 { x: MAX_WIDTH, y: f32::INFINITY }, image.size());
+    let button = ImageButton::new(image);
+    ui.add_sized(calced,button).on_hover_text(text).clicked()
 }

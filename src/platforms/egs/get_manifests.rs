@@ -27,7 +27,7 @@ pub(crate) fn get_egs_manifests(
 
                     manifests.sort_by_key(|m| m.dedupe_key());
                     manifests.dedup_by_key(|m| m.dedupe_key());
-                    for mut manifest in &mut manifests {
+                    for  manifest in &mut manifests {
                         manifest.launcher_path = Some(locations.launcher_path.clone());
                         manifest.compat_folder = locations.compat_folder_path.clone();
                         if settings.safe_launch.contains(&manifest.display_name)

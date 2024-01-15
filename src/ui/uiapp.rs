@@ -1,7 +1,9 @@
 use std::{collections::HashMap, error::Error, time::Duration};
 
 use eframe::{egui, App, Frame};
-use egui::{ImageButton, Rounding, Stroke, TextureHandle};
+use egui::{
+   ImageButton, Rounding, Stroke, Vec2
+};
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
@@ -20,19 +22,14 @@ use super::{
         BACKGROUND_COLOR, BG_STROKE_COLOR, EXTRA_BACKGROUND_COLOR, LIGHT_ORANGE, ORANGE, PURLPLE,
         TEXT_COLOR,
     },
-    ui_images::{get_import_image, get_logo, get_logo_icon, get_save_image},
+    ui_images::get_logo_icon,
     ui_import_games::FetcStatus,
     BackupState, DiconnectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
 
-#[derive(Default)]
-struct UiImages {
-    import_button: Option<egui::TextureHandle>,
-    save_button: Option<egui::TextureHandle>,
-    logo_32: Option<egui::TextureHandle>,
-}
+
 type GamesToSync = Vec<(
     String,
     Receiver<FetcStatus<eyre::Result<Vec<ShortcutToImport>>>>,
@@ -59,7 +56,6 @@ pub struct MyEguiApp {
     selected_menu: Menues,
     pub(crate) settings: Settings,
     pub(crate) rt: Runtime,
-    ui_images: UiImages,
     pub(crate) games_to_sync: GamesToSync,
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) image_selected_state: ImageSelectState,
@@ -81,7 +77,6 @@ impl MyEguiApp {
             settings,
             rt: runtime,
             games_to_sync,
-            ui_images: UiImages::default(),
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
@@ -119,22 +114,22 @@ impl MyEguiApp {
             }
         }
         let all_ready = all_ready(&self.games_to_sync);
-        let texture = self.get_import_image(ui);
-        let size = texture.size_vec2();
-        let image_button = ImageButton::new(texture, size * 0.40);
+        let import_image = egui::include_image!("../../resources/import_games_button.png");
+        let size = Vec2::new(200.,100.);
+        let image_button = ImageButton::new(import_image);
         if all_ready && !syncing {
             if ui
-                .add(image_button)
+                .add_sized(size,image_button)
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
-                if let Err(err) = save_settings(&self.settings, &self.platforms){
+                if let Err(err) = save_settings(&self.settings, &self.platforms) {
                     eprintln!("Failed to save settings {err:?}");
                 }
                 self.run_sync_async();
             }
         } else {
-            ui.add(image_button)
+            ui.add_sized(size,image_button)
                 .on_hover_text("Waiting for sync to finish");
         }
     }
@@ -187,9 +182,8 @@ impl App for MyEguiApp {
             .default_width(40.0)
             .frame(frame)
             .show(ctx, |ui| {
-                let texture = self.get_logo_image(ui);
-                let size = texture.size_vec2();
-                ui.image(texture, size);
+                let image = egui::include_image!("../../resources/logo32.png");
+                ui.image(image);
                 ui.add_space(SECTION_SPACING);
 
                 let menu_before = self.selected_menu.clone();
@@ -258,12 +252,15 @@ impl App for MyEguiApp {
             egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
                 .frame(frame)
                 .show(ctx, |ui| {
-                    let texture = self.get_save_image(ui);
-                    let size = texture.size_vec2();
-                    let save_button = ImageButton::new(texture, size * 0.5);
-
-                    if ui.add(save_button).on_hover_text("Save settings").clicked() {
-                        if let Err(err) = save_settings(&self.settings, &self.platforms){
+                    let image = egui::include_image!("../../resources/save.png");
+                    let size = image.texture_size().unwrap_or_default();
+                    let save_button = ImageButton::new(image);
+                    if ui
+                        .add_sized(size * 0.5, save_button)
+                        .on_hover_text("Save settings")
+                        .clicked()
+                    {
+                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
                             eprintln!("Failed to save settings: {err:?}");
                         }
                     }
@@ -303,36 +300,6 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
     style.visuals.selection.bg_fill = PURLPLE;
 }
-
-impl MyEguiApp {
-    fn get_import_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
-        self.ui_images.import_button.get_or_insert_with(|| {
-            // Load the texture only once.
-            ui.ctx().load_texture(
-                "import_image",
-                get_import_image(),
-                egui::TextureOptions::LINEAR,
-            )
-        })
-    }
-
-    fn get_save_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
-        self.ui_images.save_button.get_or_insert_with(|| {
-            // Load the texture only once.
-            ui.ctx()
-                .load_texture("save_image", get_save_image(), egui::TextureOptions::LINEAR)
-        })
-    }
-
-    fn get_logo_image(&mut self, ui: &mut egui::Ui) -> &mut TextureHandle {
-        self.ui_images.logo_32.get_or_insert_with(|| {
-            // Load the texture only once.
-            ui.ctx()
-                .load_texture("logo32", get_logo(), egui::TextureOptions::LINEAR)
-        })
-    }
-}
-
 fn setup(ctx: &egui::Context) {
     #[cfg(target_family = "unix")]
     ctx.set_pixels_per_point(0.999);
@@ -340,8 +307,9 @@ fn setup(ctx: &egui::Context) {
     let mut style: egui::Style = (*ctx.style()).clone();
     create_style(&mut style);
     ctx.set_style(style);
+    egui_extras::install_image_loaders(ctx);
 }
-pub fn run_sync() -> eyre::Result<()>{
+pub fn run_sync() -> eyre::Result<()> {
     let mut app = MyEguiApp::new()?;
     while !all_ready(&app.games_to_sync) {
         println!("Finding games, trying again in 500ms");
@@ -350,15 +318,14 @@ pub fn run_sync() -> eyre::Result<()>{
     app.run_sync_blocking()
 }
 
-pub fn run_ui(args: Vec<String>) -> eyre::Result<()>{
+pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
     let app = MyEguiApp::new()?;
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
+    let logo = get_logo_icon();
+    let viewport = egui::ViewportBuilder { fullscreen: Some(fullscreen), icon: Some(logo.into()), ..Default::default() };
     let native_options = eframe::NativeOptions {
-        fullscreen,
-        maximized: true,
-        //initial_window_size: Some(egui::Vec2 { x: 1280., y: 800. }),
-        icon_data: Some(get_logo_icon()),
+        viewport,
         vsync: !no_v_sync,
         ..Default::default()
     };
@@ -368,7 +335,8 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()>{
         Box::new(|cc| {
             setup(&cc.egui_ctx);
             Box::new(app)
-        }));
+        }),
+    );
     run_result.map_err(|e| eyre::eyre!("Could not initialize: {:?}", e))
 }
 
