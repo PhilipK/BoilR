@@ -20,15 +20,13 @@ mod playnite;
 #[cfg(not(target_family = "unix"))]
 mod gamepass;
 
-
-
-
 mod gog;
 mod itch;
 mod origin;
 mod platform;
 mod platforms_load;
 mod uplay;
+mod folders;
 
 mod egs;
 pub(crate) use platform::*;

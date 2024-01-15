@@ -21,6 +21,7 @@ color-eyre = "^0.6.2"
 dyn-clone = "^1.0.10"
 time = {version="^0.3.17", features = ["formatting"]}
 egui_extras = { version = "0.25.0", features = ["all_loaders"] }
+walkdir = "2.4.0"
 
 [target."cfg(not(windows))".dependencies]
 openssl = { version = "*", features = ["vendored"] }
