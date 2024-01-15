@@ -18,7 +18,6 @@ use std::{collections::HashMap, error::Error};
 
 use std::{fs::File, io::Write, path::Path};
 
-pub const BOILR_TAG: &str = "boilr";
 
 pub enum SyncProgress {
     NotStarted,
@@ -39,7 +38,7 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
             for shortcut in shortcut_info.shortcuts.iter_mut() {
                 if shortcut.app_id == app_id {
                     shortcut.dev_kit_game_id = "".to_string();
-                    shortcut.tags.retain(|s| s != BOILR_TAG);
+                    shortcut.tags.retain(|s| s != &settings.boilr_tag.clone().unwrap_or_default());
                 }
             }
             save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
@@ -62,7 +61,7 @@ pub fn sync_shortcuts(
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
     for shortcut in &mut all_shortcuts {
-        shortcut.dev_kit_game_id = BOILR_TAG.to_string();
+        shortcut.dev_kit_game_id = settings.boilr_tag.clone().unwrap_or_default();
     }
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::FoundGames {
@@ -100,7 +99,7 @@ pub fn sync_shortcuts(
             user.user_id
         );
 
-        remove_old_shortcuts(&mut shortcut_info);
+        remove_old_shortcuts(&mut shortcut_info,&settings.boilr_tag.clone().unwrap_or_default());
         remove_shortcuts_with_same_appid(&mut shortcut_info, &all_shortcuts);
 
         shortcut_info.shortcuts.extend(all_shortcuts.clone());
@@ -136,12 +135,12 @@ pub async fn download_images(
 }
 
 pub trait IsBoilRShortcut {
-    fn is_boilr_shortcut(&self) -> bool;
+    fn is_boilr_shortcut(&self, tag: &str) -> bool;
 }
 
 impl IsBoilRShortcut for ShortcutOwned {
-    fn is_boilr_shortcut(&self) -> bool {
-        let boilr_tag = BOILR_TAG.to_string();
+    fn is_boilr_shortcut(&self,tag:&str) -> bool {
+        let boilr_tag = tag.to_string();
         self.tags.contains(&boilr_tag) || self.dev_kit_game_id.starts_with(&boilr_tag)
     }
 }
@@ -156,10 +155,10 @@ fn remove_shortcuts_with_same_appid(
         .retain(|shortcut| !app_ids.contains(&shortcut.app_id));
 }
 
-fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo) {
+fn remove_old_shortcuts(shortcut_info: &mut ShortcutInfo,tag: &str) {
     shortcut_info
         .shortcuts
-        .retain(|shortcut| !shortcut.is_boilr_shortcut());
+        .retain(|shortcut| !shortcut.is_boilr_shortcut(tag));
 }
 
 pub fn fix_all_shortcut_icons(settings: &Settings) -> eyre::Result<()> {

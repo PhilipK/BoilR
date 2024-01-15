@@ -74,6 +74,7 @@ pub async fn download_images_for_users<'b>(
         let to_downloads = stream::iter(users_info)
             .map(|(shortcut_info, data_folder)| async move {
                 let known_images = get_users_images(data_folder).unwrap_or_default();
+                let boilr_tag = settings.boilr_tag.clone().unwrap_or_default();
                 let res = search_for_images_to_download(
                     known_images,
                     data_folder.as_str(),
@@ -81,6 +82,7 @@ pub async fn download_images_for_users<'b>(
                     search,
                     client,
                     settings,
+                    boilr_tag.as_str()
                 )
                 .await;
                 res.unwrap_or_default()
@@ -169,6 +171,7 @@ async fn search_for_images_to_download<T: SearchSettings>(
     search: &CachedSearch<'_>,
     client: &Client,
     search_settins: &T,
+    boilr_tag:&str
 ) -> Result<Vec<ToDownload>, Box<dyn Error>> {
     let types = {
         let mut types = vec![
@@ -186,7 +189,7 @@ async fn search_for_images_to_download<T: SearchSettings>(
 
     let shortcuts_to_search_for = shortcuts
         .iter()
-        .filter(|s| !search_settins.only_download_boilr_images() || s.is_boilr_shortcut())
+        .filter(|s| !search_settins.only_download_boilr_images() || s.is_boilr_shortcut(boilr_tag))
         .filter(|s| {
             // if we are missing any of the images we need to search for them
             types

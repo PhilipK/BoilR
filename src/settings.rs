@@ -14,7 +14,10 @@ pub struct Settings {
     pub blacklisted_games: Vec<u32>,
     pub steamgrid_db: SteamGridDbSettings,
     pub steam: SteamSettings,
+    pub boilr_tag: Option<String>,
 }
+
+pub const DEFAULT_BOILR_TAG: &str = "boilr";
 
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
@@ -40,6 +43,10 @@ impl Settings {
             .build()?;
         let mut settings = config.try_deserialize::<Settings>()?;
         sanitize_auth_key(&mut settings);
+        if settings.boilr_tag.is_none() {
+            settings.boilr_tag = Some(DEFAULT_BOILR_TAG.to_string());
+        }
+        dbg!(&settings.boilr_tag);
         Ok(settings)
     }
 }

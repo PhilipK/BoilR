@@ -59,7 +59,7 @@ impl MyEguiApp {
                                 ui.heading(&user.path.to_string_lossy().to_string());
                             }
                             for shortcut in user.shortcuts.iter() {
-                                if shortcut.is_boilr_shortcut()
+                                if shortcut.is_boilr_shortcut(&self.settings.boilr_tag.clone().unwrap_or_default())
                                     && ui.button(&shortcut.app_name).clicked()
                                     && disconnect_shortcut(&self.settings, shortcut.app_id).is_ok()
                                 {
