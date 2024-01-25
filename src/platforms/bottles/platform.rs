@@ -49,7 +49,7 @@ impl From<BottlesApp> for ShortcutOwned {
     fn from(app: BottlesApp) -> Self {
         //
         let launch_parameter = format!(
-            "run --command=bottles-cli com.usebottles.bottles run -b \"{}\" -p \"{}\"",
+            "run --command=bottles-cli com.usebottles.bottles run --args-replace -b \"{}\" -p \"{}\"",
             app.bottle, app.name
         );
         Shortcut::new("0", &app.name, "flatpak", "", "", "", &launch_parameter).to_owned()
