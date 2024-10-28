@@ -334,7 +334,7 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
         native_options,
         Box::new(|cc| {
             setup(&cc.egui_ctx);
-            Box::new(app)
+            Ok(Box::new(app))
         }),
     );
     run_result.map_err(|e| eyre::eyre!("Could not initialize: {:?}", e))

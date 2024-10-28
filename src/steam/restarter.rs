@@ -1,6 +1,6 @@
-use std::{process::Command, thread::sleep, time::Duration};
+use std::{ffi::OsStr, process::Command, thread::sleep, time::Duration};
 
-use sysinfo::System;
+use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System};
 
 pub fn ensure_steam_stopped() {
     #[cfg(target_os = "windows")]
@@ -8,13 +8,18 @@ pub fn ensure_steam_stopped() {
     #[cfg(target_family = "unix")]
     let steam_name = "steam";
 
+    let os_steam_name = OsStr::new(steam_name);
+
     let s = System::new_all();
-    let processes = s.processes_by_name(steam_name);
+    let processes = s.processes_by_name(os_steam_name);
     for process in processes {
         let mut s = System::new();
         process.kill_with(sysinfo::Signal::Quit);
         process.kill_with(sysinfo::Signal::Kill);
-        while s.refresh_process(process.pid()) {
+        let pid = process.pid();
+        let pid_arr = [pid];
+        let process_to_update = ProcessesToUpdate::Some(&pid_arr);
+        while s.refresh_processes_specifics(process_to_update, true,ProcessRefreshKind::everything()) == 0{
             println!("Waiting for steam to stop");
             sleep(Duration::from_millis(500));
             process.kill_with(sysinfo::Signal::Quit);
@@ -25,8 +30,9 @@ pub fn ensure_steam_stopped() {
 #[cfg(target_os = "windows")]
 pub fn ensure_steam_started(settings: &super::SteamSettings) {
     let steam_name = "steam.exe";
+    let os_steam_name = OsStr::new(steam_name);
     let s = System::new_all();
-    let mut processes = s.processes_by_name(steam_name);
+    let mut processes = s.processes_by_name(os_steam_name);
     if processes.next().is_none() {
         //no steam, we need to start it
         println!("Starting steam");
