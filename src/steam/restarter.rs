@@ -50,8 +50,9 @@ pub fn ensure_steam_started(settings: &super::SteamSettings) {
 #[cfg(target_family = "unix")]
 pub fn ensure_steam_started(_settings: &super::SteamSettings) {
     let steam_name = "steam";
+    let os_steam_name = OsStr::new(steam_name);
     let s = System::new_all();
-    let mut processes = s.processes_by_name(steam_name);
+    let mut processes = s.processes_by_name(os_steam_name);
     if processes.next().is_none() {
         //no steam, we need to start it
         println!("Starting steam");

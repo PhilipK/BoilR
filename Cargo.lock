@@ -656,7 +656,6 @@ dependencies = [
  "futures",
  "image",
  "is_executable",
- "nix 0.29.0",
  "nom",
  "reqwest 0.12.8",
  "roxmltree 0.20.0",
@@ -670,6 +669,7 @@ dependencies = [
  "time",
  "tokio",
  "toml 0.8.19",
+ "wayland-cursor",
  "winreg 0.52.0",
  "winres",
 ]
@@ -2847,18 +2847,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "memoffset 0.7.1",
-]
-
-[[package]]
-name = "nix"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71e2746dc3a24dd78b3cfcb7be93368c6de9963d30f43a6a73998a9cf4b17b46"
-dependencies = [
- "bitflags 2.6.0",
- "cfg-if",
- "cfg_aliases 0.2.1",
- "libc",
 ]
 
 [[package]]
@@ -5257,11 +5245,11 @@ dependencies = [
 
 [[package]]
 name = "wayland-cursor"
-version = "0.31.0"
+version = "0.31.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a44aa20ae986659d6c77d64d808a046996a932aa763913864dc40c359ef7ad5b"
+checksum = "32b08bc3aafdb0035e7fe0fdf17ba0c09c268732707dca4ae098f60cb28c9e4c"
 dependencies = [
- "nix 0.26.4",
+ "rustix 0.38.30",
  "wayland-client",
  "xcursor",
 ]
@@ -6057,7 +6045,7 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2769203cd13a0c6015d515be729c526d041e9cf2c0cc478d57faee85f40c6dcd"
 dependencies = [
- "nix 0.26.4",
+ "nix",
  "winapi",
 ]
 
@@ -6127,7 +6115,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "hex",
- "nix 0.26.4",
+ "nix",
  "once_cell",
  "ordered-stream",
  "rand",
