@@ -22,9 +22,6 @@ dyn-clone = "^1.0.17"
 time = {version="^0.3.36", features = ["formatting"]}
 egui_extras = { version = "0.29.1", features = ["all_loaders"] }
 
-[target."cfg(not(windows))".dependencies]
-openssl = { version = "0.10.68", features = ["vendored"] }
-
 [dependencies.dashmap]
 features = ["serde"]
 version = "^6.1.0"
@@ -47,7 +44,7 @@ version ="^0.25.4"
 [dependencies.reqwest]
 default_features = false
 version = "^0.12.8"
-features = ["json"]
+features = ["json","rustls-tls"]
 
 [dependencies.serde]
 features = ["derive"]

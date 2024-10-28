@@ -99,6 +99,7 @@ pub async fn download_images_for_users<'b>(
                 .map(|to_download| async move {
                     if let Err(e) = download_to_download(to_download).await {
                         println!("Error downloading {:?}: {}", &to_download.path, e);
+                        dbg!(&e);
                     }
                 })
                 .buffer_unordered(CONCURRENT_REQUESTS)
