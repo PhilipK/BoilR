@@ -175,6 +175,7 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
 
 impl App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+        ctx.set_pixels_per_point(1.0);
         let frame = egui::Frame::default()
             .stroke(Stroke::new(0., BACKGROUND_COLOR))
             .fill(BACKGROUND_COLOR);
@@ -301,9 +302,6 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.selection.bg_fill = PURLPLE;
 }
 fn setup(ctx: &egui::Context) {
-    #[cfg(target_family = "unix")]
-    ctx.set_pixels_per_point(0.999);
-
     let mut style: egui::Style = (*ctx.style()).clone();
     create_style(&mut style);
     ctx.set_style(style);

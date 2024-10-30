@@ -26,6 +26,14 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+<release version="1.9.6" date="2024-10-30">
+      <description>
+        <ul>
+          <li>Update dependencies</li>
+          <li>Fix scaling issue on steam deck</li>
+        </ul>
+      </description>
+    </release>
 <release version="1.9.4" date="2023-09-18">
       <description>
         <ul>
