@@ -9,7 +9,7 @@ use crate::sync::disconnect_shortcut;
 use crate::sync::IsBoilRShortcut;
 
 #[derive(Default)]
-pub struct DiconnectState {
+pub struct DisconnectState {
     pub connected_shortcuts: Option<Result<Vec<ShortcutInfo>, String>>,
 }
 
@@ -17,7 +17,7 @@ impl MyEguiApp {
     pub fn render_disconnect(&mut self, ui: &mut egui::Ui) {
         let steam_settings = self.settings.steam.clone();
         let users_info = self
-            .disconect_state
+            .disconnect_state
             .connected_shortcuts
             .get_or_insert_with(|| {
                 let users = get_shortcuts_paths(&steam_settings)
@@ -34,11 +34,11 @@ impl MyEguiApp {
                 })
             });
 
-        ui.heading("Add a disconnected Shortcuts");
+        ui.heading("Add a disconnected Shortcut");
         ui.label("In this section you can add a shortcut that BoilR is not in control of.");
-        ui.label("This prevents BoilR from deleting or updating a shortcut it orignally added.");
+        ui.label("This prevents BoilR from deleting or updating a shortcut it originally added.");
         ui.label(
-            "This is useful if you want to manully edit a shortcut after BoilR has imported it.",
+            "This is useful if you want to manually edit a shortcut after BoilR has imported it.",
         );
 
         ui.add_space(super::SECTION_SPACING);
@@ -56,7 +56,7 @@ impl MyEguiApp {
 
                         for user in users.iter_mut() {
                             if has_multiple_users {
-                                ui.heading(&user.path.to_string_lossy().to_string());
+                                ui.heading(user.path.to_string_lossy().to_string());
                             }
                             for shortcut in user.shortcuts.iter() {
                                 if shortcut.is_boilr_shortcut()
@@ -69,7 +69,7 @@ impl MyEguiApp {
                         }
                     });
                 if redraw != 0 {
-                    self.disconect_state.connected_shortcuts = None;
+                    self.disconnect_state.connected_shortcuts = None;
                     self.settings.blacklisted_games.push(redraw);
                 }
             }
