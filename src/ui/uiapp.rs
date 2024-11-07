@@ -24,7 +24,7 @@ use super::{
     },
     ui_images::get_logo_icon,
     ui_import_games::FetcStatus,
-    BackupState, DiconnectState,
+    BackupState, DisconnectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -60,7 +60,7 @@ pub struct MyEguiApp {
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
-    pub(crate) disconect_state: DiconnectState,
+    pub(crate) disconnect_state: DisconnectState,
     pub(crate) rename_map: HashMap<u32, String>,
     pub(crate) current_edit: Option<u32>,
     pub(crate) platforms: Platforms,
@@ -80,7 +80,7 @@ impl MyEguiApp {
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
-            disconect_state: DiconnectState::default(),
+            disconnect_state: DisconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
             platforms,
