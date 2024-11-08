@@ -1,9 +1,14 @@
+# rust-clippy is a tool that runs a bunch of lints to catch common
+# mistakes in your Rust code and help improve your Rust code.
+# More details at https://github.com/rust-lang/rust-clippy
+# and https://rust-lang.github.io/rust-clippy/
 name: Create Release Builds
 
 on:
   push:
     tags:
       - "v.*.*.*" # matches v.1.0.1 etc
+
 jobs:
   once:
     name: Create GitHub release
@@ -11,9 +16,12 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Create a release
         id: create_release
-        uses: actions/create-release@v1
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -36,26 +44,26 @@ jobs:
           - os: windows-latest
             file: target/release/boilr.exe
             asset_name: windows_BoilR.exe
-            strip: false      
+            strip: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         if: ${{ matrix.os == 'ubuntu-latest'}}
         run: |
-          sudo apt-get update 
+          sudo apt-get update
           sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev binutils
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v2
       - name: Build Release Version
-        run: cargo build --release     
+        run: cargo build --release
       - name: Upload Release Asset
         id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.once.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/${{ matrix.file }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
+          artifact_path: ${{ github.workspace }}/${{ matrix.file }}
+          artifact_name: ${{ matrix.asset_name }}
+          artifact_content_type: application/octet-stream
