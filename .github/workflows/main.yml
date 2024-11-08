@@ -23,10 +23,8 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: stable
           components: clippy
-          override: true
       - name: Test
         run: |
           cargo test
@@ -38,10 +36,8 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: stable
           components: clippy
-          override: true
       - name: Rust Cache
         id: rust_cache
         uses: Swatinem/rust-cache@v2
@@ -54,10 +50,8 @@ jobs:
  #   - name: Install Rust toolchain
  #     uses: dtolnay/rust-toolchain@stable
  #     with:
- #       profile: minimal
  #       toolchain: stable
  #       components: clippy
- #       override: true
  #   - name: Rust Cache
  #     id: rust_cache
  #     uses: Swatinem/rust-cache@v2
