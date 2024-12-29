@@ -30,6 +30,7 @@ pub fn ensure_steam_stopped() {
             process.kill_with(sysinfo::Signal::Kill);
         }
     }
+    println!("Steam is stopped");
 }
 #[cfg(target_os = "windows")]
 pub fn ensure_steam_started(settings: &super::SteamSettings) {
