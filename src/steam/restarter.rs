@@ -19,8 +19,12 @@ pub fn ensure_steam_stopped() {
         let pid = process.pid();
         let pid_arr = [pid];
         let process_to_update = ProcessesToUpdate::Some(&pid_arr);
-        while s.refresh_processes_specifics(process_to_update, true,ProcessRefreshKind::everything()) == 0{
-            println!("Waiting for steam to stop");
+
+        while s.refresh_processes_specifics(process_to_update, true,ProcessRefreshKind::everything()) > 0 
+                // The process is still alive
+                && s.process(pid).is_some()
+                 {
+            println!("Waiting for steam to stop. PID: {:?}", pid);
             sleep(Duration::from_millis(500));
             process.kill_with(sysinfo::Signal::Quit);
             process.kill_with(sysinfo::Signal::Kill);
