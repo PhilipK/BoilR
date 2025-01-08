@@ -244,7 +244,7 @@ impl GamesPlatform for HeroicPlatform {
             (true, x) => format!("{x} games forced to launch directly"),
         };
 
-        egui::CollapsingHeader::new(safe_mode_header).id_source("Heroic_Launcher_safe_launch").show(ui, |ui| {
+        egui::CollapsingHeader::new(safe_mode_header).id_salt("Heroic_Launcher_safe_launch").show(ui, |ui| {
             if self.settings.default_launch_through_heroic{
                 ui.label("Some games work best when launched directly, select those games below and BoilR will create shortcuts that launch the games directly.");
             } else {

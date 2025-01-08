@@ -11,7 +11,7 @@ use crate::{
             constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
             possible_image::PossibleImage, useraction::UserAction,
         },
-        FetcStatus, MyEguiApp,
+        FetchStatus, MyEguiApp,
     },
 };
 
@@ -51,7 +51,7 @@ pub fn render_page_pick_image(
     let columns = (width / (column_width + column_padding)).floor() as u32;
     let mut column = 0;
     match &*state.image_options.borrow() {
-        FetcStatus::Fetched(images) => {
+        FetchStatus::Fetched(images) => {
             let x = Grid::new("ImageThumbnailSelectGrid")
                 .spacing([column_padding, column_padding])
                 .show(ui, |ui| {
@@ -128,7 +128,7 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
 
         {
             app.image_selected_state.image_type_selected = None;
-            app.image_selected_state.image_options = watch::channel(FetcStatus::NeedsFetched).1;
+            app.image_selected_state.image_options = watch::channel(FetchStatus::NeedsFetched).1;
         }
     }
 }

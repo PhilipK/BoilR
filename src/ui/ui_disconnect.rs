@@ -9,7 +9,7 @@ use crate::sync::disconnect_shortcut;
 use crate::sync::IsBoilRShortcut;
 
 #[derive(Default)]
-pub struct DiconnectState {
+pub struct DisconnectState {
     pub connected_shortcuts: Option<Result<Vec<ShortcutInfo>, String>>,
 }
 
@@ -17,7 +17,7 @@ impl MyEguiApp {
     pub fn render_disconnect(&mut self, ui: &mut egui::Ui) {
         let steam_settings = self.settings.steam.clone();
         let users_info = self
-            .disconect_state
+            .disconnect_state
             .connected_shortcuts
             .get_or_insert_with(|| {
                 let users = get_shortcuts_paths(&steam_settings)
@@ -56,7 +56,7 @@ impl MyEguiApp {
 
                         for user in users.iter_mut() {
                             if has_multiple_users {
-                                ui.heading(&user.path.to_string_lossy().to_string());
+                                ui.heading(user.path.to_string_lossy().to_string());
                             }
                             for shortcut in user.shortcuts.iter() {
                                 if shortcut.is_boilr_shortcut()
@@ -69,7 +69,7 @@ impl MyEguiApp {
                         }
                     });
                 if redraw != 0 {
-                    self.disconect_state.connected_shortcuts = None;
+                    self.disconnect_state.connected_shortcuts = None;
                     self.settings.blacklisted_games.push(redraw);
                 }
             }

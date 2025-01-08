@@ -13,7 +13,7 @@ impl EpicPlatform {
             };
 
             egui::CollapsingHeader::new(safe_mode_header)
-            .id_source("Epic_Launcher_safe_launch")
+            .id_salt("Epic_Launcher_safe_launch")
             .show(ui, |ui| {
                 ui.label("Some games must be started from the Epic Launcher, select those games below and BoilR will create shortcuts that opens the games through the Epic Launcher.");
                 let manifests =self.epic_manifests.get_or_insert_with(||{
