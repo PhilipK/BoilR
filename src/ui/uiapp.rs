@@ -23,8 +23,8 @@ use super::{
         TEXT_COLOR,
     },
     ui_images::get_logo_icon,
-    ui_import_games::FetcStatus,
-    BackupState, DiconnectState,
+    ui_import_games::FetchStatus,
+    BackupState, DisconnectState,
 };
 
 const SECTION_SPACING: f32 = 25.0;
@@ -32,7 +32,7 @@ const SECTION_SPACING: f32 = 25.0;
 
 type GamesToSync = Vec<(
     String,
-    Receiver<FetcStatus<eyre::Result<Vec<ShortcutToImport>>>>,
+    Receiver<FetchStatus<eyre::Result<Vec<ShortcutToImport>>>>,
 )>;
 
 pub(crate) fn all_ready(games: &GamesToSync) -> bool {
@@ -43,7 +43,7 @@ pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutToI
     games
         .iter()
         .filter_map(|(name, rx)| {
-            if let FetcStatus::Fetched(Ok(data)) = &*rx.borrow() {
+            if let FetchStatus::Fetched(Ok(data)) = &*rx.borrow() {
                 Some((name.to_owned(), data.to_owned()))
             } else {
                 None
@@ -60,7 +60,7 @@ pub struct MyEguiApp {
     pub(crate) status_reciever: Receiver<SyncProgress>,
     pub(crate) image_selected_state: ImageSelectState,
     pub(crate) backup_state: BackupState,
-    pub(crate) disconect_state: DiconnectState,
+    pub(crate) disconnect_state: DisconnectState,
     pub(crate) rename_map: HashMap<u32, String>,
     pub(crate) current_edit: Option<u32>,
     pub(crate) platforms: Platforms,
@@ -80,7 +80,7 @@ impl MyEguiApp {
             status_reciever: watch::channel(SyncProgress::NotStarted).1,
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
-            disconect_state: DiconnectState::default(),
+            disconnect_state: DisconnectState::default(),
             rename_map: get_rename_map(),
             current_edit: Option::None,
             platforms,
@@ -160,13 +160,13 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
     let mut to_sync = vec![];
     for platform in platforms {
         if platform.enabled() {
-            let (tx, rx) = watch::channel(FetcStatus::NeedsFetched);
+            let (tx, rx) = watch::channel(FetchStatus::NeedsFetched);
             to_sync.push((platform.name().to_string(), rx));
             let platform = platform.clone();
             rt.spawn_blocking(move || {
-                let _ = tx.send(FetcStatus::Fetching);
+                let _ = tx.send(FetchStatus::Fetching);
                 let games_to_sync = sync::get_platform_shortcuts(platform);
-                let _ = tx.send(FetcStatus::Fetched(games_to_sync));
+                let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });
         }
     }

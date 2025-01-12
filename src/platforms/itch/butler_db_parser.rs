@@ -38,15 +38,13 @@ fn parse_path(i: &[u8]) -> nom::IResult<&[u8], DbPaths> {
 
     let candidates = serde_json::from_str::<Vec<Candidate>>(&candidates_json);
     match candidates {
-        Ok(candidates) => {
-            return IResult::Ok((
-                i,
-                DbPaths {
-                    base_path,
-                    paths: candidates.iter().map(|c| c.path.clone()).collect(),
-                },
-            ))
-        }
+        Ok(candidates) => IResult::Ok((
+            i,
+            DbPaths {
+                base_path,
+                paths: candidates.iter().map(|c| c.path.clone()).collect(),
+            },
+        )),
         Err(_err) => {
             //we found a basepath, but no executables
             IResult::Ok((

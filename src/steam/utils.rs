@@ -90,11 +90,11 @@ pub fn get_shortcuts_paths(settings: &SteamSettings) -> eyre::Result<Vec<SteamUs
             let shortcuts_path = Path::new(path.as_str());
             let folder_string = folder_str.to_string();
             if shortcuts_path.exists() {
-                return SteamUsersInfo {
+                SteamUsersInfo {
                     steam_user_data_folder: folder_string,
                     shortcut_path: Some(shortcuts_path.to_string_lossy().to_string()),
                     user_id,
-                };
+                }
             } else {
                 SteamUsersInfo {
                     steam_user_data_folder: folder_string,

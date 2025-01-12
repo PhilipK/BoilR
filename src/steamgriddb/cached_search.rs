@@ -11,7 +11,7 @@ pub struct CachedSearch<'a> {
 }
 
 impl<'a> CachedSearch<'a> {
-    pub fn new(client: &steamgriddb_api::Client) -> CachedSearch {
+    pub fn new(client: &'a steamgriddb_api::Client) -> CachedSearch<'a> {
         CachedSearch {
             search_map: get_search_map(),
             client,

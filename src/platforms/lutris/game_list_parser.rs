@@ -1,11 +1,7 @@
 use super::lutris_game::LutrisGame;
 
 pub fn parse_lutris_games(input: &str) -> Vec<LutrisGame> {
-    let games = serde_json::from_str::<Vec<LutrisGame>>(input);
-    match games {
-        Ok(games) => games,
-        Err(_err) => Vec::new(),
-    }
+    serde_json::from_str::<Vec<LutrisGame>>(input).unwrap_or_default()
 }
 
 #[cfg(test)]

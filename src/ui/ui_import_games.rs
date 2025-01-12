@@ -22,18 +22,18 @@ use super::{
 
 const SECTION_SPACING: f32 = 25.0;
 
-pub enum FetcStatus<T> {
+pub enum FetchStatus<T> {
     NeedsFetched,
     Fetching,
     Fetched(T),
 }
 
-impl<T> FetcStatus<T> {
+impl<T> FetchStatus<T> {
     pub fn is_some(&self) -> bool {
         match self {
-            FetcStatus::NeedsFetched => false,
-            FetcStatus::Fetching => false,
-            FetcStatus::Fetched(_) => true,
+            FetchStatus::NeedsFetched => false,
+            FetchStatus::Fetching => false,
+            FetchStatus::Fetched(_) => true,
         }
     }
 }
@@ -58,14 +58,14 @@ impl MyEguiApp {
             for (name,status) in &self.games_to_sync{
                 ui.heading(name);
                 match &*status.borrow(){
-                    FetcStatus::NeedsFetched => {ui.label("Need to find games");},
-                    FetcStatus::Fetching => {
+                    FetchStatus::NeedsFetched => {ui.label("Need to find games");},
+                    FetchStatus::Fetching => {
                         ui.horizontal(|ui|{
                             ui.spinner();
                             ui.label("Finding installed games");
                         });
                     },
-                    FetcStatus::Fetched(shortcuts) => {
+                    FetchStatus::Fetched(shortcuts) => {
                         match shortcuts{
                             Ok(shortcuts) => {
                                 if shortcuts.is_empty(){

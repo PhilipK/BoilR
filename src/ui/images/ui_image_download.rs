@@ -19,7 +19,7 @@ use crate::{
     steam::{get_installed_games, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, ImageType},
     sync::{download_images, SyncProgress},
-    ui::{components::render_user_select, FetcStatus, MyEguiApp},
+    ui::{components::render_user_select, FetchStatus, MyEguiApp},
 };
 use egui::ScrollArea;
 use futures::executor::block_on;
@@ -274,7 +274,7 @@ impl MyEguiApp {
     fn handle_image_type_selected(&mut self, image_type: ImageType) {
         let state = &mut self.image_selected_state;
         state.image_type_selected = Some(image_type);
-        let (tx, rx) = watch::channel(FetcStatus::Fetching);
+        let (tx, rx) = watch::channel(FetchStatus::Fetching);
         self.image_selected_state.image_options = rx;
         let settings = self.settings.clone();
         if let Some(auth_key) = settings.steamgrid_db.auth_key {
@@ -298,7 +298,7 @@ impl MyEguiApp {
                                 full_url: possible_image.url.clone(),
                             });
                         }
-                        let _ = tx.send(FetcStatus::Fetched(result));
+                        let _ = tx.send(FetchStatus::Fetched(result));
                     }
                 });
             }
