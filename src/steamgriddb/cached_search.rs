@@ -5,13 +5,13 @@ use crate::config::get_cache_file;
 
 type SearchMap = DashMap<u32, (String, usize)>;
 
-pub struct CachedSearch<'_> {
+pub struct CachedSearch<'a> {
     search_map: SearchMap,
-    client: &'_ steamgriddb_api::Client,
+    client: &'a steamgriddb_api::Client,
 }
 
-impl CachedSearch<'_> {
-    pub fn new(client: &steamgriddb_api::Client) -> CachedSearch {
+impl<'a> CachedSearch<'a> {
+    pub fn new(client: &'a steamgriddb_api::Client) -> CachedSearch<'a> {
         CachedSearch {
             search_map: get_search_map(),
             client,

@@ -391,7 +391,7 @@ async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<S
             if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(mtime))))) =
                 (game_id, mtime)
             {
-                return Some(image_type.steam_url(steam_app_id, mtime));
+                return Some(image_type.steam_url(steam_app_id.to_string(), mtime));
             }
         }
     }
@@ -415,7 +415,7 @@ async fn get_steam_icon_url(game_id: usize) -> Option<String> {
             if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(mtime))))) =
                 (game_id, mtime)
             {
-                return Some(icon_url(&steam_app_id, &mtime));
+                return Some(icon_url(&steam_app_id.to_string(), &mtime.to_string()));
             }
         }
     }
