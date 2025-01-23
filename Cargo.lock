@@ -1999,9 +1999,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.19"
+version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d357c7ae988e7d2182f7d7871d0b963962420b0678b0997ce7de72001aeab782"
+checksum = "81fe527a889e1532da5c525686d96d4c2e74cdd345badf8dfef9f6b39dd5f5e8"
 dependencies = [
  "bytes",
  "fnv",
@@ -2009,7 +2009,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http 0.2.9",
- "indexmap 1.9.3",
+ "indexmap 2.6.0",
  "slab",
  "tokio",
  "tokio-util",
