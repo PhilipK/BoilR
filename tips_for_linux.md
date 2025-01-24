@@ -26,6 +26,6 @@ I recommend you just use Heroic, Rare or [Legendary](https://github.com/derrod/l
 
 - Download the origin installer
 - Run the installer by adding it to steam via the "add a non-steam game" option
-- Remember to set "compatability" to a newer proton version
+- Remember to set "compatibility" to a newer proton version
 - After the install, BoilR can find and add the games
 - Validate that the found games have the correct Proton version
