@@ -99,7 +99,7 @@ Most people will not have to configure anything, just open BoilR and click Impor
 ### Run as CLI
 
 In previous releases there was both a CLI and UI version of BoilR, now there is only a UI version.
-But you can add the commandline argument ``--no-ui`` and then the UI version will act like the old CLI version.
+But you can add the command line argument ``--no-ui`` and then the UI version will act like the old CLI version.
 This saves some CO2 from not having to build 2 versions of BoilR for each platform, and it also makes development easier.
 
 ### Rename shortcuts
@@ -109,7 +109,7 @@ If you want to revert back to the original name, just clear the name and click r
 
 ### Try the native version over the flatpak
 
-In general, the native (downloaded form the releases page) version of BoilR is the more reliable one.
+In general, the native (downloaded from the releases page) version of BoilR is the more reliable one.
 If you experience bugs or errors please try the native version and see if that fixes your problem.
 
 ## Contributions 
@@ -131,7 +131,7 @@ To run BoilR just write:
 cargo run
 ```
 
-If you are not a developer (or you don't like to code in Rust) do spread the work and create issues/discussions for anything.
+If you are not a developer (or you don't like to code in Rust) do spread the word and create issues/discussions for anything.
 
 ### I found a bug, what do I do?
 Check that there is not already an issue for it [here](https://github.com/PhilipK/BoilR/issues)
@@ -148,4 +148,4 @@ Nope, please don't, donate it to your favorite charity instead, and if you don't
 This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
 
 ## What is up with the name BoilR?
-This tool turns things into Steam, therefor boiler, And it is written in **R**ust so therefor: BoilR
+This tool turns things into Steam, therefore boiler, And it is written in **R**ust so therefore: BoilR
