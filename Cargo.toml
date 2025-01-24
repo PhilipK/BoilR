@@ -5,7 +5,7 @@ version = "1.9.6"
 
 [dependencies]
 base64 = "^0.22.1"
-config = "^0.14.1"
+config = "^0.15.6"
 copypasta = "^0.10.1"
 flate2 = "^1.0.34"
 is_executable = "^1.0.4"
@@ -19,7 +19,7 @@ sysinfo = "^0.32.0"
 eyre = "^0.6.12"
 color-eyre = "^0.6.3"
 dyn-clone = "^1.0.17"
-time = {version="^0.3.36", features = ["formatting"]}
+time = {version="^0.3.37", features = ["formatting"]}
 egui_extras = { version = "0.29.1", features = ["all_loaders"] }
 
 [dependencies.dashmap]
@@ -43,12 +43,12 @@ version ="^0.25.4"
 
 [dependencies.reqwest]
 default-features = false
-version = "^0.12.8"
+version = "^0.12.9"
 features = ["json","rustls-tls"]
 
 [dependencies.serde]
 features = ["derive"]
-version = "^1.0.213"
+version = "^1.0.217"
 
 [dependencies.tokio]
 features = ["full"]
