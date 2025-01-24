@@ -18,7 +18,7 @@ And here is a full example of all configuration options:
 [epic_games]
 enabled=true #On Windows this is default true, on Linux default false
 location="C:\\ProgramData\\Epic\\EpicGamesLauncher\\Data\\Manifests" #If this value is not defined, the tool will try to find it automatically (only windows). If it can't find it, it will fail and tell you.
-create_symlinks = true #Only for Linux, To get around a bug in steam where paths can not contain spaces, BoilR creates symlinks in ~/.BoilR/link and uses those. 
+create_symlinks = true #Only for Linux, To get around a bug in steam where paths can not contain spaces, BoilR creates symlinks in ~/.Boilr/link and uses those. 
 
 [legendary]
 enabled=true
@@ -31,7 +31,7 @@ executable="lutris" #The executable to run for lutris, default is "lutris".
 [itch]
 enabled=true
 location="C:\\Users\\user\\AppData\\Roaming\\itch" #If this value is not defined, "%APPDATA%itch" will be used on windows, and HOME/.config/itch on Linux.
-create_symlinks = true #Only for Linux, To get around a bug in steam where paths can not contain spaces, BoilR creates symlinks in ~/.BoilR/link and uses those. 
+create_symlinks = true #Only for Linux, To get around a bug in steam where paths can not contain spaces, BoilR creates symlinks in ~/.Boilr/link and uses those. 
 
 [origin]
 enabled=true
@@ -40,7 +40,7 @@ location="C:\\ProgramData\\Origin" #If this value is not defined, "%PROGRAMGDATA
 [gog]
 enabled=true
 location="C:\\ProgramData\\GOG.com\\Galaxy" #The location of GOG Galaxy will default to this value if not defined on windows and "~/Games/gog-galaxy/drive_c/ProgramData/GOG.com/Galaxy" on Linux.
-create_symlinks = true #Only for Linux, To get around a bug in steam where paths can not contain spaces, BoilR creates symlinks in ~/.BoilR/link and uses those. 
+create_symlinks = true #Only for Linux, To get around a bug in steam where paths can not contain spaces, BoilR creates symlinks in ~/.Boilr/link and uses those. 
 wine_c_drive="/home/username/Games/gog-galaxy/drive_c" #Only for Linux, Is mandatory on Linux. 
 
 [steam]
