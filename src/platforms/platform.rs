@@ -15,7 +15,7 @@ where
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>>;
 
-    fn get_settings_serilizable(&self) -> String;
+    fn get_settings_serializable(&self) -> String;
 
     fn render_ui(&mut self, ui: &mut egui::Ui);
 }

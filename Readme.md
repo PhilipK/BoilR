@@ -56,7 +56,7 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 
 ## Integrations
 
-BoilR can import games from many platforms, but there are limits based 
+BoilR can import games from many platforms, but there are limitations:
 
 | Platforms                                                                       | Windows | Linux (executable)            | Linux (flatpak)                           |
 | ------------------------------------------------------------------------------- | ------- | ----------------------------- | ----------------------------------------- |
@@ -117,7 +117,7 @@ If you experience bugs or errors please try the native version and see if that f
 ### How can I help/contribute?
 If you are a coder, you are very welcome! You can fork this repo and then create a pull request.
 
-To check formats and errors of code before run the code:
+To check formats and errors of code before running the code:
 
 ```shell
 cargo fmt
@@ -148,4 +148,4 @@ Nope, please don't, donate it to your favorite charity instead, and if you don't
 This project is dual license MIT or Apache 2.0 , it is up to you. In short, you can do what you want with this project, but if in doubt read the license files.
 
 ## What is up with the name BoilR?
-This tool turns things into Steam, therefor boiler, And it is written in **R**ust so therefor: BoilR
+This tool turns things into Steam, therefore boiler, And it is written in **R**ust, so therefore: BoilR
