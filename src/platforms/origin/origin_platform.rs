@@ -1,5 +1,5 @@
 use crate::platforms::{
-    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsProton, ShortcutToImport,
 };
 use nom::bytes::complete::take_until;
 use std::{
@@ -14,7 +14,7 @@ pub struct OriginPlatform {
     pub settings: OriginSettings,
 }
 
-impl NeedsPorton<OriginPlatform> for OriginGame {
+impl NeedsProton<OriginPlatform> for OriginGame {
     #[cfg(target_os = "windows")]
     fn needs_proton(&self, _platform: &OriginPlatform) -> bool {
         false

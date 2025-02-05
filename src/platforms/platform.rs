@@ -35,7 +35,7 @@ pub(crate) fn to_shortcuts<T, P>(
 ) -> eyre::Result<Vec<ShortcutToImport>>
 where
     T: Into<ShortcutOwned>,
-    T: NeedsPorton<P>,
+    T: NeedsProton<P>,
 {
     let shortcuts = into_shortcuts?;
     let mut shortcut_info = vec![];
@@ -73,7 +73,7 @@ where
     Ok(shortcut_info)
 }
 
-pub trait NeedsPorton<P> {
+pub trait NeedsProton<P> {
     fn needs_proton(&self, platform: &P) -> bool;
 
     fn create_symlinks(&self, platform: &P) -> bool;

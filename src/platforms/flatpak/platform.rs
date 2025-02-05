@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::platforms::{
-    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsProton, ShortcutToImport,
 };
 
 use super::FlatpakSettings;
@@ -25,7 +25,7 @@ impl From<FlatpakApp> for ShortcutOwned {
     }
 }
 
-impl NeedsPorton<FlatpakPlatform> for FlatpakApp {
+impl NeedsProton<FlatpakPlatform> for FlatpakApp {
     fn needs_proton(&self, _platform: &FlatpakPlatform) -> bool {
         false
     }

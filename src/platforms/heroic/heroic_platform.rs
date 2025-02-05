@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use super::{HeroicGame, HeroicGameType, HeroicSettings};
 use crate::platforms::{load_settings, FromSettingsString, GamesPlatform};
-use crate::platforms::{to_shortcuts, NeedsPorton, ShortcutToImport};
+use crate::platforms::{to_shortcuts, NeedsProton, ShortcutToImport};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -86,7 +86,7 @@ impl HeroicPlatform {
     }
 }
 
-impl NeedsPorton<HeroicPlatform> for HeroicGameType {
+impl NeedsProton<HeroicPlatform> for HeroicGameType {
     #[cfg(not(target_family = "unix"))]
     fn needs_proton(&self, _platform: &HeroicPlatform) -> bool {
         false

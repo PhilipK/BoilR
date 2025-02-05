@@ -7,7 +7,7 @@ use crate::platforms::load_settings;
 use crate::platforms::to_shortcuts_simple;
 use crate::platforms::FromSettingsString;
 use crate::platforms::GamesPlatform;
-use crate::platforms::NeedsPorton;
+use crate::platforms::NeedsProton;
 use crate::platforms::ShortcutToImport;
 
 use super::{game::UplayGame, settings::UplaySettings};
@@ -17,7 +17,7 @@ pub struct UplayPlatform {
     pub settings: UplaySettings,
 }
 
-impl NeedsPorton<UplayPlatform> for UplayGame {
+impl NeedsProton<UplayPlatform> for UplayGame {
     #[cfg(target_os = "windows")]
     fn needs_proton(&self, _platform: &UplayPlatform) -> bool {
         false
