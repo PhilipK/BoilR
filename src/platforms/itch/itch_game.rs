@@ -3,7 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
-use crate::platforms::NeedsPorton;
+use crate::platforms::NeedsProton;
 
 use super::ItchPlatform;
 
@@ -38,7 +38,7 @@ impl From<ItchGame> for ShortcutOwned {
     }
 }
 
-impl NeedsPorton<ItchPlatform> for ItchGame {
+impl NeedsProton<ItchPlatform> for ItchGame {
     fn needs_proton(&self, _platform: &ItchPlatform) -> bool {
         self.executable.ends_with("exe")
     }

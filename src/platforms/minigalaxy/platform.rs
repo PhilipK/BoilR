@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::platforms::{GamesPlatform, FromSettingsString, load_settings, GogShortcut, NeedsPorton};
+use crate::platforms::{GamesPlatform, FromSettingsString, load_settings, GogShortcut, NeedsProton};
 
 #[derive(Clone)]
 pub struct MiniGalaxyPlatform {
@@ -25,7 +25,7 @@ impl Default for Settings{
 }
 
 
-impl NeedsPorton<MiniGalaxyPlatform> for GogShortcut{
+impl NeedsProton<MiniGalaxyPlatform> for GogShortcut{
     #[cfg(target_family = "unix")]
     fn needs_proton(&self, _platform: &MiniGalaxyPlatform) -> bool {
         //TODO check if we can do better than just always true
