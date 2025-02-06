@@ -112,7 +112,7 @@ impl GamesPlatform for LutrisPlatform {
         }
     }
 
-    fn get_settings_serilizable(&self) -> String {
+    fn get_settings_serializable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 

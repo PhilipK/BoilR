@@ -32,7 +32,7 @@ fn get_sqlite_path() -> eyre::Result<PathBuf> {
         Ok(path)
     } else {
         Err(eyre::format_err!(
-            "Amazong GameInstallInfo.sqlite not found at {:?}",
+            "Amazon GameInstallInfo.sqlite not found at {:?}",
             path
         ))
     }
@@ -72,7 +72,7 @@ impl GamesPlatform for AmazonPlatform {
         ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
     }
 
-    fn get_settings_serilizable(&self) -> String {
+    fn get_settings_serializable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 
@@ -83,10 +83,10 @@ impl GamesPlatform for AmazonPlatform {
 
 impl AmazonPlatform {
     fn get_amazon_games(&self) -> eyre::Result<Vec<AmazonGame>> {
-        let sqllite_path = get_sqlite_path()?;
+        let sqlite_path = get_sqlite_path()?;
         let launcher_path = get_launcher_path()?;
         let mut result = vec![];
-        let connection = sqlite::open(sqllite_path)?;
+        let connection = sqlite::open(sqlite_path)?;
         let mut statement =
             connection.prepare("SELECT Id, ProductTitle FROM DbSet WHERE Installed = 1")?;
         while let Ok(State::Row) = statement.next() {

@@ -77,7 +77,7 @@ pub fn save_settings(settings: &Settings, platforms: &Platforms) -> eyre::Result
         toml.push('\n');
         toml.push_str(section_name.as_str());
         toml.push('\n');
-        let platform_string = platform.get_settings_serilizable();
+        let platform_string = platform.get_settings_serializable();
         toml.push_str(platform_string.as_str());
     }
 

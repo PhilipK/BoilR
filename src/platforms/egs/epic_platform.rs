@@ -53,7 +53,7 @@ impl GamesPlatform for EpicPlatform {
         self.render_epic_settings(ui)
     }
 
-    fn get_settings_serilizable(&self) -> String {
+    fn get_settings_serializable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 }

@@ -146,7 +146,7 @@ impl GamesPlatform for BottlesPlatform {
         ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
     }
 
-    fn get_settings_serilizable(&self) -> String {
+    fn get_settings_serializable(&self) -> String {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 
