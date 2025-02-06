@@ -18,7 +18,7 @@ const PLATFORM_NAMES: [&str; 14] = [
     "uplay",
     "minigalaxy",
     "playnite",
-    "gamepass"
+    "xbox"
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -35,11 +35,11 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
         //Windows only platforms
         use super::amazon::AmazonPlatform;
         use super::playnite::PlaynitePlatform;
-        use super::gamepass::GamePassPlatForm;
+        use super::xbox::XboxPlatform;
         match name {
             "amazon" => return load::<AmazonPlatform>(s),
             "playnite" => return load::<PlaynitePlatform>(s),
-            "gamepass" => return load::<GamePassPlatForm>(s),
+            "xbox" => return load::<XboxPlatform>(s),
             _ => {}
         }
     }

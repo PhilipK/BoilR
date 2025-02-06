@@ -76,7 +76,7 @@ BoilR can import games from many platforms, but there are limits based
 | [Bottles](https://usebottles.com/)                                              | No      | Yes                           | Yes                                       |
 | [MiniGalaxy](https://sharkwouter.github.io/minigalaxy/)                         | No      | Yes                           | Yes                                       |
 | [Playnite](https://playnite.link/)                                              | Yes     | No                            | No                                        |
-| [Game Pass](https://www.xbox.com/en-US/xbox-game-pass)                          | Yes     | No                            | No                                        |
+| [Xbox](https://www.xbox.com/en-US/)                                             | Yes     | No                            | No                                        |
 
 ## Getting cover art for your shortcuts
 
