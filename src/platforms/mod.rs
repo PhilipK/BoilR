@@ -18,7 +18,7 @@ mod amazon;
 mod playnite;
 
 #[cfg(not(target_family = "unix"))]
-mod gamepass;
+mod xbox;
 
 
 

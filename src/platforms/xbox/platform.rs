@@ -10,22 +10,22 @@ use steam_shortcuts_util::Shortcut;
 use crate::platforms::ShortcutToImport;
 
 #[derive(Clone, Deserialize, Default)]
-pub struct GamePassPlatForm {
-    settings: GamePassSettings,
+pub struct XboxPlatform {
+    settings: XboxSettings,
 }
 
 #[derive(Serialize, Deserialize, Default, Clone)]
-pub struct GamePassSettings {
+pub struct XboxSettings {
     enabled: bool,
 }
 
-impl GamesPlatform for GamePassPlatForm {
+impl GamesPlatform for XboxPlatform {
     fn name(&self) -> &str {
-        "Game Pass"
+        "Xbox"
     }
 
     fn code_name(&self) -> &str {
-        "gamepass"
+        "xbox"
     }
 
     fn enabled(&self) -> bool {
@@ -33,7 +33,7 @@ impl GamesPlatform for GamePassPlatForm {
     }
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<crate::platforms::ShortcutToImport>> {
-        let command = include_str!("./game_pass_games.ps1");
+        let command = include_str!("./xbox_games.ps1");
         let res = run_powershell_command(command)?;
         let apps: Vec<AppInfo> = serde_json::from_str(&res)?;
         let windows_dir = std::env::var("WinDir").unwrap_or("C:\\Windows".to_string());
@@ -82,8 +82,8 @@ impl GamesPlatform for GamePassPlatForm {
     }
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Game Pass");
-        ui.checkbox(&mut self.settings.enabled, "Import from Game Pass");
+        ui.heading("Xbox");
+        ui.checkbox(&mut self.settings.enabled, "Import from Xbox");
     }
 }
 
@@ -181,9 +181,9 @@ fn run_powershell_command(cmd: &str) -> Result<String, Error> {
     }
 }
 
-impl FromSettingsString for GamePassPlatForm {
+impl FromSettingsString for XboxPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        GamePassPlatForm {
+        XboxPlatform {
             settings: load_settings(s),
         }
     }
