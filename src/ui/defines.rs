@@ -7,7 +7,7 @@ pub mod ui_colors {
     pub const BG_STROKE_COLOR: Color32 = Color32::from_rgb(32, 60, 86);
     pub const LIGHT_ORANGE: Color32 = Color32::from_rgb(255, 212, 163);
     pub const ORANGE: Color32 = Color32::from_rgb(255, 170, 94);
-    pub const PURLPLE: Color32 = Color32::from_rgb(84, 78, 104);
+    pub const PURPLE: Color32 = Color32::from_rgb(84, 78, 104);
 }
 
 pub mod ui_images {

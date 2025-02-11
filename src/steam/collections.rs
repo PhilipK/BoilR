@@ -117,9 +117,10 @@ pub fn write_collections<S: AsRef<str>>(
 
     let mut db = open_db()?;
 
+    let mut write_batch = WriteBatch::default();
+
     let current_categories = get_categories(steam_user_id, &mut db)?;
     //this is a collection of collections, known as a category
-    let mut write_batch = WriteBatch::new();
 
     for (category_key, mut collections) in current_categories {
         collections.retain(|(_key, collection)| !collection.is_boilr_collection());

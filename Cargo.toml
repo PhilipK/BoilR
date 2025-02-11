@@ -5,68 +5,68 @@ version = "1.9.6"
 
 [dependencies]
 base64 = "^0.22.1"
-config = "^0.14.1"
+config = "^0.15.8"
 copypasta = "^0.10.1"
-flate2 = "^1.0.34"
+flate2 = "^1.0.35"
 is_executable = "^1.0.4"
-nom = "^7.1.1"
-rusty-leveldb = "^3.0.0"
-serde_json = "^1.0.132"
+nom = "^8.0.0"
+rusty-leveldb = "^3.0.2"
+serde_json = "^1.0.138"
 
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
-sysinfo = "^0.32.0"
+sysinfo = "^0.33.1"
 eyre = "^0.6.12"
 color-eyre = "^0.6.3"
-dyn-clone = "^1.0.17"
-time = {version="^0.3.36", features = ["formatting"]}
-egui_extras = { version = "0.29.1", features = ["all_loaders"] }
+dyn-clone = "^1.0.18"
+time = {version="^0.3.37", features = ["formatting"]}
+egui_extras = { version = "0.31.0", features = ["all_loaders"] }
 
 [dependencies.dashmap]
 features = ["serde"]
 version = "^6.1.0"
 
 [dependencies.eframe]
-version = "^0.29.1"
+version = "^0.31.0"
 
 [dependencies.egui]
-version = "^0.29.1"
+version = "^0.31.0"
 
 [dependencies.futures]
 version = "^0.3.31"
 
 [dependencies.image]
 features = ["png","webp","jpeg"]
-version ="^0.25.4"
+version ="^0.25.5"
 #git = "https://github.com/PhilipK/image"
 #rev = "55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
 
 [dependencies.reqwest]
 default-features = false
-version = "^0.12.8"
+version = "^0.12.12"
 features = ["json","rustls-tls"]
 
 [dependencies.serde]
 features = ["derive"]
-version = "^1.0.213"
+version = "^1.0.217"
 
 [dependencies.tokio]
 features = ["full"]
-version = "^1.41.0"
+version = "^1.43.0"
 
 [dependencies.toml]
-version = "^0.8.19"
+version = "^0.8.20"
 [target."cfg(windows)"]
 [target."cfg(windows)".build-dependencies]
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.52.0"
+winreg = "^0.55.0"
 sqlite = "^0.36.1"
 roxmltree = "^0.20.0"
 
 [target.'cfg(not(windows))'.dependencies]
-wayland-cursor = "0.31.7"
+wayland-cursor = "0.31.8"
 
 [features]
 # This feature is enabled when building for a flatpak environment

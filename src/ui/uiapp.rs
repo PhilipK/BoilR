@@ -2,7 +2,7 @@ use std::{collections::HashMap, error::Error, time::Duration};
 
 use eframe::{egui, App, Frame};
 use egui::{
-   ImageButton, Rounding, Stroke, Vec2
+   ImageButton, CornerRadius, Stroke, Vec2
 };
 use tokio::{
     runtime::Runtime,
@@ -19,7 +19,7 @@ use crate::{
 use super::{
     images::ImageSelectState,
     ui_colors::{
-        BACKGROUND_COLOR, BG_STROKE_COLOR, EXTRA_BACKGROUND_COLOR, LIGHT_ORANGE, ORANGE, PURLPLE,
+        BACKGROUND_COLOR, BG_STROKE_COLOR, EXTRA_BACKGROUND_COLOR, LIGHT_ORANGE, ORANGE, PURPLE,
         TEXT_COLOR,
     },
     ui_images::get_logo_icon,
@@ -276,13 +276,13 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.dark_mode = true;
     style.visuals.panel_fill = BACKGROUND_COLOR;
     style.visuals.override_text_color = Some(TEXT_COLOR);
-    style.visuals.widgets.noninteractive.rounding = Rounding {
-        ne: 0.0,
-        nw: 0.0,
-        se: 0.0,
-        sw: 0.0,
+    style.visuals.widgets.noninteractive.corner_radius = CornerRadius {
+        ne: 0,
+        nw: 0,
+        se: 0,
+        sw: 0,
     };
-    style.visuals.faint_bg_color = PURLPLE;
+    style.visuals.faint_bg_color = PURPLE;
     style.visuals.extreme_bg_color = EXTRA_BACKGROUND_COLOR;
     style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
     style.visuals.widgets.active.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
@@ -299,7 +299,7 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
     style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
     style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
-    style.visuals.selection.bg_fill = PURLPLE;
+    style.visuals.selection.bg_fill = PURPLE;
 }
 fn setup(ctx: &egui::Context) {
     let mut style: egui::Style = (*ctx.style()).clone();
