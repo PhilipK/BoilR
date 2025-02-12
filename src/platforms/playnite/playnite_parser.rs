@@ -3,9 +3,10 @@ use nom::{
         complete::{tag, take_until, take_while},
         streaming::take,
     },
-    character::is_alphanumeric,
     multi::many0,
     IResult,
+    AsChar,
+    Parser,
 };
 
 pub(crate) struct NamesAndId {
@@ -15,7 +16,7 @@ pub(crate) struct NamesAndId {
 }
 
 pub(crate) fn parse_db(content: &[u8]) -> nom::IResult<&[u8], Vec<NamesAndId>> {
-    many0(parse_game)(content)
+    many0(parse_game).parse(content)
 }
 
 fn parse_game(i: &[u8]) -> nom::IResult<&[u8], NamesAndId> {
@@ -33,7 +34,7 @@ fn parse_game(i: &[u8]) -> nom::IResult<&[u8], NamesAndId> {
     let (i, _taken) = take_until("InstallSizeGroup")(i)?;
     let (i, _taken) = take_until("Name")(i)?;
     let (i, _taken) = take(4usize)(i)?;
-    let (i, _taken) = take_while(|b| !is_alphanumeric(b))(i)?;
+    let (i, _taken) = take_while(|b: u8| !b.is_alphanum())(i)?;
     let (i, name_bytes) = take_while(|b| b != 0)(i)?;
     let name = String::from_utf8_lossy(name_bytes).to_string();
     IResult::Ok((
