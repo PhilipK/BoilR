@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::platforms::{
-    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsProton, ShortcutToImport,
 };
 
 use super::{
@@ -163,7 +163,7 @@ fn get_games_from_game_folders(game_folders: Vec<PathBuf>) -> Vec<(GogGame, Path
     games
 }
 
-impl NeedsPorton<GogPlatform> for GogShortcut {
+impl NeedsProton<GogPlatform> for GogShortcut {
     #[cfg(target_family = "unix")]
     fn needs_proton(&self, _platform: &GogPlatform) -> bool {
         true

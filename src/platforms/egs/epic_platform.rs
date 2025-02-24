@@ -1,5 +1,5 @@
 use crate::platforms::{
-    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsPorton, ShortcutToImport,
+    load_settings, to_shortcuts, FromSettingsString, GamesPlatform, NeedsProton, ShortcutToImport,
 };
 
 use super::{get_egs_manifests, settings::EpicGamesLauncherSettings, ManifestItem};
@@ -19,7 +19,7 @@ impl FromSettingsString for EpicPlatform {
     }
 }
 
-impl NeedsPorton<EpicPlatform> for ManifestItem {
+impl NeedsProton<EpicPlatform> for ManifestItem {
     fn needs_proton(&self, _platform: &EpicPlatform) -> bool {
         #[cfg(target_family = "unix")]
         return true;
