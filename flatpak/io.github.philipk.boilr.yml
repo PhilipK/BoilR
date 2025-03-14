@@ -22,7 +22,8 @@ finish-args:
   - --filesystem=~/.var/app/net.lutris.Lutris:rw # Lutris (Flatpak)
   - --filesystem=~/Games/Heroic:rw # Heroic (non-flatpak)
   - --filesystem=~/.var/app/com.heroicgameslauncher.hgl:rw # Heroic (Flatpak)
-  - --filesystem=~/.config/itch:rw # Itch
+  - --filesystem=~/.config/itch:rw # Itch (non-flatpak)
+  - --filesystem=~/.var/app/io.itch.itch/config/itch:rw # Itch (Flatpak)
   - --talk-name=org.freedesktop.Flatpak
   - --filesystem=xdg-data/flatpak:ro
 
