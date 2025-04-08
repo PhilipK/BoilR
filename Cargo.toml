@@ -52,7 +52,7 @@ version = "^1.0.217"
 
 [dependencies.tokio]
 features = ["full"]
-version = "^1.41.0"
+version = "^1.43.1"
 
 [dependencies.toml]
 version = "^0.8.19"
