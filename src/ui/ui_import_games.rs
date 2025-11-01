@@ -6,13 +6,13 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
-use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
+use boilr_core::config::get_renames_file;
 #[cfg(target_family = "unix")]
-use crate::steam::setup_proton_games;
-use crate::sync;
+use boilr_core::steam::setup_proton_games;
+use boilr_core::sync;
 
-use crate::sync::{download_images, SyncProgress};
+use boilr_core::sync::{download_images, SyncProgress};
 
 use super::{all_ready, backup_shortcuts, get_all_games};
 use super::{
@@ -135,7 +135,7 @@ impl MyEguiApp {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
-            crate::steam::ensure_steam_stopped();
+            boilr_core::steam::ensure_steam_stopped();
         }
 
         self.status_reciever = reciever;
@@ -165,7 +165,7 @@ impl MyEguiApp {
                     let _ = sender.send(SyncProgress::Done);
                 }
                 if settings.steam.start_steam {
-                    crate::steam::ensure_steam_started(&settings.steam);
+                    boilr_core::steam::ensure_steam_started(&settings.steam);
                 }
                 Ok(())
             });
@@ -201,17 +201,17 @@ where
     for (name, shortcuts) in shortcut_infos {
         for shortcut_info in shortcuts {
             if shortcut_info.needs_proton {
-                crate::sync::symlinks::ensure_links_folder_created(name);
+                boilr_core::sync::symlinks::ensure_links_folder_created(name);
             }
             if shortcut_info.needs_proton {
                 shortcuts_to_proton.push(format!("{}", shortcut_info.shortcut.app_id));
             }
 
             if shortcut_info.needs_symlinks {
-                crate::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
+                boilr_core::sync::symlinks::create_sym_links(&shortcut_info.shortcut);
             }
         }
-        if let Err(err) = setup_proton_games(&shortcuts_to_proton){
+        if let Err(err) = setup_proton_games(&shortcuts_to_proton) {
             eprintln!("failed to save proton settings: {err:?}");
         }
     }

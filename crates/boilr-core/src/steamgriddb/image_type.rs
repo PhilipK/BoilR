@@ -22,7 +22,6 @@ impl ImageType {
         &ALL_TYPES
     }
 
-
     pub fn name(&self) -> &str {
         match self {
             ImageType::Hero => "Hero",

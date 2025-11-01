@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{platforms::get_platforms, settings::save_settings};
+use crate::settings::{load_setting_sections, save_settings_with_sections};
 
 pub fn migrate_config() {
     let version = &crate::settings::Settings::new()
@@ -37,8 +37,10 @@ pub fn migrate_config() {
     if save_version {
         if let Ok(mut settings) = crate::settings::Settings::new() {
             settings.config_version = Some(1);
-            let platforms = get_platforms();
-            if let Err(err) = save_settings(&settings, &platforms){
+            let sections = load_setting_sections()
+                .map(|map| map.into_iter().collect::<Vec<_>>())
+                .unwrap_or_default();
+            if let Err(err) = save_settings_with_sections(&settings, &sections) {
                 eprintln!("Failed to load settings {err:?}");
             }
         }

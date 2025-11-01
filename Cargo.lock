@@ -599,8 +599,8 @@ name = "boilr"
 version = "1.9.6"
 dependencies = [
  "base64 0.22.1",
+ "boilr-core",
  "color-eyre",
- "config",
  "copypasta",
  "dashmap",
  "dyn-clone",
@@ -614,7 +614,7 @@ dependencies = [
  "is_executable",
  "nom 7.1.3",
  "reqwest 0.12.24",
- "roxmltree 0.20.0",
+ "roxmltree 0.21.1",
  "rusty-leveldb",
  "serde",
  "serde_json",
@@ -624,10 +624,41 @@ dependencies = [
  "sysinfo",
  "time",
  "tokio",
- "toml 0.8.23",
+ "toml 0.9.8",
  "wayland-cursor",
- "winreg 0.52.0",
+ "winreg 0.55.0",
  "winres",
+]
+
+[[package]]
+name = "boilr-core"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "color-eyre",
+ "config",
+ "dashmap",
+ "dyn-clone",
+ "eyre",
+ "flate2",
+ "futures",
+ "image",
+ "is_executable",
+ "nom 7.1.3",
+ "reqwest 0.12.24",
+ "roxmltree 0.21.1",
+ "rusty-leveldb",
+ "serde",
+ "serde_json",
+ "sqlite",
+ "steam_shortcuts_util",
+ "steamgriddb_api",
+ "sysinfo",
+ "time",
+ "tokio",
+ "toml 0.9.8",
+ "wayland-cursor",
+ "winreg 0.55.0",
 ]
 
 [[package]]
@@ -4082,9 +4113,12 @@ checksum = "3cd14fd5e3b777a7422cca79358c57a8f6e3a703d9ac187448d0daf220c2407f"
 
 [[package]]
 name = "roxmltree"
-version = "0.20.0"
+version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
+checksum = "f1964b10c76125c36f8afe190065a4bf9a87bf324842c05701330bba9f1cacbb"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "rust-ini"
@@ -4558,18 +4592,18 @@ dependencies = [
 
 [[package]]
 name = "sqlite"
-version = "0.36.2"
+version = "0.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6843ff5d46230ca95be07e59876757d7c4dd88f5204eeede7271dab03ac4bed3"
+checksum = "f66e9c01a11936154f3910dbba732c01f8b591543bc4d6672bddee79fd9c4783"
 dependencies = [
  "sqlite3-sys",
 ]
 
 [[package]]
 name = "sqlite3-src"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "174d4a6df77c27db281fb23de1a6d968f3aaaa4807c2a1afa8056b971f947b4a"
+checksum = "e5b6d3c860886b0a33e69e421796a5f4a27f23597a182c2450f6d7ace5103120"
 dependencies = [
  "cc",
  "pkg-config",
@@ -4577,9 +4611,9 @@ dependencies = [
 
 [[package]]
 name = "sqlite3-sys"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3901ada7090c3c3584dc92ec7ef1b7091868d13bfe6d7de9f0bcaffee7d0ade5"
+checksum = "a7781d97adc13a1d5081127a9ee29afad8427f3757bd984daf814d8265267039"
 dependencies = [
  "sqlite3-src",
 ]
@@ -5011,10 +5045,12 @@ version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0dc8b1fb61449e27716ec0e1bdf0f6b8f3e8f6b05391e8497b8b6d7804ea6d8"
 dependencies = [
+ "indexmap",
  "serde_core",
  "serde_spanned 1.0.3",
  "toml_datetime 0.7.3",
  "toml_parser",
+ "toml_writer",
  "winnow",
 ]
 
@@ -5046,7 +5082,6 @@ dependencies = [
  "serde",
  "serde_spanned 0.6.9",
  "toml_datetime 0.6.11",
- "toml_write",
  "winnow",
 ]
 
@@ -5072,10 +5107,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "toml_write"
-version = "0.1.2"
+name = "toml_writer"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
+checksum = "df8b2b54733674ad286d16267dcfc7a71ed5c776e4ac7aa3c3e2561f7c637bf2"
 
 [[package]]
 name = "tower"
@@ -6291,12 +6326,12 @@ dependencies = [
 
 [[package]]
 name = "winreg"
-version = "0.52.0"
+version = "0.55.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
+checksum = "cb5a765337c50e9ec252c2069be9bf91c7df47afb103b642ba3a53bf8101be97"
 dependencies = [
  "cfg-if",
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

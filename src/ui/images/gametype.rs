@@ -1,8 +1,6 @@
-
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use crate::{steam::SteamGameInfo};
-
+use boilr_core::steam::SteamGameInfo;
 
 #[derive(Debug, Clone)]
 pub enum GameType {

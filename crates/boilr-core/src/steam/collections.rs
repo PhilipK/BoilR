@@ -61,8 +61,7 @@ impl ActualSteamCollection {
     }
 
     pub fn is_boilr_collection(&self) -> bool {
-        self.key
-            .contains(&format!("user-collections.{BOILR_TAG}"))
+        self.key.contains(&format!("user-collections.{BOILR_TAG}"))
     }
 }
 
@@ -324,7 +323,7 @@ fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Str
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
-    use base64::{Engine as _, engine::general_purpose};
+    use base64::{engine::general_purpose, Engine as _};
     let base64 = general_purpose::STANDARD_NO_PAD.encode(name.as_ref());
     let base64_no_end = if base64.ends_with("==") {
         base64.get(..base64.len() - 2).unwrap_or_default()

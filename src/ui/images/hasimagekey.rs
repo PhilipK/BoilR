@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use crate::{steam::SteamGameInfo, steamgriddb::ImageType};
+use boilr_core::{steam::SteamGameInfo, steamgriddb::ImageType};
 
 use super::{constants::POSSIBLE_EXTENSIONS, gametype::GameType};
 

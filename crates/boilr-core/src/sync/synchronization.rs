@@ -1,11 +1,10 @@
-use eframe::epaint::ahash::HashSet;
+use std::collections::HashSet;
 use steam_shortcuts_util::{
     calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
@@ -86,13 +85,11 @@ pub fn sync_shortcuts(
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
     println!("Found {} user(s)", userinfo_shortcuts.len());
-    let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user|{
+    let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user| {
         let shortcut_info = get_shortcuts_for_user(user).ok();
-        shortcut_info.map(|shortcut_info| {
-            (user,shortcut_info)
-        })
+        shortcut_info.map(|shortcut_info| (user, shortcut_info))
     });
-    for (user,mut shortcut_info) in ok_shorcuts {
+    for (user, mut shortcut_info) in ok_shorcuts {
         let start_time = std::time::Instant::now();
         println!(
             "Found {} shortcuts for user: {}",
@@ -126,11 +123,11 @@ pub async fn download_images(
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     if settings.steamgrid_db.enabled {
-        download_images_for_users(settings, userinfo_shortcuts,  sender).await;
-        if settings.steamgrid_db.prefer_animated{
+        download_images_for_users(settings, userinfo_shortcuts, sender).await;
+        if settings.steamgrid_db.prefer_animated {
             let mut set = settings.clone();
             set.steamgrid_db.prefer_animated = false;
-            download_images_for_users(&set, userinfo_shortcuts,  sender).await;
+            download_images_for_users(&set, userinfo_shortcuts, sender).await;
         }
     }
 }
@@ -227,16 +224,6 @@ fn write_shortcut_collections<S: AsRef<str>>(
     println!("Writing {} collections ", collections.len());
     write_collections(steam_id.as_ref(), &collections)?;
     Ok(())
-}
-
-pub fn get_platform_shortcuts(
-    platform: Box<dyn GamesPlatform>,
-) -> eyre::Result<Vec<ShortcutToImport>> {
-    if platform.enabled() {
-        platform.get_shortcut_info()
-    } else {
-        Ok(vec![])
-    }
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {

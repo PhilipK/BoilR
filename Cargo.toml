@@ -1,69 +1,46 @@
+[workspace]
+members = ["crates/boilr-core"]
+
 [package]
 edition = "2021"
 name = "boilr"
 version = "1.9.6"
 
 [dependencies]
-base64 = "^0.22.1"
-config = "^0.15.6"
-copypasta = "^0.10.1"
-flate2 = "^1.0.34"
-is_executable = "^1.0.4"
-nom = "^7.1.1"
-rusty-leveldb = "^3.0.0"
-serde_json = "^1.0.132"
-
-steam_shortcuts_util = "^1.1.8"
-steamgriddb_api = "^0.3.1"
-sysinfo = "^0.32.0"
-eyre = "^0.6.12"
-color-eyre = "^0.6.3"
-dyn-clone = "^1.0.17"
-time = {version="^0.3.37", features = ["formatting"]}
+boilr-core = { path = "crates/boilr-core" }
+copypasta = "0.10.2"
+eframe = "0.29.1"
+egui = "0.29.1"
 egui_extras = { version = "0.29.1", features = ["all_loaders"] }
+futures = "0.3.31"
+image = { version = "0.25.8", features = ["png", "webp", "jpeg"] }
+tokio = { version = "1.41.0", features = ["full"] }
+color-eyre = "0.6.5"
+eyre = "0.6.12"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+steamgriddb_api = "0.3.1"
+reqwest = { version = "0.12.24", default-features = false, features = ["json", "rustls-tls"] }
+time = { version = "0.3.44", features = ["formatting"] }
+dashmap = { version = "6.1.0", features = ["serde"] }
+dyn-clone = "1.0.20"
+sysinfo = "0.32.1"
+steam_shortcuts_util = "1.1.8"
+flate2 = "1.1.5"
+base64 = "0.22.1"
+is_executable = "1.0.5"
+nom = "7.1.3"
+rusty-leveldb = "3.0.3"
+toml = "0.9.8"
 
-[dependencies.dashmap]
-features = ["serde"]
-version = "^6.1.0"
-
-[dependencies.eframe]
-version = "^0.29.1"
-
-[dependencies.egui]
-version = "^0.29.1"
-
-[dependencies.futures]
-version = "^0.3.31"
-
-[dependencies.image]
-features = ["png","webp","jpeg"]
-version ="^0.25.4"
-#git = "https://github.com/PhilipK/image"
-#rev = "55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
-
-[dependencies.reqwest]
-default-features = false
-version = "^0.12.9"
-features = ["json","rustls-tls"]
-
-[dependencies.serde]
-features = ["derive"]
-version = "^1.0.217"
-
-[dependencies.tokio]
-features = ["full"]
-version = "^1.41.0"
-
-[dependencies.toml]
-version = "^0.8.19"
 [target."cfg(windows)"]
 [target."cfg(windows)".build-dependencies]
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.52.0"
-sqlite = "^0.36.1"
-roxmltree = "^0.20.0"
+winreg = "0.55.0"
+sqlite = "0.37.0"
+roxmltree = "0.21.1"
 
 [target.'cfg(not(windows))'.dependencies]
 wayland-cursor = "0.31.7"

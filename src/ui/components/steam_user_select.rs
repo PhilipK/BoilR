@@ -1,4 +1,4 @@
-use crate::steam::SteamUsersInfo;
+use boilr_core::steam::SteamUsersInfo;
 
 pub fn render_user_select<'a>(
     steam_user: Option<&'a SteamUsersInfo>,

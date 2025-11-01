@@ -1,0 +1,35 @@
+[package]
+name = "boilr-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+base64 = "0.22.1"
+config = "0.15.18"
+dashmap = { version = "6.1.0", features = ["serde"] }
+dyn-clone = "1.0.20"
+eyre = "0.6.12"
+color-eyre = "0.6.5"
+flate2 = "1.1.5"
+futures = "0.3.31"
+image = { version = "0.25.8", features = ["png", "webp", "jpeg"] }
+is_executable = "1.0.5"
+nom = "7.1.3"
+reqwest = { version = "0.12.24", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+steam_shortcuts_util = "1.1.8"
+steamgriddb_api = "0.3.1"
+sysinfo = "0.32.1"
+time = { version = "0.3.44", features = ["formatting"] }
+tokio = { version = "1.41.0", features = ["full"] }
+toml = "0.9.8"
+rusty-leveldb = "3.0.3"
+
+[target.'cfg(not(windows))'.dependencies]
+wayland-cursor = "0.31.7"
+
+[target.'cfg(windows)'.dependencies]
+roxmltree = "0.21.1"
+winreg = "0.55.0"
+sqlite = "0.37.0"

@@ -1,11 +1,11 @@
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
-use crate::{steam::SteamUsersInfo, steamgriddb::ImageType, ui::FetchStatus};
+use crate::ui::FetchStatus;
+use boilr_core::{steam::SteamUsersInfo, steamgriddb::ImageType};
 
-use super::{ gamemode::GameMode, possible_image::PossibleImage,  gametype::GameType};
+use super::{gamemode::GameMode, gametype::GameType, possible_image::PossibleImage};
 
 use tokio::sync::watch::{self, Receiver};
-
 
 pub struct ImageSelectState {
     pub selected_shortcut: Option<GameType>,
@@ -18,12 +18,10 @@ pub struct ImageSelectState {
     pub game_mode: GameMode,
     pub image_type_selected: Option<ImageType>,
     pub image_options: Receiver<FetchStatus<Vec<PossibleImage>>>,
-    pub steam_games: Option<Vec<crate::steam::SteamGameInfo>>,
+    pub steam_games: Option<Vec<boilr_core::steam::SteamGameInfo>>,
 
     pub possible_names: Option<Vec<steamgriddb_api::search::SearchResult>>,
 }
-
-
 
 impl Default for ImageSelectState {
     fn default() -> Self {

@@ -11,15 +11,14 @@ use super::{
     useraction::UserAction,
 };
 
-use std::{ path::Path, thread, time::Duration};
+use std::{path::Path, thread, time::Duration};
 
-use crate::{
+use crate::ui::{components::render_user_select, FetchStatus, MyEguiApp};
+use boilr_core::{
     config::get_thumbnails_folder,
-    steam::get_shortcuts_paths,
-    steam::{get_installed_games, SteamUsersInfo},
+    steam::{get_installed_games, get_shortcuts_paths, SteamUsersInfo},
     steamgriddb::{get_image_extension, get_query_type, ImageType},
     sync::{download_images, SyncProgress},
-    ui::{components::render_user_select, FetchStatus, MyEguiApp},
 };
 use egui::ScrollArea;
 use futures::executor::block_on;
@@ -91,17 +90,17 @@ impl MyEguiApp {
 
     fn render_find_all_images(&self, ui: &mut egui::Ui) -> Option<UserAction> {
         match *self.status_reciever.borrow() {
-            crate::sync::SyncProgress::FindingImages => {
+            SyncProgress::FindingImages => {
                 ui.spinner();
                 ui.label("Finding images to download");
                 ui.ctx().request_repaint();
             }
-            crate::sync::SyncProgress::DownloadingImages { to_download } => {
+            SyncProgress::DownloadingImages { to_download } => {
                 ui.spinner();
                 ui.label(format!("Downloading {to_download} images"));
                 ui.ctx().request_repaint();
             }
-            crate::sync::SyncProgress::Done => {
+            SyncProgress::Done => {
                 ui.ctx().request_repaint();
                 return Some(UserAction::RefreshImages);
             }
@@ -322,7 +321,7 @@ impl MyEguiApp {
 
 //TODO remove this
 fn load_image_grids(user: &SteamUsersInfo) -> Vec<ShortcutOwned> {
-    let user_info = crate::steam::get_shortcuts_for_user(user);
+    let user_info = boilr_core::steam::get_shortcuts_for_user(user);
     match user_info {
         Ok(user_info) => {
             let mut user_folder = user_info.path.clone();

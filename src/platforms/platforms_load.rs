@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use super::GamesPlatform;
 
-use crate::settings::load_setting_sections;
+use boilr_core::settings::load_setting_sections;
 const PLATFORM_NAMES: [&str; 14] = [
     "amazon",
     "bottles",
@@ -18,7 +18,7 @@ const PLATFORM_NAMES: [&str; 14] = [
     "uplay",
     "minigalaxy",
     "playnite",
-    "gamepass"
+    "gamepass",
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -34,8 +34,8 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     {
         //Windows only platforms
         use super::amazon::AmazonPlatform;
-        use super::playnite::PlaynitePlatform;
         use super::gamepass::GamePassPlatForm;
+        use super::playnite::PlaynitePlatform;
         match name {
             "amazon" => return load::<AmazonPlatform>(s),
             "playnite" => return load::<PlaynitePlatform>(s),
@@ -86,9 +86,7 @@ pub fn get_platforms() -> Platforms {
     let sections = match sections {
         Ok(s) => s,
         Err(err) => {
-            eprintln!(
-                "Could not load platform settings, using defaults: Error: {err:?}"
-            );
+            eprintln!("Could not load platform settings, using defaults: Error: {err:?}");
             HashMap::new()
         }
     };

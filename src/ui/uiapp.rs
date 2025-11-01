@@ -1,19 +1,17 @@
 use std::{collections::HashMap, error::Error, time::Duration};
 
 use eframe::{egui, App, Frame};
-use egui::{
-   ImageButton, Rounding, Stroke, Vec2
-};
+use egui::{ImageButton, Rounding, Stroke, Vec2};
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
 };
 
-use crate::{
+use crate::platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport};
+use boilr_core::{
     config::get_renames_file,
-    platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport},
-    settings::{save_settings, Settings},
-    sync::{self, SyncProgress},
+    settings::{save_settings_with_sections, Settings},
+    sync::SyncProgress,
 };
 
 use super::{
@@ -28,7 +26,6 @@ use super::{
 };
 
 const SECTION_SPACING: f32 = 25.0;
-
 
 type GamesToSync = Vec<(
     String,
@@ -115,21 +112,22 @@ impl MyEguiApp {
         }
         let all_ready = all_ready(&self.games_to_sync);
         let import_image = egui::include_image!("../../resources/import_games_button.png");
-        let size = Vec2::new(200.,100.);
+        let size = Vec2::new(200., 100.);
         let image_button = ImageButton::new(import_image);
         if all_ready && !syncing {
             if ui
-                .add_sized(size,image_button)
+                .add_sized(size, image_button)
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
-                if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                let sections = collect_platform_sections(&self.platforms);
+                if let Err(err) = save_settings_with_sections(&self.settings, &sections) {
                     eprintln!("Failed to save settings {err:?}");
                 }
                 self.run_sync_async();
             }
         } else {
-            ui.add_sized(size,image_button)
+            ui.add_sized(size, image_button)
                 .on_hover_text("Waiting for sync to finish");
         }
     }
@@ -165,12 +163,32 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
             let platform = platform.clone();
             rt.spawn_blocking(move || {
                 let _ = tx.send(FetchStatus::Fetching);
-                let games_to_sync = sync::get_platform_shortcuts(platform);
+                let games_to_sync = get_platform_shortcuts(platform);
                 let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });
         }
     }
     to_sync
+}
+
+fn get_platform_shortcuts(platform: Box<dyn GamesPlatform>) -> eyre::Result<Vec<ShortcutToImport>> {
+    if platform.enabled() {
+        platform.get_shortcut_info()
+    } else {
+        Ok(vec![])
+    }
+}
+
+fn collect_platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(String, String)> {
+    platforms
+        .iter()
+        .map(|platform| {
+            (
+                platform.code_name().to_string(),
+                platform.get_settings_serializable(),
+            )
+        })
+        .collect()
 }
 
 impl App for MyEguiApp {
@@ -261,7 +279,8 @@ impl App for MyEguiApp {
                         .on_hover_text("Save settings")
                         .clicked()
                     {
-                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                        let sections = collect_platform_sections(&self.platforms);
+                        if let Err(err) = save_settings_with_sections(&self.settings, &sections) {
                             eprintln!("Failed to save settings: {err:?}");
                         }
                     }
@@ -321,7 +340,11 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
     let logo = get_logo_icon();
-    let viewport = egui::ViewportBuilder { fullscreen: Some(fullscreen), icon: Some(logo.into()), ..Default::default() };
+    let viewport = egui::ViewportBuilder {
+        fullscreen: Some(fullscreen),
+        icon: Some(logo.into()),
+        ..Default::default()
+    };
     let native_options = eframe::NativeOptions {
         viewport,
         vsync: !no_v_sync,

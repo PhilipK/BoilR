@@ -12,7 +12,6 @@ pub mod ui_colors {
 
 pub mod ui_images {
 
-
     use egui::IconData;
 
     pub const LOGO_ICON: &[u8] = include_bytes!("../../resources/logo_small.png");
@@ -27,5 +26,4 @@ pub mod ui_images {
             rgba: pixels.as_slice().to_vec(),
         }
     }
-
 }

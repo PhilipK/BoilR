@@ -6,14 +6,10 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 
-mod config;
-mod migration;
 mod platforms;
-mod settings;
-mod steam;
-mod steamgriddb;
-mod sync;
 mod ui;
+
+use boilr_core::{config, migration};
 
 use color_eyre::eyre::Result;
 

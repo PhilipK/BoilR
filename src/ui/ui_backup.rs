@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use egui::ScrollArea;
 use time::format_description;
 
-use crate::{
+use boilr_core::{
     config::get_backups_flder,
     steam::{get_shortcuts_paths, SteamSettings},
 };
@@ -117,26 +117,25 @@ pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     let paths = get_shortcuts_paths(steam_settings);
     let date = OffsetDateTime::now_utc();
     let format = format_description::parse(DATE_FORMAT);
-    if let Ok(format) = format{
-    let date_string = date.format(&format);
-    if let (Ok(date_string),Ok(user_infos)) = (date_string,paths) {
-        for user_info in user_infos {
-            if let Some(shortcut_path) = user_info.shortcut_path {
-                let new_path = backup_folder.join(format!(
-                    "{}-{}-shortcuts.vdf",
-                    user_info.user_id, date_string
-                ));
-                match std::fs::copy(shortcut_path, &new_path) {
-                    Ok(_) => {
-                        println!("Backed up shortcut at: {new_path:?}");
-                    }
-                    Err(err) => {
-                        eprintln!(
-                            "Failed to backup shortcut at: {new_path:?}, error: {err:?}"
-                        );
+    if let Ok(format) = format {
+        let date_string = date.format(&format);
+        if let (Ok(date_string), Ok(user_infos)) = (date_string, paths) {
+            for user_info in user_infos {
+                if let Some(shortcut_path) = user_info.shortcut_path {
+                    let new_path = backup_folder.join(format!(
+                        "{}-{}-shortcuts.vdf",
+                        user_info.user_id, date_string
+                    ));
+                    match std::fs::copy(shortcut_path, &new_path) {
+                        Ok(_) => {
+                            println!("Backed up shortcut at: {new_path:?}");
+                        }
+                        Err(err) => {
+                            eprintln!("Failed to backup shortcut at: {new_path:?}, error: {err:?}");
+                        }
                     }
                 }
             }
-        }}
+        }
     }
 }

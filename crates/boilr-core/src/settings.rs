@@ -1,7 +1,4 @@
-use crate::{
-    config::get_config_file, platforms::Platforms, steam::SteamSettings,
-    steamgriddb::SteamGridDbSettings,
-};
+use crate::{config::get_config_file, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
 
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
@@ -69,16 +66,18 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     Ok(result)
 }
 
-pub fn save_settings(settings: &Settings, platforms: &Platforms) -> eyre::Result<()>{
+pub fn save_settings_with_sections(
+    settings: &Settings,
+    platform_sections: &[(String, String)],
+) -> eyre::Result<()> {
     let mut toml = toml::to_string(&settings)?;
 
-    for platform in platforms {
-        let section_name = format!("[{}]", platform.code_name());
+    for (code_name, serialized) in platform_sections {
+        let section_name = format!("[{code_name}]");
         toml.push('\n');
         toml.push_str(section_name.as_str());
         toml.push('\n');
-        let platform_string = platform.get_settings_serializable();
-        toml.push_str(platform_string.as_str());
+        toml.push_str(serialized.as_str());
     }
 
     let config_path = crate::config::get_config_file();

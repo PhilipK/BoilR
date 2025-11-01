@@ -2,11 +2,11 @@ use egui::ScrollArea;
 
 use super::ui_colors::*;
 use super::MyEguiApp;
-use crate::steam::get_shortcuts_for_user;
-use crate::steam::get_shortcuts_paths;
-use crate::steam::ShortcutInfo;
-use crate::sync::disconnect_shortcut;
-use crate::sync::IsBoilRShortcut;
+use boilr_core::steam::get_shortcuts_for_user;
+use boilr_core::steam::get_shortcuts_paths;
+use boilr_core::steam::ShortcutInfo;
+use boilr_core::sync::disconnect_shortcut;
+use boilr_core::sync::IsBoilRShortcut;
 
 #[derive(Default)]
 pub struct DisconnectState {

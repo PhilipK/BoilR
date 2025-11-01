@@ -4,16 +4,14 @@ use egui::{Grid, ImageButton};
 use futures::executor::block_on;
 use tokio::sync::watch;
 
-use crate::{
-    steamgriddb::{get_image_extension, ImageType, ToDownload},
-    ui::{
-        images::{
-            constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
-            possible_image::PossibleImage, useraction::UserAction,
-        },
-        FetchStatus, MyEguiApp,
+use crate::ui::{
+    images::{
+        constants::MAX_WIDTH, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
+        possible_image::PossibleImage, useraction::UserAction,
     },
+    FetchStatus, MyEguiApp,
 };
+use boilr_core::steamgriddb::{get_image_extension, ImageType, ToDownload};
 
 pub fn render_page_pick_image(
     ui: &mut egui::Ui,
@@ -123,7 +121,7 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
             image_type: *selected_image_type,
         };
         app.rt.spawn_blocking(move || {
-            let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
+            let _ = block_on(boilr_core::steamgriddb::download_to_download(&to_download));
         });
 
         {
@@ -134,7 +132,7 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
 }
 
 fn delete_images_of_type(
-    user: &crate::steam::SteamUsersInfo,
+    user: &boilr_core::steam::SteamUsersInfo,
     selected_shortcut: &crate::ui::images::gametype::GameType,
     selected_image_type: &ImageType,
 ) {
