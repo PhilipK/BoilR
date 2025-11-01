@@ -26,6 +26,7 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
   - [Index](#index)
   - [Features](#features)
   - [Integrations](#integrations)
+  - [Architecture](#architecture)
   - [Getting cover art for your shortcuts](#getting-cover-art-for-your-shortcuts)
   - [Tips](#tips)
     - [Tips for Linux](#tips-for-linux)
@@ -53,6 +54,10 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 - [x] Small (~3mb on disk)
 - [x] Lightweight (~30mb ram)
 - [x] Fast synchronization (~1 second)
+
+## Architecture
+
+If you want a tour of the main modules, responsibilities, and how they collaborate, read [AGENTS.md](AGENTS.md).
 
 ## Integrations
 
