@@ -20,7 +20,17 @@ Each description lists:
 - **Role:** Central egui app (`MyEguiApp`) hosting menus for import, settings, artwork, backups, and disconnect flows.
 - **Collaborators:** `platforms` (fetching game lists), `settings` (load/save), `sync` (runs Steam updates), `tokio` runtime (async tasks), `ui/*` submodules for panels.
 - **Key I/O:** Persists settings before launches, manages rename map (`config/renames.json`), renders status for sync progress, spawns async jobs via `tokio::Runtime`.
-- **Notes:** State is kept on the struct; UI callbacks mutate it directly. When adding new views follow the existing menu/state pattern.
+- **Notes:** State is kept on the struct; UI callbacks mutate it directly. When adding new views follow the existing menu/state pattern. This remains the “legacy” UI path even as the Tauri frontend matures.
+
+### Tauri Frontend (`apps/boilr-tauri`)
+- **Role:** Modern desktop shell built with Tauri + React. It exposes dashboard widgets, settings controls, and orchestrates sync actions via Tauri commands.
+- **Collaborators:** `boilr-core` (settings, sync, Steam helpers), `boilr` library (platform discovery, rename helpers), frontend build chain (Vite/Tailwind).
+- **Key I/O:** Commands in `apps/boilr-tauri/src/main.rs` (`load_settings`, `discover_games`, `plan_sync`, `update_settings`, `run_full_sync`). The React layer in `src/App.tsx` consumes those commands, renders data, and calls back for updates.
+- **Notes:**
+  - `plan_sync` precomputes additions/removals so the UI can present a safe preview without touching disk.
+  - `update_settings` merges partial settings patches and re-serialises platform sections using `save_settings_with_sections`.
+  - Frontend assets live under `apps/boilr-tauri/src/` and are bundled with Vite; see `README.md` → **Development** for scripts.
+  - Outstanding parity items (per-game selection, artwork tools, etc.) are tracked in `TODO.md`. When adding new commands, document them here.
 
 ### Headless Sync (`ui::run_sync` from `src/ui/mod.rs`)
 - **Role:** Lightweight CLI flow triggered by `--no-ui`, executing the same synchronization pipeline minus GUI.
@@ -144,4 +154,3 @@ Each description lists:
 ## First-Run Behavior
 
 On a fresh machine, expect log warnings about missing config files and unknown optional platforms (e.g., Amazon, Playnite, Game Pass) until the user enables or configures them. The sync pipeline still succeeds; those warnings are informational.
-
