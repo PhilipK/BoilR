@@ -49,6 +49,7 @@ impl GamesPlatform for EpicPlatform {
         to_shortcuts(self, get_egs_manifests(&self.settings))
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         self.render_epic_settings(ui)
     }

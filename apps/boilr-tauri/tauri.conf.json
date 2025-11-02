@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/v2/schema.json",
+  "productName": "BoilR",
+  "version": "0.1.0",
+  "identifier": "io.github.philipk.boilr",
+  "build": {
+    "frontendDist": "dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "BoilR Tauri",
+        "width": 1280,
+        "height": 720,
+        "url": "index.html",
+        "resizable": true
+      }
+    ]
+  }
+}

@@ -1,19 +1,23 @@
 [workspace]
-members = ["crates/boilr-core"]
+members = ["crates/boilr-core", "apps/boilr-tauri"]
 
 [package]
 edition = "2021"
 name = "boilr"
 version = "1.9.6"
 
+[lib]
+name = "boilr"
+path = "src/lib.rs"
+
 [dependencies]
 boilr-core = { path = "crates/boilr-core" }
-copypasta = "0.10.2"
-eframe = "0.29.1"
-egui = "0.29.1"
-egui_extras = { version = "0.29.1", features = ["all_loaders"] }
+copypasta = { version = "0.10.2", optional = true }
+eframe = { version = "0.29.1", optional = true }
+egui = { version = "0.29.1", optional = true }
+egui_extras = { version = "0.29.1", features = ["all_loaders"], optional = true }
 futures = "0.3.31"
-image = { version = "0.25.8", features = ["png", "webp", "jpeg"] }
+image = { version = "0.25.8", features = ["png", "webp", "jpeg"], optional = true }
 tokio = { version = "1.41.0", features = ["full"] }
 color-eyre = "0.6.5"
 eyre = "0.6.12"
@@ -46,6 +50,9 @@ roxmltree = "0.21.1"
 wayland-cursor = "0.31.7"
 
 [features]
+# Default UI is egui-based; other consumers (like the Tauri app) can opt-out.
+default = ["egui-ui"]
+egui-ui = ["copypasta", "eframe", "egui", "egui_extras", "image"]
 # This feature is enabled when building for a flatpak environment
 flatpak = []
 

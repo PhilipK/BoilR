@@ -81,6 +81,7 @@ impl GamesPlatform for GamePassPlatForm {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Game Pass");
         ui.checkbox(&mut self.settings.enabled, "Import from Game Pass");

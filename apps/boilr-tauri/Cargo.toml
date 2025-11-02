@@ -1,0 +1,19 @@
+[package]
+name = "boilr-tauri"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+boilr = { path = "../..", package = "boilr", default-features = false }
+boilr-core = { path = "../../crates/boilr-core" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+tauri = { version = "2.0.0", features = ["wry"] }
+tokio = { version = "1.41.0", features = ["rt-multi-thread"] }
+steam_shortcuts_util = "1.1.8"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0", features = [] }
+
+[dev-dependencies]
+tauri = { version = "2.0.0", features = ["test", "wry"] }

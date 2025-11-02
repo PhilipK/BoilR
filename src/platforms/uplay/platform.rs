@@ -294,6 +294,7 @@ impl GamesPlatform for UplayPlatform {
         to_shortcuts_simple(get_uplay_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Uplay");
         ui.checkbox(&mut self.settings.enabled, "Import from Uplay");

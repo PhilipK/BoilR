@@ -94,6 +94,7 @@ impl GamesPlatform for LutrisPlatform {
         to_shortcuts_simple(self.get_shortcuts())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Lutris");
         ui.checkbox(&mut self.settings.enabled, "Import from Lutris");

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, Vec2};
@@ -7,9 +7,11 @@ use tokio::{
     sync::watch::{self, Receiver},
 };
 
-use crate::platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport};
+use crate::{
+    platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport},
+    renames::load_rename_map,
+};
 use boilr_core::{
-    config::get_renames_file,
     settings::{save_settings_with_sections, Settings},
     sync::SyncProgress,
 };
@@ -78,7 +80,7 @@ impl MyEguiApp {
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconnect_state: DisconnectState::default(),
-            rename_map: get_rename_map(),
+            rename_map: load_rename_map(),
             current_edit: Option::None,
             platforms,
         })
@@ -131,17 +133,6 @@ impl MyEguiApp {
                 .on_hover_text("Waiting for sync to finish");
         }
     }
-}
-
-fn get_rename_map() -> HashMap<u32, String> {
-    try_get_rename_map().unwrap_or_default()
-}
-
-fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
-    let rename_map = get_renames_file();
-    let file_content = std::fs::read_to_string(rename_map)?;
-    let deserialized = serde_json::from_str(&file_content)?;
-    Ok(deserialized)
 }
 
 #[derive(PartialEq, Clone, Default)]
@@ -272,10 +263,14 @@ impl App for MyEguiApp {
                 .frame(frame)
                 .show(ctx, |ui| {
                     let image = egui::include_image!("../../resources/save.png");
-                    let size = image.texture_size().unwrap_or_default();
+                    let raw_size = image
+                        .texture_size()
+                        .unwrap_or_else(|| Vec2::new(48.0, 48.0));
+                    let display_size =
+                        Vec2::new(raw_size.x.max(1.0) * 0.5, raw_size.y.max(1.0) * 0.5);
                     let save_button = ImageButton::new(image);
                     if ui
-                        .add_sized(size * 0.5, save_button)
+                        .add_sized(display_size, save_button)
                         .on_hover_text("Save settings")
                         .clicked()
                     {

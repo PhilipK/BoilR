@@ -6,9 +6,7 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 
-mod platforms;
-mod ui;
-
+use boilr::ui;
 use boilr_core::{config, migration};
 
 use color_eyre::eyre::Result;

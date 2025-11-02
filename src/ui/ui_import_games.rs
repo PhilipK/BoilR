@@ -14,7 +14,8 @@ use boilr_core::sync;
 
 use boilr_core::sync::{download_images, SyncProgress};
 
-use super::{all_ready, backup_shortcuts, get_all_games};
+use super::{all_ready, get_all_games};
+use crate::backups::backup_shortcuts;
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,

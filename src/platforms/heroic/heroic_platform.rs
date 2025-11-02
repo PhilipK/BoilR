@@ -224,6 +224,7 @@ impl GamesPlatform for HeroicPlatform {
         to_shortcuts(self, self.get_heroic_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Heroic");
         ui.checkbox(&mut self.settings.enabled, "Import from Heroic");

@@ -190,6 +190,7 @@ impl GamesPlatform for OriginPlatform {
         to_shortcuts(self, self.get_shortcuts())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Origin");
         ui.checkbox(&mut self.settings.enabled, "Import from Origin");
