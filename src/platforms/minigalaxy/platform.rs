@@ -12,6 +12,7 @@ pub struct MiniGalaxyPlatform {
 #[derive(Deserialize, Serialize, Clone)]
 struct Settings {
     enabled: bool,
+    #[allow(dead_code)]
     create_symlinks: bool,
     games_folder: Option<String>,
 }
@@ -117,6 +118,7 @@ impl GamesPlatform for MiniGalaxyPlatform {
     }
 }
 
+#[cfg(feature = "egui-ui")]
 fn get_default_folder_string() -> String {
     get_default_folder_path()
         .unwrap_or_default()

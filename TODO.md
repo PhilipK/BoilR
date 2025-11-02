@@ -43,14 +43,6 @@
 - **UI:** Replace bland messages like “No such file or directory (os error 2)” with actionable hints (“Epic is not installed—install via Heroic or point BoilR at the manifest folder in Settings”). Suppress redundant “No games detected…” text when an error is shown.
 - **References:** Example noisy cases observed on a machine without those launchers: Epic (“Manifests not found”), Flatpak/GOG/Legendary/Lutris (“No such file or directory (os error 2)”), Itch (“Path not found: ~/.config/itch/db/butler.db-wal”), Origin (“Default path not found”).
 
-### Compile-time warnings cleanup (Priority: High · Estimate: 2)
-- **Goal:** Resolve the persistent warnings that surface on every build/test (unused imports, dead code, lifetime hints) to keep CI noise low.
-- **Where to look:** 
-  - `crates/boilr-core/src/sync/synchronization.rs` (unused parentheses)  
-  - `src/platforms/*` dead-code warnings (e.g., `SteamFolderNotFound`, `SteamUsersDataEmpty`, `HeroicGameType::title`)  
-  - `src/ui/images/possible_image.rs` (`thumbnail_path`) and `src/platforms/uplay/platform.rs` lifetime hints.
-- **Plan:** Either address the warnings (e.g., remove unused types) or document why they must remain (conditionally compiled paths) and silence them with `#[allow]` alongside a comment.
-
 ### Noise-free platform discovery (Priority: High · Estimate: 3)
 - **Goal:** Remove the repeated log spam about “Unknown platform named amazon/playnite/gamepass” during startup.
 - **Likely cause:** Tauri bootstrap loads all platform sections but we now build only UNIX or Windows subsets—`load_platform` returns an error when a platform is behind a `cfg` and not compiled in.

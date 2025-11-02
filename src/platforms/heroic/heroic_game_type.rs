@@ -28,6 +28,7 @@ impl HeroicGameType {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn title(&self) -> &str {
         match self {
             HeroicGameType::Epic(g) => g.title.as_ref(),
@@ -37,6 +38,15 @@ impl HeroicGameType {
                 app_name: _,
                 install_mode: _,
             } => title.as_ref(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn hero_identifier(&self) -> &str {
+        match self {
+            HeroicGameType::Epic(g) => g.app_name.as_ref(),
+            HeroicGameType::Gog(g, _) => g.game_id.as_ref(),
+            HeroicGameType::Heroic { app_name, .. } => app_name.as_ref(),
         }
     }
 }

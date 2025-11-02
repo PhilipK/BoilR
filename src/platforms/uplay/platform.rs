@@ -209,7 +209,7 @@ struct GameConfig<'a> {
     launch_id: usize,
 }
 
-fn parse_game_config(split: &str) -> Vec<GameConfig> {
+fn parse_game_config(split: &str) -> Vec<GameConfig<'_>> {
     let mut res = vec![];
     let mut icon_image = "";
     let mut shortcut_name = "";

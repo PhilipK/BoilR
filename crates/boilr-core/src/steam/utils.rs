@@ -1,8 +1,8 @@
 #[cfg(target_os = "windows")]
 use std::env::{self};
 use std::error::Error;
+use std::path::Path;
 use std::path::PathBuf;
-use std::{fmt, path::Path};
 
 use steam_shortcuts_util::{parse_shortcuts, shortcut::ShortcutOwned};
 
@@ -158,47 +158,6 @@ pub fn get_default_location() -> eyre::Result<String> {
     Ok(path_string)
 }
 
-#[derive(Debug)]
-struct SteamFolderNotFound {
-    location_tried: String,
-}
-
-impl fmt::Display for SteamFolderNotFound {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Could not find steam user data at location: {}  Please specify it in the configuration",
-            self.location_tried
-        )
-    }
-}
-
-impl Error for SteamFolderNotFound {
-    fn description(&self) -> &str {
-        self.location_tried.as_str()
-    }
-}
-
-#[derive(Debug)]
-struct SteamUsersDataEmpty {
-    location_tried: String,
-}
-
-impl fmt::Display for SteamUsersDataEmpty {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Steam users data folder is empty: {}  Please specify it in the configuration",
-            self.location_tried
-        )
-    }
-}
-
-impl Error for SteamUsersDataEmpty {
-    fn description(&self) -> &str {
-        self.location_tried.as_str()
-    }
-}
 pub fn get_users_images(data_folder: &str) -> Result<Vec<String>, Box<dyn Error>> {
     let grid_folder = Path::new(data_folder).join("config/grid");
     if !grid_folder.exists() {

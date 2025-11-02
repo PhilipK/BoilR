@@ -7,6 +7,7 @@ use super::{get_egs_manifests, settings::EpicGamesLauncherSettings, ManifestItem
 #[derive(Clone)]
 pub struct EpicPlatform {
     pub(crate) settings: EpicGamesLauncherSettings,
+    #[allow(dead_code)]
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
 }
 

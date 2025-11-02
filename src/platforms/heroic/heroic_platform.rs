@@ -11,6 +11,7 @@ use std::path::PathBuf;
 #[derive(Clone)]
 pub struct HeroicPlatform {
     pub settings: HeroicSettings,
+    #[allow(dead_code)]
     pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
 }
 

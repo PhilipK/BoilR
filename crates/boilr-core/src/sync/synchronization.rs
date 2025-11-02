@@ -217,7 +217,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
     let mut collections = vec![];
 
     for (name, shortcuts) in platform_results {
-        let game_ids = shortcuts.iter().map(|s| (s.app_id as usize)).collect();
+        let game_ids = shortcuts.iter().map(|s| s.app_id as usize).collect();
         collections.push(Collection {
             name: name.clone(),
             game_ids,
