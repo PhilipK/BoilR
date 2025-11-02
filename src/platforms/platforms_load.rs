@@ -4,22 +4,57 @@ use std::collections::HashMap;
 use super::GamesPlatform;
 
 use boilr_core::settings::load_setting_sections;
-const PLATFORM_NAMES: [&str; 14] = [
-    "amazon",
-    "bottles",
-    "epic_games",
-    "flatpak",
-    "gog",
-    "heroic",
-    "itch",
-    "legendary",
-    "lutris",
-    "origin",
-    "uplay",
-    "minigalaxy",
-    "playnite",
-    "gamepass",
-];
+fn platform_names() -> Vec<&'static str> {
+    let mut names = Vec::new();
+
+    #[cfg(target_os = "windows")]
+    {
+        names.push("amazon");
+    }
+
+    #[cfg(target_family = "unix")]
+    {
+        names.push("bottles");
+    }
+
+    names.push("epic_games");
+
+    #[cfg(target_family = "unix")]
+    {
+        names.push("flatpak");
+    }
+
+    names.push("gog");
+
+    #[cfg(target_family = "unix")]
+    {
+        names.push("heroic");
+    }
+
+    names.push("itch");
+
+    #[cfg(target_family = "unix")]
+    {
+        names.push("legendary");
+        names.push("lutris");
+    }
+
+    names.push("origin");
+    names.push("uplay");
+
+    #[cfg(target_family = "unix")]
+    {
+        names.push("minigalaxy");
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        names.push("playnite");
+        names.push("gamepass");
+    }
+
+    names
+}
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
 
@@ -92,17 +127,12 @@ pub fn get_platforms() -> Platforms {
     };
 
     let mut platforms = vec![];
-    for name in PLATFORM_NAMES {
+    for name in platform_names() {
         let default = String::from("");
         let settings = sections.get(name).unwrap_or(&default);
         match load_platform(name, settings) {
             Ok(platform) => platforms.push(platform),
-            Err(e) => {
-                let message = e.to_string();
-                if !message.contains("Unknown platform named") {
-                    eprintln!("Could not load platform {name}, gave error: {message}");
-                }
-            }
+            Err(e) => eprintln!("Could not load platform {name}, gave error: {e}"),
         }
     }
     platforms

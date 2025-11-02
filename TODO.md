@@ -43,14 +43,6 @@
 - **UI:** Replace bland messages like “No such file or directory (os error 2)” with actionable hints (“Epic is not installed—install via Heroic or point BoilR at the manifest folder in Settings”). Suppress redundant “No games detected…” text when an error is shown.
 - **References:** Example noisy cases observed on a machine without those launchers: Epic (“Manifests not found”), Flatpak/GOG/Legendary/Lutris (“No such file or directory (os error 2)”), Itch (“Path not found: ~/.config/itch/db/butler.db-wal”), Origin (“Default path not found”).
 
-### Noise-free platform discovery (Priority: High · Estimate: 3)
-- **Goal:** Remove the repeated log spam about “Unknown platform named amazon/playnite/gamepass” during startup.
-- **Likely cause:** Tauri bootstrap loads all platform sections but we now build only UNIX or Windows subsets—`load_platform` returns an error when a platform is behind a `cfg` and not compiled in.
-- **Approach:** 
-  - Adjust `load_platform` so it silently skips sections for platforms that aren’t compiled for the current OS.  
-  - Alternatively prune those sections when we serialise settings (e.g., remove them from `collect_platform_sections` if the platform isn’t available).  
-  - Update logging to use `debug!` instead of `eprintln!` if we intentionally skip optional sections.
-
 ## Nice to have
 
 ### Blacklisted games manager (Priority: Medium · Estimate: 3)
