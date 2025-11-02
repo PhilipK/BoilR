@@ -37,6 +37,22 @@
 - **UI:** On the overview page, add a toggle near the platform name. When switched off, call the settings update command with the appropriate serialised platform section so the change persists.
 - **Quick actions:** Include a “Refresh now” and “Open platform settings” action button in each card for smoother workflows.
 
+### Compile-time warnings cleanup (Priority: High · Estimate: 2)
+- **Goal:** Resolve the persistent warnings that surface on every build/test (unused imports, dead code, lifetime hints) to keep CI noise low.
+- **Where to look:** 
+  - `crates/boilr-core/src/sync/synchronization.rs` (unused parentheses)  
+  - `src/platforms/*` dead-code warnings (e.g., `SteamFolderNotFound`, `SteamUsersDataEmpty`, `HeroicGameType::title`)  
+  - `src/ui/images/possible_image.rs` (`thumbnail_path`) and `src/platforms/uplay/platform.rs` lifetime hints.
+- **Plan:** Either address the warnings (e.g., remove unused types) or document why they must remain (conditionally compiled paths) and silence them with `#[allow]` alongside a comment.
+
+### Noise-free platform discovery (Priority: High · Estimate: 3)
+- **Goal:** Remove the repeated log spam about “Unknown platform named amazon/playnite/gamepass” during startup.
+- **Likely cause:** Tauri bootstrap loads all platform sections but we now build only UNIX or Windows subsets—`load_platform` returns an error when a platform is behind a `cfg` and not compiled in.
+- **Approach:** 
+  - Adjust `load_platform` so it silently skips sections for platforms that aren’t compiled for the current OS.  
+  - Alternatively prune those sections when we serialise settings (e.g., remove them from `collect_platform_sections` if the platform isn’t available).  
+  - Update logging to use `debug!` instead of `eprintln!` if we intentionally skip optional sections.
+
 ## Nice to have
 
 ### Blacklisted games manager (Priority: Medium · Estimate: 3)
