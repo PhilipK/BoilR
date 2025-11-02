@@ -80,6 +80,12 @@
 - **Goal:** Display the textual status updates we currently print to stdout.  
 - **Approach:** Build on the telemetry console above; at minimum, show the last N log lines in the overview page so users see why a platform failed quickly.
 
+### Artwork preview & editing (Priority: Medium · Estimate: 8)
+- **Goal:** Preview the SteamGridDB artwork BoilR will apply for each shortcut (both planned imports and existing Steam entries) and allow users to change images before syncing.
+- **Backend:** Extend the image helpers so Tauri commands can return candidate art (icon/hero/grid) for each `ShortcutToImport`, respecting user preferences (`prefer_animated`, `allow_nsfw`). For existing Steam shortcuts, surface the resolved grid paths or URLs so the frontend can display current art.
+- **Frontend:** In `App.tsx`, replace the placeholder tiles with real art thumbnails via `convertFileSrc`. Add an “Edit artwork” action that opens a picker similar to the egui image workflow, allowing users to fetch alternates, ban images, or upload custom art. Persist choices using the existing ban/unban logic and rename map as needed.
+- **Notes:** React can rely on the browser’s image decoding without the egui memory loader. Reuse the banning/fix helpers under `boilr_core::steamgriddb` to keep behaviour consistent.
+
 ## Later
 
 ### Document bundle size & optimisation ideas (Priority: Low · Estimate: 2)
