@@ -10,3 +10,5 @@ flatpak/build-dir
 flatpak/repo
 flatpak/flatpak-cargo-generator.py
 .flatpak-builder
+apps/boilr-tauri/node_modules
+apps/boilr-tauri/dist

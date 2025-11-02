@@ -26,6 +26,7 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
   - [Index](#index)
   - [Features](#features)
   - [Integrations](#integrations)
+  - [Development](#development)
   - [Architecture](#architecture)
   - [Getting cover art for your shortcuts](#getting-cover-art-for-your-shortcuts)
   - [Tips](#tips)
@@ -54,6 +55,42 @@ There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gu
 - [x] Small (~3mb on disk)
 - [x] Lightweight (~30mb ram)
 - [x] Fast synchronization (~1 second)
+
+## Development
+
+### Prerequisites
+
+- [Rust](https://www.rust-lang.org/) (stable toolchain)
+- [Node.js](https://nodejs.org/) ≥ 18 with `npm`
+- `tauri-cli` – install once with `cargo install tauri-cli --locked`
+
+### Quick start
+
+```shell
+# install frontend dependencies (run after pulling new UI code)
+./scripts/bootstrap-frontend.sh
+
+# start the new Tauri UI with hot reload
+./scripts/dev-tauri.sh
+
+# build the Tauri bundle (frontend + Rust core)
+./scripts/build-tauri.sh
+
+# run the legacy egui desktop app
+./scripts/dev-egui.sh
+```
+
+For automated checks:
+
+```shell
+cargo fmt
+cargo check
+
+# exercise the Tauri command surface
+./scripts/test-tauri.sh
+```
+
+The Tauri scripts will bootstrap `npm` packages automatically if `node_modules/` is missing.
 
 ## Architecture
 
@@ -122,19 +159,7 @@ If you experience bugs or errors please try the native version and see if that f
 ### How can I help/contribute?
 If you are a coder, you are very welcome! You can fork this repo and then create a pull request.
 
-To check formats and errors of code before running the code:
-
-```shell
-cargo fmt
-
-cargo check
-```
-
-To run BoilR just write:
-
-```shell
-cargo run
-```
+See the [Development](#development) section for the most common scripts and checks.
 
 If you are not a developer (or you don't like to code in Rust) do spread the work and create issues/discussions for anything.
 

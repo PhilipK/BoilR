@@ -1,17 +1,24 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::collections::{HashMap, HashSet};
+
 use boilr::{
     backups::backup_shortcuts,
-    platforms::{get_platforms, ShortcutToImport},
+    platforms::{get_platforms, GamesPlatform, ShortcutToImport},
     renames::load_rename_map,
 };
 use boilr_core::{
-    settings::Settings,
-    steam::{ensure_steam_started, ensure_steam_stopped},
-    sync::{self, download_images},
+    settings::{save_settings_with_sections, Settings},
+    steam::{
+        ensure_steam_started, ensure_steam_stopped, get_shortcuts_for_user, get_shortcuts_paths,
+    },
+    sync::{self, download_images, IsBoilRShortcut},
 };
 use serde::{Deserialize, Serialize};
-use steam_shortcuts_util::shortcut::ShortcutOwned;
+use steam_shortcuts_util::{
+    calculate_app_id_for_shortcut,
+    shortcut::{Shortcut, ShortcutOwned},
+};
 use tokio::runtime::Runtime;
 
 #[cfg(target_family = "unix")]
@@ -53,6 +60,7 @@ fn discover_games() -> Result<Vec<PlatformSummary>, String> {
                     display_name,
                     exe: shortcut.exe,
                     start_dir: shortcut.start_dir,
+                    icon: icon_to_option(&shortcut.icon),
                     needs_proton,
                     needs_symlinks,
                     blacklisted,
@@ -80,6 +88,72 @@ async fn run_full_sync() -> Result<SyncOutcome, String> {
 }
 
 #[tauri::command]
+fn plan_sync() -> Result<SyncPlan, String> {
+    let settings = Settings::new().map_err(|err| err.to_string())?;
+    let rename_map = load_rename_map();
+    let snapshots = gather_platform_snapshots();
+
+    let (additions, addition_ids) = prepare_additions(&snapshots, &settings, &rename_map);
+    let removals = collect_removals(&settings, &addition_ids);
+
+    Ok(SyncPlan {
+        additions,
+        removals,
+    })
+}
+
+#[tauri::command]
+fn update_settings(update: SettingsUpdate) -> Result<Settings, String> {
+    let mut settings = Settings::new().map_err(|err| err.to_string())?;
+
+    if let Some(steam) = update.steam {
+        if let Some(value) = steam.stop_steam {
+            settings.steam.stop_steam = value;
+        }
+        if let Some(value) = steam.start_steam {
+            settings.steam.start_steam = value;
+        }
+        if let Some(value) = steam.create_collections {
+            settings.steam.create_collections = value;
+        }
+        if let Some(value) = steam.optimize_for_big_picture {
+            settings.steam.optimize_for_big_picture = value;
+        }
+        if let Some(location) = steam.location {
+            settings.steam.location = location;
+        }
+    }
+
+    if let Some(grid) = update.steamgrid_db {
+        if let Some(value) = grid.enabled {
+            settings.steamgrid_db.enabled = value;
+        }
+        if let Some(value) = grid.prefer_animated {
+            settings.steamgrid_db.prefer_animated = value;
+        }
+        if let Some(value) = grid.allow_nsfw {
+            settings.steamgrid_db.allow_nsfw = value;
+        }
+        if let Some(value) = grid.only_download_boilr_images {
+            settings.steamgrid_db.only_download_boilr_images = value;
+        }
+        if let Some(value) = grid.auth_key {
+            settings.steamgrid_db.auth_key = value;
+        }
+    }
+
+    if let Some(blacklisted) = update.blacklisted_games {
+        settings.blacklisted_games = blacklisted;
+    }
+
+    let platforms = get_platforms();
+    let sections = collect_platform_sections(&platforms);
+    save_settings_with_sections(&settings, &sections).map_err(|err| err.to_string())?;
+
+    Ok(settings)
+}
+
+#[tauri::command]
 fn ping() -> &'static str {
     "pong"
 }
@@ -89,6 +163,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             load_settings,
             discover_games,
+            plan_sync,
+            update_settings,
             run_full_sync,
             ping
         ])
@@ -257,6 +333,159 @@ fn prepare_proton(shortcut_infos: &[(String, Vec<ShortcutToImport>)]) {
     }
 }
 
+fn prepare_additions(
+    snapshots: &[PlatformSnapshot],
+    settings: &Settings,
+    rename_map: &HashMap<u32, String>,
+) -> (Vec<AdditionPlan>, HashSet<u32>) {
+    let mut additions = Vec::new();
+    let mut addition_ids = HashSet::new();
+
+    for snapshot in snapshots {
+        if !snapshot.enabled {
+            continue;
+        }
+
+        let Some(shortcuts) = snapshot.shortcuts.as_ref() else {
+            continue;
+        };
+
+        for entry in shortcuts {
+            if settings.blacklisted_games.contains(&entry.shortcut.app_id) {
+                continue;
+            }
+
+            let mut shortcut = entry.shortcut.clone();
+            if let Some(rename) = rename_map.get(&entry.shortcut.app_id) {
+                shortcut.app_name = rename.clone();
+                let template = Shortcut::new(
+                    "0",
+                    shortcut.app_name.as_str(),
+                    &shortcut.exe,
+                    "",
+                    "",
+                    "",
+                    "",
+                );
+                shortcut.app_id = calculate_app_id_for_shortcut(&template);
+            }
+
+            let display_name = shortcut.app_name.clone();
+            let app_name = shortcut.app_name.clone();
+            let exe = shortcut.exe.clone();
+            let start_dir = shortcut.start_dir.clone();
+            let icon = icon_to_option(&shortcut.icon);
+
+            addition_ids.insert(shortcut.app_id);
+            additions.push(AdditionPlan {
+                platform: snapshot.display_name.clone(),
+                platform_code: snapshot.code_name.clone(),
+                needs_proton: entry.needs_proton,
+                needs_symlinks: entry.needs_symlinks,
+                shortcut: PlannedShortcut {
+                    app_id: shortcut.app_id,
+                    app_name,
+                    display_name,
+                    exe,
+                    start_dir,
+                    icon,
+                },
+            });
+        }
+    }
+
+    (additions, addition_ids)
+}
+
+fn collect_removals(settings: &Settings, addition_ids: &HashSet<u32>) -> Vec<RemovalPlan> {
+    let mut removals = Vec::new();
+    let mut seen = HashSet::new();
+
+    let users = match get_shortcuts_paths(&settings.steam) {
+        Ok(users) => users,
+        Err(err) => {
+            eprintln!("Failed to inspect Steam shortcuts: {err:?}");
+            Vec::new()
+        }
+    };
+
+    for user in users {
+        let shortcut_info = match get_shortcuts_for_user(&user) {
+            Ok(info) => info,
+            Err(err) => {
+                eprintln!(
+                    "Failed to load shortcuts for user {}: {err:?}",
+                    user.user_id
+                );
+                continue;
+            }
+        };
+
+        for shortcut in shortcut_info.shortcuts {
+            let reason = if shortcut.is_boilr_shortcut() {
+                Some(RemovalReason::LegacyBoilr)
+            } else if addition_ids.contains(&shortcut.app_id) {
+                Some(RemovalReason::DuplicateAppId)
+            } else {
+                None
+            };
+
+            let Some(reason) = reason else {
+                continue;
+            };
+
+            let key = (user.user_id.clone(), shortcut.app_id, reason);
+            if !seen.insert(key) {
+                continue;
+            }
+
+            let app_id = shortcut.app_id;
+            let app_name = shortcut.app_name.clone();
+            let display_name = shortcut.app_name.clone();
+            let exe = shortcut.exe.clone();
+            let start_dir = shortcut.start_dir.clone();
+            let icon = icon_to_option(&shortcut.icon);
+
+            removals.push(RemovalPlan {
+                user_id: user.user_id.clone(),
+                steam_user_data_folder: user.steam_user_data_folder.clone(),
+                reason,
+                shortcut: RemovalShortcut {
+                    app_id,
+                    app_name,
+                    display_name,
+                    exe,
+                    start_dir,
+                    icon,
+                },
+            });
+        }
+    }
+
+    removals
+}
+
+fn icon_to_option(path: &str) -> Option<String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+fn collect_platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(String, String)> {
+    platforms
+        .iter()
+        .map(|platform| {
+            (
+                platform.code_name().to_string(),
+                platform.get_settings_serializable(),
+            )
+        })
+        .collect()
+}
+
 struct PlatformSnapshot {
     display_name: String,
     code_name: String,
@@ -281,9 +510,86 @@ struct ShortcutSummary {
     display_name: String,
     exe: String,
     start_dir: String,
+    icon: Option<String>,
     needs_proton: bool,
     needs_symlinks: bool,
     blacklisted: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct SyncPlan {
+    additions: Vec<AdditionPlan>,
+    removals: Vec<RemovalPlan>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct AdditionPlan {
+    platform: String,
+    platform_code: String,
+    needs_proton: bool,
+    needs_symlinks: bool,
+    shortcut: PlannedShortcut,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PlannedShortcut {
+    app_id: u32,
+    app_name: String,
+    display_name: String,
+    exe: String,
+    start_dir: String,
+    icon: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+enum RemovalReason {
+    LegacyBoilr,
+    DuplicateAppId,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RemovalPlan {
+    user_id: String,
+    steam_user_data_folder: String,
+    reason: RemovalReason,
+    shortcut: RemovalShortcut,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RemovalShortcut {
+    app_id: u32,
+    app_name: String,
+    display_name: String,
+    exe: String,
+    start_dir: String,
+    icon: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SettingsUpdate {
+    steam: Option<SteamSettingsUpdate>,
+    #[serde(rename = "steamgrid_db")]
+    steamgrid_db: Option<SteamGridDbUpdate>,
+    blacklisted_games: Option<Vec<u32>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SteamSettingsUpdate {
+    stop_steam: Option<bool>,
+    start_steam: Option<bool>,
+    create_collections: Option<bool>,
+    optimize_for_big_picture: Option<bool>,
+    location: Option<Option<String>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SteamGridDbUpdate {
+    enabled: Option<bool>,
+    prefer_animated: Option<bool>,
+    allow_nsfw: Option<bool>,
+    only_download_boilr_images: Option<bool>,
+    auth_key: Option<Option<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -317,6 +623,8 @@ mod tests {
             .invoke_handler(tauri::generate_handler![
                 load_settings,
                 discover_games,
+                plan_sync,
+                update_settings,
                 run_full_sync,
                 ping
             ])
@@ -369,5 +677,15 @@ mod tests {
         let _payload = response
             .deserialize::<Vec<PlatformSummary>>()
             .expect("discover_games payload is valid JSON");
+    }
+
+    #[test]
+    fn plan_sync_command_returns_payload() {
+        let webview = build_mock_webview();
+        let response = get_ipc_response(&webview, invoke_request("plan_sync"))
+            .expect("plan_sync command should succeed");
+        let _payload = response
+            .deserialize::<SyncPlan>()
+            .expect("plan_sync payload is valid JSON");
     }
 }

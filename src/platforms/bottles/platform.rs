@@ -1,5 +1,5 @@
-use std::{collections::HashMap, process::Command};
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, process::Command};
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 

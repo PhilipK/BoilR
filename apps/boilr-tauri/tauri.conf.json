@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "identifier": "io.github.philipk.boilr",
   "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
     "frontendDist": "dist"
   },
   "app": {
