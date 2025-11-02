@@ -1,6 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use boilr::{
     backups::backup_shortcuts,
@@ -12,13 +15,14 @@ use boilr_core::{
     steam::{
         ensure_steam_started, ensure_steam_stopped, get_shortcuts_for_user, get_shortcuts_paths,
     },
-    sync::{self, download_images, IsBoilRShortcut},
+    sync::{self, download_images, IsBoilRShortcut, SyncProgress},
 };
 use serde::{Deserialize, Serialize};
 use steam_shortcuts_util::{
     calculate_app_id_for_shortcut,
     shortcut::{Shortcut, ShortcutOwned},
 };
+use tauri::{Emitter, Manager};
 use tokio::runtime::Runtime;
 
 #[cfg(target_family = "unix")]
@@ -26,6 +30,15 @@ use boilr_core::{
     steam::setup_proton_games,
     sync::symlinks::{create_sym_links, ensure_links_folder_created},
 };
+
+#[derive(Clone)]
+struct ProgressEmitter(Arc<dyn Fn(&str, ProgressPayload) + Send + Sync>);
+
+impl ProgressEmitter {
+    fn emit(&self, event: &str, payload: ProgressPayload) {
+        (self.0)(event, payload);
+    }
+}
 
 #[tauri::command]
 fn load_settings() -> Result<Settings, String> {
@@ -81,8 +94,37 @@ fn discover_games() -> Result<Vec<PlatformSummary>, String> {
 }
 
 #[tauri::command]
-async fn run_full_sync() -> Result<SyncOutcome, String> {
-    tauri::async_runtime::spawn_blocking(perform_full_sync)
+async fn run_full_sync(
+    emitter_state: tauri::State<'_, ProgressEmitter>,
+) -> Result<SyncOutcome, String> {
+    use tokio::sync::watch;
+
+    let emitter = emitter_state.inner().clone();
+    let (progress_tx, mut progress_rx) = watch::channel(SyncProgress::NotStarted);
+
+    emitter.emit(
+        "sync-progress",
+        progress_to_payload(&SyncProgress::NotStarted),
+    );
+
+    let emitter_for_events = emitter.clone();
+    tauri::async_runtime::spawn(async move {
+        loop {
+            match progress_rx.changed().await {
+                Ok(_) => {
+                    let progress = progress_rx.borrow().clone();
+                    emitter_for_events.emit("sync-progress", progress_to_payload(&progress));
+
+                    if matches!(progress, SyncProgress::Done) {
+                        break;
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    tauri::async_runtime::spawn_blocking(move || perform_full_sync(Some(progress_tx)))
         .await
         .map_err(|err| err.to_string())?
 }
@@ -160,6 +202,15 @@ fn ping() -> &'static str {
 
 fn main() {
     tauri::Builder::default()
+        .setup(|app| {
+            let handle = app.handle().clone();
+            app.manage(ProgressEmitter(Arc::new(move |event, payload| {
+                if let Err(err) = handle.emit(event, payload.clone()) {
+                    eprintln!("Failed to emit {event} event: {err}");
+                }
+            })));
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             load_settings,
             discover_games,
@@ -172,7 +223,9 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-fn perform_full_sync() -> Result<SyncOutcome, String> {
+fn perform_full_sync(
+    progress: Option<tokio::sync::watch::Sender<SyncProgress>>,
+) -> Result<SyncOutcome, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let rename_map = load_rename_map();
 
@@ -210,7 +263,14 @@ fn perform_full_sync() -> Result<SyncOutcome, String> {
         .map(|(_, entries)| entries.len())
         .sum();
 
+    if let Some(sender) = progress.as_ref() {
+        let _ = sender.send(SyncProgress::Starting);
+    }
+
     if imported_platforms == 0 {
+        if let Some(sender) = progress.as_ref() {
+            let _ = sender.send(SyncProgress::Done);
+        }
         return Ok(SyncOutcome {
             imported_platforms,
             shortcuts_considered,
@@ -230,16 +290,24 @@ fn perform_full_sync() -> Result<SyncOutcome, String> {
     prepare_proton(&platform_shortcuts);
 
     let import_games = to_shortcut_owned(platform_shortcuts);
-    let mut sender = None;
-    let users = sync::sync_shortcuts(&settings, &import_games, &mut sender, &rename_map)
-        .map_err(|err| err.to_string())?;
+    let mut progress_for_sync = progress.clone();
+    let users = sync::sync_shortcuts(
+        &settings,
+        &import_games,
+        &mut progress_for_sync,
+        &rename_map,
+    )
+    .map_err(|err| err.to_string())?;
 
     let images_requested = settings.steamgrid_db.enabled;
     if images_requested {
         match Runtime::new() {
-            Ok(runtime) => runtime.block_on(async {
-                download_images(&settings, &users, &mut sender).await;
-            }),
+            Ok(runtime) => {
+                let mut progress_for_images = progress.clone();
+                runtime.block_on(async {
+                    download_images(&settings, &users, &mut progress_for_images).await;
+                })
+            }
             Err(err) => eprintln!("Failed to initialise async runtime: {err:?}"),
         }
     }
@@ -250,6 +318,10 @@ fn perform_full_sync() -> Result<SyncOutcome, String> {
 
     if settings.steam.start_steam {
         ensure_steam_started(&settings.steam);
+    }
+
+    if let Some(sender) = progress.as_ref() {
+        let _ = sender.send(SyncProgress::Done);
     }
 
     Ok(SyncOutcome {
@@ -486,6 +558,48 @@ fn collect_platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(Strin
         .collect()
 }
 
+#[derive(Clone, Serialize)]
+struct ProgressPayload {
+    state: &'static str,
+    games_found: Option<usize>,
+    to_download: Option<usize>,
+}
+
+fn progress_to_payload(progress: &SyncProgress) -> ProgressPayload {
+    match progress {
+        SyncProgress::NotStarted => ProgressPayload {
+            state: "not_started",
+            games_found: None,
+            to_download: None,
+        },
+        SyncProgress::Starting => ProgressPayload {
+            state: "starting",
+            games_found: None,
+            to_download: None,
+        },
+        SyncProgress::FoundGames { games_found } => ProgressPayload {
+            state: "found_games",
+            games_found: Some(*games_found),
+            to_download: None,
+        },
+        SyncProgress::FindingImages => ProgressPayload {
+            state: "finding_images",
+            games_found: None,
+            to_download: None,
+        },
+        SyncProgress::DownloadingImages { to_download } => ProgressPayload {
+            state: "downloading_images",
+            games_found: None,
+            to_download: Some(*to_download),
+        },
+        SyncProgress::Done => ProgressPayload {
+            state: "done",
+            games_found: None,
+            to_download: None,
+        },
+    }
+}
+
 struct PlatformSnapshot {
     display_name: String,
     code_name: String,
@@ -620,6 +734,10 @@ mod tests {
 
     fn build_mock_webview() -> tauri::WebviewWindow<tauri::test::MockRuntime> {
         let app = mock_builder()
+            .setup(|app| {
+                app.manage(ProgressEmitter(Arc::new(|_, _| {})));
+                Ok(())
+            })
             .invoke_handler(tauri::generate_handler![
                 load_settings,
                 discover_games,

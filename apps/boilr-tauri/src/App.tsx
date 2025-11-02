@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import clsx from "clsx";
 
 import type {
@@ -10,6 +11,7 @@ import type {
   SyncOutcome,
   SyncPlan,
   SettingsUpdatePayload,
+  SyncProgressEvent,
 } from "./types";
 import type { Settings } from "./settings";
 
@@ -679,6 +681,7 @@ const ActionsBar = ({
   onRunSync,
   syncError,
   lastOutcome,
+  progress,
 }: {
   refreshing: boolean;
   onRefresh: () => void;
@@ -686,7 +689,30 @@ const ActionsBar = ({
   onRunSync: () => void;
   syncError: string | null;
   lastOutcome: SyncOutcome | null;
-}) => (
+  progress: SyncProgressEvent;
+}) => {
+  const progressMessage = (() => {
+    switch (progress.state) {
+      case "starting":
+        return "Starting import…";
+      case "found_games":
+        return progress.games_found !== undefined
+          ? `Discovered ${progress.games_found} shortcut${progress.games_found === 1 ? "" : "s"} to import…`
+          : "Calculating shortcuts…";
+      case "finding_images":
+        return "Searching for artwork…";
+      case "downloading_images":
+        return progress.to_download !== undefined
+          ? `Downloading ${progress.to_download} image${progress.to_download === 1 ? "" : "s"}…`
+          : "Downloading artwork…";
+      case "done":
+        return "Finalising Steam updates…";
+      default:
+        return "Preparing sync…";
+    }
+  })();
+
+  return (
   <SectionCard
     title="Actions"
     description="Kick off a full sync once you’re happy with the plan"
@@ -721,6 +747,11 @@ const ActionsBar = ({
       <div className="text-sm text-slate-400">
         {syncError ? (
           <span className="text-rose-300">Sync failed: {syncError}</span>
+        ) : syncRunning ? (
+          <span className="inline-flex items-center gap-2 text-emerald-200">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" />
+            {progressMessage}
+          </span>
         ) : lastOutcome ? (
           <span>
             Last run: imported {lastOutcome.imported_platforms} platform(s),
@@ -732,7 +763,8 @@ const ActionsBar = ({
       </div>
     </div>
   </SectionCard>
-);
+  );
+};
 
 const App = () => {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -744,9 +776,32 @@ const App = () => {
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastOutcome, setLastOutcome] = useState<SyncOutcome | null>(null);
+  const [progress, setProgress] = useState<SyncProgressEvent>({ state: "not_started" });
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"overview" | "settings">("overview");
+
+  useEffect(() => {
+    let active = true;
+    let unlisten: (() => void) | null = null;
+
+    listen<SyncProgressEvent>("sync-progress", (event) => {
+      if (active) {
+        setProgress(event.payload);
+      }
+    })
+      .then((stop) => {
+        unlisten = stop;
+      })
+      .catch((err) => console.error("Failed to register sync-progress listener", err));
+
+    return () => {
+      active = false;
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
 
   const fetchAll = useCallback(async () => {
     setSettingsError(null);
@@ -811,6 +866,7 @@ const App = () => {
   const handleRunSync = useCallback(async () => {
     setSyncRunning(true);
     setSyncError(null);
+    setProgress({ state: "starting" });
     try {
       const outcome = await invoke<SyncOutcome>("run_full_sync");
       setLastOutcome(outcome);
@@ -957,6 +1013,7 @@ const App = () => {
               onRunSync={handleRunSync}
               syncError={syncError}
               lastOutcome={lastOutcome}
+              progress={progress}
             />
 
             <PlatformLibrary

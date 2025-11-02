@@ -58,6 +58,14 @@ export type SyncPlan = {
   removals: RemovalPlan[];
 };
 
+export type SyncProgressEvent =
+  | { state: "not_started" }
+  | { state: "starting" }
+  | { state: "found_games"; games_found: number }
+  | { state: "finding_images" }
+  | { state: "downloading_images"; to_download: number }
+  | { state: "done" };
+
 export type SettingsUpdatePayload = {
   steam?: {
     stop_steam?: boolean;

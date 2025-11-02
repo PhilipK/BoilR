@@ -31,12 +31,6 @@
 - **UI:** Add tabs mirroring egui: a list of backups with restore buttons, and a disconnect confirmation card explaining the impact.
 - **Considerations:** Backups are per-user; surface user IDs in the list; ensure long-running tasks show progress.
 
-### Sync progress UI (Priority: High · Estimate: 3)
-- **Goal:** Stream `SyncProgress` over to the frontend with live updates.
-- **Backend:** Extend `run_full_sync` to emit progress events via a `tauri::async_runtime::channel` or `tauri::State` updates (e.g., eventing with `app.emit_all`). We already broadcast progress in Rust using `watch::Sender`.
-- **UI:** Show a stepper or timeline (Starting → Found games → Finding images → Downloading). Add a cancel button that signals the background task if feasible.
-- **Hints:** Check how egui forced `ctx.request_repaint()` when progress changed (`src/ui/uiapp.rs:104`). Mirror that via React state updates driven by the emitted events.
-
 ### Platform enable/disable + quick actions (Priority: High · Estimate: 3)
 - **Goal:** Let users toggle whole platforms directly in the Tauri UI.
 - **Backend:** The enable flag is stored per platform (`GamesPlatform::enabled`). We already compute it inside `prepare_additions`. Add an `update_platform_enabled` field when saving platform sections.

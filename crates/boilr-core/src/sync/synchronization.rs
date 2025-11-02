@@ -13,12 +13,14 @@ use crate::{
     steamgriddb::{download_images_for_users, ImageType},
 };
 
+use serde::Serialize;
 use std::{collections::HashMap, error::Error};
 
 use std::{fs::File, io::Write, path::Path};
 
 pub const BOILR_TAG: &str = "boilr";
 
+#[derive(Clone, Debug, Serialize)]
 pub enum SyncProgress {
     NotStarted,
     Starting,
