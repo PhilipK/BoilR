@@ -97,7 +97,12 @@ pub fn get_platforms() -> Platforms {
         let settings = sections.get(name).unwrap_or(&default);
         match load_platform(name, settings) {
             Ok(platform) => platforms.push(platform),
-            Err(e) => eprintln!("Could not load platform {name}, gave error: {e}"),
+            Err(e) => {
+                let message = e.to_string();
+                if !message.contains("Unknown platform named") {
+                    eprintln!("Could not load platform {name}, gave error: {message}");
+                }
+            }
         }
     }
     platforms
