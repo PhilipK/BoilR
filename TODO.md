@@ -37,6 +37,12 @@
 - **UI:** On the overview page, add a toggle near the platform name. When switched off, call the settings update command with the appropriate serialised platform section so the change persists.
 - **Quick actions:** Include a “Refresh now” and “Open platform settings” action button in each card for smoother workflows.
 
+### Consistent platform error messaging (Priority: High · Estimate: 5)
+- **Goal:** Present clear, user-friendly errors when a platform isn’t installed or misconfigured instead of raw OS messages.
+- **Backend:** Normalise `GamesPlatform::get_shortcut_info` errors—wrap common `io::ErrorKind::NotFound`/`PermissionDenied` cases so consumers can distinguish “not installed” from unexpected failures. Consider adding a helper (e.g., `PlatformError::MissingDependency { hint }`) and update each platform module (Epic, Itch, Legendary, Lutris, etc.) accordingly.
+- **UI:** Replace bland messages like “No such file or directory (os error 2)” with actionable hints (“Epic is not installed—install via Heroic or point BoilR at the manifest folder in Settings”). Suppress redundant “No games detected…” text when an error is shown.
+- **References:** Example noisy cases observed on a machine without those launchers: Epic (“Manifests not found”), Flatpak/GOG/Legendary/Lutris (“No such file or directory (os error 2)”), Itch (“Path not found: ~/.config/itch/db/butler.db-wal”), Origin (“Default path not found”).
+
 ### Compile-time warnings cleanup (Priority: High · Estimate: 2)
 - **Goal:** Resolve the persistent warnings that surface on every build/test (unused imports, dead code, lifetime hints) to keep CI noise low.
 - **Where to look:** 
