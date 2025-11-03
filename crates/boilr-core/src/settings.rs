@@ -43,7 +43,13 @@ impl Settings {
 
 pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     let config_file_path = get_config_file();
-    let content = std::fs::read_to_string(config_file_path)?;
+    let content = match std::fs::read_to_string(&config_file_path) {
+        Ok(data) => data,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(HashMap::new());
+        }
+        Err(err) => return Err(err.into()),
+    };
     let mut result = HashMap::new();
     let lines = content.lines();
     let mut current_section_lines: Vec<String> = vec![];

@@ -5,22 +5,51 @@ use std::{
 
 #[cfg(target_family = "unix")]
 pub fn get_config_folder() -> PathBuf {
+    if let Some(path) = config_override() {
+        return path;
+    }
     let config_home = std::env::var("XDG_CONFIG_HOME");
     let home = std::env::var("HOME");
-    match (config_home, home) {
+    let path = match (config_home, home) {
         (Ok(p), _) => Path::new(&p).join("boilr"),
         (Err(_), Ok(home)) => Path::new(&home).join(".config").join("boilr"),
         _ => Path::new("").to_path_buf(),
-    }
+    };
+    ensure_folder(path)
 }
 
 #[cfg(windows)]
 pub fn get_config_folder() -> PathBuf {
+    if let Some(path) = config_override() {
+        return path;
+    }
     let config_home = std::env::var("APPDATA");
-    match config_home {
+    let path = match config_home {
         Ok(p) => Path::new(&p).join("boilr"),
         Err(_) => Path::new("").to_path_buf(),
+    };
+    ensure_folder(path)
+}
+
+fn config_override() -> Option<PathBuf> {
+    let override_var = std::env::var("BOILR_CONFIG_HOME").ok()?;
+    if override_var.is_empty() {
+        return None;
     }
+    let path = Path::new(&override_var).to_path_buf();
+    Some(ensure_folder(path))
+}
+
+fn ensure_folder(path: PathBuf) -> PathBuf {
+    if !path.as_os_str().is_empty() {
+        if let Err(err) = create_dir_all(&path) {
+            eprintln!(
+                "Failed to ensure config directory {}: {err}",
+                path.display()
+            );
+        }
+    }
+    path
 }
 
 pub fn get_thumbnails_folder() -> PathBuf {

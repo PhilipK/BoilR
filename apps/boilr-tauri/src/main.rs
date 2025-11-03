@@ -11,7 +11,7 @@ use boilr::{
     renames::load_rename_map,
 };
 use boilr_core::{
-    settings::{save_settings_with_sections, Settings},
+    settings::{load_setting_sections, save_settings_with_sections, Settings},
     steam::{
         ensure_steam_started, ensure_steam_stopped, get_shortcuts_for_user, get_shortcuts_paths,
     },
@@ -24,6 +24,7 @@ use steam_shortcuts_util::{
 };
 use tauri::{Emitter, Manager};
 use tokio::runtime::Runtime;
+use toml::Value;
 
 #[cfg(target_family = "unix")]
 use boilr_core::{
@@ -196,6 +197,19 @@ fn update_settings(update: SettingsUpdate) -> Result<Settings, String> {
 }
 
 #[tauri::command]
+fn update_platform_enabled(
+    code_name: String,
+    enabled: bool,
+) -> Result<PlatformToggleResponse, String> {
+    persist_platform_enabled(&code_name, enabled)?;
+
+    let platforms = discover_games()?;
+    let plan = plan_sync()?;
+
+    Ok(PlatformToggleResponse { platforms, plan })
+}
+
+#[tauri::command]
 fn ping() -> &'static str {
     "pong"
 }
@@ -216,6 +230,7 @@ fn main() {
             discover_games,
             plan_sync,
             update_settings,
+            update_platform_enabled,
             run_full_sync,
             ping
         ])
@@ -558,6 +573,55 @@ fn collect_platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(Strin
         .collect()
 }
 
+fn persist_platform_enabled(code_name: &str, enabled: bool) -> Result<(), String> {
+    let settings = Settings::new().map_err(|err| err.to_string())?;
+    let mut sections = match load_setting_sections() {
+        Ok(data) => data,
+        Err(err) => {
+            eprintln!("Falling back to defaults while updating {code_name} settings: {err:?}");
+            std::collections::HashMap::new()
+        }
+    };
+
+    let default_table = default_settings_table(code_name);
+
+    let mut table: toml::value::Table = match sections.get(code_name) {
+        Some(serialized) if !serialized.trim().is_empty() => match toml::from_str(serialized) {
+            Ok(parsed) => parsed,
+            Err(err) => {
+                eprintln!(
+                    "Failed to parse existing settings for {code_name}, reinitialising from defaults: {err}"
+                );
+                default_table
+                    .clone()
+                    .unwrap_or_else(toml::value::Table::new)
+            }
+        },
+        _ => default_table
+            .clone()
+            .unwrap_or_else(toml::value::Table::new),
+    };
+
+    table.insert("enabled".to_string(), Value::Boolean(enabled));
+
+    let serialized = toml::to_string(&table)
+        .map_err(|err| format!("Could not serialise settings for {code_name}: {err}"))?;
+    sections.insert(code_name.to_string(), serialized.clone());
+
+    let mut platform_sections: Vec<(String, String)> = sections.into_iter().collect();
+    platform_sections.sort_by(|a, b| a.0.cmp(&b.0));
+
+    save_settings_with_sections(&settings, &platform_sections).map_err(|err| err.to_string())
+}
+
+fn default_settings_table(code_name: &str) -> Option<toml::value::Table> {
+    let defaults = get_platforms()
+        .into_iter()
+        .find(|platform| platform.code_name() == code_name)?
+        .get_settings_serializable();
+    toml::from_str(&defaults).ok()
+}
+
 #[derive(Clone, Serialize)]
 struct ProgressPayload {
     state: &'static str,
@@ -713,6 +777,12 @@ struct PlatformError {
     message: String,
 }
 
+#[derive(Debug, Serialize)]
+struct PlatformToggleResponse {
+    platforms: Vec<PlatformSummary>,
+    plan: SyncPlan,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct SyncOutcome {
     imported_platforms: usize,
@@ -725,12 +795,20 @@ struct SyncOutcome {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, OnceLock};
     use tauri::{
         ipc::CallbackFn,
         test::{get_ipc_response, mock_builder, mock_context, noop_assets, INVOKE_KEY},
         webview::InvokeRequest,
         WebviewWindowBuilder,
     };
+
+    fn test_lock() -> std::sync::MutexGuard<'static, ()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+            .lock()
+            .expect("test lock poisoned")
+    }
 
     fn build_mock_webview() -> tauri::WebviewWindow<tauri::test::MockRuntime> {
         let app = mock_builder()
@@ -743,6 +821,7 @@ mod tests {
                 discover_games,
                 plan_sync,
                 update_settings,
+                update_platform_enabled,
                 run_full_sync,
                 ping
             ])
@@ -805,5 +884,158 @@ mod tests {
         let _payload = response
             .deserialize::<SyncPlan>()
             .expect("plan_sync payload is valid JSON");
+    }
+
+    #[test]
+    fn update_platform_enabled_persists_config_flag() {
+        let _guard = test_lock();
+        use std::fs;
+
+        let workspace_config = std::env::current_dir()
+            .expect("cwd")
+            .join("target/test-config");
+        let _ = fs::remove_dir_all(&workspace_config);
+        fs::create_dir_all(&workspace_config).expect("temp config dir");
+
+        let previous_override = std::env::var_os("BOILR_CONFIG_HOME");
+        let previous_xdg = std::env::var_os("XDG_CONFIG_HOME");
+        std::env::set_var("BOILR_CONFIG_HOME", &workspace_config);
+        std::env::set_var("XDG_CONFIG_HOME", &workspace_config);
+
+        // Ensure a config file exists on disk.
+        let settings = Settings::new().expect("settings should load");
+        save_settings_with_sections(&settings, &[]).expect("write initial config");
+
+        let config_path = boilr_core::config::get_config_file();
+        let original = fs::read_to_string(&config_path).unwrap_or_default();
+
+        let target_code = "epic_games";
+        let sections_before =
+            load_setting_sections().expect("platform sections should load before toggle");
+        let was_enabled = sections_before
+            .get(target_code)
+            .map(|serialized| serialized.contains("enabled = true"))
+            .unwrap_or(true);
+
+        let should_enable = !was_enabled;
+        let response = update_platform_enabled(target_code.to_string(), should_enable)
+            .expect("toggle command should succeed");
+
+        // Snapshot returned to the frontend should reflect the new state.
+        let epic_snapshot = response
+            .platforms
+            .into_iter()
+            .find(|platform| platform.code_name == target_code)
+            .expect("toggled platform appears in response");
+        assert_eq!(
+            epic_snapshot.enabled, should_enable,
+            "frontend payload should mirror persisted state"
+        );
+
+        let sections_after =
+            load_setting_sections().expect("platform sections should load after toggle");
+        let serialized = sections_after
+            .get(target_code)
+            .expect("toggled platform section should exist");
+        assert!(
+            serialized.contains(if should_enable {
+                "enabled = true"
+            } else {
+                "enabled = false"
+            }),
+            "config should contain updated enabled flag"
+        );
+
+        // Restore original config so other tests/developers keep their preferences.
+        fs::write(&config_path, original).expect("restoring config failed");
+        if previous_override
+            .as_ref()
+            .map(|s| s.is_empty())
+            .unwrap_or(false)
+        {
+            std::env::remove_var("BOILR_CONFIG_HOME");
+        } else if let Some(value) = previous_override {
+            std::env::set_var("BOILR_CONFIG_HOME", value);
+        } else {
+            std::env::remove_var("BOILR_CONFIG_HOME");
+        }
+
+        if previous_xdg.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        } else if let Some(value) = previous_xdg {
+            std::env::set_var("XDG_CONFIG_HOME", value);
+        } else {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        }
+
+        let _ = fs::remove_dir_all(&workspace_config);
+    }
+
+    #[test]
+    fn update_platform_enabled_creates_config_if_missing() {
+        let _guard = test_lock();
+        use std::fs;
+
+        let workspace_config = std::env::current_dir()
+            .expect("cwd")
+            .join("target/test-config-missing");
+        let _ = fs::remove_dir_all(&workspace_config);
+        fs::create_dir_all(&workspace_config).expect("temp config dir");
+
+        let previous_override = std::env::var_os("BOILR_CONFIG_HOME");
+        let previous_xdg = std::env::var_os("XDG_CONFIG_HOME");
+        std::env::set_var("BOILR_CONFIG_HOME", &workspace_config);
+        std::env::set_var("XDG_CONFIG_HOME", &workspace_config);
+
+        // Ensure config file truly missing
+        let config_path = boilr_core::config::get_config_file();
+        if config_path.exists() {
+            fs::remove_file(&config_path).expect("remove existing config");
+        }
+
+        let response =
+            update_platform_enabled("epic_games".to_string(), false).expect("toggle should work");
+
+        let epic_snapshot = response
+            .platforms
+            .into_iter()
+            .find(|platform| platform.code_name == "epic_games")
+            .expect("platform exists in response");
+        assert!(!epic_snapshot.enabled);
+
+        let sections = load_setting_sections().expect("platform sections should load");
+        let serialized = sections
+            .get("epic_games")
+            .expect("epic section should exist");
+        assert!(
+            serialized.contains("enabled = false"),
+            "config should persist disabled flag"
+        );
+        assert!(
+            serialized.contains("safe_launch"),
+            "default fields should be preserved"
+        );
+
+        if previous_override
+            .as_ref()
+            .map(|s| s.is_empty())
+            .unwrap_or(false)
+        {
+            std::env::remove_var("BOILR_CONFIG_HOME");
+        } else if let Some(value) = previous_override {
+            std::env::set_var("BOILR_CONFIG_HOME", value);
+        } else {
+            std::env::remove_var("BOILR_CONFIG_HOME");
+        }
+
+        if previous_xdg.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        } else if let Some(value) = previous_xdg {
+            std::env::set_var("XDG_CONFIG_HOME", value);
+        } else {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        }
+
+        let _ = fs::remove_dir_all(&workspace_config);
     }
 }

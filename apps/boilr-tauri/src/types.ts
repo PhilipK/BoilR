@@ -18,6 +18,11 @@ export type PlatformSummary = {
   error: string | null;
 };
 
+export type PlatformToggleResponse = {
+  platforms: PlatformSummary[];
+  plan: SyncPlan;
+};
+
 export type PlannedShortcut = {
   app_id: number;
   app_name: string;

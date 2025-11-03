@@ -31,12 +31,6 @@
 - **UI:** Add tabs mirroring egui: a list of backups with restore buttons, and a disconnect confirmation card explaining the impact.
 - **Considerations:** Backups are per-user; surface user IDs in the list; ensure long-running tasks show progress.
 
-### Platform enable/disable + quick actions (Priority: High · Estimate: 3)
-- **Goal:** Let users toggle whole platforms directly in the Tauri UI.
-- **Backend:** The enable flag is stored per platform (`GamesPlatform::enabled`). We already compute it inside `prepare_additions`. Add an `update_platform_enabled` field when saving platform sections.
-- **UI:** On the overview page, add a toggle near the platform name. When switched off, call the settings update command with the appropriate serialised platform section so the change persists.
-- **Quick actions:** Include a “Refresh now” and “Open platform settings” action button in each card for smoother workflows.
-
 ### Consistent platform error messaging (Priority: High · Estimate: 5)
 - **Goal:** Present clear, user-friendly errors when a platform isn’t installed or misconfigured instead of raw OS messages.
 - **Backend:** Normalise `GamesPlatform::get_shortcut_info` errors—wrap common `io::ErrorKind::NotFound`/`PermissionDenied` cases so consumers can distinguish “not installed” from unexpected failures. Consider adding a helper (e.g., `PlatformError::MissingDependency { hint }`) and update each platform module (Epic, Itch, Legendary, Lutris, etc.) accordingly.

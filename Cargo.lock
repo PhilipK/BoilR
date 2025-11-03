@@ -729,6 +729,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tokio",
+ "toml 0.9.8",
 ]
 
 [[package]]

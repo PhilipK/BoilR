@@ -7,6 +7,7 @@ import clsx from "clsx";
 import type {
   AdditionPlan,
   PlatformSummary,
+  PlatformToggleResponse,
   RemovalPlan,
   SyncOutcome,
   SyncPlan,
@@ -281,11 +282,13 @@ const SettingsPanel = ({
   saving,
   error,
   onUpdate,
+  highlightedPlatform,
 }: {
   settings: Settings | null;
   saving: boolean;
   error: string | null;
   onUpdate: (patch: SettingsUpdatePayload) => void;
+  highlightedPlatform?: string | null;
 }) => {
   const steam = settings?.steam ?? {};
   const grid = settings?.steamgrid_db ?? {};
@@ -383,6 +386,13 @@ const SettingsPanel = ({
 
   return (
     <div className="space-y-6">
+      {highlightedPlatform ? (
+        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 shadow-inner shadow-emerald-900/30">
+          Platform-specific controls for{" "}
+          <span className="font-semibold text-emerald-50">{highlightedPlatform}</span> will land
+          here soon. In the meantime, adjust the shared Steam integration settings below.
+        </div>
+      ) : null}
       <SectionCard
         title="Steam integration"
         description="Control how BoilR interacts with your Steam installation"
@@ -559,10 +569,22 @@ const PlatformLibrary = ({
   platforms,
   plannedAppIds,
   additionsByPlatform,
+  onTogglePlatform,
+  busyPlatforms,
+  onRefreshPlatform,
+  onOpenPlatformSettings,
+  refreshing,
+  syncRunning,
 }: {
   platforms: PlatformSummary[];
   plannedAppIds: Set<number>;
   additionsByPlatform: Map<string, AdditionPlanGroup>;
+  onTogglePlatform: (codeName: string, enabled: boolean) => void;
+  busyPlatforms: Set<string>;
+  onRefreshPlatform: (codeName: string) => void;
+  onOpenPlatformSettings: (platform: PlatformSummary) => void;
+  refreshing: boolean;
+  syncRunning: boolean;
 }) => (
   <SectionCard
     title="Discovered platforms"
@@ -571,27 +593,76 @@ const PlatformLibrary = ({
     <div className="grid gap-4 lg:grid-cols-2">
       {platforms.map((platform) => {
         const plannedGroup = additionsByPlatform.get(platform.code_name);
+        const isBusy = busyPlatforms.has(platform.code_name);
+        const statusClasses = platform.enabled
+          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+          : "border-slate-700/50 bg-slate-800/80 text-slate-300";
         return (
           <div
             key={platform.code_name}
             className="flex flex-col gap-4 rounded-2xl border border-slate-800/70 bg-slate-900/80 p-4"
           >
-            <header className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-white">{platform.name}</h3>
-                <p className="text-xs uppercase tracking-widest text-slate-500">
-                  {platform.enabled ? "Enabled" : "Disabled"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-slate-800/80 px-3 py-1 text-xs text-slate-300">
-                  {platform.games.length} discovered
-                </span>
-                {plannedGroup ? (
-                  <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
-                    {plannedGroup.entries.length} queued
+            <header className="flex flex-col gap-3 border-b border-slate-800/60 pb-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-white">{platform.name}</h3>
+                  <span
+                    className={clsx(
+                      "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] uppercase tracking-widest",
+                      statusClasses
+                    )}
+                  >
+                    {platform.enabled ? "Enabled" : "Disabled"}
                   </span>
-                ) : null}
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      aria-label={`Toggle ${platform.name}`}
+                      checked={platform.enabled}
+                      disabled={isBusy}
+                      onChange={(event) =>
+                        onTogglePlatform(platform.code_name, event.target.checked)
+                      }
+                    />
+                    <span className="h-6 w-11 rounded-full bg-slate-700 transition peer-checked:bg-emerald-500 peer-disabled:bg-slate-800" />
+                    <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition peer-checked:translate-x-5 peer-disabled:bg-slate-300" />
+                  </label>
+                  {isBusy ? (
+                    <span className="h-3 w-3 animate-spin rounded-full border border-emerald-200 border-t-transparent" />
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-800/80 px-3 py-1 text-xs text-slate-300">
+                    {platform.games.length} discovered
+                  </span>
+                  {plannedGroup ? (
+                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
+                      {plannedGroup.entries.length} queued
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onRefreshPlatform(platform.code_name)}
+                    disabled={refreshing || syncRunning || isBusy}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/70 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:border-slate-500/70 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Refresh now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenPlatformSettings(platform)}
+                    className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 transition hover:border-emerald-400/60 hover:text-emerald-100"
+                  >
+                    Open platform settings
+                  </button>
+                </div>
               </div>
             </header>
 
@@ -779,6 +850,8 @@ const App = () => {
   const [progress, setProgress] = useState<SyncProgressEvent>({ state: "not_started" });
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [platformBusy, setPlatformBusy] = useState<Set<string>>(() => new Set());
+  const [highlightedPlatform, setHighlightedPlatform] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"overview" | "settings">("overview");
 
   useEffect(() => {
@@ -825,6 +898,12 @@ const App = () => {
       })
       .finally(() => setLoading(false));
   }, [fetchAll]);
+
+  useEffect(() => {
+    if (activeView !== "settings") {
+      setHighlightedPlatform(null);
+    }
+  }, [activeView]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -878,6 +957,62 @@ const App = () => {
       setSyncRunning(false);
     }
   }, [fetchAll]);
+
+  const handlePlatformSettingsShortcut = useCallback((platform: PlatformSummary) => {
+    setHighlightedPlatform(platform.name);
+    setActiveView("settings");
+  }, []);
+
+  const handleRefreshPlatform = useCallback(
+    async (_codeName: string) => {
+      await handleRefresh();
+    },
+    [handleRefresh]
+  );
+
+  const handleTogglePlatform = useCallback(
+    async (codeName: string, enabled: boolean) => {
+      const previousPlatforms = platforms.map((platform) => ({
+        ...platform,
+        games: platform.games.map((game) => ({ ...game })),
+      }));
+      setPlatforms((prev) =>
+        prev.map((platform) =>
+          platform.code_name === codeName ? { ...platform, enabled } : platform
+        )
+      );
+      setPlatformBusy((prev) => {
+        const next = new Set(prev);
+        next.add(codeName);
+        return next;
+      });
+      setError(null);
+      try {
+        const response = await invoke<PlatformToggleResponse>("update_platform_enabled", {
+          codeName,
+          enabled,
+        });
+        setPlatforms(response.platforms);
+        setPlan(response.plan);
+      } catch (err) {
+        const message = errorMessage(err);
+        setError(message);
+        setPlatforms(previousPlatforms);
+        try {
+          await fetchAll();
+        } catch (refreshErr) {
+          console.error("Failed to refresh after platform toggle error", refreshErr);
+        }
+      } finally {
+        setPlatformBusy((prev) => {
+          const next = new Set(prev);
+          next.delete(codeName);
+          return next;
+        });
+      }
+    },
+    [fetchAll, platforms]
+  );
 
   const additionsCount = plan?.additions.length ?? 0;
   const removalsCount = plan?.removals.length ?? 0;
@@ -1020,6 +1155,12 @@ const App = () => {
               platforms={platforms}
               plannedAppIds={plannedAppIds}
               additionsByPlatform={additionsByPlatform}
+              onTogglePlatform={handleTogglePlatform}
+              busyPlatforms={platformBusy}
+              onRefreshPlatform={handleRefreshPlatform}
+              onOpenPlatformSettings={handlePlatformSettingsShortcut}
+              refreshing={refreshing}
+              syncRunning={syncRunning}
             />
 
             <RemovalList removals={plan?.removals ?? []} />
@@ -1030,6 +1171,7 @@ const App = () => {
             saving={settingsSaving}
             error={settingsError}
             onUpdate={handleSettingsUpdate}
+            highlightedPlatform={highlightedPlatform}
           />
         )}
       </main>

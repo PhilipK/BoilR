@@ -11,6 +11,7 @@ serde_json = "1.0.145"
 tauri = { version = "2.0.0", features = ["wry"] }
 tokio = { version = "1.41.0", features = ["rt-multi-thread"] }
 steam_shortcuts_util = "1.1.8"
+toml = "0.9.8"
 
 [build-dependencies]
 tauri-build = { version = "2.0.0", features = [] }

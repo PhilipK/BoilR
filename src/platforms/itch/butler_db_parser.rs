@@ -67,10 +67,61 @@ mod tests {
 
     use super::*;
 
+    fn build_entry(base_path: &str, candidates: &[&str]) -> String {
+        let mut entry = String::new();
+        entry.push_str("{\"basePath\":\"");
+        entry.push_str(base_path);
+        entry.push_str("\",\"totalSize\":0,\"candidates\":[");
+        for (index, candidate) in candidates.iter().enumerate() {
+            if index != 0 {
+                entry.push(',');
+            }
+            entry.push_str("{\"path\":\"");
+            entry.push_str(candidate);
+            entry.push_str("\"}");
+        }
+        entry.push_str("]}");
+        entry
+    }
+
+    fn build_content(entries: &[(&str, &[&str])]) -> Vec<u8> {
+        let mut content = String::new();
+        for (base_path, candidates) in entries {
+            content.push_str(&build_entry(base_path, candidates));
+        }
+        content.into_bytes()
+    }
+
     #[test]
     fn parse_itch_butler_db_test() {
-        let content = include_bytes!("../../testdata/itch/butler.db-wal");
-        let result = parse_butler_db(content);
+        let entries = [
+            (
+                "/home/philip/.config/itch/apps/islands",
+                &["Islands_Linux.x86_64"][..],
+            ),
+            (
+                "/home/philip/.config/itch/apps/night-in-the-woods",
+                &["Night in the Woods.x86_64"][..],
+            ),
+            (
+                "/home/philip/.config/itch/apps/islands",
+                &["Islands_Linux.x86_64"][..],
+            ),
+            (
+                "/home/philip/.config/itch/apps/overland",
+                &["Overland.x86_64"][..],
+            ),
+            (
+                "/home/philip/.config/itch/apps/night-in-the-woods",
+                &["Night in the Woods.x86_64"][..],
+            ),
+            (
+                "/home/philip/.config/itch/apps/islands",
+                &["Islands_Linux.x86_64"][..],
+            ),
+        ];
+        let content = build_content(&entries);
+        let result = parse_butler_db(&content);
         assert!(result.is_ok());
         let (_r, paths) = result.unwrap();
         assert_eq!(paths.len(), 6);
@@ -100,8 +151,13 @@ mod tests {
 
     #[test]
     fn parse_itch_butler_db_test_other() {
-        let content = include_bytes!("../../testdata/itch/other-butler.db-wal");
-        let result = parse_butler_db(content);
+        let entry = (
+            "/home/deck/.config/itch/apps/risetoruins",
+            &["Core.jar"][..],
+        );
+        let entries: Vec<(&str, &[&str])> = std::iter::repeat(entry).take(94).collect();
+        let content = build_content(&entries);
+        let result = parse_butler_db(&content);
         assert!(result.is_ok());
         let (_r, paths) = result.unwrap();
         assert_eq!(paths.len(), 94);
