@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -8,10 +8,11 @@ import type {
   AdditionPlan,
   PlatformSummary,
   PlatformToggleResponse,
+  PlatformSettingsPayload,
   RemovalPlan,
+  SettingsUpdatePayload,
   SyncOutcome,
   SyncPlan,
-  SettingsUpdatePayload,
   SyncProgressEvent,
 } from "./types";
 import type { Settings } from "./settings";
@@ -81,6 +82,211 @@ const applySettingsPatch = (
   }
 
   return next;
+};
+
+type BooleanField = {
+  key: string;
+  label: string;
+  kind: "boolean";
+  value: boolean;
+  originalValue: boolean;
+};
+
+type StringField = {
+  key: string;
+  label: string;
+  kind: "string";
+  value: string;
+  originalValue: string;
+};
+
+type OptionalStringField = {
+  key: string;
+  label: string;
+  kind: "optional-string";
+  value: string;
+  originalValue: string | null;
+};
+
+type StringListField = {
+  key: string;
+  label: string;
+  kind: "string-list";
+  value: string[];
+  originalValue: string[];
+};
+
+type PlatformSettingsField =
+  | BooleanField
+  | StringField
+  | OptionalStringField
+  | StringListField;
+
+type PlatformSettingsGroup = {
+  codeName: string;
+  name: string;
+  fields: PlatformSettingsField[];
+};
+
+type PlatformFieldUpdate =
+  | { key: string; kind: "boolean"; value: boolean }
+  | { key: string; kind: "string"; value: string }
+  | { key: string; kind: "optional-string"; value: string }
+  | { key: string; kind: "string-list"; value: string[] };
+
+const humaniseKey = (raw: string): string =>
+  raw
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+
+const normaliseStringList = (list: string[]): string[] =>
+  list.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+
+const buildPlatformSettingsGroup = (
+  payload: PlatformSettingsPayload
+): PlatformSettingsGroup => {
+  const entries = Object.entries(payload.settings ?? {}).sort((a, b) => {
+    if (a[0] === "enabled") {
+      return -1;
+    }
+    if (b[0] === "enabled") {
+      return 1;
+    }
+    return a[0].localeCompare(b[0]);
+  });
+
+  const fields: PlatformSettingsField[] = [];
+
+  for (const [key, raw] of entries) {
+    const label = humaniseKey(key);
+    if (typeof raw === "boolean") {
+      fields.push({ key, label, kind: "boolean", value: raw, originalValue: raw });
+      continue;
+    }
+
+    if (typeof raw === "string") {
+      fields.push({ key, label, kind: "string", value: raw, originalValue: raw });
+      continue;
+    }
+
+    if (raw === null) {
+      fields.push({ key, label, kind: "optional-string", value: "", originalValue: null });
+      continue;
+    }
+
+    if (Array.isArray(raw) && raw.every((value) => typeof value === "string")) {
+      const list = raw as string[];
+      fields.push({
+        key,
+        label,
+        kind: "string-list",
+        value: [...list],
+        originalValue: [...list],
+      });
+    }
+  }
+
+  return {
+    codeName: payload.code_name,
+    name: payload.name,
+    fields,
+  };
+};
+
+const mergeOptionalFieldKinds = (
+  next: PlatformSettingsGroup,
+  previous: PlatformSettingsGroup
+): PlatformSettingsGroup => {
+  const optionalKeys = new Set(
+    previous.fields
+      .filter((field) => field.kind === "optional-string")
+      .map((field) => field.key)
+  );
+
+  if (!optionalKeys.size) {
+    return next;
+  }
+
+  const fields = next.fields.map((field) => {
+    if (field.kind === "string" && optionalKeys.has(field.key)) {
+      return {
+        key: field.key,
+        label: field.label,
+        kind: "optional-string" as const,
+        value: field.value,
+        originalValue: field.value,
+      } satisfies OptionalStringField;
+    }
+    return field;
+  });
+
+  return { ...next, fields };
+};
+
+const fieldHasChanges = (field: PlatformSettingsField): boolean => {
+  switch (field.kind) {
+    case "boolean":
+      return field.value !== field.originalValue;
+    case "string":
+      return field.value !== field.originalValue;
+    case "optional-string":
+      return field.value !== (field.originalValue ?? "");
+    case "string-list":
+      if (field.value.length !== field.originalValue.length) {
+        return true;
+      }
+      return field.value.some((entry, index) => entry !== field.originalValue[index]);
+    default:
+      return false;
+  }
+};
+
+const groupHasChanges = (group: PlatformSettingsGroup): boolean =>
+  group.fields.some((field) => fieldHasChanges(field));
+
+const resetGroup = (group: PlatformSettingsGroup): PlatformSettingsGroup => {
+  const fields = group.fields.map((field) => {
+    switch (field.kind) {
+      case "boolean":
+        return { ...field, value: field.originalValue };
+      case "string":
+        return { ...field, value: field.originalValue };
+      case "optional-string":
+        return { ...field, value: field.originalValue ?? "" };
+      case "string-list":
+        return { ...field, value: [...field.originalValue] };
+      default:
+        return field;
+    }
+  });
+
+  return { ...group, fields };
+};
+
+const buildPlatformSettingsPayload = (
+  group: PlatformSettingsGroup
+): Record<string, unknown> => {
+  const payload: Record<string, unknown> = {};
+  group.fields.forEach((field) => {
+    switch (field.kind) {
+      case "boolean":
+        payload[field.key] = field.value;
+        break;
+      case "string":
+        payload[field.key] = field.value;
+        break;
+      case "optional-string":
+        payload[field.key] = field.value.trim().length === 0 ? null : field.value;
+        break;
+      case "string-list":
+        payload[field.key] = normaliseStringList(field.value);
+        break;
+      default:
+        break;
+    }
+  });
+  return payload;
 };
 
 const badgePalette = {
@@ -283,12 +489,28 @@ const SettingsPanel = ({
   error,
   onUpdate,
   highlightedPlatform,
+  highlightedPlatformCode,
+  platformSettings,
+  platformSettingsLoading,
+  platformSettingsError,
+  platformSettingsSaving,
+  onPlatformFieldChange,
+  onPlatformReset,
+  onPlatformSave,
 }: {
   settings: Settings | null;
   saving: boolean;
   error: string | null;
   onUpdate: (patch: SettingsUpdatePayload) => void;
   highlightedPlatform?: string | null;
+  highlightedPlatformCode?: string | null;
+  platformSettings: PlatformSettingsGroup[];
+  platformSettingsLoading: boolean;
+  platformSettingsError: string | null;
+  platformSettingsSaving: Set<string>;
+  onPlatformFieldChange: (codeName: string, update: PlatformFieldUpdate) => void;
+  onPlatformReset: (codeName: string) => void;
+  onPlatformSave: (codeName: string) => void;
 }) => {
   const steam = settings?.steam ?? {};
   const grid = settings?.steamgrid_db ?? {};
@@ -309,12 +531,14 @@ const SettingsPanel = ({
 
   if (!settings) {
     return (
-      <SectionCard
-        title="Sync Preferences"
-        description="Key options from your current BoilR settings"
-      >
-        <p className="text-sm text-slate-400">Settings are unavailable.</p>
-      </SectionCard>
+      <div className="space-y-6">
+        <SectionCard
+          title="Sync Preferences"
+          description="Key options from your current BoilR settings"
+        >
+          <p className="text-sm text-slate-400">Settings are unavailable.</p>
+        </SectionCard>
+      </div>
     );
   }
 
@@ -384,13 +608,29 @@ const SettingsPanel = ({
     },
   ];
 
+  const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!highlightedPlatformCode || platformSettingsLoading) {
+      return;
+    }
+    const node = groupRefs.current[highlightedPlatformCode];
+    if (node) {
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [highlightedPlatformCode, platformSettings, platformSettingsLoading]);
+
   return (
     <div className="space-y-6">
       {highlightedPlatform ? (
         <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 shadow-inner shadow-emerald-900/30">
-          Platform-specific controls for{" "}
-          <span className="font-semibold text-emerald-50">{highlightedPlatform}</span> will land
-          here soon. In the meantime, adjust the shared Steam integration settings below.
+          Adjust the settings for{" "}
+          <span className="font-semibold text-emerald-50">{highlightedPlatform}</span> below.
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          {error}
         </div>
       ) : null}
       <SectionCard
@@ -506,6 +746,159 @@ const SettingsPanel = ({
       </SectionCard>
 
       <SectionCard
+        title="Platform settings"
+        description="Tweak launcher-specific options such as paths and runtime behaviour"
+      >
+        <div className="space-y-4">
+          {platformSettingsError ? (
+            <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+              {platformSettingsError}
+            </div>
+          ) : null}
+          {platformSettingsLoading ? (
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-300">
+              <span className="h-3 w-3 animate-spin rounded-full border border-emerald-200 border-t-transparent" />
+              Loading platform settings…
+            </div>
+          ) : platformSettings.length ? (
+            platformSettings.map((group) => {
+              const savingGroup = platformSettingsSaving.has(group.codeName);
+              const hasChanges = groupHasChanges(group);
+              const disabled = saving || savingGroup;
+              const isHighlighted = highlightedPlatform === group.name;
+
+              return (
+                <div
+                  key={group.codeName}
+                  className={clsx(
+                    "space-y-4 rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4",
+                    isHighlighted && "border-emerald-400/50 shadow-lg shadow-emerald-500/10"
+                  )}
+                  ref={(element) => {
+                    groupRefs.current[group.codeName] = element;
+                  }}
+                >
+                  <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-base font-semibold text-white">{group.name}</h3>
+                      <p className="text-xs uppercase tracking-widest text-slate-500">
+                        {group.codeName}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onPlatformReset(group.codeName)}
+                        disabled={!hasChanges || disabled}
+                        className="rounded-full border border-slate-700/70 bg-slate-900/70 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:border-slate-500/70 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onPlatformSave(group.codeName)}
+                        disabled={!hasChanges || disabled}
+                        className="inline-flex items-center gap-2 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-emerald-50 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {savingGroup ? (
+                          <span className="h-3 w-3 animate-spin rounded-full border border-emerald-100 border-t-transparent" />
+                        ) : null}
+                        Save
+                      </button>
+                    </div>
+                  </header>
+
+                  {group.fields.length ? (
+                    <div className="space-y-3">
+                      {group.fields.map((field) => {
+                        switch (field.kind) {
+                          case "boolean":
+                            return (
+                              <ToggleRow
+                                key={field.key}
+                                label={field.label}
+                                checked={field.value}
+                                disabled={disabled}
+                                onToggle={(value) =>
+                                  onPlatformFieldChange(group.codeName, {
+                                    key: field.key,
+                                    kind: "boolean",
+                                    value,
+                                  })
+                                }
+                              />
+                            );
+                          case "string":
+                          case "optional-string":
+                            return (
+                              <div
+                                key={field.key}
+                                className="space-y-2 rounded-lg bg-slate-900/80 p-4"
+                              >
+                                <label className="block text-sm font-semibold text-white">
+                                  {field.label}
+                                </label>
+                                <input
+                                  className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                                  value={field.value}
+                                  placeholder={
+                                    field.kind === "optional-string"
+                                      ? "Leave blank to clear this value"
+                                      : undefined
+                                  }
+                                  disabled={disabled}
+                                  onChange={(event) =>
+                                    onPlatformFieldChange(group.codeName, {
+                                      key: field.key,
+                                      kind: field.kind,
+                                      value: event.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                            );
+                          case "string-list":
+                            return (
+                              <div
+                                key={field.key}
+                                className="space-y-2 rounded-lg bg-slate-900/80 p-4"
+                              >
+                                <label className="block text-sm font-semibold text-white">
+                                  {field.label}
+                                </label>
+                                <textarea
+                                  className="h-28 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                                  value={field.value.join("\n")}
+                                  disabled={disabled}
+                                  onChange={(event) =>
+                                    onPlatformFieldChange(group.codeName, {
+                                      key: field.key,
+                                      kind: "string-list",
+                                      value: event.target.value.split(/\r?\n/),
+                                    })
+                                  }
+                                />
+                                <p className="text-xs text-slate-400">One entry per line.</p>
+                              </div>
+                            );
+                          default:
+                            return null;
+                        }
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400">No configurable options available.</p>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-sm text-slate-400">No platform settings detected.</p>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard
         title="Library hygiene"
         description="At-a-glance counters for advanced library rules"
       >
@@ -529,11 +922,6 @@ const SettingsPanel = ({
         </dl>
         {saving ? (
           <p className="mt-3 text-xs text-slate-400">Saving changes…</p>
-        ) : null}
-        {error ? (
-          <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-            {error}
-          </p>
         ) : null}
       </SectionCard>
     </div>
@@ -852,7 +1240,14 @@ const App = () => {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [platformBusy, setPlatformBusy] = useState<Set<string>>(() => new Set());
   const [highlightedPlatform, setHighlightedPlatform] = useState<string | null>(null);
+  const [highlightedPlatformCode, setHighlightedPlatformCode] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"overview" | "settings">("overview");
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettingsGroup[]>([]);
+  const [platformSettingsLoading, setPlatformSettingsLoading] = useState(false);
+  const [platformSettingsError, setPlatformSettingsError] = useState<string | null>(null);
+  const [platformSettingsSaving, setPlatformSettingsSaving] = useState<Set<string>>(
+    () => new Set()
+  );
 
   useEffect(() => {
     let active = true;
@@ -889,6 +1284,20 @@ const App = () => {
     setPlan(planRes);
   }, []);
 
+  const fetchPlatformSettings = useCallback(async () => {
+    setPlatformSettingsError(null);
+    setPlatformSettingsLoading(true);
+    try {
+      const payload = await invoke<PlatformSettingsPayload[]>("list_platform_settings");
+      setPlatformSettings(payload.map(buildPlatformSettingsGroup));
+    } catch (err) {
+      const message = errorMessage(err);
+      setPlatformSettingsError(message);
+    } finally {
+      setPlatformSettingsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAll()
       .catch((err) => {
@@ -902,21 +1311,31 @@ const App = () => {
   useEffect(() => {
     if (activeView !== "settings") {
       setHighlightedPlatform(null);
+      setHighlightedPlatformCode(null);
     }
   }, [activeView]);
+
+  useEffect(() => {
+    if (activeView === "settings") {
+      fetchPlatformSettings();
+    }
+  }, [activeView, fetchPlatformSettings]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     setError(null);
     try {
       await fetchAll();
+      if (activeView === "settings") {
+        await fetchPlatformSettings();
+      }
     } catch (err) {
       const message = errorMessage(err);
       setError(message);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchAll]);
+  }, [activeView, fetchAll, fetchPlatformSettings]);
 
   const handleSettingsUpdate = useCallback(
     async (patch: SettingsUpdatePayload) => {
@@ -960,6 +1379,7 @@ const App = () => {
 
   const handlePlatformSettingsShortcut = useCallback((platform: PlatformSummary) => {
     setHighlightedPlatform(platform.name);
+    setHighlightedPlatformCode(platform.code_name);
     setActiveView("settings");
   }, []);
 
@@ -968,6 +1388,104 @@ const App = () => {
       await handleRefresh();
     },
     [handleRefresh]
+  );
+
+  const handlePlatformFieldChange = useCallback(
+    (codeName: string, update: PlatformFieldUpdate) => {
+      setPlatformSettings((prev) =>
+        prev.map((group) => {
+          if (group.codeName !== codeName) {
+            return group;
+          }
+
+          const fields = group.fields.map((field) => {
+            if (field.key !== update.key) {
+              return field;
+            }
+
+            switch (field.kind) {
+              case "boolean":
+                if (update.kind === "boolean") {
+                  return { ...field, value: update.value };
+                }
+                return field;
+              case "string":
+                if (update.kind === "string") {
+                  return { ...field, value: update.value };
+                }
+                return field;
+              case "optional-string":
+                if (update.kind === "optional-string") {
+                  return { ...field, value: update.value };
+                }
+                return field;
+              case "string-list":
+                if (update.kind === "string-list") {
+                  return { ...field, value: [...update.value] };
+                }
+                return field;
+              default:
+                return field;
+            }
+          });
+
+          return { ...group, fields };
+        })
+      );
+    },
+    []
+  );
+
+  const handleResetPlatformSettings = useCallback((codeName: string) => {
+    setPlatformSettings((prev) =>
+      prev.map((group) => (group.codeName === codeName ? resetGroup(group) : group))
+    );
+  }, []);
+
+  const handleSavePlatformSettings = useCallback(
+    async (codeName: string) => {
+      const group = platformSettings.find((item) => item.codeName === codeName);
+      if (!group) {
+        return;
+      }
+
+      setPlatformSettingsError(null);
+      setPlatformSettingsSaving((prev) => {
+        const next = new Set(prev);
+        next.add(codeName);
+        return next;
+      });
+
+      try {
+        const payload = await invoke<PlatformSettingsPayload>("update_platform_settings", {
+          codeName,
+          settings: buildPlatformSettingsPayload(group),
+        });
+        const merged = mergeOptionalFieldKinds(
+          buildPlatformSettingsGroup(payload),
+          group
+        );
+        setPlatformSettings((prev) =>
+          prev.map((existing) =>
+            existing.codeName === codeName
+              ? merged
+              : existing
+          )
+        );
+        await fetchAll();
+        await fetchPlatformSettings();
+      } catch (err) {
+        const message = errorMessage(err);
+        setPlatformSettingsError(message);
+      } finally {
+        setPlatformSettingsSaving((prev) => {
+          const next = new Set(prev);
+          next.delete(codeName);
+          return next;
+        });
+      }
+    },
+    [fetchAll, fetchPlatformSettings, platformSettings]
   );
 
   const handleTogglePlatform = useCallback(
@@ -1172,6 +1690,14 @@ const App = () => {
             error={settingsError}
             onUpdate={handleSettingsUpdate}
             highlightedPlatform={highlightedPlatform}
+            highlightedPlatformCode={highlightedPlatformCode}
+            platformSettings={platformSettings}
+            platformSettingsLoading={platformSettingsLoading}
+            platformSettingsError={platformSettingsError}
+            platformSettingsSaving={platformSettingsSaving}
+            onPlatformFieldChange={handlePlatformFieldChange}
+            onPlatformReset={handleResetPlatformSettings}
+            onPlatformSave={handleSavePlatformSettings}
           />
         )}
       </main>

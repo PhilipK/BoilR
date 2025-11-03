@@ -8,12 +8,6 @@
 - **UI approach:** In `apps/boilr-tauri/src/App.tsx`, add per-game checkboxes (backed by a local `Set` of excluded app IDs) and a rename modal or inline edit. Persist changes by updating `blacklisted_games` (for exclusions) via `update_settings` and writing to `renames.json` through a new Tauri command that mirrors egui’s `rename_map` logic.
 - **Edge cases:** Provide a reset option to revert to stored names; ensure renames trigger `calculate_app_id_for_shortcut` exactly once (follow `prepare_additions`).
 
-### Platform-specific settings (Priority: High · Estimate: 5)
-- **Goal:** Surface each platform’s configuration UI in the Tauri app so toggles/paths can be adjusted without falling back to egui.
-- **Where to start:** Every platform implements `GamesPlatform::render_ui` and `get_settings_serializable`. Introduce a Tauri command that returns serialisable settings metadata per platform (code name, current values, schema hints). We can adapt the egui widgets by porting them to React forms.
-- **UI approach:** Create a “Platform Settings” section that iterates over `get_platforms()` results (perhaps reusing the overview panel). Provide editors for common types (checkbox, text input) and call a new `update_platform_settings` command to persist to the config via `save_settings_with_sections`.
-- **Notes:** Some platform views are OS-specific; guard them with `cfg` info so we only show applicable settings.
-
 ### Artwork management tools (Priority: High · Estimate: 8)
 - **Goal:** Reintroduce the “Images” experience—browse SteamGridDB alternatives, ban assets, and run the “fix icons” action.
 - **Backend:** Commands already exist (`download_images_for_users`, `fix_all_shortcut_icons`, ban logic in `SteamGridDbSettings`). Add Tauri commands for listing cached search results (`steamgriddb/cached_search.rs`), toggling bans, and invoking `fix_all_shortcut_icons`.

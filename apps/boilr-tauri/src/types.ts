@@ -23,6 +23,12 @@ export type PlatformToggleResponse = {
   plan: SyncPlan;
 };
 
+export type PlatformSettingsPayload = {
+  code_name: string;
+  name: string;
+  settings: Record<string, unknown>;
+};
+
 export type PlannedShortcut = {
   app_id: number;
   app_name: string;

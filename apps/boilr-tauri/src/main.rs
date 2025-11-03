@@ -18,6 +18,7 @@ use boilr_core::{
     sync::{self, download_images, IsBoilRShortcut, SyncProgress},
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use steam_shortcuts_util::{
     calculate_app_id_for_shortcut,
     shortcut::{Shortcut, ShortcutOwned},
@@ -214,6 +215,31 @@ fn ping() -> &'static str {
     "pong"
 }
 
+#[tauri::command]
+fn list_platform_settings() -> Result<Vec<PlatformSettingsPayload>, String> {
+    let platforms = get_platforms();
+    platforms
+        .into_iter()
+        .map(|platform| platform_settings_payload(platform.as_ref()))
+        .collect()
+}
+
+#[tauri::command]
+fn update_platform_settings(
+    code_name: String,
+    settings: JsonValue,
+) -> Result<PlatformSettingsPayload, String> {
+    let table = json_to_toml_table(settings)?;
+    persist_platform_table(&code_name, table)?;
+
+    let platforms = get_platforms();
+    let platform = platforms
+        .into_iter()
+        .find(|platform| platform.code_name() == code_name)
+        .ok_or_else(|| format!("Platform {code_name} not found after updating settings"))?;
+    platform_settings_payload(platform.as_ref())
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
@@ -230,6 +256,8 @@ fn main() {
             discover_games,
             plan_sync,
             update_settings,
+            list_platform_settings,
+            update_platform_settings,
             update_platform_enabled,
             run_full_sync,
             ping
@@ -573,13 +601,12 @@ fn collect_platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(Strin
         .collect()
 }
 
-fn persist_platform_enabled(code_name: &str, enabled: bool) -> Result<(), String> {
-    let settings = Settings::new().map_err(|err| err.to_string())?;
-    let mut sections = match load_setting_sections() {
+fn load_platform_table(code_name: &str) -> Result<toml::value::Table, String> {
+    let sections = match load_setting_sections() {
         Ok(data) => data,
         Err(err) => {
-            eprintln!("Falling back to defaults while updating {code_name} settings: {err:?}");
-            std::collections::HashMap::new()
+            eprintln!("Falling back to defaults while loading {code_name} settings: {err:?}");
+            HashMap::new()
         }
     };
 
@@ -602,16 +629,86 @@ fn persist_platform_enabled(code_name: &str, enabled: bool) -> Result<(), String
             .unwrap_or_else(toml::value::Table::new),
     };
 
-    table.insert("enabled".to_string(), Value::Boolean(enabled));
+    if table.is_empty() {
+        if let Some(defaults) = default_table {
+            table = defaults;
+        }
+    }
+
+    Ok(table)
+}
+
+fn persist_platform_table(code_name: &str, table: toml::value::Table) -> Result<(), String> {
+    let settings = Settings::new().map_err(|err| err.to_string())?;
+    let mut sections = match load_setting_sections() {
+        Ok(data) => data,
+        Err(err) => {
+            eprintln!("Falling back to defaults while updating {code_name} settings: {err:?}");
+            HashMap::new()
+        }
+    };
 
     let serialized = toml::to_string(&table)
         .map_err(|err| format!("Could not serialise settings for {code_name}: {err}"))?;
-    sections.insert(code_name.to_string(), serialized.clone());
+    sections.insert(code_name.to_string(), serialized);
 
+    save_platform_sections(&settings, sections)
+}
+
+fn save_platform_sections(
+    settings: &Settings,
+    sections: HashMap<String, String>,
+) -> Result<(), String> {
     let mut platform_sections: Vec<(String, String)> = sections.into_iter().collect();
     platform_sections.sort_by(|a, b| a.0.cmp(&b.0));
+    save_settings_with_sections(settings, &platform_sections).map_err(|err| err.to_string())
+}
 
-    save_settings_with_sections(&settings, &platform_sections).map_err(|err| err.to_string())
+fn json_to_toml_table(settings: JsonValue) -> Result<toml::value::Table, String> {
+    let value = toml::Value::try_from(settings)
+        .map_err(|err| format!("Could not convert settings payload to TOML: {err}"))?;
+    match value {
+        toml::Value::Table(table) => Ok(table),
+        other => Err(format!(
+            "Platform settings payload must be a table, found {other:?}"
+        )),
+    }
+}
+
+fn platform_settings_payload(
+    platform: &dyn GamesPlatform,
+) -> Result<PlatformSettingsPayload, String> {
+    let serialized = platform.get_settings_serializable();
+    let table = match toml::from_str::<toml::Value>(&serialized) {
+        Ok(toml::Value::Table(table)) => table,
+        Ok(_) => toml::value::Table::new(),
+        Err(err) => {
+            eprintln!(
+                "Failed to parse settings for {}: {err}",
+                platform.code_name()
+            );
+            toml::value::Table::new()
+        }
+    };
+
+    let json = serde_json::to_value(&table).map_err(|err| {
+        format!(
+            "Could not serialise settings for {}: {err}",
+            platform.code_name()
+        )
+    })?;
+
+    Ok(PlatformSettingsPayload {
+        code_name: platform.code_name().to_string(),
+        name: platform.name().to_string(),
+        settings: json,
+    })
+}
+
+fn persist_platform_enabled(code_name: &str, enabled: bool) -> Result<(), String> {
+    let mut table = load_platform_table(code_name)?;
+    table.insert("enabled".to_string(), Value::Boolean(enabled));
+    persist_platform_table(code_name, table)
 }
 
 fn default_settings_table(code_name: &str) -> Option<toml::value::Table> {
@@ -777,10 +874,17 @@ struct PlatformError {
     message: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct PlatformToggleResponse {
     platforms: Vec<PlatformSummary>,
     plan: SyncPlan,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PlatformSettingsPayload {
+    code_name: String,
+    name: String,
+    settings: JsonValue,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -821,6 +925,8 @@ mod tests {
                 discover_games,
                 plan_sync,
                 update_settings,
+                list_platform_settings,
+                update_platform_settings,
                 update_platform_enabled,
                 run_full_sync,
                 ping
@@ -884,6 +990,17 @@ mod tests {
         let _payload = response
             .deserialize::<SyncPlan>()
             .expect("plan_sync payload is valid JSON");
+    }
+
+    #[test]
+    fn list_platform_settings_command_returns_payload() {
+        let webview = build_mock_webview();
+        let response = get_ipc_response(&webview, invoke_request("list_platform_settings"))
+            .expect("list_platform_settings command should succeed");
+        let payload = response
+            .deserialize::<Vec<PlatformSettingsPayload>>()
+            .expect("list_platform_settings payload is valid JSON");
+        assert!(!payload.is_empty());
     }
 
     #[test]
@@ -1015,6 +1132,67 @@ mod tests {
             serialized.contains("safe_launch"),
             "default fields should be preserved"
         );
+
+        if previous_override
+            .as_ref()
+            .map(|s| s.is_empty())
+            .unwrap_or(false)
+        {
+            std::env::remove_var("BOILR_CONFIG_HOME");
+        } else if let Some(value) = previous_override {
+            std::env::set_var("BOILR_CONFIG_HOME", value);
+        } else {
+            std::env::remove_var("BOILR_CONFIG_HOME");
+        }
+
+        if previous_xdg.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        } else if let Some(value) = previous_xdg {
+            std::env::set_var("XDG_CONFIG_HOME", value);
+        } else {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        }
+
+        let _ = fs::remove_dir_all(&workspace_config);
+    }
+
+    #[test]
+    fn update_platform_settings_updates_section() {
+        let _guard = test_lock();
+        use serde_json::json;
+        use std::fs;
+
+        let workspace_config = std::env::current_dir()
+            .expect("cwd")
+            .join("target/test-config-platform-settings");
+        let _ = fs::remove_dir_all(&workspace_config);
+        fs::create_dir_all(&workspace_config).expect("temp config dir");
+
+        let previous_override = std::env::var_os("BOILR_CONFIG_HOME");
+        let previous_xdg = std::env::var_os("XDG_CONFIG_HOME");
+        std::env::set_var("BOILR_CONFIG_HOME", &workspace_config);
+        std::env::set_var("XDG_CONFIG_HOME", &workspace_config);
+
+        let settings = Settings::new().expect("settings should load");
+        save_settings_with_sections(&settings, &[]).expect("write initial config");
+
+        let response = update_platform_settings(
+            "epic_games".to_string(),
+            json!({
+                "enabled": false,
+                "safe_launch": ["ExampleGame"]
+            }),
+        )
+        .expect("platform settings should update");
+
+        assert_eq!(response.code_name, "epic_games");
+
+        let sections = load_setting_sections().expect("sections load after update");
+        let epic_section = sections
+            .get("epic_games")
+            .expect("epic settings should exist after update");
+        assert!(epic_section.contains("enabled = false"));
+        assert!(epic_section.contains("safe_launch = [\"ExampleGame\"]"));
 
         if previous_override
             .as_ref()
