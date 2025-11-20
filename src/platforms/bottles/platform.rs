@@ -24,11 +24,14 @@ impl FromSettingsString for BottlesPlatform {
 pub struct BottlesApp {
     pub name: String,
     pub bottle: String,
+    pub is_flatpak: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BottlesSettings {
     pub enabled: bool,
+    #[allow(dead_code)]
+    is_flatpak: bool,
 }
 
 impl Default for BottlesSettings {
@@ -39,61 +42,30 @@ impl Default for BottlesSettings {
         #[cfg(not(target_family = "unix"))]
         let enabled = false;
 
-        Self { enabled }
+        Self {
+            enabled,
+            is_flatpak: false,
+        }
     }
 }
 
 impl From<BottlesApp> for ShortcutOwned {
     fn from(app: BottlesApp) -> Self {
         //
-        let launch_parameter = format!(
-            "run --command=bottles-cli com.usebottles.bottles run --args-replace -b \"{}\" -p \"{}\"",
-            app.bottle, app.name
-        );
-        Shortcut::new("0", &app.name, "flatpak", "", "", "", &launch_parameter).to_owned()
-    }
-}
-
-fn get_bottles() -> eyre::Result<Vec<Bottle>> {
-    let json = get_bottles_output()?;
-    let map: HashMap<String, Bottle> = serde_json::from_str(json.as_str())?;
-    let mut res = vec![];
-    for (_, value) in map {
-        res.push(value);
-    }
-    Ok(res)
-}
-
-fn get_bottles_output() -> eyre::Result<String> {
-    let output = {
-        #[cfg(not(feature = "flatpak"))]
-        {
-            let mut command = Command::new("flatpak");
-            command
-                .arg("run")
-                .arg("--command=bottles-cli")
-                .arg("com.usebottles.bottles")
-                .arg("-j")
-                .arg("list")
-                .arg("bottles")
-                .output()?
+        if app.is_flatpak {
+            let launch_parameter = format!(
+                "run --command=bottles-cli com.usebottles.bottles run --args-replace -b \"{}\" -p \"{}\"",
+                app.bottle, app.name
+            );
+            Shortcut::new("0", &app.name, "flatpak", "", "", "", &launch_parameter).to_owned()
+        } else {
+            let launch_parameter = format!(
+                "run --args-replace -b \"{}\" -p \"{}\"",
+                app.bottle, app.name
+            );
+            Shortcut::new("0", &app.name, "bottles-cli", "", "", "", &launch_parameter).to_owned()
         }
-        #[cfg(feature = "flatpak")]
-        {
-            let mut command = Command::new("flatpak-spawn");
-            command
-                .arg("--host")
-                .arg("flatpak")
-                .arg("run")
-                .arg("--command=bottles-cli")
-                .arg("com.usebottles.bottles")
-                .arg("-j")
-                .arg("list")
-                .arg("bottles")
-                .output()?
-        }
-    };
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -111,14 +83,75 @@ struct Program {
 }
 
 impl BottlesPlatform {
+    fn get_bottles(&self) -> eyre::Result<Vec<Bottle>> {
+        let json = self.get_bottles_output()?;
+        let map: HashMap<String, Bottle> = serde_json::from_str(json.as_str())?;
+        let mut res = vec![];
+        for (_, value) in map {
+            res.push(value);
+        }
+        Ok(res)
+    }
+
+    fn get_bottles_output(&self) -> eyre::Result<String> {
+        let output = {
+            #[cfg(not(feature = "flatpak"))]
+            {
+                if self.settings.is_flatpak {
+                    let mut command = Command::new("flatpak");
+                    command
+                        .arg("run")
+                        .arg("--command=bottles-cli")
+                        .arg("com.usebottles.bottles")
+                        .arg("-j")
+                        .arg("list")
+                        .arg("bottles")
+                        .output()?
+                } else {
+                    let mut command = Command::new("bottles-cli");
+                    command
+                        .arg("-j")
+                        .arg("list")
+                        .arg("bottles")
+                        .output()?
+                }
+            }
+            #[cfg(feature = "flatpak")]
+            {
+                if self.settings.is_flatpak {
+                    let mut command = Command::new("flatpak spawn");
+                    command
+                        .arg("--host")
+                        .arg("flatpak")
+                        .arg("run")
+                        .arg("--command=bottles-cli")
+                        .arg("com.usebottles.bottles")
+                        .arg("-j")
+                        .arg("list")
+                        .arg("bottles")
+                        .output()?
+                } else {
+                    let mut command = Command::new("bottles-cli");
+                    command
+                        .arg("-j")
+                        .arg("list")
+                        .arg("bottles")
+                        .output()?
+                }
+            }
+        };
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    }
+
     fn get_botttles(&self) -> eyre::Result<Vec<BottlesApp>> {
         let mut res = vec![];
-        let bottles = get_bottles()?;
+        let bottles = self.get_bottles()?;
         for bottle in bottles {
             for (_id, program) in bottle.external_programs {
                 res.push(BottlesApp {
                     name: program.name,
                     bottle: bottle.name.clone(),
+                    is_flatpak: self.settings.is_flatpak,
                 })
             }
         }
@@ -143,6 +176,7 @@ impl GamesPlatform for BottlesPlatform {
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Bottles");
         ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
+        ui.checkbox(&mut self.settings.is_flatpak, "Flatpak version");
     }
 
     fn get_settings_serializable(&self) -> String {
