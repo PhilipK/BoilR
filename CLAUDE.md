@@ -147,21 +147,21 @@ src/
 
 ### Phase 2: Error Handling
 
-- [ ] Replace `.unwrap_or_default()` with proper error propagation
-- [ ] Add user-visible error messages in UI
+- [ ] Replace `.unwrap_or_default()` with proper error propagation (partially done for sync)
+- [x] Add user-visible error messages in UI (SyncProgress::Error with red text display)
 - [ ] Implement retry logic for network operations
 - [ ] Add timeout handling for external commands
 
 ### Phase 3: UX Improvements
 
-- [ ] Add progress indicators for long operations
-- [ ] Implement proper loading states in Images tab
+- [x] Add progress indicators for long operations (sync progress already existed, now with error states)
+- [x] Implement proper loading states in Images tab (async FetchStatus for grid_id and name searches)
 - [ ] Add SteamGridDB API key validation
 - [ ] Show log file location in UI
 
 ### Phase 4: Modernization (Optional)
 
-- [ ] Consider migrating from `block_on` to proper async channels
+- [x] Migrate from `block_on` to proper async channels (done for UI-blocking calls)
 - [ ] Implement image cache cleanup
 - [ ] Add configuration validation
 - [ ] Consider breaking up monolithic config.toml
