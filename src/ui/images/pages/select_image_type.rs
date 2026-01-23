@@ -1,10 +1,11 @@
 use std::path::Path;
 
 use egui::ImageButton;
+use tracing::{debug, trace};
 
 use crate::ui::images::{
     gametype::GameType, hasimagekey::HasImageKey, image_select_state::ImageSelectState,
-    useraction::UserAction, 
+    useraction::UserAction,
 };
 use crate::steamgriddb::ImageType;
 
@@ -81,10 +82,20 @@ fn render_thumbnail(
     image_type: &ImageType,
     user_path: &String,
 ) -> bool {
-    let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
+    let (path, key) = shortcut.key(image_type, Path::new(&user_path));
+    trace!(image_type = ?image_type, path = %path.display(), "Rendering thumbnail");
     let text = format!("Pick {} image", image_type.name());
-    let image = egui::Image::new(format!("file://{}", key)).max_width(MAX_WIDTH).shrink_to_fit();
+
+    // Convert Windows backslashes to forward slashes for file:// URL
+    let key_normalized = key.replace('\\', "/");
+    let image_url = format!("file:///{}", key_normalized);
+
+    let image = egui::Image::new(&image_url).max_width(MAX_WIDTH).shrink_to_fit();
     let calced = image.calc_size(egui::Vec2 { x: MAX_WIDTH, y: f32::INFINITY }, image.size());
     let button = ImageButton::new(image);
-    ui.add_sized(calced,button).on_hover_text(text).clicked()
+    let clicked = ui.add_sized(calced, button).on_hover_text(text).clicked();
+    if clicked {
+        debug!(image_type = ?image_type, "Image type thumbnail clicked");
+    }
+    clicked
 }

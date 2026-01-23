@@ -3,6 +3,7 @@ use steam_shortcuts_util::{
     calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
 use tokio::sync::watch::Sender;
+use tracing::{debug, error, info, warn};
 
 use crate::{
     platforms::{GamesPlatform, ShortcutToImport},
@@ -55,22 +56,32 @@ pub fn sync_shortcuts(
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32, String>,
 ) -> eyre::Result<Vec<SteamUsersInfo>> {
+    info!("Starting shortcut synchronization");
+
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
+    info!(user_count = userinfo_shortcuts.len(), "Found Steam users");
+
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
         .filter(|s| !settings.blacklisted_games.contains(&s.app_id))
         .collect();
+
+    info!(shortcut_count = all_shortcuts.len(), "Total shortcuts to import (after blacklist filter)");
+
     for shortcut in &mut all_shortcuts {
         shortcut.dev_kit_game_id = BOILR_TAG.to_string();
     }
+
     if let Some(sender) = &sender {
         let _ = sender.send(SyncProgress::FoundGames {
             games_found: all_shortcuts.len(),
         });
     }
+
     for shortcut in &mut all_shortcuts {
         if let Some(rename) = renames.get(&shortcut.app_id) {
+            debug!(app_id = shortcut.app_id, old_name = %shortcut.app_name, new_name = %rename, "Renaming shortcut");
             shortcut.app_name = rename.clone();
             let new_shortcut = Shortcut::new(
                 "0",
@@ -83,40 +94,54 @@ pub fn sync_shortcuts(
             );
             shortcut.app_id = calculate_app_id_for_shortcut(&new_shortcut);
         }
-        println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
+        debug!(app_id = shortcut.app_id, app_name = %shortcut.app_name, "Processing shortcut");
     }
-    println!("Found {} user(s)", userinfo_shortcuts.len());
+
     let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user|{
         let shortcut_info = get_shortcuts_for_user(user).ok();
         shortcut_info.map(|shortcut_info| {
             (user,shortcut_info)
         })
     });
-    for (user,mut shortcut_info) in ok_shorcuts {
+
+    for (user, mut shortcut_info) in ok_shorcuts {
         let start_time = std::time::Instant::now();
-        println!(
-            "Found {} shortcuts for user: {}",
-            shortcut_info.shortcuts.len(),
-            user.user_id
+        info!(
+            user_id = %user.user_id,
+            existing_shortcuts = shortcut_info.shortcuts.len(),
+            "Processing user"
         );
 
+        let before_count = shortcut_info.shortcuts.len();
         remove_old_shortcuts(&mut shortcut_info);
+        let after_remove_old = shortcut_info.shortcuts.len();
+        debug!(removed = before_count - after_remove_old, "Removed old BoilR shortcuts");
+
         remove_shortcuts_with_same_appid(&mut shortcut_info, &all_shortcuts);
+        let after_remove_dupes = shortcut_info.shortcuts.len();
+        debug!(removed = after_remove_old - after_remove_dupes, "Removed duplicate app IDs");
 
         shortcut_info.shortcuts.extend(all_shortcuts.clone());
+        info!(
+            user_id = %user.user_id,
+            total_shortcuts = shortcut_info.shortcuts.len(),
+            "Saving shortcuts"
+        );
 
         save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
 
         if settings.steam.create_collections {
             match write_shortcut_collections(&user.user_id, platform_shortcuts) {
-                Ok(_) => (),
-                Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
+                Ok(_) => info!(user_id = %user.user_id, "Collections written successfully"),
+                Err(e) => warn!(user_id = %user.user_id, error = %e, "Could not write collections - make sure Steam is shut down"),
             }
         }
 
         let duration = start_time.elapsed();
-        println!("Finished synchronizing games in: {duration:?}");
+        info!(user_id = %user.user_id, duration_ms = duration.as_millis(), "Finished synchronizing user");
     }
+
+    info!("Shortcut synchronization complete");
     Ok(userinfo_shortcuts)
 }
 
@@ -126,12 +151,17 @@ pub async fn download_images(
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     if settings.steamgrid_db.enabled {
-        download_images_for_users(settings, userinfo_shortcuts,  sender).await;
-        if settings.steamgrid_db.prefer_animated{
+        info!("Starting image download from SteamGridDB");
+        download_images_for_users(settings, userinfo_shortcuts, sender).await;
+        if settings.steamgrid_db.prefer_animated {
+            debug!("Running second pass for non-animated images");
             let mut set = settings.clone();
             set.steamgrid_db.prefer_animated = false;
-            download_images_for_users(&set, userinfo_shortcuts,  sender).await;
+            download_images_for_users(&set, userinfo_shortcuts, sender).await;
         }
+        info!("Image download complete");
+    } else {
+        debug!("SteamGridDB disabled, skipping image download");
     }
 }
 
@@ -248,20 +278,14 @@ fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
     match File::create(path) {
         Ok(mut file) => match file.write_all(new_content.as_slice()) {
             Ok(_) => {
-                println!("Saved {} shortcuts", shortcuts.len())
+                info!(path = %path.display(), count = shortcuts.len(), "Saved shortcuts to file");
             }
-            Err(e) => println!(
-                "Failed to save shortcuts to {} error: {}",
-                path.to_string_lossy(),
-                e
-            ),
+            Err(e) => {
+                error!(path = %path.display(), error = %e, "Failed to write shortcuts to file");
+            }
         },
         Err(e) => {
-            println!(
-                "Failed to save shortcuts to {} error: {}",
-                path.to_string_lossy(),
-                e
-            );
+            error!(path = %path.display(), error = %e, "Failed to create shortcuts file");
         }
     }
 }

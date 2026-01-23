@@ -41,6 +41,10 @@ pub fn get_cache_file() -> PathBuf {
     get_config_folder().join("cache.json")
 }
 
+pub fn get_log_file() -> PathBuf {
+    get_config_folder().join("boilr.log")
+}
+
 pub fn get_backups_flder() -> PathBuf {
     let backups_path = get_config_folder().join("backup");
     let _ = create_dir_all(&backups_path);

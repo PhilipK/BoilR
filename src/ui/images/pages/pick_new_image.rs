@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use egui::{Grid, ImageButton};
 use futures::executor::block_on;
 use tokio::sync::watch;
+use tracing::{debug, error, info, trace, warn};
 
 use crate::{
     steamgriddb::{get_image_extension, ImageType, ToDownload},
@@ -99,7 +100,8 @@ pub fn render_page_pick_image(
 }
 
 pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
-    //We must have a user here
+    info!(url = %image.full_url, "Image selected for download");
+    // We must have a user here
     let state = &app.image_selected_state;
     if let (Some(user), Some(selected_image_type), Some(selected_shortcut)) = (
         state.steam_user.as_ref(),
@@ -113,23 +115,35 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
             .join("grid")
             .join(selected_image_type.file_name(selected_shortcut.app_id(), ext));
 
+        debug!(
+            app_name = %selected_shortcut.name(),
+            image_type = ?selected_image_type,
+            destination = %to_download_to_path.display(),
+            "Downloading image"
+        );
+
         delete_images_of_type(user, selected_shortcut, selected_image_type);
 
         let app_name = selected_shortcut.name();
         let to_download = ToDownload {
-            path: to_download_to_path,
+            path: to_download_to_path.clone(),
             url: image.full_url.clone(),
             app_name: app_name.to_string(),
             image_type: *selected_image_type,
         };
         app.rt.spawn_blocking(move || {
-            let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
+            match block_on(crate::steamgriddb::download_to_download(&to_download)) {
+                Ok(_) => info!(path = %to_download.path.display(), "Image downloaded successfully"),
+                Err(e) => error!(error = %e, path = %to_download.path.display(), "Failed to download image"),
+            }
         });
 
         {
             app.image_selected_state.image_type_selected = None;
             app.image_selected_state.image_options = watch::channel(FetchStatus::NeedsFetched).1;
         }
+    } else {
+        warn!("Cannot download image: missing user, image type, or shortcut selection");
     }
 }
 

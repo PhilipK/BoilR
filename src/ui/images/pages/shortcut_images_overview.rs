@@ -2,13 +2,14 @@ use std::path::Path;
 
 use egui::ImageButton;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
+use tracing::{debug, error, info, trace, warn};
 
 use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
         images::{
-            gametype::GameType, hasimagekey::HasImageKey, 
+            gametype::GameType, hasimagekey::HasImageKey,
             useraction::UserAction,
         },
         MyEguiApp,
@@ -19,6 +20,7 @@ pub fn render_page_shortcut_images_overview(
     app: &MyEguiApp,
     ui: &mut egui::Ui,
 ) -> Option<UserAction> {
+    trace!("Rendering shortcut images overview");
     let user_info = &app.image_selected_state.steam_user;
     let shortcuts = &app.image_selected_state.user_shortcuts;
     let width = ui.available_size().x;
@@ -28,6 +30,7 @@ pub fn render_page_shortcut_images_overview(
     let mut cur_column = 0;
     match (user_info, shortcuts) {
         (Some(user_info), Some(shortcuts)) => {
+            trace!(shortcut_count = shortcuts.len(), columns = columns, "Rendering image grid");
             if let Some(action) = egui::Grid::new("ui_images")
                 .show(ui, |ui| {
                     for shortcut in shortcuts {
@@ -50,6 +53,7 @@ pub fn render_page_shortcut_images_overview(
             }
         }
         _ => {
+            debug!("No shortcuts available to display");
             ui.label("Could not find any shortcuts");
         }
     }
@@ -62,32 +66,53 @@ fn render_image(
     column_width: f32,
     ui: &mut egui::Ui,
 ) -> Option<Option<UserAction>> {
-    let (_, key) = shortcut.key(
+    let (path, key) = shortcut.key(
         &ImageType::Grid,
         Path::new(&user_info.steam_user_data_folder),
     );
-    let image = egui::Image::new(format!("file://{}", key)).max_width(column_width).shrink_to_fit();
+    trace!(app_name = %shortcut.app_name, image_path = %path.display(), "Rendering shortcut image");
+
+    // Convert Windows backslashes to forward slashes for file:// URL
+    let key_normalized = key.replace('\\', "/");
+    let image_url = format!("file:///{}", key_normalized);
+    trace!(url = %image_url, "Loading image from URL");
+
+    let image = egui::Image::new(&image_url).max_width(column_width).shrink_to_fit();
     let calced = image.calc_size(egui::Vec2 { x: column_width, y: f32::INFINITY }, image.size());
     let button = ImageButton::new(image);
 
     if ui.add_sized(calced,button).on_hover_text(&shortcut.app_name).clicked() {
+        debug!(app_name = %shortcut.app_name, app_id = shortcut.app_id, "Shortcut clicked");
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             Box::new(shortcut.clone()),
         ))));
     }
     None
 }
-pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType ) {
+pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType) {
+    info!(app_name = %shortcut.name(), app_id = shortcut.app_id(), "Shortcut selected for image management");
     let state = &mut app.image_selected_state;
-    //We must have a user to get to this action;
-        if let Some(auth_key) = &app.settings.steamgrid_db.auth_key {
-            let client = steamgriddb_api::Client::new(auth_key);
-            let search = CachedSearch::new(&client);
-            state.grid_id = app
-                .rt
-                .block_on(search.search(shortcut.app_id(), shortcut.name()))
-                .ok()
-                .flatten();
+    // We must have a user to get to this action
+    if let Some(auth_key) = &app.settings.steamgrid_db.auth_key {
+        debug!("Searching SteamGridDB for game");
+        let client = steamgriddb_api::Client::new(auth_key);
+        let search = CachedSearch::new(&client);
+        match app.rt.block_on(search.search(shortcut.app_id(), shortcut.name())) {
+            Ok(Some(grid_id)) => {
+                info!(grid_id = grid_id, app_name = %shortcut.name(), "Found SteamGridDB ID");
+                state.grid_id = Some(grid_id);
+            }
+            Ok(None) => {
+                warn!(app_name = %shortcut.name(), "No SteamGridDB match found for game");
+                state.grid_id = None;
+            }
+            Err(e) => {
+                error!(error = %e, app_name = %shortcut.name(), "SteamGridDB search failed");
+                state.grid_id = None;
+            }
         }
-        state.selected_shortcut = Some(shortcut);
+    } else {
+        warn!("No SteamGridDB auth key configured");
+    }
+    state.selected_shortcut = Some(shortcut);
 }

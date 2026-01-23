@@ -1,6 +1,7 @@
 use eframe::egui;
 use egui::ScrollArea;
 use futures::executor::block_on;
+use tracing::{debug, error, info, warn};
 
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
@@ -132,47 +133,79 @@ impl MyEguiApp {
         let _ = self.run_sync(false);
     }
     fn run_sync(&mut self, wait: bool) -> eyre::Result<()> {
+        info!(wait = wait, "Starting sync process");
+
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
+
         if settings.steam.stop_steam {
+            info!("Stopping Steam before sync");
             crate::steam::ensure_steam_stopped();
         }
 
         self.status_reciever = reciever;
         let renames = self.rename_map.clone();
         let all_ready = all_ready(&self.games_to_sync);
-        let _ = sender.send(SyncProgress::Starting);
-        if all_ready {
-            let shortcuts_to_import = get_all_games(&self.games_to_sync);
-            let handle: JoinHandle<eyre::Result<()>> = self.rt.spawn_blocking(move || {
-                #[cfg(target_family = "unix")]
-                setup_proton(shortcuts_to_import.iter());
 
-                let import_games = to_shortcut_owned(shortcuts_to_import);
-
-                let mut some_sender = Some(sender);
-                backup_shortcuts(&settings.steam);
-                let usersinfo =
-                    sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)?;
-                let task = download_images(&settings, &usersinfo, &mut some_sender);
-                block_on(task);
-                //Run a second time to fix up shortcuts after images are downloaded
-                if let Err(e) = sync::fix_all_shortcut_icons(&settings) {
-                    eprintln!("Could not fix shortcuts with error {e}");
-                }
-
-                if let Some(sender) = some_sender {
-                    let _ = sender.send(SyncProgress::Done);
-                }
-                if settings.steam.start_steam {
-                    crate::steam::ensure_steam_started(&settings.steam);
-                }
-                Ok(())
-            });
-            if wait {
-                self.rt.block_on(handle)??;
-            }
+        if !all_ready {
+            warn!("Sync requested but platforms are still loading");
+            return Ok(());
         }
+
+        let _ = sender.send(SyncProgress::Starting);
+        let shortcuts_to_import = get_all_games(&self.games_to_sync);
+
+        let total_games: usize = shortcuts_to_import.iter().map(|(_, v)| v.len()).sum();
+        info!(
+            platform_count = shortcuts_to_import.len(),
+            total_games = total_games,
+            "Starting import"
+        );
+
+        let handle: JoinHandle<eyre::Result<()>> = self.rt.spawn_blocking(move || {
+            #[cfg(target_family = "unix")]
+            setup_proton(shortcuts_to_import.iter());
+
+            let import_games = to_shortcut_owned(shortcuts_to_import);
+
+            let mut some_sender = Some(sender);
+            info!("Creating backup of existing shortcuts");
+            backup_shortcuts(&settings.steam);
+
+            info!("Syncing shortcuts to Steam");
+            let usersinfo =
+                sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)?;
+
+            info!("Downloading images");
+            let task = download_images(&settings, &usersinfo, &mut some_sender);
+            block_on(task);
+
+            // Run a second time to fix up shortcuts after images are downloaded
+            info!("Fixing shortcut icons");
+            if let Err(e) = sync::fix_all_shortcut_icons(&settings) {
+                error!(error = %e, "Could not fix shortcut icons");
+            }
+
+            if let Some(sender) = some_sender {
+                let _ = sender.send(SyncProgress::Done);
+            }
+
+            if settings.steam.start_steam {
+                info!("Starting Steam after sync");
+                crate::steam::ensure_steam_started(&settings.steam);
+            }
+
+            info!("Sync process complete");
+            Ok(())
+        });
+
+        if wait {
+            debug!("Waiting for sync to complete");
+            self.rt.block_on(handle)??;
+        } else {
+            debug!("Sync running in background");
+        }
+
         Ok(())
     }
 }
