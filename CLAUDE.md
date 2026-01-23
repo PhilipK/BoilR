@@ -83,27 +83,24 @@ src/
 
 ### Critical
 
-1. **Admin Privileges Required (Windows)**
-   - App silently fails without admin rights
-   - No UAC prompt or elevation request
-   - User gets no feedback about why operations fail
-   - **Location**: Likely `steam/utils.rs` and registry access
+1. ~~**Permissions / Error Feedback (Windows)**~~ (FIXED)
+   - Analysis confirmed admin is NOT required for normal operation
+   - All registry access is READ-only (Uplay, Epic, Origin)
+   - Steam userdata folder is typically writable by current user
+   - **Fix**: Added `SyncProgress::Error` to surface permission errors in UI
 
-2. **Images Tab "Freak Out"**
-   - UI becomes unresponsive when clicking Images tab
-   - Likely causes:
-     - `block_on()` inside tokio runtime causing deadlocks
-     - Missing SteamGridDB API key (silent failure)
-     - Windows file path backslashes in `file://` URLs
-     - `thread::sleep(100ms)` blocking UI thread
-   - **Locations**: `ui/images/ui_image_download.rs`, `ui/images/pages/`
+2. ~~**Images Tab "Freak Out"**~~ (FIXED)
+   - **Fixes applied**:
+     - Converted blocking `block_on()` calls to async with background spawning
+     - Fixed Windows file path backslashes in `file://` URLs
+     - Removed blocking `thread::sleep(100ms)` call
+     - Added proper loading states for async operations
 
 ### Moderate
 
-3. **Silent Error Handling**
-   - Widespread `.unwrap_or_default()` and `.ok()` swallowing errors
-   - `let _ = ...` ignoring Result values
-   - No user feedback when operations fail
+3. ~~**Silent Error Handling**~~ (PARTIALLY FIXED)
+   - **Fixed**: Sync/shortcut saving now reports errors to user via UI
+   - **Remaining**: Some `.unwrap_or_default()` and `.ok()` patterns still exist in other areas
 
 4. **Steam Process Management**
    - Uses SIGKILL without proper wait verification
@@ -125,10 +122,9 @@ src/
 7. **TODO Comments** (incomplete features)
    - `platforms/minigalaxy/platform.rs` - Detection incomplete
    - `steam/proton_vdf_util.rs` - Error handling question
-   - `ui/images/ui_image_download.rs:324` - Dead code marked for removal
 
-8. **Typo in Function Name**
-   - `config.rs:44` - `get_backups_flder()` should be `get_backups_folder()`
+8. ~~**Typo in Function Name**~~ (FIXED)
+   - ~~`config.rs:44` - `get_backups_flder()` should be `get_backups_folder()`~~
 
 ## Roadmap
 
@@ -141,8 +137,12 @@ src/
 - [x] Add logging to sync/import process
 - [x] Single instance enforcement (prevents multiple BoilR instances)
 - [x] Fix Windows file:// URL path handling (backslashes)
-- [ ] Add admin privilege detection and prompt (Windows)
-- [ ] Fix `block_on()` usage in async context
+- [x] Investigate admin privilege requirements (confirmed NOT needed)
+- [x] Fix `block_on()` usage in async context (converted UI-blocking calls to async)
+- [x] Add proper permission error handling (surface errors to user via SyncProgress::Error)
+- [x] Fix typo: `get_backups_flder` -> `get_backups_folder`
+- [x] Remove duplicate `get_log_file` function
+- [x] Fix unnecessary parentheses in sync/synchronization.rs
 
 ### Phase 2: Error Handling
 

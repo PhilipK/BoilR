@@ -2,6 +2,7 @@ use std::path::Path;
 
 use egui::ImageButton;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
+use tokio::sync::watch;
 use tracing::{debug, error, info, trace, warn};
 
 use crate::{
@@ -12,7 +13,7 @@ use crate::{
             gametype::GameType, hasimagekey::HasImageKey,
             useraction::UserAction,
         },
-        MyEguiApp,
+        FetchStatus, MyEguiApp,
     },
 };
 
@@ -91,28 +92,46 @@ fn render_image(
 }
 pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType) {
     info!(app_name = %shortcut.name(), app_id = shortcut.app_id(), "Shortcut selected for image management");
-    let state = &mut app.image_selected_state;
+
+    // Set the selected shortcut immediately so UI can show it
+    app.image_selected_state.selected_shortcut = Some(shortcut.clone());
+    app.image_selected_state.grid_id = None;
+
     // We must have a user to get to this action
-    if let Some(auth_key) = &app.settings.steamgrid_db.auth_key {
-        debug!("Searching SteamGridDB for game");
-        let client = steamgriddb_api::Client::new(auth_key);
-        let search = CachedSearch::new(&client);
-        match app.rt.block_on(search.search(shortcut.app_id(), shortcut.name())) {
-            Ok(Some(grid_id)) => {
-                info!(grid_id = grid_id, app_name = %shortcut.name(), "Found SteamGridDB ID");
-                state.grid_id = Some(grid_id);
-            }
-            Ok(None) => {
-                warn!(app_name = %shortcut.name(), "No SteamGridDB match found for game");
-                state.grid_id = None;
-            }
-            Err(e) => {
-                error!(error = %e, app_name = %shortcut.name(), "SteamGridDB search failed");
-                state.grid_id = None;
-            }
-        }
+    if let Some(auth_key) = app.settings.steamgrid_db.auth_key.clone() {
+        debug!("Spawning async SteamGridDB search for game");
+
+        // Create channel to communicate results
+        let (tx, rx) = watch::channel(FetchStatus::Fetching);
+        app.image_selected_state.grid_id_search = rx;
+
+        let app_id = shortcut.app_id();
+        let app_name = shortcut.name().to_string();
+
+        // Spawn the search in the background
+        app.rt.spawn(async move {
+            let client = steamgriddb_api::Client::new(auth_key);
+            let search = CachedSearch::new(&client);
+            let result = search.search(app_id, &app_name).await;
+
+            let search_result = match result {
+                Ok(Some(grid_id)) => {
+                    info!(grid_id = grid_id, app_name = %app_name, "Found SteamGridDB ID");
+                    Ok(Some(grid_id))
+                }
+                Ok(None) => {
+                    warn!(app_name = %app_name, "No SteamGridDB match found for game");
+                    Ok(None)
+                }
+                Err(e) => {
+                    error!(error = %e, app_name = %app_name, "SteamGridDB search failed");
+                    Err(e.to_string())
+                }
+            };
+
+            let _ = tx.send(FetchStatus::Fetched(search_result));
+        });
     } else {
         warn!("No SteamGridDB auth key configured");
     }
-    state.selected_shortcut = Some(shortcut);
 }

@@ -11,7 +11,7 @@ use super::{
     useraction::UserAction,
 };
 
-use std::{ path::Path, thread, time::Duration};
+use std::path::Path;
 
 use crate::{
     config::get_thumbnails_folder,
@@ -106,6 +106,9 @@ impl MyEguiApp {
                 ui.ctx().request_repaint();
                 return Some(UserAction::RefreshImages);
             }
+            crate::sync::SyncProgress::Error { ref message } => {
+                ui.colored_label(egui::Color32::RED, format!("Error: {}", message));
+            }
             _ => {
                 if ui.button("Download images for all games").clicked() {
                     return Some(UserAction::DownloadAllImages);
@@ -135,10 +138,46 @@ impl MyEguiApp {
         }
     }
 
+    /// Poll for async grid_id search results from background task
+    fn poll_grid_id_search(&mut self) {
+        if let FetchStatus::Fetched(result) = &*self.image_selected_state.grid_id_search.borrow() {
+            match result {
+                Ok(Some(grid_id)) => {
+                    if self.image_selected_state.grid_id.is_none() {
+                        debug!(grid_id = grid_id, "Grid ID search completed");
+                        self.image_selected_state.grid_id = Some(*grid_id);
+                    }
+                }
+                Ok(None) => {
+                    trace!("Grid ID search returned no result");
+                }
+                Err(e) => {
+                    trace!(error = %e, "Grid ID search had an error");
+                }
+            }
+        }
+    }
+
+    /// Poll for async name search results from background task
+    fn poll_name_search(&mut self) {
+        if let FetchStatus::Fetched(results) = &*self.image_selected_state.name_search.borrow() {
+            if self.image_selected_state.possible_names.is_none() {
+                debug!(count = results.len(), "Name search completed");
+                self.image_selected_state.possible_names = Some(results.clone());
+            }
+        }
+    }
+
     #[instrument(skip(self, ui), level = "trace")]
     pub fn render_ui_images(&mut self, ui: &mut egui::Ui) {
         trace!("Rendering images UI");
         self.ensure_steam_users_loaded();
+
+        // Poll for async grid_id search results
+        self.poll_grid_id_search();
+
+        // Poll for async name search results
+        self.poll_name_search();
 
         if let Some(error_message) = &self.image_selected_state.settings_error {
             warn!(error = %error_message, "Images tab showing error state");
@@ -171,7 +210,8 @@ impl MyEguiApp {
             }
             UserAction::ImageSelected(image) => {
                 handle_image_selected(self, image);
-                thread::sleep(Duration::from_millis(100));
+                // Request repaint to refresh images after download starts
+                ui.ctx().request_repaint();
                 ui.ctx().forget_all_images();
             }
             UserAction::BackButton => {

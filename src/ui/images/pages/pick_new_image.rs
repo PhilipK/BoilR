@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use egui::{Grid, ImageButton};
 use futures::executor::block_on;
 use tokio::sync::watch;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::{
     steamgriddb::{get_image_extension, ImageType, ToDownload},

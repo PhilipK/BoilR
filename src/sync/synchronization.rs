@@ -28,6 +28,8 @@ pub enum SyncProgress {
     FindingImages,
     DownloadingImages { to_download: usize },
     Done,
+    /// Error occurred during sync - contains user-friendly error message
+    Error { message: String },
 }
 
 pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), String> {
@@ -43,7 +45,9 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
                     shortcut.tags.retain(|s| s != BOILR_TAG);
                 }
             }
-            save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+            if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path)) {
+                return Err(e);
+            }
         }
     }
 
@@ -128,7 +132,13 @@ pub fn sync_shortcuts(
             "Saving shortcuts"
         );
 
-        save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+        if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path)) {
+            error!(user_id = %user.user_id, error = %e, "Failed to save shortcuts");
+            if let Some(sender) = sender {
+                let _ = sender.send(SyncProgress::Error { message: e });
+            }
+            // Continue with other users even if one fails
+        }
 
         if settings.steam.create_collections {
             match write_shortcut_collections(&user.user_id, platform_shortcuts) {
@@ -204,7 +214,10 @@ pub fn fix_all_shortcut_icons(settings: &Settings) -> eyre::Result<()> {
                 settings.steam.optimize_for_big_picture,
             );
             if changes {
-                save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path));
+                if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path)) {
+                    warn!(user_id = %user.user_id, error = %e, "Failed to save shortcut icons");
+                    // Continue with other users
+                }
             }
         }
     }
@@ -248,7 +261,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
     let mut collections = vec![];
 
     for (name, shortcuts) in platform_results {
-        let game_ids = shortcuts.iter().map(|s| (s.app_id as usize)).collect();
+        let game_ids = shortcuts.iter().map(|s| s.app_id as usize).collect();
         collections.push(Collection {
             name: name.clone(),
             game_ids,
@@ -269,7 +282,7 @@ pub fn get_platform_shortcuts(
     }
 }
 
-fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
+fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) -> Result<(), String> {
     let mut shortcuts_refs = vec![];
     for shortcut in shortcuts {
         shortcuts_refs.push(shortcut.borrow());
@@ -279,13 +292,24 @@ fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) {
         Ok(mut file) => match file.write_all(new_content.as_slice()) {
             Ok(_) => {
                 info!(path = %path.display(), count = shortcuts.len(), "Saved shortcuts to file");
+                Ok(())
             }
             Err(e) => {
                 error!(path = %path.display(), error = %e, "Failed to write shortcuts to file");
+                Err(format!(
+                    "Failed to write shortcuts to {}: {}. Check that Steam is not running and you have write permissions to the Steam folder.",
+                    path.display(),
+                    e
+                ))
             }
         },
         Err(e) => {
             error!(path = %path.display(), error = %e, "Failed to create shortcuts file");
+            Err(format!(
+                "Failed to create shortcuts file at {}: {}. Check that Steam is not running and you have write permissions to the Steam folder.",
+                path.display(),
+                e
+            ))
         }
     }
 }

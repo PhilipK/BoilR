@@ -18,7 +18,7 @@ mod sync;
 mod ui;
 
 use color_eyre::eyre::Result;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 fn main() -> Result<()> {
     color_eyre::install()?;

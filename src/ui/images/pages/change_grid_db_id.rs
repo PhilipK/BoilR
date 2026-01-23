@@ -1,8 +1,11 @@
+use tokio::sync::watch;
+use tracing::{debug, warn};
+
 use crate::{
     steamgriddb::CachedSearch,
     ui::{
         images::{image_select_state::ImageSelectState, useraction::UserAction},
-        MyEguiApp,
+        FetchStatus, MyEguiApp,
     },
 };
 
@@ -51,20 +54,32 @@ pub fn handle_grid_change(app: &mut MyEguiApp, grid_id: usize) {
 }
 
 
-pub fn handle_correct_grid_request(app:&mut MyEguiApp) {
-        let app_name = app
-            .image_selected_state
-            .selected_shortcut
-            .as_ref()
-            .map(|s| s.name())
-            .unwrap_or_default();
-        let auth_key = app
-            .settings
-            .steamgrid_db
-            .auth_key
-            .clone()
-            .unwrap_or_default();
-        let client = steamgriddb_api::Client::new(auth_key);
-        let search_results = app.rt.block_on(client.search(app_name));
-        app.image_selected_state.possible_names = search_results.ok();
+pub fn handle_correct_grid_request(app: &mut MyEguiApp) {
+    let app_name = app
+        .image_selected_state
+        .selected_shortcut
+        .as_ref()
+        .map(|s| s.name().to_string())
+        .unwrap_or_default();
+
+    if let Some(auth_key) = app.settings.steamgrid_db.auth_key.clone() {
+        debug!(app_name = %app_name, "Spawning async name search for grid ID correction");
+
+        // Create channel to communicate results
+        let (tx, rx) = watch::channel(FetchStatus::Fetching);
+        app.image_selected_state.name_search = rx;
+
+        // Clear any existing possible_names so we show loading state
+        app.image_selected_state.possible_names = None;
+
+        // Spawn the search in the background
+        app.rt.spawn(async move {
+            let client = steamgriddb_api::Client::new(auth_key);
+            let search_results = client.search(&app_name).await;
+            let results = search_results.unwrap_or_default();
+            let _ = tx.send(FetchStatus::Fetched(results));
+        });
+    } else {
+        warn!("No SteamGridDB auth key configured");
     }
+}
