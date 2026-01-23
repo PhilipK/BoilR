@@ -45,6 +45,7 @@ cargo run --release -- --fullscreen
 src/
 ├── main.rs                 # Entry point
 ├── logging.rs              # Logging infrastructure (tracing)
+├── single_instance.rs      # Single-instance enforcement (lock file + PID)
 ├── config.rs               # Path helpers
 ├── settings.rs             # TOML config management
 ├── platforms/              # Game platform implementations
@@ -177,6 +178,7 @@ src/
 | `tracing` | 0.1 | Logging (newly added) |
 | `tracing-subscriber` | 0.3 | Log output |
 | `tracing-appender` | 0.2 | File logging |
+| `sysinfo` | 0.32 | Process detection for single-instance (newly added) |
 
 ## Platform Support Matrix
 
