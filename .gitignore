@@ -9,4 +9,4 @@ flatpak/.flatpak-builder
 flatpak/build-dir
 flatpak/repo
 flatpak/flatpak-cargo-generator.py
-.flatpak-builder
+.flatpak-builder.claude/
