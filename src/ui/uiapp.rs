@@ -8,6 +8,7 @@ use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
 };
+use tracing::{debug, error, info, trace};
 
 use crate::{
     config::get_renames_file,
@@ -68,10 +69,22 @@ pub struct MyEguiApp {
 
 impl MyEguiApp {
     pub fn new() -> eyre::Result<Self> {
+        info!("Initializing BoilR application");
         let mut runtime = Runtime::new()?;
+        debug!("Tokio runtime created");
+
         let settings = Settings::new()?;
+        debug!(
+            steamgriddb_enabled = settings.steamgrid_db.auth_key.is_some(),
+            steam_location = ?settings.steam.location,
+            "Settings loaded"
+        );
+
         let platforms = get_platforms();
+        info!(platform_count = platforms.len(), "Platforms loaded");
+
         let games_to_sync = create_games_to_sync(&mut runtime, &platforms);
+        debug!(sync_tasks = games_to_sync.len(), "Game sync tasks created");
         Ok(Self {
             selected_menu: Menues::Import,
             settings,
@@ -123,8 +136,9 @@ impl MyEguiApp {
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
+                info!("Import button clicked");
                 if let Err(err) = save_settings(&self.settings, &self.platforms) {
-                    eprintln!("Failed to save settings {err:?}");
+                    error!(error = %err, "Failed to save settings before import");
                 }
                 self.run_sync_async();
             }
@@ -160,14 +174,26 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
     let mut to_sync = vec![];
     for platform in platforms {
         if platform.enabled() {
+            let platform_name = platform.name().to_string();
+            debug!(platform = %platform_name, "Starting game discovery for platform");
             let (tx, rx) = watch::channel(FetchStatus::NeedsFetched);
-            to_sync.push((platform.name().to_string(), rx));
+            to_sync.push((platform_name.clone(), rx));
             let platform = platform.clone();
             rt.spawn_blocking(move || {
                 let _ = tx.send(FetchStatus::Fetching);
                 let games_to_sync = sync::get_platform_shortcuts(platform);
+                match &games_to_sync {
+                    Ok(games) => {
+                        info!(platform = %platform_name, game_count = games.len(), "Platform game discovery completed");
+                    }
+                    Err(e) => {
+                        error!(platform = %platform_name, error = %e, "Platform game discovery failed");
+                    }
+                }
                 let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });
+        } else {
+            trace!(platform = %platform.name(), "Platform disabled, skipping");
         }
     }
     to_sync
@@ -308,18 +334,23 @@ fn setup(ctx: &egui::Context) {
     egui_extras::install_image_loaders(ctx);
 }
 pub fn run_sync() -> eyre::Result<()> {
+    info!("Running in headless sync mode");
     let mut app = MyEguiApp::new()?;
     while !all_ready(&app.games_to_sync) {
-        println!("Finding games, trying again in 500ms");
+        debug!("Waiting for game discovery to complete...");
         std::thread::sleep(Duration::from_secs_f32(0.5));
     }
+    info!("All platforms ready, starting sync");
     app.run_sync_blocking()
 }
 
 pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
+    info!(args = ?args, "Starting GUI");
     let app = MyEguiApp::new()?;
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
+    debug!(vsync = !no_v_sync, fullscreen = fullscreen, "Window configuration");
+
     let logo = get_logo_icon();
     let viewport = egui::ViewportBuilder { fullscreen: Some(fullscreen), icon: Some(logo.into()), ..Default::default() };
     let native_options = eframe::NativeOptions {
@@ -327,6 +358,7 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
         vsync: !no_v_sync,
         ..Default::default()
     };
+    info!("Launching eframe window");
     let run_result = eframe::run_native(
         "BoilR",
         native_options,
@@ -335,7 +367,10 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
             Ok(Box::new(app))
         }),
     );
-    run_result.map_err(|e| eyre::eyre!("Could not initialize: {:?}", e))
+    run_result.map_err(|e| {
+        error!(error = ?e, "Failed to initialize eframe");
+        eyre::eyre!("Could not initialize: {:?}", e)
+    })
 }
 
 fn is_fullscreen(args: &[String]) -> bool {
