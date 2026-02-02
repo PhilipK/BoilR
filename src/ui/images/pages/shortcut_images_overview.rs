@@ -2,16 +2,17 @@ use std::path::Path;
 
 use egui::ImageButton;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
+use tokio::sync::watch;
 
 use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
         images::{
-            gametype::GameType, hasimagekey::HasImageKey, 
+            gametype::GameType, hasimagekey::HasImageKey,
             useraction::UserAction,
         },
-        MyEguiApp,
+        FetchStatus, MyEguiApp,
     },
 };
 
@@ -66,7 +67,9 @@ fn render_image(
         &ImageType::Grid,
         Path::new(&user_info.steam_user_data_folder),
     );
-    let image = egui::Image::new(format!("file://{}", key)).max_width(column_width).shrink_to_fit();
+    // Convert Windows backslashes to forward slashes for file:// URL
+    let key_normalized = key.replace('\\', "/");
+    let image = egui::Image::new(format!("file:///{}", key_normalized)).max_width(column_width).shrink_to_fit();
     let calced = image.calc_size(egui::Vec2 { x: column_width, y: f32::INFINITY }, image.size());
     let button = ImageButton::new(image);
 
@@ -77,17 +80,32 @@ fn render_image(
     }
     None
 }
-pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType ) {
-    let state = &mut app.image_selected_state;
-    //We must have a user to get to this action;
-        if let Some(auth_key) = &app.settings.steamgrid_db.auth_key {
+pub fn handle_shortcut_selected(app: &mut MyEguiApp, shortcut: GameType) {
+    // Set the selected shortcut immediately so UI can show it
+    app.image_selected_state.selected_shortcut = Some(shortcut.clone());
+    app.image_selected_state.grid_id = None;
+
+    // We must have a user to get to this action
+    if let Some(auth_key) = app.settings.steamgrid_db.auth_key.clone() {
+        // Create channel to communicate results
+        let (tx, rx) = watch::channel(FetchStatus::Fetching);
+        app.image_selected_state.grid_id_search = rx;
+
+        let app_id = shortcut.app_id();
+        let app_name = shortcut.name().to_string();
+
+        // Spawn the search in the background instead of blocking the UI
+        app.rt.spawn(async move {
             let client = steamgriddb_api::Client::new(auth_key);
             let search = CachedSearch::new(&client);
-            state.grid_id = app
-                .rt
-                .block_on(search.search(shortcut.app_id(), shortcut.name()))
-                .ok()
-                .flatten();
-        }
-        state.selected_shortcut = Some(shortcut);
+            let result = search.search(app_id, &app_name).await;
+
+            let search_result = match result {
+                Ok(grid_id) => Ok(grid_id),
+                Err(e) => Err(e.to_string()),
+            };
+
+            let _ = tx.send(FetchStatus::Fetched(search_result));
+        });
+    }
 }
