@@ -10,6 +10,7 @@ mod config;
 mod migration;
 mod platforms;
 mod settings;
+mod single_instance;
 mod steam;
 mod steamgriddb;
 mod sync;
@@ -20,6 +21,17 @@ use color_eyre::eyre::Result;
 fn main() -> Result<()> {
     color_eyre::install()?;
     ensure_config_folder();
+
+    // Acquire single instance lock
+    let _instance_lock = match single_instance::InstanceLock::acquire() {
+        Ok(lock) => lock,
+        Err(msg) => {
+            eprintln!("Error: {}", msg);
+            eprintln!("Please close the other instance of BoilR first.");
+            return Ok(());
+        }
+    };
+
     migration::migrate_config();
 
     let args: Vec<String> = std::env::args().collect();
