@@ -105,6 +105,9 @@ impl MyEguiApp {
                 ui.ctx().request_repaint();
                 return Some(UserAction::RefreshImages);
             }
+            crate::sync::SyncProgress::Error { ref message } => {
+                ui.colored_label(egui::Color32::RED, format!("Error: {}", message));
+            }
             _ => {
                 if ui.button("Download images for all games").clicked() {
                     return Some(UserAction::DownloadAllImages);

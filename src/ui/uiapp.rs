@@ -88,23 +88,28 @@ impl MyEguiApp {
     }
 
     fn render_import_button(&mut self, ui: &mut egui::Ui) {
-        let (status_string, syncing) = match &*self.status_reciever.borrow() {
-            SyncProgress::NotStarted => ("".to_string(), false),
-            SyncProgress::Starting => ("Starting Import".to_string(), true),
+        let (status_string, syncing, is_error) = match &*self.status_reciever.borrow() {
+            SyncProgress::NotStarted => ("".to_string(), false, false),
+            SyncProgress::Starting => ("Starting Import".to_string(), true, false),
             SyncProgress::FoundGames { games_found } => {
-                (format!("Found {games_found} games to  import"), true)
+                (format!("Found {games_found} games to import"), true, false)
             }
-            SyncProgress::FindingImages => ("Searching for images".to_string(), true),
+            SyncProgress::FindingImages => ("Searching for images".to_string(), true, false),
             SyncProgress::DownloadingImages { to_download } => {
-                (format!("Downloading {to_download} images "), true)
+                (format!("Downloading {to_download} images"), true, false)
             }
-            SyncProgress::Done => ("Done importing games".to_string(), false),
+            SyncProgress::Done => ("Done importing games".to_string(), false, false),
+            SyncProgress::Error { message } => {
+                (format!("Error: {}", message), false, true)
+            }
         };
         if syncing {
             ui.ctx().request_repaint();
         }
         if !status_string.is_empty() {
-            if syncing {
+            if is_error {
+                ui.colored_label(egui::Color32::RED, &status_string);
+            } else if syncing {
                 ui.horizontal(|c| {
                     c.spinner();
                     c.label(&status_string);
