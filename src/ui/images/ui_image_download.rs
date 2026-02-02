@@ -11,7 +11,7 @@ use super::{
     useraction::UserAction,
 };
 
-use std::{ path::Path, thread, time::Duration};
+use std::path::Path;
 
 use crate::{
     config::get_thumbnails_folder,
@@ -131,8 +131,38 @@ impl MyEguiApp {
         }
     }
 
+    /// Poll for async grid_id search results from background task
+    fn poll_grid_id_search(&mut self) {
+        if let FetchStatus::Fetched(result) = &*self.image_selected_state.grid_id_search.borrow() {
+            match result {
+                Ok(Some(grid_id)) => {
+                    if self.image_selected_state.grid_id.is_none() {
+                        self.image_selected_state.grid_id = Some(*grid_id);
+                    }
+                }
+                Ok(None) => {}
+                Err(_) => {}
+            }
+        }
+    }
+
+    /// Poll for async name search results from background task
+    fn poll_name_search(&mut self) {
+        if let FetchStatus::Fetched(results) = &*self.image_selected_state.name_search.borrow() {
+            if self.image_selected_state.possible_names.is_none() {
+                self.image_selected_state.possible_names = Some(results.clone());
+            }
+        }
+    }
+
     pub fn render_ui_images(&mut self, ui: &mut egui::Ui) {
         self.ensure_steam_users_loaded();
+
+        // Poll for async grid_id search results
+        self.poll_grid_id_search();
+
+        // Poll for async name search results
+        self.poll_name_search();
 
         if let Some(error_message) = &self.image_selected_state.settings_error {
             ui.label(error_message);
@@ -147,6 +177,7 @@ impl MyEguiApp {
                 ui.reset_style();
                 action = self.render_ui_image_action(ui);
             });
+
         match action {
             UserAction::UserSelected(user) => {
                 self.handle_user_selected(user);
@@ -159,7 +190,8 @@ impl MyEguiApp {
             }
             UserAction::ImageSelected(image) => {
                 handle_image_selected(self, image);
-                thread::sleep(Duration::from_millis(100));
+                // Request repaint to refresh images after download starts
+                ui.ctx().request_repaint();
                 ui.ctx().forget_all_images();
             }
             UserAction::BackButton => {
