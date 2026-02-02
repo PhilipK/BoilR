@@ -3,12 +3,14 @@ use std::path::Path;
 use egui::ImageButton;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 
+use tracing::{debug, trace};
+
 use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
         images::{
-            gametype::GameType, hasimagekey::HasImageKey, 
+            gametype::GameType, hasimagekey::HasImageKey,
             useraction::UserAction,
         },
         MyEguiApp,
@@ -71,6 +73,7 @@ fn render_image(
     let button = ImageButton::new(image);
 
     if ui.add_sized(calced,button).on_hover_text(&shortcut.app_name).clicked() {
+        debug!(app_name = %shortcut.app_name, app_id = shortcut.app_id, "Shortcut clicked");
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             Box::new(shortcut.clone()),
         ))));

@@ -22,6 +22,11 @@ dyn-clone = "^1.0.17"
 time = {version="^0.3.37", features = ["formatting"]}
 egui_extras = { version = "0.29.1", features = ["all_loaders"] }
 
+# Logging
+tracing = "^0.1"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+tracing-appender = "^0.2"
+
 [dependencies.dashmap]
 features = ["serde"]
 version = "^6.1.0"

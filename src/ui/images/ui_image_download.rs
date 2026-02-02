@@ -25,6 +25,7 @@ use egui::ScrollArea;
 use futures::executor::block_on;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
+use tracing::{debug, error, info, instrument, trace, warn};
 
 impl MyEguiApp {
     fn render_ui_image_action(&self, ui: &mut egui::Ui) -> UserAction {
@@ -114,24 +115,33 @@ impl MyEguiApp {
         None
     }
 
+    #[instrument(skip(self), level = "debug")]
     fn ensure_steam_users_loaded(&mut self) {
         if self.image_selected_state.settings_error.is_none()
             && self.image_selected_state.steam_users.is_none()
         {
+            debug!("Loading Steam users for images tab");
             let paths = get_shortcuts_paths(&self.settings.steam);
             match paths {
-                Ok(paths) => self.image_selected_state.steam_users = Some(paths),
+                Ok(paths) => {
+                    info!(user_count = paths.len(), "Found Steam users");
+                    self.image_selected_state.steam_users = Some(paths);
+                }
                 Err(err) => {
+                    error!(error = %err, "Failed to find Steam user location");
                     self.image_selected_state.settings_error = Some(format!("Could not find user steam location, error message: {err} , try to clear the steam location field in settings to let BoilR find it itself"));
                 }
             }
         }
     }
 
+    #[instrument(skip(self, ui), level = "trace")]
     pub fn render_ui_images(&mut self, ui: &mut egui::Ui) {
+        trace!("Rendering images UI");
         self.ensure_steam_users_loaded();
 
         if let Some(error_message) = &self.image_selected_state.settings_error {
+            warn!(error = %error_message, "Images tab showing error state");
             ui.label(error_message);
             return;
         }
@@ -216,20 +226,29 @@ impl MyEguiApp {
         self.handle_back_button_action();
     }
 
+    #[instrument(skip(self), level = "debug")]
     fn handle_download_all_images(&mut self) {
+        info!("Starting download of all images");
         if let Some(users) = &self.image_selected_state.steam_users {
+            debug!(user_count = users.len(), "Downloading images for users");
             let (sender, reciever) = watch::channel(SyncProgress::FindingImages);
             self.status_reciever = reciever;
             let mut sender_op = Some(sender);
             let settings = self.settings.clone();
             let users = users.clone();
             self.rt.spawn_blocking(move || {
+                info!("Background image download task started");
                 let task = download_images(&settings, &users, &mut sender_op);
                 block_on(task);
+                info!("Background image download task completed");
                 if let Some(sender_op) = sender_op {
-                    let _ = sender_op.send(SyncProgress::Done);
+                    if let Err(e) = sender_op.send(SyncProgress::Done) {
+                        error!(error = %e, "Failed to send download completion signal");
+                    }
                 }
             });
+        } else {
+            warn!("No Steam users loaded, cannot download images");
         }
     }
 
@@ -264,14 +283,19 @@ impl MyEguiApp {
         self.image_selected_state.steam_games = Some(get_installed_games(&self.settings.steam));
     }
 
+    #[instrument(skip(self), level = "debug")]
     fn handle_user_selected(&mut self, user: SteamUsersInfo) {
+        info!(user_id = %user.user_id, folder = %user.steam_user_data_folder, "Steam user selected");
         let state = &mut self.image_selected_state;
         let shortcuts = load_image_grids(&user);
+        info!(shortcut_count = shortcuts.len(), "Loaded shortcuts for user");
         state.user_shortcuts = Some(shortcuts);
         state.steam_user = Some(user);
     }
 
+    #[instrument(skip(self), level = "debug")]
     fn handle_image_type_selected(&mut self, image_type: ImageType) {
+        info!(image_type = ?image_type, "Image type selected");
         let state = &mut self.image_selected_state;
         state.image_type_selected = Some(image_type);
         let (tx, rx) = watch::channel(FetchStatus::Fetching);
@@ -279,29 +303,43 @@ impl MyEguiApp {
         let settings = self.settings.clone();
         if let Some(auth_key) = settings.steamgrid_db.auth_key {
             if let Some(grid_id) = self.image_selected_state.grid_id {
+                debug!(grid_id = grid_id, "Fetching images from SteamGridDB");
                 self.rt.spawn_blocking(move || {
                     let thumbnails_folder = get_thumbnails_folder();
                     let client = steamgriddb_api::Client::new(auth_key);
                     let query =
                         get_query_type(false, &image_type, settings.steamgrid_db.allow_nsfw);
+                    debug!(grid_id = grid_id, image_type = ?image_type, "Querying SteamGridDB API");
                     let search_res = block_on(client.get_images_for_id(grid_id, &query));
-                    if let Ok(possible_images) = search_res {
-                        let mut result = vec![];
-                        for possible_image in &possible_images {
-                            let ext = get_image_extension(&possible_image.mime);
-                            let path =
-                                thumbnails_folder.join(format!("{}.{}", possible_image.id, ext));
-                            result.push(PossibleImage {
-                                thumbnail_path: path,
-                                mime: possible_image.mime.clone(),
-                                thumbnail_url: possible_image.thumb.clone(),
-                                full_url: possible_image.url.clone(),
-                            });
+                    match search_res {
+                        Ok(possible_images) => {
+                            info!(count = possible_images.len(), "Found images from SteamGridDB");
+                            let mut result = vec![];
+                            for possible_image in &possible_images {
+                                let ext = get_image_extension(&possible_image.mime);
+                                let path =
+                                    thumbnails_folder.join(format!("{}.{}", possible_image.id, ext));
+                                result.push(PossibleImage {
+                                    thumbnail_path: path,
+                                    mime: possible_image.mime.clone(),
+                                    thumbnail_url: possible_image.thumb.clone(),
+                                    full_url: possible_image.url.clone(),
+                                });
+                            }
+                            if let Err(e) = tx.send(FetchStatus::Fetched(result)) {
+                                error!(error = %e, "Failed to send fetched images to UI");
+                            }
                         }
-                        let _ = tx.send(FetchStatus::Fetched(result));
+                        Err(e) => {
+                            error!(error = %e, grid_id = grid_id, "SteamGridDB API request failed");
+                        }
                     }
                 });
+            } else {
+                warn!("No grid_id available, cannot fetch images");
             }
+        } else {
+            warn!("No SteamGridDB auth key configured, cannot fetch images");
         };
     }
 
@@ -320,8 +358,8 @@ impl MyEguiApp {
     }
 }
 
-//TODO remove this
 fn load_image_grids(user: &SteamUsersInfo) -> Vec<ShortcutOwned> {
+    debug!(user_id = %user.user_id, "Loading shortcuts for image grid");
     let user_info = crate::steam::get_shortcuts_for_user(user);
     match user_info {
         Ok(user_info) => {
@@ -330,9 +368,11 @@ fn load_image_grids(user: &SteamUsersInfo) -> Vec<ShortcutOwned> {
             user_folder.pop();
             let mut shortcuts = user_info.shortcuts;
             shortcuts.sort_by_key(|s| s.app_name.clone());
+            debug!(shortcut_count = shortcuts.len(), "Loaded and sorted shortcuts");
             shortcuts
         }
-        Err(_err) => {
+        Err(err) => {
+            error!(error = %err, user_id = %user.user_id, "Failed to load shortcuts for user");
             vec![]
         }
     }
