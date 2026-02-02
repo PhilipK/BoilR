@@ -4,7 +4,7 @@ use egui::ScrollArea;
 use time::format_description;
 
 use crate::{
-    config::get_backups_flder,
+    config::get_backups_folder,
     steam::{get_shortcuts_paths, SteamSettings},
 };
 
@@ -87,7 +87,7 @@ pub fn restore_backup(steam_settings: &SteamSettings, shortcut_path: &Path) -> b
 }
 
 pub fn load_backups() -> Vec<PathBuf> {
-    let backup_folder = get_backups_flder();
+    let backup_folder = get_backups_folder();
     let files = std::fs::read_dir(backup_folder);
     let mut result = vec![];
     if let Ok(files) = files {
@@ -113,7 +113,7 @@ const DATE_FORMAT: &str = "[year]-[month]-[day]-[hour]-[minute]-[second]";
 pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     use time::OffsetDateTime;
 
-    let backup_folder = get_backups_flder();
+    let backup_folder = get_backups_folder();
     let paths = get_shortcuts_paths(steam_settings);
     let date = OffsetDateTime::now_utc();
     let format = format_description::parse(DATE_FORMAT);
