@@ -69,7 +69,7 @@ pub fn load_setting_sections() -> eyre::Result<HashMap<String, String>> {
     Ok(result)
 }
 
-pub fn save_settings(settings: &Settings, platforms: &Platforms) -> eyre::Result<()>{
+pub fn save_settings(settings: &Settings, platforms: &Platforms) -> eyre::Result<()> {
     let mut toml = toml::to_string(&settings)?;
 
     for platform in platforms {

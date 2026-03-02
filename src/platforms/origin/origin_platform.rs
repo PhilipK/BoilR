@@ -7,36 +7,36 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::{origin_game::OriginGame, OriginSettings};
+use super::{origin_game::EAGame, EASettings};
 
 #[derive(Clone)]
-pub struct OriginPlatform {
-    pub settings: OriginSettings,
+pub struct EAPlatform {
+    pub settings: EASettings,
 }
 
-impl NeedsProton<OriginPlatform> for OriginGame {
+impl NeedsProton<EAPlatform> for EAGame {
     #[cfg(target_os = "windows")]
-    fn needs_proton(&self, _platform: &OriginPlatform) -> bool {
+    fn needs_proton(&self, _platform: &EAPlatform) -> bool {
         false
     }
 
     #[cfg(target_family = "unix")]
-    fn needs_proton(&self, _platform: &OriginPlatform) -> bool {
+    fn needs_proton(&self, _platform: &EAPlatform) -> bool {
         true
     }
 
-    fn create_symlinks(&self, _platform: &OriginPlatform) -> bool {
+    fn create_symlinks(&self, _platform: &EAPlatform) -> bool {
         false
     }
 }
 
-impl OriginPlatform {
-    fn get_shortcuts(&self) -> eyre::Result<Vec<OriginGame>> {
-        let origin_folders =
+impl EAPlatform {
+    fn get_shortcuts(&self) -> eyre::Result<Vec<EAGame>> {
+        let ea_folders =
             get_default_locations().ok_or(eyre::format_err!("Default path not found"))?;
-        let origin_folder = origin_folders.local_content_path;
-        let origin_exe = origin_folders.exe_path;
-        let game_folders = origin_folder.join("LocalContent").read_dir()?;
+        let content_folder = ea_folders.local_content_path;
+        let launcher_exe = ea_folders.exe_path;
+        let game_folders = content_folder.join("LocalContent").read_dir()?;
         let games = game_folders
             .filter_map(|folder| folder.ok())
             .filter_map(|game_folder| {
@@ -48,11 +48,11 @@ impl OriginPlatform {
                         .map(|(_, id_str)| String::from(id_str)),
                     None => None,
                 };
-                id.map(|id| OriginGame {
+                id.map(|id| EAGame {
                     id,
                     title: game_title,
-                    origin_location: origin_exe.clone(),
-                    origin_compat_folder: origin_folders.compat_folder.clone(),
+                    launcher_location: launcher_exe.clone(),
+                    launcher_compat_folder: ea_folders.compat_folder.clone(),
                 })
             });
         Ok(games.collect())
@@ -89,18 +89,18 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
 }
 
 #[derive(Default)]
-struct OriginPathData {
-    //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Origin/Origin.exe
+struct EAPathData {
+    // Path to the EA Desktop / Origin launcher executable
     exe_path: PathBuf,
-    //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/ProgramData/Origin/LocalContent
+    // Path to the folder containing LocalContent (with .mfst game manifests)
     local_content_path: PathBuf,
-    //~/.steam/steam/steamapps/compatdata/X
+    // Proton compat folder (Linux only)
     compat_folder: Option<PathBuf>,
 }
 
 #[cfg(target_family = "unix")]
-fn get_default_locations() -> Option<OriginPathData> {
-    let mut res = OriginPathData::default();
+fn get_default_locations() -> Option<EAPathData> {
+    let mut res = EAPathData::default();
     if let Ok(home) = std::env::var("HOME") {
         let compat_folder_path = Path::new(&home)
             .join(".steam")
@@ -138,24 +138,23 @@ fn get_default_locations() -> Option<OriginPathData> {
 }
 
 #[cfg(target_os = "windows")]
-fn get_default_locations() -> Option<OriginPathData> {
-    let mut res = OriginPathData::default();
-    let key = "PROGRAMDATA";
-    let program_data = std::env::var(key);
-    if let Ok(program_data) = program_data {
+fn get_default_locations() -> Option<EAPathData> {
+    let mut res = EAPathData::default();
+    if let Ok(program_data) = std::env::var("PROGRAMDATA") {
+        // EA Desktop still writes .mfst manifests here for backwards compat
         let origin_folder = Path::new(&program_data).join("Origin");
         if origin_folder.exists() {
             res.local_content_path = origin_folder;
         } else {
             return None;
         }
-        let exe_path = get_exe_path();
-        match exe_path {
-            Some(exe_path) => {
-                res.exe_path = exe_path;
-            }
-            None => return None,
-        }
+    } else {
+        return None;
+    }
+    let exe_path = get_exe_path();
+    match exe_path {
+        Some(exe_path) => res.exe_path = exe_path,
+        None => return None,
     }
     Some(res)
 }
@@ -164,8 +163,10 @@ fn get_default_locations() -> Option<OriginPathData> {
 fn get_exe_path() -> Option<PathBuf> {
     use winreg::enums::*;
     use winreg::RegKey;
-    //Computer\HKEY_CLASSES_ROOT\eadm\shell\open\command
-    RegKey::predef(HKEY_CLASSES_ROOT)
+
+    // Try registry: HKEY_CLASSES_ROOT\eadm\shell\open\command
+    // (registered by both old Origin and EA Desktop)
+    let from_registry = RegKey::predef(HKEY_CLASSES_ROOT)
         .open_subkey("eadm\\shell\\open\\command")
         .and_then(|launcher_key| launcher_key.get_value(""))
         .ok()
@@ -174,12 +175,33 @@ fn get_exe_path() -> Option<PathBuf> {
                 .get(1..value.len() - 6)
                 .map(|path_str| Path::new(path_str).to_path_buf())
         })
-        .filter(|path| path.exists())
+        .filter(|path| path.exists());
+
+    if from_registry.is_some() {
+        return from_registry;
+    }
+
+    // Fallback: EA Desktop default install locations
+    let candidate_paths: &[(&str, &str)] = &[
+        ("PROGRAMFILES",     "Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe"),
+        ("PROGRAMFILES(X86)","Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe"),
+        ("PROGRAMFILES",     "Origin\\Origin.exe"),
+        ("PROGRAMFILES(X86)","Origin\\Origin.exe"),
+    ];
+    for (env_var, relative) in candidate_paths {
+        if let Ok(base) = std::env::var(env_var) {
+            let path = Path::new(&base).join(relative);
+            if path.exists() {
+                return Some(path);
+            }
+        }
+    }
+    None
 }
 
-impl GamesPlatform for OriginPlatform {
+impl GamesPlatform for EAPlatform {
     fn name(&self) -> &str {
-        "Origin"
+        "Origin/EA Desktop"
     }
 
     fn enabled(&self) -> bool {
@@ -191,8 +213,8 @@ impl GamesPlatform for OriginPlatform {
     }
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Origin");
-        ui.checkbox(&mut self.settings.enabled, "Import from Origin");
+        ui.heading("Origin/EA Desktop");
+        ui.checkbox(&mut self.settings.enabled, "Import from Origin/EA Desktop");
     }
 
     fn get_settings_serializable(&self) -> String {
@@ -200,13 +222,14 @@ impl GamesPlatform for OriginPlatform {
     }
 
     fn code_name(&self) -> &str {
+        // Kept as "origin" for backwards compatibility with existing settings.toml
         "origin"
     }
 }
 
-impl FromSettingsString for OriginPlatform {
+impl FromSettingsString for EAPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        OriginPlatform {
+        EAPlatform {
             settings: load_settings(s),
         }
     }

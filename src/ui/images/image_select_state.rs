@@ -2,10 +2,9 @@ use steam_shortcuts_util::shortcut::ShortcutOwned;
 
 use crate::{steam::SteamUsersInfo, steamgriddb::ImageType, ui::FetchStatus};
 
-use super::{ gamemode::GameMode, possible_image::PossibleImage,  gametype::GameType};
+use super::{gamemode::GameMode, gametype::GameType, possible_image::PossibleImage};
 
 use tokio::sync::watch::{self, Receiver};
-
 
 /// Result type for grid ID search operations
 pub type GridIdSearchResult = Result<Option<usize>, String>;
@@ -31,8 +30,6 @@ pub struct ImageSelectState {
     /// Receiver for async name search results (for "correct grid ID" feature)
     pub name_search: Receiver<FetchStatus<Vec<steamgriddb_api::search::SearchResult>>>,
 }
-
-
 
 impl Default for ImageSelectState {
     fn default() -> Self {

@@ -18,7 +18,11 @@ impl LutrisPlatform {
         let installed = self.settings.installed;
         let mut res = vec![];
         for mut game in games {
-            let service = if installed { game.runner.clone().unwrap_or_default() } else { game.service.clone().unwrap_or_default() };
+            let service = if installed {
+                game.runner.clone().unwrap_or_default()
+            } else {
+                game.service.clone().unwrap_or_default()
+            };
             if service != "steam" {
                 game.settings = Some(self.settings.clone());
                 res.push(game);

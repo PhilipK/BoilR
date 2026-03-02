@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use steam_shortcuts_util::shortcut::{Shortcut, ShortcutOwned};
 
 #[derive(Clone)]
-pub(crate) struct UplayGame {
+pub(crate) struct UbisoftGame {
     pub(crate) name: String,
     pub(crate) icon: String,
     pub(crate) id: String,
@@ -12,13 +12,16 @@ pub(crate) struct UplayGame {
     pub(crate) launch_id: usize,
 }
 
-impl From<UplayGame> for ShortcutOwned {
-    fn from(game: UplayGame) -> Self {
-        let launch = match game.launcher_compat_folder{
-            Some(compat_folder) => format!
-            ("STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"uplay://launch/{}/{}\"",
-             compat_folder.to_string_lossy(), game.id, game.launch_id),
-            None => format!("\"uplay://launch/{}/{}\"", game.id, game.launch_id)
+impl From<UbisoftGame> for ShortcutOwned {
+    fn from(game: UbisoftGame) -> Self {
+        let launch = match game.launcher_compat_folder {
+            Some(compat_folder) => format!(
+                "STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"uplay://launch/{}/{}\"",
+                compat_folder.to_string_lossy(),
+                game.id,
+                game.launch_id
+            ),
+            None => format!("\"uplay://launch/{}/{}\"", game.id, game.launch_id),
         };
         let start_dir = game
             .launcher

@@ -18,7 +18,7 @@ const PLATFORM_NAMES: [&str; 14] = [
     "uplay",
     "minigalaxy",
     "playnite",
-    "gamepass"
+    "gamepass",
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -34,8 +34,8 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     {
         //Windows only platforms
         use super::amazon::AmazonPlatform;
-        use super::playnite::PlaynitePlatform;
         use super::gamepass::GamePassPlatForm;
+        use super::playnite::PlaynitePlatform;
         match name {
             "amazon" => return load::<AmazonPlatform>(s),
             "playnite" => return load::<PlaynitePlatform>(s),
@@ -68,15 +68,15 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     use super::egs::EpicPlatform;
     use super::gog::GogPlatform;
     use super::itch::ItchPlatform;
-    use super::origin::OriginPlatform;
-    use super::uplay::UplayPlatform;
+    use super::origin::EAPlatform;
+    use super::uplay::UbisoftPlatform;
 
     match name {
         "epic_games" => load::<EpicPlatform>(s),
-        "uplay" => load::<UplayPlatform>(s),
+        "uplay" => load::<UbisoftPlatform>(s),
         "itch" => load::<ItchPlatform>(s),
         "gog" => load::<GogPlatform>(s),
-        "origin" => load::<OriginPlatform>(s),
+        "origin" => load::<EAPlatform>(s),
         _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
 }
@@ -86,9 +86,7 @@ pub fn get_platforms() -> Platforms {
     let sections = match sections {
         Ok(s) => s,
         Err(err) => {
-            eprintln!(
-                "Could not load platform settings, using defaults: Error: {err:?}"
-            );
+            eprintln!("Could not load platform settings, using defaults: Error: {err:?}");
             HashMap::new()
         }
     };

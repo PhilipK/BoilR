@@ -54,7 +54,7 @@ https://hughsie.github.io/oars/index.html
       <description>
         <ul>
           <li>Update dependencies</li>
-          <li>Support for UPlay</li>
+          <li>Support for Ubisoft Connect (formerly UPlay)</li>
         </ul>
       </description>
     </release>
@@ -365,7 +365,7 @@ https://hughsie.github.io/oars/index.html
       <description>
         <ul>
           <li>Option to launch games through Heroic Launcher</li>
-          <li>Allow steam input Epic, Gog and Uplay</li>
+          <li>Allow steam input Epic, Gog and Ubisoft Connect</li>
           <li>Fix bug where GOG games with a launcher where not found</li>
         </ul>
       </description>

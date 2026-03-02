@@ -61,8 +61,7 @@ impl ActualSteamCollection {
     }
 
     pub fn is_boilr_collection(&self) -> bool {
-        self.key
-            .contains(&format!("user-collections.{BOILR_TAG}"))
+        self.key.contains(&format!("user-collections.{BOILR_TAG}"))
     }
 }
 
@@ -115,56 +114,62 @@ pub fn write_collections<S: AsRef<str>>(
         })
         .collect();
 
-    let mut db = open_db()?;
+    // Modern Steam (late 2025+): collections are stored in a flat JSON file in userdata
+    if let Some(cloud_path) = get_cloud_storage_path(steam_user_id) {
+        let content = std::fs::read_to_string(&cloud_path)?;
+        let mut all_collections: Vec<(String, SteamCollection)> = serde_json::from_str(&content)?;
+        all_collections.retain(|(_key, collection)| !collection.is_boilr_collection());
+        all_collections.extend(new_collections);
+        let new_content = serde_json::to_string(&all_collections)?;
+        std::fs::write(&cloud_path, new_content)?;
+    } else {
+        // Legacy Steam: collections stored in LevelDB
+        let mut db = open_db()?;
+        let current_categories = get_categories(steam_user_id, &mut db)?;
+        let mut write_batch = WriteBatch::new();
+        for (category_key, mut collections) in current_categories {
+            collections.retain(|(_key, collection)| !collection.is_boilr_collection());
+            collections.extend(new_collections.clone());
+            save_category(category_key, collections, &mut write_batch)?;
+        }
+        db.write(write_batch, true)?;
+    }
 
-    let current_categories = get_categories(steam_user_id, &mut db)?;
-    //this is a collection of collections, known as a category
-    let mut write_batch = WriteBatch::new();
+    // Also update localconfig.vdf for any Steam version that still references it
+    if let Some(path) = get_vdf_path(steam_user_id) {
+        let content = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(parse_vdf_collection);
+        if let Some(mut vdf_collections) = content {
+            let boilr_keys: Vec<String> = vdf_collections
+                .keys()
+                .filter(|k| k.contains(BOILR_TAG))
+                .cloned()
+                .collect();
+            for key in boilr_keys {
+                vdf_collections.remove(&key);
+            }
 
-    for (category_key, mut collections) in current_categories {
-        collections.retain(|(_key, collection)| !collection.is_boilr_collection());
-        collections.extend(new_collections.clone());
-        save_category(category_key, collections, &mut write_batch)?;
+            let new_vdfs = collections_to_add.iter().map(|collection| {
+                let key = name_to_key(&collection.name);
 
-        if let Some(path) = get_vdf_path(steam_user_id) {
-            let content = std::fs::read_to_string(&path)
-                .ok()
-                .and_then(parse_vdf_collection);
-            if let Some(mut vdf_collections) = content {
-                let boilr_keys: Vec<String> = vdf_collections
-                    .keys()
-                    .filter(|k| k.contains(BOILR_TAG))
-                    .cloned()
-                    .collect();
-                for key in boilr_keys {
-                    vdf_collections.remove(&key);
+                VdfCollection {
+                    id: key,
+                    added: collection.game_ids.clone(),
+                    removed: vec![],
                 }
+            });
+            for new_vdf in new_vdfs {
+                vdf_collections.insert(new_vdf.id.clone(), new_vdf.clone());
+            }
 
-                let new_vdfs = collections_to_add.iter().map(|collection| {
-                    let key = name_to_key(&collection.name);
-
-                    VdfCollection {
-                        id: key,
-                        added: collection.game_ids.clone(),
-                        removed: vec![],
-                    }
-                });
-                for new_vdf in new_vdfs {
-                    vdf_collections.insert(new_vdf.id.clone(), new_vdf.clone());
-                }
-
-                let new_string = write_vdf_collection_to_string(
-                    path.clone().to_string_lossy(),
-                    &vdf_collections,
-                );
-                if let Some(new_string) = new_string {
-                    std::fs::write(path, new_string)?;
-                }
+            let new_string =
+                write_vdf_collection_to_string(path.clone().to_string_lossy(), &vdf_collections);
+            if let Some(new_string) = new_string {
+                std::fs::write(path, new_string)?;
             }
         }
     }
-
-    db.write(write_batch, true)?;
 
     Ok(())
 }
@@ -199,6 +204,49 @@ fn get_vdf_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
                 .join(steamid.as_ref())
                 .join("config")
                 .join("localconfig.vdf");
+            if path.exists() {
+                Some(path)
+            } else {
+                None
+            }
+        }
+        Err(_e) => None,
+    }
+}
+
+#[cfg(target_family = "unix")]
+fn get_cloud_storage_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
+    match std::env::var("HOME") {
+        Ok(home) => {
+            let path = Path::new(&home)
+                .join(".steam")
+                .join("steam")
+                .join("userdata")
+                .join(steamid.as_ref())
+                .join("config")
+                .join("cloudstorage")
+                .join("cloud-storage-namespace-1.json");
+            if path.exists() {
+                Some(path)
+            } else {
+                None
+            }
+        }
+        Err(_e) => None,
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn get_cloud_storage_path<S: AsRef<str>>(steamid: S) -> Option<PathBuf> {
+    match std::env::var("PROGRAMFILES(X86)") {
+        Ok(program_files) => {
+            let path = Path::new(&program_files)
+                .join("Steam")
+                .join("userdata")
+                .join(steamid.as_ref())
+                .join("config")
+                .join("cloudstorage")
+                .join("cloud-storage-namespace-1.json");
             if path.exists() {
                 Some(path)
             } else {
@@ -283,17 +331,31 @@ fn get_namespaces(db: &mut DB, key_bytes: &[u8]) -> Option<Vec<(i32, String)>> {
 fn get_level_db_location() -> Option<PathBuf> {
     match std::env::var("HOME") {
         Ok(home) => {
-            let path = Path::new(&home)
+            // New path: Steam's updated CEF client uses a "Default" profile subdirectory
+            let new_path = Path::new(&home)
+                .join(".steam")
+                .join("steam")
+                .join("config")
+                .join("htmlcache")
+                .join("Default")
+                .join("Local Storage")
+                .join("leveldb");
+            if new_path.exists() {
+                return Some(new_path);
+            }
+            // Legacy path: older Steam clients before the CEF update
+            let legacy_path = Path::new(&home)
                 .join(".steam")
                 .join("steam")
                 .join("config")
                 .join("htmlcache")
                 .join("Local Storage")
                 .join("leveldb");
-            if path.exists() {
-                return Some(path);
+            if legacy_path.exists() {
+                Some(legacy_path)
+            } else {
+                None
             }
-            None
         }
         Err(_e) => None,
     }
@@ -303,13 +365,24 @@ fn get_level_db_location() -> Option<PathBuf> {
 fn get_level_db_location() -> Option<PathBuf> {
     match std::env::var("LOCALAPPDATA") {
         Ok(localdata) => {
-            let path = Path::new(&localdata)
+            // New path: Steam's updated CEF client uses a "Default" profile subdirectory
+            let new_path = Path::new(&localdata)
+                .join("Steam")
+                .join("htmlcache")
+                .join("Default")
+                .join("Local Storage")
+                .join("leveldb");
+            if new_path.exists() {
+                return Some(new_path);
+            }
+            // Legacy path: older Steam clients before the CEF update
+            let legacy_path = Path::new(&localdata)
                 .join("Steam")
                 .join("htmlcache")
                 .join("Local Storage")
                 .join("leveldb");
-            if path.exists() {
-                Some(path)
+            if legacy_path.exists() {
+                Some(legacy_path)
             } else {
                 None
             }
@@ -324,7 +397,7 @@ fn serialize_collection_value<S: AsRef<str>>(name: S, game_ids: &[usize]) -> Str
 }
 
 fn name_to_key<S: AsRef<str>>(name: S) -> String {
-    use base64::{Engine as _, engine::general_purpose};
+    use base64::{engine::general_purpose, Engine as _};
     let base64 = general_purpose::STANDARD_NO_PAD.encode(name.as_ref());
     let base64_no_end = if base64.ends_with("==") {
         base64.get(..base64.len() - 2).unwrap_or_default()
