@@ -5,7 +5,7 @@ Type=Application
 Name=BoilR
 Comment=Add non-steam games to your steam library
 Categories=Utility;Amusement;
-Keywords=Steam;Heroic;Lutris;Itch;Origin;GOG;UPlay;Icons;Images;Non-Steam;Games;
+Keywords=Steam;Heroic;Lutris;Itch;Origin;EA;EA Games;EA Desktop;GOG;UPlay;Ubisoft;Ubisoft Connect;Icons;Images;Non-Steam;Games;
 
 Icon=io.github.philipk.boilr
 Exec=boilr

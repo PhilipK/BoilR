@@ -34,10 +34,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(
-            games[5].name,
-            "Wolfenstein: The New Order"
-        );
+        assert_eq!(games[5].name, "Wolfenstein: The New Order");
     }
 
     #[test]
@@ -46,10 +43,7 @@ mod tests {
 
         let games = parse_lutris_games(content);
 
-        assert_eq!(
-            games[5].slug,
-            "wolfenstein_the_new_order"
-        );
+        assert_eq!(games[5].slug, "wolfenstein_the_new_order");
     }
 
     #[test]

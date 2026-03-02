@@ -1,9 +1,7 @@
 use std::{collections::HashMap, error::Error, time::Duration};
 
 use eframe::{egui, App, Frame};
-use egui::{
-   ImageButton, Rounding, Stroke, Vec2
-};
+use egui::{ImageButton, Rounding, Stroke, Vec2};
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
@@ -28,7 +26,6 @@ use super::{
 };
 
 const SECTION_SPACING: f32 = 25.0;
-
 
 type GamesToSync = Vec<(
     String,
@@ -99,9 +96,7 @@ impl MyEguiApp {
                 (format!("Downloading {to_download} images"), true, false)
             }
             SyncProgress::Done => ("Done importing games".to_string(), false, false),
-            SyncProgress::Error { message } => {
-                (format!("Error: {}", message), false, true)
-            }
+            SyncProgress::Error { message } => (format!("Error: {}", message), false, true),
         };
         if syncing {
             ui.ctx().request_repaint();
@@ -120,11 +115,11 @@ impl MyEguiApp {
         }
         let all_ready = all_ready(&self.games_to_sync);
         let import_image = egui::include_image!("../../resources/import_games_button.png");
-        let size = Vec2::new(200.,100.);
+        let size = Vec2::new(200., 100.);
         let image_button = ImageButton::new(import_image);
         if all_ready && !syncing {
             if ui
-                .add_sized(size,image_button)
+                .add_sized(size, image_button)
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
@@ -134,7 +129,7 @@ impl MyEguiApp {
                 self.run_sync_async();
             }
         } else {
-            ui.add_sized(size,image_button)
+            ui.add_sized(size, image_button)
                 .on_hover_text("Waiting for sync to finish");
         }
     }
@@ -234,6 +229,25 @@ impl App for MyEguiApp {
                 }
             });
 
+        if self.selected_menu == Menues::Settings {
+            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
+                .frame(frame)
+                .show(ctx, |ui| {
+                    let image = egui::include_image!("../../resources/save.png");
+                    let size = image.texture_size().unwrap_or(egui::Vec2::new(64., 64.));
+                    let save_button = ImageButton::new(image);
+                    if ui
+                        .add_sized(size * 0.5, save_button)
+                        .on_hover_text("Save settings")
+                        .clicked()
+                    {
+                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                            eprintln!("Failed to save settings: {err:?}");
+                        }
+                    }
+                });
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             match self.selected_menu {
                 Menues::Import => {
@@ -253,25 +267,6 @@ impl App for MyEguiApp {
                 }
             };
         });
-
-        if self.selected_menu == Menues::Settings {
-            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
-                .frame(frame)
-                .show(ctx, |ui| {
-                    let image = egui::include_image!("../../resources/save.png");
-                    let size = image.texture_size().unwrap_or_default();
-                    let save_button = ImageButton::new(image);
-                    if ui
-                        .add_sized(size * 0.5, save_button)
-                        .on_hover_text("Save settings")
-                        .clicked()
-                    {
-                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
-                            eprintln!("Failed to save settings: {err:?}");
-                        }
-                    }
-                });
-        }
     }
 }
 
@@ -326,7 +321,11 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
     let logo = get_logo_icon();
-    let viewport = egui::ViewportBuilder { fullscreen: Some(fullscreen), icon: Some(logo.into()), ..Default::default() };
+    let viewport = egui::ViewportBuilder {
+        fullscreen: Some(fullscreen),
+        icon: Some(logo.into()),
+        ..Default::default()
+    };
     let native_options = eframe::NativeOptions {
         viewport,
         vsync: !no_v_sync,

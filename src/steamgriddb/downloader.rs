@@ -318,7 +318,7 @@ pub fn get_query_type(
     download_animated: bool,
     image_type: &ImageType,
     allow_nsfw: bool,
-) -> steamgriddb_api::QueryType {
+) -> steamgriddb_api::QueryType<'_> {
     let anymation_type = if download_animated {
         Some(&[steamgriddb_api::query_parameters::AnimtionType::Animated][..])
     } else {

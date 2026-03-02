@@ -63,9 +63,9 @@ BoilR can import games from many platforms, but there are limitations:
 | [Epic Games Store](https://www.epicgames.com/)                                  | Yes     | Yes, install through proton   | Yes, install through proton               |
 | [Itch.io](https://itch.io/app) (Windows Games)                                  | Yes     | No                            | No                                        |
 | [Itch.io](https://itch.io/app) (Linux Games)                                    | No      | Yes                           | Yes                                       |
-| [Origin](https://www.origin.com)                                                | Yes     | Yes, install through proton   | Yes, install through proton               |
+| [Origin/EA Desktop](https://www.ea.com/ea-app)                                 | Yes     | Yes, install through proton   | Yes, install through proton               |
 | [GOG](https://www.gog.com/galaxy)                                               | Yes     | No (Use Heroic or MiniGalaxy) | No (Use Heroic or MiniGalaxy)             |
-| [UPlay](https://ubisoftconnect.com)                                             | Yes     | Yes                           | Yes                                       |
+| [Ubisoft Connect](https://ubisoftconnect.com)                                             | Yes     | Yes                           | Yes                                       |
 | [Lutris](https://github.com/lutris/lutris) (Flatpak)                            | No      | Yes                           | Yes (make sure Lutris is shut down first) |
 | [Lutris](https://github.com/lutris/lutris) (Non-Flatpak)                        | No      | Yes                           | Yes                                       |
 | [Legendary](https://github.com/derrod/legendary)                                | No      | Yes                           | Yes                                       |
