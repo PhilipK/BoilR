@@ -17,6 +17,7 @@ use crate::{
 };
 
 use super::{
+    locale::AppLanguage,
     images::ImageSelectState,
     ui_colors::{
         BACKGROUND_COLOR, BG_STROKE_COLOR, EXTRA_BACKGROUND_COLOR, LIGHT_ORANGE, ORANGE, PURLPLE,
@@ -53,6 +54,7 @@ pub(crate) fn get_all_games(games: &GamesToSync) -> Vec<(String, Vec<ShortcutToI
 }
 
 pub struct MyEguiApp {
+    pub(crate) language: AppLanguage,
     selected_menu: Menues,
     pub(crate) settings: Settings,
     pub(crate) rt: Runtime,
@@ -73,6 +75,7 @@ impl MyEguiApp {
         let platforms = get_platforms();
         let games_to_sync = create_games_to_sync(&mut runtime, &platforms);
         Ok(Self {
+            language: AppLanguage::from_string(&settings.language),
             selected_menu: Menues::Import,
             settings,
             rt: runtime,
@@ -90,17 +93,25 @@ impl MyEguiApp {
     fn render_import_button(&mut self, ui: &mut egui::Ui) {
         let (status_string, syncing, is_error) = match &*self.status_reciever.borrow() {
             SyncProgress::NotStarted => ("".to_string(), false, false),
-            SyncProgress::Starting => ("Starting Import".to_string(), true, false),
+            SyncProgress::Starting => (self.language.t("starting_import").to_string(), true, false),
             SyncProgress::FoundGames { games_found } => {
-                (format!("Found {games_found} games to import"), true, false)
+                (
+                    self.language.t("found_games_to_import").replace("{games_found}", &games_found.to_string()),
+                    true,
+                    false,
+                )
             }
-            SyncProgress::FindingImages => ("Searching for images".to_string(), true, false),
+            SyncProgress::FindingImages => (self.language.t("searching_for_images").to_string(), true, false),
             SyncProgress::DownloadingImages { to_download } => {
-                (format!("Downloading {to_download} images"), true, false)
+                (
+                    self.language.t("downloading_images").replace("{to_download}", &to_download.to_string()),
+                    true,
+                    false,
+                )
             }
-            SyncProgress::Done => ("Done importing games".to_string(), false, false),
+            SyncProgress::Done => (self.language.t("done_importing_games").to_string(), false, false),
             SyncProgress::Error { message } => {
-                (format!("Error: {}", message), false, true)
+                (format!("{}: {}", self.language.t("error"), message), false, true)
             }
         };
         if syncing {
@@ -125,7 +136,7 @@ impl MyEguiApp {
         if all_ready && !syncing {
             if ui
                 .add_sized(size,image_button)
-                .on_hover_text("Import your games into steam")
+                .on_hover_text(self.language.t("import_button_tooltip"))
                 .clicked()
             {
                 if let Err(err) = save_settings(&self.settings, &self.platforms) {
@@ -135,7 +146,7 @@ impl MyEguiApp {
             }
         } else {
             ui.add_sized(size,image_button)
-                .on_hover_text("Waiting for sync to finish");
+                .on_hover_text(self.language.t("waiting_for_sync"));
         }
     }
 }
@@ -195,27 +206,27 @@ impl App for MyEguiApp {
                 let menu_before = self.selected_menu.clone();
 
                 let mut changed = ui
-                    .selectable_value(&mut self.selected_menu, Menues::Import, "Import Games")
+                    .selectable_value(&mut self.selected_menu, Menues::Import, self.language.t("import_games"))
                     .changed();
                 if self.settings.steamgrid_db.auth_key.is_some() {
                     changed = changed
                         || ui
-                            .selectable_value(&mut self.selected_menu, Menues::Images, "Images")
+                            .selectable_value(&mut self.selected_menu, Menues::Images, self.language.t("images"))
                             .changed();
                 }
                 changed = changed
                     || ui
-                        .selectable_value(&mut self.selected_menu, Menues::Settings, "Settings")
+                        .selectable_value(&mut self.selected_menu, Menues::Settings, self.language.t("settings"))
                         .changed();
 
                 changed = changed
                     || ui
-                        .selectable_value(&mut self.selected_menu, Menues::Backup, "Backup")
+                        .selectable_value(&mut self.selected_menu, Menues::Backup, self.language.t("backup"))
                         .changed();
 
                 changed = changed
                     || ui
-                        .selectable_value(&mut self.selected_menu, Menues::Disconnect, "Disconnect")
+                        .selectable_value(&mut self.selected_menu, Menues::Disconnect, self.language.t("disconnect"))
                         .changed();
                 if self.selected_menu == Menues::Import {
                     ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
@@ -263,7 +274,7 @@ impl App for MyEguiApp {
                     let save_button = ImageButton::new(image);
                     if ui
                         .add_sized(size * 0.5, save_button)
-                        .on_hover_text("Save settings")
+                        .on_hover_text(self.language.t("save_settings"))
                         .clicked()
                     {
                         if let Err(err) = save_settings(&self.settings, &self.platforms) {

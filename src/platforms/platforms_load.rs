@@ -4,8 +4,9 @@ use std::collections::HashMap;
 use super::GamesPlatform;
 
 use crate::settings::load_setting_sections;
-const PLATFORM_NAMES: [&str; 14] = [
+const PLATFORM_NAMES: [&str; 16] = [
     "amazon",
+    "custom",
     "bottles",
     "epic_games",
     "flatpak",
@@ -15,6 +16,7 @@ const PLATFORM_NAMES: [&str; 14] = [
     "legendary",
     "lutris",
     "origin",
+    "rockstar",
     "uplay",
     "minigalaxy",
     "playnite",
@@ -65,18 +67,22 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     }
 
     //Common platforms
+    use super::custom::CustomPlatform;
     use super::egs::EpicPlatform;
     use super::gog::GogPlatform;
     use super::itch::ItchPlatform;
     use super::origin::OriginPlatform;
+    use super::rockstar::RockstarPlatform;
     use super::uplay::UplayPlatform;
 
     match name {
+        "custom" => load::<CustomPlatform>(s),
         "epic_games" => load::<EpicPlatform>(s),
         "uplay" => load::<UplayPlatform>(s),
         "itch" => load::<ItchPlatform>(s),
         "gog" => load::<GogPlatform>(s),
         "origin" => load::<OriginPlatform>(s),
+        "rockstar" => load::<RockstarPlatform>(s),
         _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
 }

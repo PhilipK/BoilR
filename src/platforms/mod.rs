@@ -23,11 +23,13 @@ mod gamepass;
 
 
 
+mod custom;
 mod gog;
 mod itch;
 mod origin;
 mod platform;
 mod platforms_load;
+mod rockstar;
 mod uplay;
 
 mod egs;

@@ -1,5 +1,6 @@
 debug= false
 blacklisted_games = []
+language = "en"
 
 [steamgrid_db]
 auth_key = "Write your authentication key between these quotes"

@@ -190,9 +190,10 @@ impl MyEguiApp {
             }
             UserAction::ImageSelected(image) => {
                 handle_image_selected(self, image);
-                // Request repaint to refresh images after download starts
+                // Request repaint to refresh images after download starts.
+                // Avoid clearing the image loader cache here because egui_extras
+                // asserts if pending file loads are invalidated mid-flight.
                 ui.ctx().request_repaint();
-                ui.ctx().forget_all_images();
             }
             UserAction::BackButton => {
                 self.handle_back_button_action();
@@ -209,22 +210,22 @@ impl MyEguiApp {
             }
             UserAction::ImageTypeCleared(image_type, should_ban) => {
                 self.handle_image_type_cleared(image_type, should_ban);
-                ui.ctx().forget_all_images();
+                ui.ctx().request_repaint();
             }
             UserAction::ClearImages => {
                 self.handle_clear_all_images();
-                ui.ctx().forget_all_images();
+                ui.ctx().request_repaint();
             }
             UserAction::DownloadAllImages => {
                 self.handle_download_all_images();
-                ui.ctx().forget_all_images();
+                ui.ctx().request_repaint();
             }
             UserAction::RefreshImages => {
                 let user = self.image_selected_state.steam_user.clone();
                 if let Some(user) = &user {
                     load_image_grids(user);
                 }
-                ui.ctx().forget_all_images();
+                ui.ctx().request_repaint();
             }
         };
     }

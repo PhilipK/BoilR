@@ -12,6 +12,7 @@ pub struct Settings {
     pub debug: bool,
     pub config_version: Option<usize>,
     pub blacklisted_games: Vec<u32>,
+    pub language: String,
     pub steamgrid_db: SteamGridDbSettings,
     pub steam: SteamSettings,
 }

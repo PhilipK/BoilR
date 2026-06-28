@@ -18,16 +18,16 @@ pub struct BackupState {
 
 impl MyEguiApp {
     pub fn render_backup(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Backups");
-        ui.label("Here you can restore backed up shortcuts files");
-        ui.label("Click a backup to restore it, your current shortcuts will be backed up first");
+        ui.heading(self.language.t("backups"));
+        ui.label(self.language.t("restore_backup"));
+        ui.label(self.language.t("click_backup_to_restore"));
         ui.add_space(15.0);
 
         if let Some(last_restore) = self.backup_state.last_restore.as_ref() {
             ui.heading(format!("Last restored {last_restore:?}"));
         }
 
-        if ui.button("Click here to create a new backup").clicked() {
+        if ui.button(self.language.t("create_new_backup")).clicked() {
             backup_shortcuts(&self.settings.steam);
             self.backup_state.available_backups = None;
         }
@@ -38,7 +38,7 @@ impl MyEguiApp {
             .get_or_insert_with(load_backups);
 
         if available_backups.is_empty() {
-            ui.label("No backups found, they will be created every time you run import");
+            ui.label(self.language.t("no_backups_found"));
         } else {
             ScrollArea::vertical()
                 .stick_to_right(true)

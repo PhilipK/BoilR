@@ -1,4 +1,5 @@
 mod defines;
+mod locale;
 mod ui_backup;
 mod ui_disconnect;
 mod ui_import_games;

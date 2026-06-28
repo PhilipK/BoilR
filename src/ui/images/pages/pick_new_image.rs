@@ -24,17 +24,17 @@ pub fn render_page_pick_image(
 
     if let Some(action) = ui
         .horizontal(|ui| {
+            ui.label("Image actions");
             if ui
-                .small_button("Clear image?")
-                .on_hover_text("Click here to clear the image")
+                .small_button("Clear image")
+                .on_hover_text("Remove the current image for this type")
                 .clicked()
             {
                 return Some(UserAction::ImageTypeCleared(*image_type, false));
             }
-
             if ui
-                .small_button("Stop downloading this image?")
-                .on_hover_text("Stop downloading this type of image for this shortcut at all")
+                .small_button("Stop downloading")
+                .on_hover_text("Stop downloading this image type for this shortcut")
                 .clicked()
             {
                 return Some(UserAction::ImageTypeCleared(*image_type, true));
