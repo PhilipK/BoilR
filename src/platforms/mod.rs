@@ -28,6 +28,7 @@ mod itch;
 mod origin;
 mod platform;
 mod platforms_load;
+mod standalone;
 mod uplay;
 
 mod egs;

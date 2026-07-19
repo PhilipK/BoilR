@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use super::GamesPlatform;
 
 use crate::settings::load_setting_sections;
-const PLATFORM_NAMES: [&str; 14] = [
+const PLATFORM_NAMES: [&str; 15] = [
     "amazon",
     "bottles",
     "epic_games",
@@ -18,7 +18,8 @@ const PLATFORM_NAMES: [&str; 14] = [
     "uplay",
     "minigalaxy",
     "playnite",
-    "gamepass"
+    "gamepass",
+    "standalone",
 ];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
@@ -69,6 +70,7 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     use super::gog::GogPlatform;
     use super::itch::ItchPlatform;
     use super::origin::OriginPlatform;
+    use super::standalone::StandalonePlatform;
     use super::uplay::UplayPlatform;
 
     match name {
@@ -77,6 +79,7 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
         "itch" => load::<ItchPlatform>(s),
         "gog" => load::<GogPlatform>(s),
         "origin" => load::<OriginPlatform>(s),
+        "standalone" => load::<StandalonePlatform>(s),
         _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
 }
