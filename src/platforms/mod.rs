@@ -1,5 +1,8 @@
 #[cfg(target_family = "unix")]
 mod bottles;
+#[cfg(all(not(target_family = "unix"), test))]
+#[allow(dead_code)]
+mod bottles;
 #[cfg(target_family = "unix")]
 mod flatpak;
 #[cfg(target_family = "unix")]
