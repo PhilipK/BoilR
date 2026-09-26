@@ -15,7 +15,7 @@ serde_json = "^1.0.132"
 
 steam_shortcuts_util = "^1.1.8"
 steamgriddb_api = "^0.3.1"
-sysinfo = "^0.32.0"
+sysinfo = "^0.38.4"
 eyre = "^0.6.12"
 color-eyre = "^0.6.3"
 dyn-clone = "^1.0.17"
