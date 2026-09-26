@@ -13,7 +13,7 @@ Apply every rule; note each failure with file and line.
 - **Settings compatibility**: no platform `code_name()` changes; new settings have defaults in `src/defaultconfig.toml`; renamed settings are migrated in `src/migration.rs`.
 - **Error handling**: no `unwrap`/`expect`/`panic`/indexing (clippy denies them); errors surface to the user instead of silently returning zero games.
 - **Platform gating**: Windows-only and Linux-only code sits behind the right `cfg`; CI's Windows job is green if Windows code changed.
-- **Flatpak**: `Cargo.lock` changes come with a regenerated `flatpak/cargo-lock.json` (you may push that commit to the PR branch yourself if the author allows maintainer edits, or do it in a follow-up PR).
+- **Flatpak**: `Cargo.lock` changes need a regenerated `flatpak/cargo-lock.json`; the `flatpak_lock_sync` CI job goes red when they drift. For dependabot and community PRs, merge and then batch the regeneration into one follow-up PR of your own per run, rather than per PR.
 - **UI thread**: new work that does IO or network runs off the UI thread, not via `block_on` in `update()`.
 - **Scope**: one concern per PR. A PR mixing a bug fix with renames and formatting across many files is reviewed per concern; ask for a split if the concerns cannot be judged together.
 - **Steam formats**: code that reads or writes Steam files matches what current Steam writes (see `CLAUDE.md`).
