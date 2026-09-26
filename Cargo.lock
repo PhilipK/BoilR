@@ -692,11 +692,9 @@ dependencies = [
 name = "boilr"
 version = "1.10.1"
 dependencies = [
- "base64 0.22.1",
+ "boilr-core",
  "color-eyre",
- "config",
  "copypasta",
- "dashmap",
  "dyn-clone",
  "eframe",
  "egui",
@@ -707,21 +705,40 @@ dependencies = [
  "image",
  "is_executable",
  "nom",
- "reqwest 0.12.9",
  "roxmltree 0.20.0",
- "rusty-leveldb",
  "serde",
  "serde_json",
  "sqlite",
  "steam_shortcuts_util",
  "steamgriddb_api",
- "sysinfo",
  "time",
  "tokio",
  "toml 0.8.19",
  "wayland-cursor",
  "winreg 0.52.0",
  "winres",
+]
+
+[[package]]
+name = "boilr-core"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "config",
+ "dashmap",
+ "eyre",
+ "futures",
+ "nom",
+ "reqwest 0.12.9",
+ "rusty-leveldb",
+ "serde",
+ "serde_json",
+ "steam_shortcuts_util",
+ "steamgriddb_api",
+ "sysinfo",
+ "time",
+ "tokio",
+ "toml 0.8.19",
 ]
 
 [[package]]

@@ -1,11 +1,9 @@
-use eframe::epaint::ahash::HashSet;
 use steam_shortcuts_util::{
     calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
@@ -14,7 +12,10 @@ use crate::{
     steamgriddb::{download_images_for_users, ImageType},
 };
 
-use std::{collections::HashMap, error::Error};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+};
 
 use std::{fs::File, io::Write, path::Path};
 
@@ -250,16 +251,6 @@ fn write_shortcut_collections<S: AsRef<str>>(
     println!("Writing {} collections ", collections.len());
     write_collections(steam_id.as_ref(), &collections)?;
     Ok(())
-}
-
-pub fn get_platform_shortcuts(
-    platform: Box<dyn GamesPlatform>,
-) -> eyre::Result<Vec<ShortcutToImport>> {
-    if platform.enabled() {
-        platform.get_shortcut_info()
-    } else {
-        Ok(vec![])
-    }
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) -> Result<(), String> {

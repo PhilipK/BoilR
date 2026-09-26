@@ -9,9 +9,12 @@ use tokio::{
 
 use crate::{
     config::get_renames_file,
-    platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport},
+    platforms::{
+        get_platform_shortcuts, get_platforms, platform_sections, GamesPlatform, Platforms,
+        ShortcutToImport,
+    },
     settings::{save_settings, Settings},
-    sync::{self, SyncProgress},
+    sync::SyncProgress,
 };
 
 use super::{
@@ -123,7 +126,8 @@ impl MyEguiApp {
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
-                if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                if let Err(err) = save_settings(&self.settings, &platform_sections(&self.platforms))
+                {
                     eprintln!("Failed to save settings {err:?}");
                 }
                 self.run_sync_async();
@@ -165,7 +169,7 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
             let platform = platform.clone();
             rt.spawn_blocking(move || {
                 let _ = tx.send(FetchStatus::Fetching);
-                let games_to_sync = sync::get_platform_shortcuts(platform);
+                let games_to_sync = get_platform_shortcuts(platform);
                 let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });
         }
@@ -244,7 +248,9 @@ impl App for MyEguiApp {
                         .on_hover_text("Save settings")
                         .clicked()
                     {
-                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                        if let Err(err) =
+                            save_settings(&self.settings, &platform_sections(&self.platforms))
+                        {
                             eprintln!("Failed to save settings: {err:?}");
                         }
                     }

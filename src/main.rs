@@ -6,15 +6,13 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 
-mod config;
-mod migration;
 mod platforms;
-mod settings;
 mod single_instance;
-mod steam;
-mod steamgriddb;
-mod sync;
 mod ui;
+
+// Core modules live in the boilr-core crate; importing them here keeps `crate::settings` etc.
+// paths working throughout the UI and platform code.
+use boilr_core::{config, migration, settings, steam, steamgriddb, sync};
 
 use color_eyre::eyre::Result;
 
@@ -32,7 +30,7 @@ fn main() -> Result<()> {
         }
     };
 
-    migration::migrate_config();
+    migration::migrate_config(|| platforms::platform_sections(&platforms::get_platforms()));
 
     let args: Vec<String> = std::env::args().collect();
     if args.contains(&"--no-ui".to_string()) {
