@@ -28,6 +28,23 @@ body {
   outline-offset: 2px;
 }
 
+/* With a controller or arrow keys there is no pointer, so focus must always be obvious. */
+/* Inset, so scroll areas don't clip it. */
+body.nav-controller :focus:not(input) {
+  outline: 3px solid theme("colors.flame");
+  outline-offset: -3px;
+}
+body.nav-controller label:focus-within {
+  outline: 3px solid theme("colors.flame");
+  outline-offset: 2px;
+}
+/* Stepped corners clip outlines, so pixel buttons light up instead. */
+body.nav-controller .btn:focus:not(:disabled) {
+  outline: none;
+  background-color: theme("colors.foam");
+  color: theme("colors.deep");
+}
+
 @layer components {
   /* Stepped 4px corners, like the pixel art. */
   .notch {

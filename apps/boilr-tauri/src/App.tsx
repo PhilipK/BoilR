@@ -26,6 +26,7 @@ import { GameList } from "./components/GameList";
 import { PipeBar } from "./components/PipeBar";
 import { Sources } from "./components/Sources";
 import { SettingsView } from "./components/SettingsView";
+import { useNavigation } from "./lib/navigation";
 
 type View = "games" | "settings";
 
@@ -245,6 +246,14 @@ const App = () => {
     [fetchAll, platformGroups]
   );
 
+  const padConnected = useNavigation({
+    onBack: () => setView("games"),
+    onPrevView: () => setView("games"),
+    onNextView: () => setView("settings"),
+    // Y only moves to the Import button; A confirms, so a stray press never imports.
+    onImport: () => document.getElementById("import-button")?.focus(),
+  });
+
   const plannedAppIds = useMemo(() => new Set(plan?.additions.map((a) => a.shortcut.app_id) ?? []), [plan]);
   const selectedIn = useCallback((p: PlatformSummary) => p.games.filter((g) => isSelected(g.app_id)).length, [isSelected]);
 
@@ -335,6 +344,7 @@ const App = () => {
         syncError={syncError}
         restartsSteam={Boolean(settings?.steam?.start_steam)}
         hasGames={platforms.some((p) => p.enabled && p.games.length > 0)}
+        padConnected={padConnected}
         onImport={runImport}
       />
     </div>
