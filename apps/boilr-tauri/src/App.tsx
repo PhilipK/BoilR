@@ -334,6 +334,7 @@ const App = () => {
         outcome={outcome}
         syncError={syncError}
         restartsSteam={Boolean(settings?.steam?.start_steam)}
+        hasGames={platforms.some((p) => p.enabled && p.games.length > 0)}
         onImport={runImport}
       />
     </div>

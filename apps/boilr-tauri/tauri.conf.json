@@ -14,12 +14,25 @@
     "windows": [
       {
         "label": "main",
-        "title": "BoilR Tauri",
+        "title": "BoilR",
         "width": 1280,
-        "height": 720,
+        "height": 800,
         "url": "index.html",
-        "resizable": true
+        "resizable": true,
+        "minWidth": 900,
+        "minHeight": 600
       }
     ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "appimage"
+    ],
+    "icon": [
+      "icons/icon.png"
+    ],
+    "category": "Game",
+    "shortDescription": "Add games from other launchers to Steam"
   }
 }

@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: "dist",
+    // main.tsx awaits the dev mock import at the top level.
+    target: "es2022",
     sourcemap: true
   },
   server: {

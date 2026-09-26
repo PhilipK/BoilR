@@ -100,7 +100,7 @@ export const GameList = ({
           <h1 id="list-title" className="font-pixel text-3xl text-foam">
             {title}
           </h1>
-          {status === "games" ? (
+          {status === "games" && visibleIds.length + (query ? 1 : 0) > 0 ? (
             <p className="mt-1 text-mauve">
               {selectedCount} of {plural(visibleIds.length, "game")} selected for Steam
             </p>
@@ -127,7 +127,7 @@ export const GameList = ({
               don't want in your Steam library.
             </p>
           ) : null}
-          <div className="flex flex-wrap items-center gap-3 px-6 pb-3">
+          <div className={clsx("flex flex-wrap items-center gap-3 px-6 pb-3", sources.every((p) => p.games.length === 0) && "hidden")}>
             <input
               type="search"
               value={query}
@@ -155,8 +155,13 @@ export const GameList = ({
                   showSource={single ? undefined : source.name}
                 />
               ))
-            ) : (
+            ) : query ? (
               <li className="px-3 py-8 text-mauve">No games match “{query}”.</li>
+            ) : (
+              <li className="max-w-prose px-3 py-8 text-peach">
+                BoilR didn't find any games yet. The launchers on the left say what it looked for;
+                pick one to see why, or point BoilR to it in Settings.
+              </li>
             )}
           </ul>
         </>

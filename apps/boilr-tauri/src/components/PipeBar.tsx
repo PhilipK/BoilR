@@ -35,6 +35,7 @@ export const PipeBar = ({
   outcome,
   syncError,
   restartsSteam,
+  hasGames,
   onImport,
 }: {
   toAdd: number;
@@ -44,6 +45,7 @@ export const PipeBar = ({
   outcome: SyncOutcome | null;
   syncError: string | null;
   restartsSteam: boolean;
+  hasGames: boolean;
   onImport: () => void;
 }) => {
   const [showRemovals, setShowRemovals] = useState(false);
@@ -58,6 +60,8 @@ export const PipeBar = ({
     status = restartsSteam
       ? "Your games are in Steam."
       : "Your games are in Steam. Restart Steam to see them.";
+  } else if (nothingToDo && !hasGames) {
+    status = "No games to import yet.";
   } else if (nothingToDo) {
     status = "Everything selected is already in Steam.";
   } else {
