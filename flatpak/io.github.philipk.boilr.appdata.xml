@@ -26,6 +26,20 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+<release version="1.10.0" date="2026-09-26">
+      <description>
+        <ul>
+          <li>Steam collections work again with current Steam clients</li>
+          <li>Fix crash when opening Settings</li>
+          <li>Ubisoft Connect and EA app support (formerly Uplay and Origin)</li>
+          <li>Fix GOG games not being found in some setups</li>
+          <li>Respect display scaling on Windows</li>
+          <li>Find itch.io games installed through Flatpak</li>
+          <li>Only one BoilR instance can run at a time</li>
+          <li>Security and dependency updates</li>
+        </ul>
+      </description>
+    </release>
 <release version="1.9.6" date="2024-10-30">
       <description>
         <ul>
