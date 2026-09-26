@@ -4,10 +4,10 @@ Rust desktop app (egui/eframe) that finds games from other launchers (Epic, GOG,
 
 ## Build and verify
 
-Linux build needs system libs (same list CI installs in `.github/workflows/main.yml`):
+Linux build needs only `pkg-config` and `libssl-dev`. OpenSSL comes in through `steamgriddb_api` (Philip's crate), which uses reqwest 0.11 with native-tls; BoilR's own reqwest uses rustls. X11, Wayland, xkbcommon and GL are loaded at runtime (dlopen), so no dev headers are needed for them. The longer apt list in the CI workflows is a leftover from older dependencies and includes GTK, which nothing uses.
 
 ```bash
-sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
+sudo apt-get install -y pkg-config libssl-dev
 ```
 
 A change is verified when all of these pass:
