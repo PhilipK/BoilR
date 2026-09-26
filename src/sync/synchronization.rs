@@ -50,10 +50,7 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
                     shortcut.tags.retain(|s| s != BOILR_TAG);
                 }
             }
-            if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path))
-            {
-                return Err(e);
-            }
+            save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path))?
         }
     }
 

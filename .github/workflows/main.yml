@@ -25,9 +25,13 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
-        components: clippy
+        components: clippy, rustfmt
+    - name: Format
+      run: cargo fmt --all --check
+    - name: Clippy
+      run: cargo clippy --all-targets -- -D warnings
     - name: Test
-      run: |        
+      run: |
         cargo test
         cargo test --features flatpak
   test_Windows:
