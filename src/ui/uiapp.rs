@@ -180,7 +180,6 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
 
 impl App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
-        ctx.set_pixels_per_point(1.0);
         let frame = egui::Frame::default()
             .stroke(Stroke::new(0., BACKGROUND_COLOR))
             .fill(BACKGROUND_COLOR);
