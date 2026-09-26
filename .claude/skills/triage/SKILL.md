@@ -8,7 +8,7 @@ description: Triage BoilR issues: label, reproduce by reading code, reply, dedup
 1. Read the issue and all comments. Classify: `bug`, `enhancement`, `question`, `documentation`, and `duplicate` where it applies.
 2. For bugs, find the code path (platform module, `src/steam/`, `src/ui/`) and state in a reply what you believe is happening, or what information would tell you (OS, install type Flatpak/native/AppImage, launcher and its install type, the `--no-ui` output). Label `need more info` when you asked for something.
 3. Link duplicates to the older issue and close the newer one, unless the newer one has the better report, in which case close the older.
-4. If an open PR fixes the issue, link it.
+4. If an open PR fixes the issue, link it and keep the issue open until the fix ships in a release. Never close an issue as stale in the same run you found a fix or likely cause for it.
 5. A bug with a clear cause and small fix is a roadmap candidate: add it to the log issue roadmap.
 
 ## Stale sweep
