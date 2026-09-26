@@ -19,7 +19,7 @@ sysinfo = "^0.32.0"
 eyre = "^0.6.12"
 color-eyre = "^0.6.3"
 dyn-clone = "^1.0.17"
-time = {version="^0.3.37", features = ["formatting"]}
+time = {version="^0.3.47", features = ["formatting"]}
 egui_extras = { version = "0.29.1", features = ["all_loaders"] }
 
 [dependencies.dashmap]
