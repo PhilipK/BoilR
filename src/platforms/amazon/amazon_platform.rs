@@ -67,6 +67,7 @@ impl GamesPlatform for AmazonPlatform {
         to_shortcuts_simple(self.get_amazon_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Amazon");
         ui.checkbox(&mut self.settings.enabled, "Import from Amazon");
@@ -90,8 +91,8 @@ impl AmazonPlatform {
         let mut statement =
             connection.prepare("SELECT Id, ProductTitle FROM DbSet WHERE Installed = 1")?;
         while let Ok(State::Row) = statement.next() {
-            let id = statement.read::<String,usize>(0);
-            let title = statement.read::<String,usize>(1);
+            let id = statement.read::<String, usize>(0);
+            let title = statement.read::<String, usize>(1);
             if let (Ok(id), Ok(title)) = (id, title) {
                 result.push(AmazonGame {
                     title,

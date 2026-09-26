@@ -1,0 +1,24 @@
+[package]
+edition = "2021"
+name = "boilr-core"
+version = "0.1.0"
+description = "UI-independent core of BoilR: settings, Steam files, SteamGridDB and sync"
+publish = false
+
+[dependencies]
+base64.workspace = true
+config.workspace = true
+dashmap.workspace = true
+eyre.workspace = true
+futures.workspace = true
+nom.workspace = true
+reqwest.workspace = true
+rusty-leveldb.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+steam_shortcuts_util.workspace = true
+steamgriddb_api.workspace = true
+sysinfo.workspace = true
+time.workspace = true
+tokio.workspace = true
+toml.workspace = true

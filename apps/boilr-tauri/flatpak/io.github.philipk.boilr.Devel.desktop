@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=BoilR (preview)
+Comment=Add games from other launchers to Steam
+Exec=boilr-tauri
+Icon=io.github.philipk.boilr.Devel
+Categories=Game;Utility;
+Terminal=false

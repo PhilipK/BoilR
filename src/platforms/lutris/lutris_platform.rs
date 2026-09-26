@@ -18,7 +18,11 @@ impl LutrisPlatform {
         let installed = self.settings.installed;
         let mut res = vec![];
         for mut game in games {
-            let service = if installed { game.runner.clone().unwrap_or_default() } else { game.service.clone().unwrap_or_default() };
+            let service = if installed {
+                game.runner.clone().unwrap_or_default()
+            } else {
+                game.service.clone().unwrap_or_default()
+            };
             if service != "steam" {
                 game.settings = Some(self.settings.clone());
                 res.push(game);
@@ -48,8 +52,8 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
                 .arg("--host")
                 .arg("flatpak")
                 .arg("run")
-                .arg(flatpak_image);
-            command.arg("run").arg(flatpak_image).arg("--json");
+                .arg(flatpak_image)
+                .arg("--json");
             if settings.installed {
                 command.arg("-lo").output()?
             } else {
@@ -90,6 +94,7 @@ impl GamesPlatform for LutrisPlatform {
         to_shortcuts_simple(self.get_shortcuts())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Lutris");
         ui.checkbox(&mut self.settings.enabled, "Import from Lutris");

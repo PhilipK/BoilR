@@ -17,6 +17,7 @@ where
 
     fn get_settings_serializable(&self) -> String;
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui);
 }
 
@@ -77,4 +78,23 @@ pub trait NeedsProton<P> {
     fn needs_proton(&self, platform: &P) -> bool;
 
     fn create_symlinks(&self, platform: &P) -> bool;
+}
+
+pub fn get_platform_shortcuts(
+    platform: Box<dyn GamesPlatform>,
+) -> eyre::Result<Vec<ShortcutToImport>> {
+    if platform.enabled() {
+        platform.get_shortcut_info()
+    } else {
+        Ok(vec![])
+    }
+}
+
+/// Each platform's settings as `(code_name, serialized settings)`, the shape
+/// `boilr_core::settings::save_settings` writes.
+pub fn platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(String, String)> {
+    platforms
+        .iter()
+        .map(|p| (p.code_name().to_string(), p.get_settings_serializable()))
+        .collect()
 }

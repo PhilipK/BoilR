@@ -8,10 +8,7 @@ use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
     ui::{
-        images::{
-            gametype::GameType, hasimagekey::HasImageKey,
-            useraction::UserAction,
-        },
+        images::{gametype::GameType, hasimagekey::HasImageKey, useraction::UserAction},
         FetchStatus, MyEguiApp,
     },
 };
@@ -69,11 +66,23 @@ fn render_image(
     );
     // Convert Windows backslashes to forward slashes for file:// URL
     let key_normalized = key.replace('\\', "/");
-    let image = egui::Image::new(format!("file:///{}", key_normalized)).max_width(column_width).shrink_to_fit();
-    let calced = image.calc_size(egui::Vec2 { x: column_width, y: f32::INFINITY }, image.size());
+    let image = egui::Image::new(format!("file:///{}", key_normalized))
+        .max_width(column_width)
+        .shrink_to_fit();
+    let calced = image.calc_size(
+        egui::Vec2 {
+            x: column_width,
+            y: f32::INFINITY,
+        },
+        image.size(),
+    );
     let button = ImageButton::new(image);
 
-    if ui.add_sized(calced,button).on_hover_text(&shortcut.app_name).clicked() {
+    if ui
+        .add_sized(calced, button)
+        .on_hover_text(&shortcut.app_name)
+        .clicked()
+    {
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             Box::new(shortcut.clone()),
         ))));

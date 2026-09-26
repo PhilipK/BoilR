@@ -1,11 +1,9 @@
-use eframe::epaint::ahash::HashSet;
 use steam_shortcuts_util::{
     calculate_app_id_for_shortcut, shortcut::ShortcutOwned, shortcuts_to_bytes, Shortcut,
 };
 use tokio::sync::watch::Sender;
 
 use crate::{
-    platforms::{GamesPlatform, ShortcutToImport},
     settings::Settings,
     steam::{
         get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
@@ -14,21 +12,31 @@ use crate::{
     steamgriddb::{download_images_for_users, ImageType},
 };
 
-use std::{collections::HashMap, error::Error};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+};
 
 use std::{fs::File, io::Write, path::Path};
 
 pub const BOILR_TAG: &str = "boilr";
 
+#[derive(Clone, Debug)]
 pub enum SyncProgress {
     NotStarted,
     Starting,
-    FoundGames { games_found: usize },
+    FoundGames {
+        games_found: usize,
+    },
     FindingImages,
-    DownloadingImages { to_download: usize },
+    DownloadingImages {
+        to_download: usize,
+    },
     Done,
     /// Error occurred during sync - contains user-friendly error message
-    Error { message: String },
+    Error {
+        message: String,
+    },
 }
 
 pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), String> {
@@ -44,9 +52,7 @@ pub fn disconnect_shortcut(settings: &Settings, app_id: u32) -> Result<(), Strin
                     shortcut.tags.retain(|s| s != BOILR_TAG);
                 }
             }
-            if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path)) {
-                return Err(e);
-            }
+            save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path))?
         }
     }
 
@@ -90,13 +96,11 @@ pub fn sync_shortcuts(
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
     println!("Found {} user(s)", userinfo_shortcuts.len());
-    let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user|{
+    let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user| {
         let shortcut_info = get_shortcuts_for_user(user).ok();
-        shortcut_info.map(|shortcut_info| {
-            (user,shortcut_info)
-        })
+        shortcut_info.map(|shortcut_info| (user, shortcut_info))
     });
-    for (user,mut shortcut_info) in ok_shorcuts {
+    for (user, mut shortcut_info) in ok_shorcuts {
         let start_time = std::time::Instant::now();
         println!(
             "Found {} shortcuts for user: {}",
@@ -136,11 +140,11 @@ pub async fn download_images(
     sender: &mut Option<Sender<SyncProgress>>,
 ) {
     if settings.steamgrid_db.enabled {
-        download_images_for_users(settings, userinfo_shortcuts,  sender).await;
-        if settings.steamgrid_db.prefer_animated{
+        download_images_for_users(settings, userinfo_shortcuts, sender).await;
+        if settings.steamgrid_db.prefer_animated {
             let mut set = settings.clone();
             set.steamgrid_db.prefer_animated = false;
-            download_images_for_users(&set, userinfo_shortcuts,  sender).await;
+            download_images_for_users(&set, userinfo_shortcuts, sender).await;
         }
     }
 }
@@ -184,8 +188,13 @@ pub fn fix_all_shortcut_icons(settings: &Settings) -> eyre::Result<()> {
                 settings.steam.optimize_for_big_picture,
             );
             if changes {
-                if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path)) {
-                    eprintln!("Failed to save shortcut icons for user {}: {}", user.user_id, e);
+                if let Err(e) =
+                    save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path))
+                {
+                    eprintln!(
+                        "Failed to save shortcut icons for user {}: {}",
+                        user.user_id, e
+                    );
                     // Continue with other users
                 }
             }
@@ -231,6 +240,9 @@ fn write_shortcut_collections<S: AsRef<str>>(
     let mut collections = vec![];
 
     for (name, shortcuts) in platform_results {
+        if shortcuts.is_empty() {
+            continue;
+        }
         let game_ids = shortcuts.iter().map(|s| s.app_id as usize).collect();
         collections.push(Collection {
             name: name.clone(),
@@ -240,16 +252,6 @@ fn write_shortcut_collections<S: AsRef<str>>(
     println!("Writing {} collections ", collections.len());
     write_collections(steam_id.as_ref(), &collections)?;
     Ok(())
-}
-
-pub fn get_platform_shortcuts(
-    platform: Box<dyn GamesPlatform>,
-) -> eyre::Result<Vec<ShortcutToImport>> {
-    if platform.enabled() {
-        platform.get_shortcut_info()
-    } else {
-        Ok(vec![])
-    }
 }
 
 fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) -> Result<(), String> {

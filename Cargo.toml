@@ -1,62 +1,73 @@
+[workspace]
+members = ["crates/boilr-core"]
+default-members = [".", "crates/boilr-core"]
+exclude = ["apps/boilr-tauri"]
+
+[workspace.dependencies]
+base64 = "^0.22.1"
+config = "^0.15.6"
+dashmap = { version = "^6.1.0", features = ["serde"] }
+eyre = "^0.6.12"
+futures = "^0.3.31"
+nom = "^7.1.1"
+reqwest = { version = "^0.12.9", default-features = false, features = ["json", "rustls-tls"] }
+# Pinned: 3.0.3 made WriteBatch::new() private (used by steam/collections.rs).
+rusty-leveldb = "=3.0.0"
+serde = { version = "^1.0.217", features = ["derive"] }
+serde_json = "^1.0.132"
+steam_shortcuts_util = "^1.1.8"
+steamgriddb_api = "^0.3.1"
+sysinfo = "^0.38.4"
+time = { version = "^0.3.47", features = ["formatting"] }
+tokio = { version = "^1.41.0", features = ["full"] }
+toml = "^0.8.19"
+
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.9.6"
+version = "1.10.1"
+
+[lib]
+name = "boilr"
+path = "src/lib.rs"
+
+[[bin]]
+name = "boilr"
+path = "src/main.rs"
+required-features = ["egui-ui"]
 
 [dependencies]
-base64 = "^0.22.1"
-config = "^0.15.6"
-copypasta = "^0.10.1"
+boilr-core = { path = "crates/boilr-core" }
+copypasta = { version = "^0.10.1", optional = true }
 flate2 = "^1.0.34"
 is_executable = "^1.0.4"
-nom = "^7.1.1"
-rusty-leveldb = "^3.0.0"
-serde_json = "^1.0.132"
-
-steam_shortcuts_util = "^1.1.8"
-steamgriddb_api = "^0.3.1"
-sysinfo = "^0.32.0"
-eyre = "^0.6.12"
+nom.workspace = true
+serde_json.workspace = true
+steam_shortcuts_util.workspace = true
+steamgriddb_api.workspace = true
+eyre.workspace = true
 color-eyre = "^0.6.3"
 dyn-clone = "^1.0.17"
-time = {version="^0.3.37", features = ["formatting"]}
-egui_extras = { version = "0.29.1", features = ["all_loaders"] }
-
-[dependencies.dashmap]
-features = ["serde"]
-version = "^6.1.0"
+time.workspace = true
+egui_extras = { version = "0.29.1", features = ["all_loaders"], optional = true }
+futures.workspace = true
+serde.workspace = true
+tokio.workspace = true
+toml.workspace = true
 
 [dependencies.eframe]
 version = "^0.29.1"
+optional = true
 
 [dependencies.egui]
 version = "^0.29.1"
-
-[dependencies.futures]
-version = "^0.3.31"
+optional = true
 
 [dependencies.image]
 features = ["png","webp","jpeg"]
 version ="^0.25.4"
-#git = "https://github.com/PhilipK/image"
-#rev = "55a668409b28fedcd6cd3dea25ae1b3cc9d25ec5"
+optional = true
 
-[dependencies.reqwest]
-default-features = false
-version = "^0.12.9"
-features = ["json","rustls-tls"]
-
-[dependencies.serde]
-features = ["derive"]
-version = "^1.0.217"
-
-[dependencies.tokio]
-features = ["full"]
-version = "^1.41.0"
-
-[dependencies.toml]
-version = "^0.8.19"
-[target."cfg(windows)"]
 [target."cfg(windows)".build-dependencies]
 winres = "^0.1.12"
 
@@ -69,6 +80,10 @@ roxmltree = "^0.20.0"
 wayland-cursor = "0.31.7"
 
 [features]
+default = ["egui-ui"]
+# The egui desktop interface and the `boilr` binary. Other front ends (the Tauri app)
+# depend on the library with default-features = false.
+egui-ui = ["dep:copypasta", "dep:eframe", "dep:egui", "dep:egui_extras", "dep:image"]
 # This feature is enabled when building for a flatpak environment
 flatpak = []
 

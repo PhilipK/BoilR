@@ -1,0 +1,5 @@
+/public/*.AppImage
+/gen/
+/dist/
+/node_modules/
+/target/

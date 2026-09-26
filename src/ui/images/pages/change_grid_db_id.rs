@@ -52,7 +52,6 @@ pub fn handle_grid_change(app: &mut MyEguiApp, grid_id: usize) {
     }
 }
 
-
 pub fn handle_correct_grid_request(app: &mut MyEguiApp) {
     let app_name = app
         .image_selected_state

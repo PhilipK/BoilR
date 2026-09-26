@@ -2,5 +2,5 @@ mod origin_game;
 mod origin_platform;
 mod settings;
 
-pub(crate) use origin_platform::OriginPlatform;
-pub use settings::OriginSettings;
+pub use origin_platform::EAPlatform;
+pub use settings::EASettings;

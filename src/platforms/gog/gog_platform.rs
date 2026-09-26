@@ -207,7 +207,10 @@ fn get_install_locations(path: PathBuf) -> eyre::Result<Vec<String>> {
         Some(path) => vec![path],
         None => vec![],
     };
-    Ok(config.installation_paths.unwrap_or(path_vec))
+    // installationPaths can be present but empty (e.g. `"installationPaths": []`),
+    // in which case we should still fall back to libraryPath instead of scanning nothing.
+    let installation_paths = config.installation_paths.filter(|paths| !paths.is_empty());
+    Ok(installation_paths.unwrap_or(path_vec))
 }
 
 pub fn default_location() -> PathBuf {
@@ -245,6 +248,7 @@ impl GamesPlatform for GogPlatform {
         to_shortcuts(self, self.get_shortcuts())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("GoG Galaxy");
         ui.checkbox(&mut self.settings.enabled, "Import from GoG Galaxy");

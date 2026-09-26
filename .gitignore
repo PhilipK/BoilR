@@ -10,3 +10,10 @@ flatpak/build-dir
 flatpak/repo
 flatpak/flatpak-cargo-generator.py
 .flatpak-builder
+planning.md
+.gitignoretarget-deck/
+.dockerhome/
+.flatpak-build/
+.flatpak-repo/
+.flatpak-builder/
+*.flatpak

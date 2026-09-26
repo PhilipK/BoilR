@@ -11,6 +11,7 @@ use std::path::PathBuf;
 #[derive(Clone)]
 pub struct HeroicPlatform {
     pub settings: HeroicSettings,
+    #[cfg_attr(not(feature = "egui-ui"), allow(dead_code))]
     pub(crate) heroic_games: Option<Vec<HeroicGameType>>,
 }
 
@@ -115,10 +116,10 @@ impl HeroicPlatform {
         for install_mode in install_modes {
             if let Ok(mut games) = get_shortcuts_from_install_mode(install_mode) {
                 games.sort_by_key(|m| {
-                    format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name)
+                    format!("{}-{}-{}", m.launch_parameters, m.executable, m.app_name)
                 });
                 games.dedup_by_key(|m| {
-                    format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name)
+                    format!("{}-{}-{}", m.launch_parameters, m.executable, m.app_name)
                 });
 
                 for game in games {
@@ -224,6 +225,7 @@ impl GamesPlatform for HeroicPlatform {
         to_shortcuts(self, self.get_heroic_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Heroic");
         ui.checkbox(&mut self.settings.enabled, "Import from Heroic");

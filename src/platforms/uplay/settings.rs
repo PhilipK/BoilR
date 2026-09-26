@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct UplaySettings {
+pub struct UbisoftSettings {
     pub enabled: bool,
 }
 
-impl Default for UplaySettings {
+impl Default for UbisoftSettings {
     fn default() -> Self {
         #[cfg(target_family = "unix")]
         let enabled = false;

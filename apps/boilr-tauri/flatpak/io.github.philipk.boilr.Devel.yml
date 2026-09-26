@@ -1,0 +1,71 @@
+# Test build of the Tauri app as a Flatpak. It uses its own app id so it installs next to the
+# Flathub release of BoilR. Build from the repository root:
+#
+#   flatpak run org.flatpak.Builder --user --install-deps-from=flathub --force-clean \
+#     --repo=.flatpak-repo .flatpak-build apps/boilr-tauri/flatpak/io.github.philipk.boilr.Devel.yml
+#
+# `--share=network` during the build lets npm and cargo download dependencies. Flathub forbids
+# that, so a Flathub submission needs generated cargo and npm sources instead.
+app-id: io.github.philipk.boilr.Devel
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node22
+command: boilr-tauri
+
+# Same sandbox as the egui app on Flathub (flathub/io.github.philipk.boilr).
+finish-args:
+  - --filesystem=~/.config/legendary:ro # Legendary
+  - --filesystem=~/.config/heroic # Heroic (native)
+  - --filesystem=xdg-data/Steam:rw # Steam (Flatpak)
+  - --filesystem=~/.steam:rw # Steam (native)
+  - --filesystem=~/.var/app/com.valvesoftware.Steam:rw # Steam (Flatpak)
+  - --filesystem=xdg-data/lutris:ro # Lutris (native)
+  - --filesystem=~/.var/app/net.lutris.Lutris:ro # Lutris (Flatpak)
+  - --filesystem=~/Games/Heroic:ro # Heroic (native)
+  - --filesystem=~/.var/app/com.heroicgameslauncher.hgl:ro # Heroic (Flatpak)
+  - --filesystem=~/.config/itch:ro # Itch (native)
+  - --filesystem=~/GOG Games:ro # MiniGalaxy
+  - --filesystem=/run/media:ro # Steam Deck SD card
+  - --talk-name=org.freedesktop.Flatpak # Listing other Flatpaks
+  - --filesystem=xdg-data/flatpak:ro # Listing other Flatpaks
+  - --share=network # Artwork downloads
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node22/bin
+  build-args:
+    - --share=network
+  env:
+    CARGO_HOME: /run/build/boilr/cargo-home
+    npm_config_cache: /run/build/boilr/npm-cache
+
+modules:
+  - name: boilr
+    buildsystem: simple
+    sources:
+      - type: dir
+        path: ../../..
+        skip:
+          - target
+          - target-deck
+          - .dockerhome
+          - .flatpak-build
+          - .flatpak-repo
+          - .flatpak-builder
+          - apps/boilr-tauri/node_modules
+          - apps/boilr-tauri/target
+          - apps/boilr-tauri/dist
+    build-commands:
+      - cd apps/boilr-tauri && npm ci --no-audit --no-fund && npm run build
+      - cd apps/boilr-tauri && cargo build --release --features tauri/custom-protocol,flatpak
+      - install -Dm755 apps/boilr-tauri/target/release/boilr-tauri /app/bin/boilr-tauri
+      - install -Dm644 resources/256/io.github.philipk.boilr.png /app/share/icons/hicolor/256x256/apps/io.github.philipk.boilr.Devel.png
+      - install -Dm644 resources/128/io.github.philipk.boilr.png /app/share/icons/hicolor/128x128/apps/io.github.philipk.boilr.Devel.png
+      - install -Dm644 resources/64/io.github.philipk.boilr.png /app/share/icons/hicolor/64x64/apps/io.github.philipk.boilr.Devel.png
+      - install -Dm644 apps/boilr-tauri/flatpak/io.github.philipk.boilr.Devel.desktop -t /app/share/applications/

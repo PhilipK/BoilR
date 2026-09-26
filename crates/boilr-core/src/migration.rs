@@ -1,8 +1,10 @@
 use std::path::Path;
 
-use crate::{platforms::get_platforms, settings::save_settings};
+use crate::settings::save_settings;
 
-pub fn migrate_config() {
+/// `platform_sections` supplies the platform settings to write back, as `(code_name,
+/// serialized settings)` pairs; it is only called when a migration saves the config.
+pub fn migrate_config(platform_sections: impl FnOnce() -> Vec<(String, String)>) {
     let version = &crate::settings::Settings::new()
         .map(|s| s.config_version)
         .unwrap_or_default();
@@ -37,8 +39,7 @@ pub fn migrate_config() {
     if save_version {
         if let Ok(mut settings) = crate::settings::Settings::new() {
             settings.config_version = Some(1);
-            let platforms = get_platforms();
-            if let Err(err) = save_settings(&settings, &platforms){
+            if let Err(err) = save_settings(&settings, &platform_sections()) {
                 eprintln!("Failed to load settings {err:?}");
             }
         }

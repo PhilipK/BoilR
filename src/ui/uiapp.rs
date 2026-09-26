@@ -1,19 +1,20 @@
-use std::{collections::HashMap, error::Error, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use eframe::{egui, App, Frame};
-use egui::{
-   ImageButton, Rounding, Stroke, Vec2
-};
+use egui::{ImageButton, Rounding, Stroke, Vec2};
 use tokio::{
     runtime::Runtime,
     sync::watch::{self, Receiver},
 };
 
 use crate::{
-    config::get_renames_file,
-    platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport},
+    platforms::{
+        get_platform_shortcuts, get_platforms, platform_sections, GamesPlatform, Platforms,
+        ShortcutToImport,
+    },
+    renames::load_rename_map,
     settings::{save_settings, Settings},
-    sync::{self, SyncProgress},
+    sync::SyncProgress,
 };
 
 use super::{
@@ -28,7 +29,6 @@ use super::{
 };
 
 const SECTION_SPACING: f32 = 25.0;
-
 
 type GamesToSync = Vec<(
     String,
@@ -81,7 +81,7 @@ impl MyEguiApp {
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconnect_state: DisconnectState::default(),
-            rename_map: get_rename_map(),
+            rename_map: load_rename_map(),
             current_edit: Option::None,
             platforms,
         })
@@ -99,9 +99,7 @@ impl MyEguiApp {
                 (format!("Downloading {to_download} images"), true, false)
             }
             SyncProgress::Done => ("Done importing games".to_string(), false, false),
-            SyncProgress::Error { message } => {
-                (format!("Error: {}", message), false, true)
-            }
+            SyncProgress::Error { message } => (format!("Error: {}", message), false, true),
         };
         if syncing {
             ui.ctx().request_repaint();
@@ -120,35 +118,25 @@ impl MyEguiApp {
         }
         let all_ready = all_ready(&self.games_to_sync);
         let import_image = egui::include_image!("../../resources/import_games_button.png");
-        let size = Vec2::new(200.,100.);
+        let size = Vec2::new(200., 100.);
         let image_button = ImageButton::new(import_image);
         if all_ready && !syncing {
             if ui
-                .add_sized(size,image_button)
+                .add_sized(size, image_button)
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
-                if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                if let Err(err) = save_settings(&self.settings, &platform_sections(&self.platforms))
+                {
                     eprintln!("Failed to save settings {err:?}");
                 }
                 self.run_sync_async();
             }
         } else {
-            ui.add_sized(size,image_button)
+            ui.add_sized(size, image_button)
                 .on_hover_text("Waiting for sync to finish");
         }
     }
-}
-
-fn get_rename_map() -> HashMap<u32, String> {
-    try_get_rename_map().unwrap_or_default()
-}
-
-fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
-    let rename_map = get_renames_file();
-    let file_content = std::fs::read_to_string(rename_map)?;
-    let deserialized = serde_json::from_str(&file_content)?;
-    Ok(deserialized)
 }
 
 #[derive(PartialEq, Clone, Default)]
@@ -170,7 +158,7 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
             let platform = platform.clone();
             rt.spawn_blocking(move || {
                 let _ = tx.send(FetchStatus::Fetching);
-                let games_to_sync = sync::get_platform_shortcuts(platform);
+                let games_to_sync = get_platform_shortcuts(platform);
                 let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });
         }
@@ -180,9 +168,12 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
 
 impl App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+        // egui reports a wrong scale factor on the Steam Deck, making the UI huge (#416),
+        // so outside Windows keep the fixed 100% scale. Windows gets native DPI scaling (#475).
+        #[cfg(not(windows))]
         ctx.set_pixels_per_point(1.0);
         let frame = egui::Frame::default()
-            .stroke(Stroke::new(0., BACKGROUND_COLOR))
+            .stroke(Stroke::new(0.0_f32, BACKGROUND_COLOR))
             .fill(BACKGROUND_COLOR);
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
             .default_width(40.0)
@@ -234,6 +225,27 @@ impl App for MyEguiApp {
                 }
             });
 
+        if self.selected_menu == Menues::Settings {
+            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
+                .frame(frame)
+                .show(ctx, |ui| {
+                    let image = egui::include_image!("../../resources/save.png");
+                    let size = image.texture_size().unwrap_or(egui::Vec2::new(64., 64.));
+                    let save_button = ImageButton::new(image);
+                    if ui
+                        .add_sized(size * 0.5, save_button)
+                        .on_hover_text("Save settings")
+                        .clicked()
+                    {
+                        if let Err(err) =
+                            save_settings(&self.settings, &platform_sections(&self.platforms))
+                        {
+                            eprintln!("Failed to save settings: {err:?}");
+                        }
+                    }
+                });
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             match self.selected_menu {
                 Menues::Import => {
@@ -253,21 +265,6 @@ impl App for MyEguiApp {
                 }
             };
         });
-
-        if self.selected_menu == Menues::Settings {
-            egui::TopBottomPanel::new(egui::panel::TopBottomSide::Bottom, "Bottom Panel")
-                .frame(frame)
-                .show(ctx, |ui| {
-                    if render_settings_save_button(ui)
-                        .on_hover_text("Save settings")
-                        .clicked()
-                    {
-                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
-                            eprintln!("Failed to save settings: {err:?}");
-                        }
-                    }
-                });
-        }
     }
 }
 
@@ -294,20 +291,20 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.faint_bg_color = PURLPLE;
     style.visuals.extreme_bg_color = EXTRA_BACKGROUND_COLOR;
     style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.active.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
+    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.active.fg_stroke = Stroke::new(2.0_f32, LIGHT_ORANGE);
     style.visuals.widgets.open.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.open.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.open.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
+    style.visuals.widgets.open.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.open.fg_stroke = Stroke::new(2.0_f32, LIGHT_ORANGE);
     style.visuals.widgets.noninteractive.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0, ORANGE);
+    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0_f32, ORANGE);
     style.visuals.widgets.inactive.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0, ORANGE);
+    style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0_f32, ORANGE);
     style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
+    style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0_f32, LIGHT_ORANGE);
     style.visuals.selection.bg_fill = PURLPLE;
 }
 fn setup(ctx: &egui::Context) {
@@ -330,7 +327,11 @@ pub fn run_ui(args: Vec<String>) -> eyre::Result<()> {
     let no_v_sync = args.contains(&"--no-vsync".to_string());
     let fullscreen = is_fullscreen(&args);
     let logo = get_logo_icon();
-    let viewport = egui::ViewportBuilder { fullscreen: Some(fullscreen), icon: Some(logo.into()), ..Default::default() };
+    let viewport = egui::ViewportBuilder {
+        fullscreen: Some(fullscreen),
+        icon: Some(logo.into()),
+        ..Default::default()
+    };
     let native_options = eframe::NativeOptions {
         viewport,
         vsync: !no_v_sync,
