@@ -62,6 +62,7 @@ impl GamesPlatform for PlaynitePlatform {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Playnite");
         ui.checkbox(&mut self.settings.enabled, "Import from Playnite");

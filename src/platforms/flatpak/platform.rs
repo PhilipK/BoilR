@@ -100,6 +100,7 @@ impl GamesPlatform for FlatpakPlatform {
         to_shortcuts(self, self.get_flatpak_apps())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Flatpak");
         ui.checkbox(&mut self.settings.enabled, "Import from Flatpak");

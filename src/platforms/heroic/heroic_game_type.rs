@@ -28,6 +28,7 @@ impl HeroicGameType {
         }
     }
 
+    #[cfg_attr(not(feature = "egui-ui"), allow(dead_code))]
     pub(crate) fn title(&self) -> &str {
         match self {
             HeroicGameType::Epic(g) => g.title.as_ref(),

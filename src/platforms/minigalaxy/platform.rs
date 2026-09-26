@@ -93,6 +93,7 @@ impl GamesPlatform for MiniGalaxyPlatform {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Mini Galaxy");
         ui.checkbox(&mut self.settings.enabled, "Import from Mini Galaxy");
@@ -116,6 +117,7 @@ impl GamesPlatform for MiniGalaxyPlatform {
     }
 }
 
+#[cfg_attr(not(feature = "egui-ui"), allow(dead_code))]
 fn get_default_folder_string() -> String {
     get_default_folder_path()
         .unwrap_or_default()
