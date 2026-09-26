@@ -27,18 +27,23 @@ The GUI cannot be exercised in a headless environment. `boilr --no-ui` runs a sy
 
 ## Architecture
 
-- `src/platforms/<name>/`: one module per launcher, each implementing `GamesPlatform` (`src/platforms/platform.rs`) and registered in `src/platforms/platforms_load.rs`.
-- `src/sync/synchronization.rs`: the import pipeline (collect shortcuts, write `shortcuts.vdf`, collections, images).
-- `src/steam/`: Steam file formats: shortcuts, collections (`collections.rs`), Proton mapping, user folders.
-- `src/steamgriddb/`: artwork lookup and download.
-- `src/ui/`: egui screens. `uiapp.rs` is the root.
-- Settings: `src/defaultconfig.toml` merged with the user's `settings.toml` in the config folder (`~/.config/boilr` or `%APPDATA%\boilr`). `src/migration.rs` handles old config shapes.
+Cargo workspace with two crates; `cargo build`/`test`/`clippy` at the root cover both.
+
+- `crates/boilr-core/`: everything that doesn't need a UI or knowledge of launchers. It must never depend on egui or on `src/platforms`; the pipeline takes plain `(platform name, shortcuts)` lists.
+  - `src/sync/synchronization.rs`: the import pipeline (write `shortcuts.vdf`, collections, images).
+  - `src/steam/`: Steam file formats: shortcuts, collections (`collections.rs`), Proton mapping, user folders.
+  - `src/steamgriddb/`: artwork lookup and download.
+  - Settings: `src/defaultconfig.toml` merged with the user's `config.toml` in the config folder (`~/.config/boilr` or `%APPDATA%\boilr`). `src/migration.rs` handles old config shapes.
+- `src/` (the `boilr` binary):
+  - `platforms/<name>/`: one module per launcher, each implementing `GamesPlatform` (`platforms/platform.rs`) and registered in `platforms/platforms_load.rs`.
+  - `ui/`: egui screens. `uiapp.rs` is the root.
+  - `main.rs` re-imports the core modules (`use boilr_core::{config, settings, ...}`), so code here still writes `crate::settings::...`.
 
 ## Direction
 
 Core first, then a new UI. Decided by Philip, 2026-09-26.
 
-1. **Extract a UI-free core.** Branch `feature/tauri-migration` (Nov 2025) already splits the backend into `crates/boilr-core`. Port that split onto `main` in small PRs while the egui UI keeps working. Target: `GamesPlatform` has no egui dependency (today `render_ui` takes `&mut egui::Ui`); platforms expose settings as data.
+1. **Extract a UI-free core.** `crates/boilr-core` exists (settings, Steam, SteamGridDB, sync). Next: make the `boilr` crate a library with platforms usable without egui (`render_ui` behind an `egui-ui` feature), following branch `feature/tauri-migration` (Nov 2025). Target: `GamesPlatform` has no egui dependency (today `render_ui` takes `&mut egui::Ui`); platforms expose settings as data.
 2. **Keep egui alive meanwhile**: minimal upgrades for user-facing bugs (paste, launch failures, DPI). Several UI paths call `block_on` on the UI thread (import, image download, image picking), causing freezes; fix those only where users hit them.
 3. **Tauri UI** (`apps/boilr-tauri` on that branch, React) rebased onto the core and shipped as an opt-in beta beside egui. Its `TODO.md` lists the feature-parity gaps. It replaces egui only after parity and testing on Steam Deck and Wayland, where WebKitGTK rendering is the known risk.
 
