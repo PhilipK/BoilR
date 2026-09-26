@@ -15,6 +15,7 @@ Apply every rule; note each failure with file and line.
 - **Platform gating**: Windows-only and Linux-only code sits behind the right `cfg`; CI's Windows job is green if Windows code changed.
 - **Flatpak**: `Cargo.lock` changes need a regenerated `flatpak/cargo-lock.json`; the `flatpak_lock_sync` CI job goes red when they drift. For dependabot and community PRs, a red `flatpak_lock_sync` is the only failure that does not block merging: merge with every other check green, then batch the regeneration into one follow-up PR of your own per run.
 - **UI thread**: new work that does IO or network runs off the UI thread, not via `block_on` in `update()`.
+- **History of removed code**: for every line the PR deletes or rewrites, find why it was added (`git log -L <start>,<end>:<file>` or `git blame`, then the linked PR or issue). A removed line that was itself a fix is a regression risk; name the old issue and check the PR still covers it. (#479 silently reverted the Steam Deck scaling fix from #417.)
 - **Scope**: one concern per PR. A PR mixing a bug fix with renames and formatting across many files is reviewed per concern; ask for a split if the concerns cannot be judged together.
 - **Steam formats**: code that reads or writes Steam files matches what current Steam writes (see `CLAUDE.md`).
 

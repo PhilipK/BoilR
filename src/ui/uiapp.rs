@@ -175,6 +175,10 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
 
 impl App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+        // egui reports a wrong scale factor on the Steam Deck, making the UI huge (#416),
+        // so outside Windows keep the fixed 100% scale. Windows gets native DPI scaling (#475).
+        #[cfg(not(windows))]
+        ctx.set_pixels_per_point(1.0);
         let frame = egui::Frame::default()
             .stroke(Stroke::new(0.0_f32, BACKGROUND_COLOR))
             .fill(BACKGROUND_COLOR);
