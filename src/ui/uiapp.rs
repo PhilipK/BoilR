@@ -268,14 +268,6 @@ impl App for MyEguiApp {
     }
 }
 
-fn render_settings_save_button(ui: &mut egui::Ui) -> egui::Response {
-    let image = egui::include_image!("../../resources/save.png");
-    let save_button = ImageButton::new(image);
-    // The texture may not be loaded on the first settings frame. A zero fallback
-    // leaves no room for ImageButton padding and produces a negative image size.
-    ui.add_sized(Vec2::splat(48.0), save_button)
-}
-
 fn create_style(style: &mut egui::Style) {
     style.spacing.item_spacing = egui::vec2(15.0, 15.0);
     style.visuals.button_frame = false;
@@ -354,17 +346,4 @@ fn is_fullscreen(args: &[String]) -> bool {
         Err(_) => false,
     };
     is_steam_mode || args.contains(&"--fullscreen".to_string())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::render_settings_save_button;
-
-    #[test]
-    fn settings_save_button_renders_before_texture_is_loaded() {
-        egui::__run_test_ui(|ui| {
-            let response = render_settings_save_button(ui);
-            assert_eq!(response.rect.size(), egui::Vec2::splat(48.0));
-        });
-    }
 }
