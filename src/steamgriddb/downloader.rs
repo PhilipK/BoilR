@@ -98,7 +98,7 @@ pub async fn download_images_for_users(
             stream::iter(&to_downloads)
                 .map(|to_download| async move {
                     if let Err(e) = download_to_download(to_download).await {
-                        println!("Error downloading {:?}: {}", &to_download.path, e);
+                        println!("Error downloading {:?}: {}", to_download.path, e);
                         dbg!(&e);
                     }
                 })
