@@ -183,10 +183,16 @@ fn get_exe_path() -> Option<PathBuf> {
 
     // Fallback: EA Desktop default install locations
     let candidate_paths: &[(&str, &str)] = &[
-        ("PROGRAMFILES",     "Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe"),
-        ("PROGRAMFILES(X86)","Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe"),
-        ("PROGRAMFILES",     "Origin\\Origin.exe"),
-        ("PROGRAMFILES(X86)","Origin\\Origin.exe"),
+        (
+            "PROGRAMFILES",
+            "Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe",
+        ),
+        (
+            "PROGRAMFILES(X86)",
+            "Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe",
+        ),
+        ("PROGRAMFILES", "Origin\\Origin.exe"),
+        ("PROGRAMFILES(X86)", "Origin\\Origin.exe"),
     ];
     for (env_var, relative) in candidate_paths {
         if let Ok(base) = std::env::var(env_var) {

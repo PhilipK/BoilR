@@ -1,7 +1,5 @@
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
-use std::path::PathBuf;
-use sysinfo::{Pid, System};
+use std::fs::{File, OpenOptions, TryLockError};
+use std::path::{Path, PathBuf};
 
 use crate::config::get_config_folder;
 
@@ -10,73 +8,82 @@ fn get_lock_file_path() -> PathBuf {
     get_config_folder().join("boilr.lock")
 }
 
-/// Represents a lock on the application instance
+/// Represents a lock on the application instance.
+///
+/// Uses an OS file lock rather than a PID written to the file: the OS releases the lock
+/// when the process exits, even after a crash or kill, so a leftover lock file never blocks
+/// startup. A stored PID could not do this inside Flatpak, where BoilR usually runs as
+/// PID 2 and would always find "itself" running.
 pub struct InstanceLock {
     _file: File,
-    path: PathBuf,
 }
 
 impl InstanceLock {
     /// Attempts to acquire an exclusive lock for this application instance.
     /// Returns Ok(InstanceLock) if successful, or Err with a message if another instance is running.
     pub fn acquire() -> Result<Self, String> {
-        let lock_path = get_lock_file_path();
+        acquire_at(&get_lock_file_path())
+    }
+}
 
-        // Ensure the config folder exists
-        if let Some(parent) = lock_path.parent() {
-            let _ = std::fs::create_dir_all(parent);
+fn acquire_at(lock_path: &Path) -> Result<InstanceLock, String> {
+    if let Some(parent) = lock_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(lock_path)
+        .map_err(|e| format!("Failed to open lock file: {}", e))?;
+
+    match file.try_lock() {
+        Ok(()) => Ok(InstanceLock { _file: file }),
+        Err(TryLockError::WouldBlock) => {
+            Err("Another instance of BoilR is already running".to_string())
         }
-
-        // Check if lock file exists and contains a valid PID
-        if lock_path.exists() {
-            if let Ok(mut file) = File::open(&lock_path) {
-                let mut contents = String::new();
-                if file.read_to_string(&mut contents).is_ok() {
-                    if let Ok(pid) = contents.trim().parse::<usize>() {
-                        // Check if process with that PID is still running
-                        if is_process_running(pid) {
-                            return Err(format!(
-                                "Another instance of BoilR is already running (PID: {})",
-                                pid
-                            ));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Try to create/overwrite the lock file
-        match OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(&lock_path)
-        {
-            Ok(mut file) => {
-                let pid = std::process::id();
-                if let Err(e) = write!(file, "{}", pid) {
-                    return Err(format!("Failed to write lock file: {}", e));
-                }
-
-                Ok(InstanceLock {
-                    _file: file,
-                    path: lock_path,
-                })
-            }
-            Err(e) => Err(format!("Failed to create lock file: {}", e)),
+        Err(TryLockError::Error(e)) => {
+            // A filesystem without lock support should not stop BoilR from starting.
+            eprintln!("Could not lock {}: {}", lock_path.display(), e);
+            Ok(InstanceLock { _file: file })
         }
     }
 }
 
-impl Drop for InstanceLock {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.path);
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-/// Check if a process with the given PID is running using sysinfo
-fn is_process_running(pid: usize) -> bool {
-    let mut system = System::new();
-    system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
-    system.process(Pid::from(pid)).is_some()
+    fn temp_lock_path(name: &str) -> PathBuf {
+        let dir =
+            std::env::temp_dir().join(format!("boilr-lock-test-{}-{}", name, std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        dir.join("boilr.lock")
+    }
+
+    #[test]
+    fn second_lock_is_refused_while_first_is_held() {
+        let path = temp_lock_path("held");
+        let first = acquire_at(&path);
+        assert!(first.is_ok());
+        assert!(acquire_at(&path).is_err());
+    }
+
+    #[test]
+    fn lock_is_available_again_after_release() {
+        let path = temp_lock_path("released");
+        drop(acquire_at(&path));
+        assert!(acquire_at(&path).is_ok());
+    }
+
+    #[test]
+    fn leftover_lock_file_does_not_block_startup() {
+        // A lock file left behind by a killed 1.10.0 instance contains a PID.
+        let path = temp_lock_path("leftover");
+        let _ = std::fs::create_dir_all(path.parent().unwrap_or(Path::new(".")));
+        let _ = std::fs::write(&path, "2");
+        assert!(acquire_at(&path).is_ok());
+    }
 }
