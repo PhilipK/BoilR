@@ -44,10 +44,13 @@ fn acquire_at(lock_path: &Path) -> Result<InstanceLock, String> {
         Err(TryLockError::WouldBlock) => {
             Err("Another instance of BoilR is already running".to_string())
         }
-        Err(TryLockError::Error(e)) => {
+        Err(TryLockError::Error(e)) if e.kind() == std::io::ErrorKind::Unsupported => {
             // A filesystem without lock support should not stop BoilR from starting.
             eprintln!("Could not lock {}: {}", lock_path.display(), e);
             Ok(InstanceLock { _file: file })
+        }
+        Err(TryLockError::Error(e)) => {
+            Err(format!("Failed to lock {}: {}", lock_path.display(), e))
         }
     }
 }
