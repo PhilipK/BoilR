@@ -4,11 +4,13 @@ Rust desktop app (egui/eframe) that finds games from other launchers (Epic, GOG,
 
 ## Build and verify
 
-Linux build needs system libs (same list CI installs in `.github/workflows/main.yml`):
+Linux build needs only `pkg-config` and `libssl-dev`. OpenSSL comes in through `steamgriddb_api` (Philip's crate), which uses reqwest 0.11 with native-tls; BoilR's own reqwest uses rustls. X11, Wayland, xkbcommon and GL are loaded at runtime (dlopen), so no dev headers are needed for them. The longer apt list in the CI workflows is a leftover from older dependencies and includes GTK, which nothing uses.
 
 ```bash
-sudo apt-get install -y libclang-dev libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
+sudo apt-get install -y pkg-config libssl-dev
 ```
+
+In Claude Code cloud sessions, the SessionStart hook in `.claude/settings.json` installs these automatically.
 
 A change is verified when all of these pass:
 
@@ -32,16 +34,19 @@ The GUI cannot be exercised in a headless environment. `boilr --no-ui` runs a sy
 - `src/ui/`: egui screens. `uiapp.rs` is the root.
 - Settings: `src/defaultconfig.toml` merged with the user's `settings.toml` in the config folder (`~/.config/boilr` or `%APPDATA%\boilr`). `src/migration.rs` handles old config shapes.
 
-Known design debt, being paid down deliberately:
+## Direction
 
-- `GamesPlatform::render_ui` takes `&mut egui::Ui`, so every platform depends on the UI. Target: platforms expose settings as data, the UI renders them.
-- Several UI paths call `block_on` on the UI thread (import, image download, image picking). This causes freezes. Target: run the work on the tokio runtime and send results back over channels.
+Core first, then a new UI. Decided by Philip, 2026-09-26.
+
+1. **Extract a UI-free core.** Branch `feature/tauri-migration` (Nov 2025) already splits the backend into `crates/boilr-core`. Port that split onto `main` in small PRs while the egui UI keeps working. Target: `GamesPlatform` has no egui dependency (today `render_ui` takes `&mut egui::Ui`); platforms expose settings as data.
+2. **Keep egui alive meanwhile**: minimal upgrades for user-facing bugs (paste, launch failures, DPI). Several UI paths call `block_on` on the UI thread (import, image download, image picking), causing freezes; fix those only where users hit them.
+3. **Tauri UI** (`apps/boilr-tauri` on that branch, React) rebased onto the core and shipped as an opt-in beta beside egui. Its `TODO.md` lists the feature-parity gaps. It replaces egui only after parity and testing on Steam Deck and Wayland, where WebKitGTK rendering is the known risk.
 
 ## Rules that are not obvious from the code
 
 - `code_name()` of a platform is the key in users' `settings.toml`. Never change it, even when renaming a platform's display name (Uplay stays `uplay`, Origin stays `origin`, Game Pass stays `gamepass`).
 - `main.rs` denies `unwrap`, `expect`, `panic`, `todo` and slice indexing. Propagate errors with `eyre`.
-- Whenever `Cargo.lock` changes, regenerate `flatpak/cargo-lock.json` with `flatpak/update-cargo-lock-json.sh`, or the Flatpak build breaks.
+- Whenever `Cargo.lock` changes, regenerate `flatpak/cargo-lock.json` with `flatpak/update-cargo-lock-json.sh`, or the Flatpak build breaks. CI job `flatpak_lock_sync` goes red on drift.
 - Steam changes its file formats without notice. Collections moved from LevelDB to `userdata/<id>/config/cloudstorage/cloud-storage-namespace-1.json` in late 2025. When a Steam-facing bug appears, check what Steam writes today before trusting the existing code.
 - Release tags have the form `v.1.9.6` (note the dot after `v`). Pushing one triggers `.github/workflows/release_on_v_tag.yml`, which makes a draft release. Releases are Philip's call: see the `release` skill.
 
