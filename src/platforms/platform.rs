@@ -17,6 +17,7 @@ where
 
     fn get_settings_serializable(&self) -> String;
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui);
 }
 

@@ -67,6 +67,7 @@ impl GamesPlatform for AmazonPlatform {
         to_shortcuts_simple(self.get_amazon_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Amazon");
         ui.checkbox(&mut self.settings.enabled, "Import from Amazon");

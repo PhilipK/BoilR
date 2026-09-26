@@ -14,11 +14,12 @@ use crate::sync;
 
 use crate::sync::{download_images, SyncProgress};
 
-use super::{all_ready, backup_shortcuts, get_all_games};
+use super::{all_ready, get_all_games};
 use super::{
     ui_colors::{BACKGROUND_COLOR, EXTRA_BACKGROUND_COLOR},
     MyEguiApp,
 };
+use crate::backups::backup_shortcuts;
 
 const SECTION_SPACING: f32 = 25.0;
 

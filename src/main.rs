@@ -6,13 +6,10 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 
-mod platforms;
 mod single_instance;
-mod ui;
 
-// Core modules live in the boilr-core crate; importing them here keeps `crate::settings` etc.
-// paths working throughout the UI and platform code.
-use boilr_core::{config, migration, settings, steam, steamgriddb, sync};
+use boilr::{platforms, ui};
+use boilr_core::{config, migration};
 
 use color_eyre::eyre::Result;
 

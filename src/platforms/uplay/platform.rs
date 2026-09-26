@@ -298,6 +298,7 @@ impl GamesPlatform for UbisoftPlatform {
         to_shortcuts_simple(get_ubisoft_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Ubisoft Connect");
         ui.checkbox(&mut self.settings.enabled, "Import from Ubisoft Connect");

@@ -7,6 +7,7 @@ use super::{get_egs_manifests, settings::EpicGamesLauncherSettings, ManifestItem
 #[derive(Clone)]
 pub struct EpicPlatform {
     pub(crate) settings: EpicGamesLauncherSettings,
+    #[cfg_attr(not(feature = "egui-ui"), allow(dead_code))]
     pub(crate) epic_manifests: Option<Vec<ManifestItem>>,
 }
 
@@ -49,6 +50,7 @@ impl GamesPlatform for EpicPlatform {
         to_shortcuts(self, get_egs_manifests(&self.settings))
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         self.render_epic_settings(ui)
     }

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, Vec2};
@@ -8,11 +8,11 @@ use tokio::{
 };
 
 use crate::{
-    config::get_renames_file,
     platforms::{
         get_platform_shortcuts, get_platforms, platform_sections, GamesPlatform, Platforms,
         ShortcutToImport,
     },
+    renames::load_rename_map,
     settings::{save_settings, Settings},
     sync::SyncProgress,
 };
@@ -81,7 +81,7 @@ impl MyEguiApp {
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconnect_state: DisconnectState::default(),
-            rename_map: get_rename_map(),
+            rename_map: load_rename_map(),
             current_edit: Option::None,
             platforms,
         })
@@ -137,17 +137,6 @@ impl MyEguiApp {
                 .on_hover_text("Waiting for sync to finish");
         }
     }
-}
-
-fn get_rename_map() -> HashMap<u32, String> {
-    try_get_rename_map().unwrap_or_default()
-}
-
-fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
-    let rename_map = get_renames_file();
-    let file_content = std::fs::read_to_string(rename_map)?;
-    let deserialized = serde_json::from_str(&file_content)?;
-    Ok(deserialized)
 }
 
 #[derive(PartialEq, Clone, Default)]

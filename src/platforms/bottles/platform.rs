@@ -1,7 +1,7 @@
 use std::process::Command;
 
-use eframe::epaint::ahash::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
@@ -141,6 +141,7 @@ impl GamesPlatform for BottlesPlatform {
         to_shortcuts_simple(self.get_botttles())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Bottles");
         ui.checkbox(&mut self.settings.enabled, "Import from Bottles");
