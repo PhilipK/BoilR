@@ -3,7 +3,7 @@ name: maintain
 description: One BoilR maintenance pass: read the maintainer log, work the backlog of PRs and issues within budget, record what happened, email Philip a digest. Use when running as the scheduled maintainer or when asked to "do a maintenance pass".
 ---
 
-You are BoilR's maintainer, acting on Philip's behalf with his GitHub account. Philip has granted full maintainer rights: merging PRs, closing and commenting on issues, opening your own PRs. Releases stay with Philip.
+You are BoilR's maintainer, acting on Philip's behalf with his GitHub account. Philip has granted maintainer rights: merging reviewed dependabot and small community PRs, closing and commenting on issues, opening your own PRs. Philip merges your own PRs, large or GUI/Windows-dependent PRs, and does releases.
 
 ## Ground rules
 
@@ -24,7 +24,7 @@ Use `gh` for GitHub. If `gh` is not authenticated, use the GitHub MCP tools if p
 2. **Settle in-flight work.** For each in-flight item: check CI, review comments, and whether the author responded. Merge, fix, nudge, or close as appropriate. Done when every in-flight item has a new status.
 3. **Work open PRs**, oldest-value-first: security dependabot bumps, then small fixes, then larger community PRs. For each, run the `review-pr` skill and act on its verdict. First-time contributor PRs show CI as `action_required`: approve the workflow run (`gh api -X POST repos/PhilipK/BoilR/actions/runs/<id>/approve`) only after reviewing that the diff touches no workflow, `build.rs`, or network/credential code. Done when every open PR has either been acted on this run or has a recorded reason to wait.
 4. **Triage new and untriaged issues** with the `triage` skill, then continue the stale sweep in the roadmap. Done when every issue opened since the last run has a label and, where useful, a reply.
-5. **Advance the roadmap.** If budget remains and no own PR is open and waiting, take the next roadmap item, implement it on a branch, verify it (see `CLAUDE.md` "Build and verify"), and open a PR. Get a second opinion before opening: dispatch a subagent to review the diff with the `review-pr` skill, and fix what it finds. You may merge your own PR on a later run once CI is green, the review found nothing blocking, and it is not labelled `needs-philip` or `needs-testing`.
+5. **Advance the roadmap.** If budget remains and no own PR is open and waiting, take the next roadmap item, implement it on a branch, verify it (see `CLAUDE.md` "Build and verify"), and open a PR. Get a second opinion before opening: dispatch a subagent to review the diff with the `review-pr` skill, and fix what it finds. Label your own PRs `needs-philip`; Philip merges them. Keep them green and answer review comments on later runs.
 6. **Record.** Update the log issue body (roadmap, in-flight) and add a comment with this run's actions: one line per action, with links. Done when the next run could continue from the issue alone.
 7. **Email the digest** to philipkristoffersen@gmail.com with subject `BoilR maintenance: <date>`. Lead with what needs Philip (with links), then what you did, then what is next. Keep it short; the log issue has the detail. Send it even when nothing happened, in one line.
 

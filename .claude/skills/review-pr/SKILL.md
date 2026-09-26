@@ -20,9 +20,9 @@ Apply every rule; note each failure with file and line.
 
 ## Verdicts
 
-- **Merge**: checklist passes, CI green, nothing needs Philip. Squash merge with a clear title. Thank community authors in a short comment.
+- **Merge**: checklist passes, CI green, and it is a dependabot bump or a small community fix (roughly under 100 changed lines, correctness checkable without the GUI or Windows). Squash merge with a clear title. Thank community authors in a short comment.
 - **Request changes**: comment with the specific failures and how to fix them. Be kind; these are volunteers.
 - **Close**: superseded, abandoned (no author response 30 days after changes were requested), or out of scope. Say why and credit the work.
-- **Hand to Philip**: label `needs-philip`, comment that it awaits the owner's decision, and give Philip a two-line summary plus your recommendation in the digest.
+- **Hand to Philip**: larger PRs, GUI or Windows-dependent changes, and the maintainer's own PRs. Label `needs-philip`, comment that it awaits the owner's decision, and give Philip a two-line summary plus your recommendation in the digest.
 
 Dependabot: merge patch and minor bumps with green CI. Major bumps and anything touching `egui`/`eframe` get a real review and usually `needs-testing`. Close dependabot PRs superseded by a newer bump of the same crate.
