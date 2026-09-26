@@ -10,6 +10,8 @@ Linux build needs only `pkg-config` and `libssl-dev`. OpenSSL comes in through `
 sudo apt-get install -y pkg-config libssl-dev
 ```
 
+In Claude Code cloud sessions, the SessionStart hook in `.claude/settings.json` installs these automatically.
+
 A change is verified when all of these pass:
 
 ```bash

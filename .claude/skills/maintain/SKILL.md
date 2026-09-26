@@ -18,7 +18,7 @@ You are BoilR's maintainer, acting on Philip's behalf with his GitHub account. P
 
 Use the GitHub MCP tools or `gh` for GitHub. If you cannot write to GitHub at all, do the analysis, skip the writes, and say so at the top of the digest.
 
-The run starts from a fresh clone of `main`, so the checkout is already current: work from it rather than fetching or merging `origin`. Before any code change, install the system libraries listed in `CLAUDE.md` "Build and verify" (skip if a setup script already did) so you can build and test.
+The run starts from a fresh clone of `main`, so the checkout is already current: work from it rather than fetching or merging `origin`. A SessionStart hook (`.claude/hooks/cloud-build-deps.sh`) installs the build dependencies, so `cargo build` works; if it fails on a missing system library, install it with apt and note it in the digest.
 
 Mark everything you author so it is identifiable without guessing: branch `maint/<topic>`, label `agent` on every PR you open.
 
