@@ -38,21 +38,28 @@ impl NeedsProton<FlatpakPlatform> for FlatpakApp {
 impl FlatpakPlatform {
     fn get_flatpak_apps(&self) -> eyre::Result<Vec<FlatpakApp>> {
         let output = get_flatpak_applications()?;
-        let output_string = String::from_utf8_lossy(&output.stdout).to_string();
-        let mut result = vec![];
-        for line in output_string.lines() {
-            let mut split = line.split('\t');
-            if let Some(name) = split.next() {
-                if let Some(id) = split.next() {
-                    result.push(FlatpakApp {
-                        name: name.to_string(),
-                        id: id.to_string(),
-                    })
-                }
-            }
-        }
-        Ok(result)
+        Ok(parse_flatpak_list(&String::from_utf8_lossy(&output.stdout)))
     }
+}
+
+/// BoilR's own app ids (the release and test builds); BoilR never imports itself.
+const BOILR_APP_ID: &str = "io.github.philipk.boilr";
+
+/// Parses `flatpak list --app --columns=name,application` output.
+fn parse_flatpak_list(output: &str) -> Vec<FlatpakApp> {
+    output
+        .lines()
+        .filter_map(|line| {
+            let mut split = line.split('\t');
+            let name = split.next()?;
+            let id = split.next()?;
+            Some(FlatpakApp {
+                name: name.to_string(),
+                id: id.to_string(),
+            })
+        })
+        .filter(|app| app.id != BOILR_APP_ID && !app.id.starts_with(&format!("{BOILR_APP_ID}.")))
+        .collect()
 }
 
 fn get_flatpak_applications() -> std::io::Result<std::process::Output> {
@@ -112,5 +119,29 @@ impl GamesPlatform for FlatpakPlatform {
 
     fn code_name(&self) -> &str {
         "flatpak"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lists_apps_but_not_boilr_itself() {
+        let output = "OrcaSlicer\tio.github.softfever.OrcaSlicer\n\
+                      BoilR\tio.github.philipk.boilr\n\
+                      Devel\tio.github.philipk.boilr.Devel\n\
+                      Not BoilR\tio.github.philipk.boilrish\n";
+        let ids: Vec<String> = parse_flatpak_list(output)
+            .into_iter()
+            .map(|a| a.id)
+            .collect();
+        assert_eq!(
+            ids,
+            vec![
+                "io.github.softfever.OrcaSlicer",
+                "io.github.philipk.boilrish"
+            ]
+        );
     }
 }

@@ -28,7 +28,15 @@ cargo run --features tauri/custom-protocol
 Without `tauri/custom-protocol` the app loads the dev server at port 1420 instead of the built
 frontend. Linux needs `libwebkit2gtk-4.1-dev` to build.
 
-## Steam Deck test build
+## Flatpak (preview)
+
+`flatpak/io.github.philipk.boilr.Devel.yml` builds the app on the GNOME runtime with the same
+sandbox as the egui app on Flathub, under a separate app id so it installs next to the release.
+The build command is at the top of the manifest; `flatpak build-bundle` turns the result into a
+single file to install elsewhere, such as a Steam Deck. Verified on a desktop: it finds Flatpak
+apps through `flatpak-spawn`, like the egui Flatpak.
+
+## Steam Deck test build (AppImage)
 
 See `deck-build/README.md`. The AppImage is for trying the interface on a Deck; it does not find
 games reliably (bundled libraries break the launcher commands BoilR runs). Releases will be a
