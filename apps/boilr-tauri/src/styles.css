@@ -1,3 +1,8 @@
+@import "@fontsource/pixelify-sans/400.css";
+@import "@fontsource/pixelify-sans/600.css";
+@import "@fontsource/atkinson-hyperlegible-next/400.css";
+@import "@fontsource/atkinson-hyperlegible-next/700.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,18 +11,116 @@
   color-scheme: dark;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-night font-sans text-peach antialiased;
+  font-size: 15px;
+  line-height: 1.45;
 }
 
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
+:focus-visible {
+  outline: 2px solid theme("colors.flame");
+  outline-offset: 2px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  @apply bg-slate-700/70 rounded-full;
+@layer components {
+  /* Stepped 4px corners, like the pixel art. */
+  .notch {
+    clip-path: polygon(
+      0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+      4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+    );
+  }
+
+  .pixelated {
+    image-rendering: pixelated;
+  }
+
+  .btn {
+    @apply notch inline-flex items-center justify-center gap-2 px-4 py-2 font-pixel text-base
+      transition-colors disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-flame text-deep hover:bg-peach disabled:bg-harbour disabled:text-mauve;
+  }
+  .btn-quiet {
+    @apply btn bg-harbour text-peach hover:bg-dusk disabled:bg-harbour disabled:text-mauve;
+  }
+  .link-btn {
+    @apply text-sm text-flame underline decoration-2 underline-offset-4 hover:text-peach
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .field {
+    @apply w-full border-2 border-harbour bg-deep px-3 py-2 text-foam placeholder:text-mauve
+      focus:border-flame focus:ring-0;
+  }
+
+  .scroll-quiet {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.dusk") transparent;
+  }
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
-  @apply bg-transparent;
+/* Copper pipe with a rivet every 40px. */
+.pipe {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 36px,
+      theme("colors.ember") 36px 40px
+    ),
+    theme("colors.flame");
+  background-size: 100% 4px, auto;
+  background-position: 0 50%, 0 0;
+  background-repeat: repeat-x;
+}
+
+/* Steam puffs travelling along the pipe while a sync runs. */
+@keyframes puff {
+  0% {
+    transform: translateX(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--pipe-length), -10px) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes simmer {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.puff {
+  animation: puff 1.8s steps(12) infinite;
+}
+
+.simmer {
+  animation: simmer 0.6s steps(2) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puff,
+  .simmer {
+    animation: none;
+  }
+  .puff {
+    opacity: 0;
+  }
 }
