@@ -52,8 +52,8 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
                 .arg("--host")
                 .arg("flatpak")
                 .arg("run")
-                .arg(flatpak_image);
-            command.arg("run").arg(flatpak_image).arg("--json");
+                .arg(flatpak_image)
+                .arg("--json");
             if settings.installed {
                 command.arg("-lo").output()?
             } else {
