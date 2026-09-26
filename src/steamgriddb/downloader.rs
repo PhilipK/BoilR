@@ -98,7 +98,7 @@ pub async fn download_images_for_users(
             stream::iter(&to_downloads)
                 .map(|to_download| async move {
                     if let Err(e) = download_to_download(to_download).await {
-                        println!("Error downloading {:?}: {}", &to_download.path, e);
+                        println!("Error downloading {:?}: {}", to_download.path, e);
                         dbg!(&e);
                     }
                 })
@@ -391,7 +391,7 @@ async fn get_steam_image_url(game_id: usize, image_type: &ImageType) -> Option<S
             if let (Some(Some(Some(steam_app_id))), Some(Some(Some(Some(mtime))))) =
                 (game_id, mtime)
             {
-                return Some(image_type.steam_url(steam_app_id.to_string(), mtime?));
+                return Some(image_type.steam_url(&steam_app_id, mtime?));
             }
         }
     }

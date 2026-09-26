@@ -180,7 +180,7 @@ impl App for MyEguiApp {
         #[cfg(not(windows))]
         ctx.set_pixels_per_point(1.0);
         let frame = egui::Frame::default()
-            .stroke(Stroke::new(0., BACKGROUND_COLOR))
+            .stroke(Stroke::new(0.0_f32, BACKGROUND_COLOR))
             .fill(BACKGROUND_COLOR);
         egui::SidePanel::new(egui::panel::Side::Left, "Side Panel")
             .default_width(40.0)
@@ -288,20 +288,20 @@ fn create_style(style: &mut egui::Style) {
     style.visuals.faint_bg_color = PURLPLE;
     style.visuals.extreme_bg_color = EXTRA_BACKGROUND_COLOR;
     style.visuals.widgets.active.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.active.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
+    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.active.fg_stroke = Stroke::new(2.0_f32, LIGHT_ORANGE);
     style.visuals.widgets.open.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.open.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.open.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
+    style.visuals.widgets.open.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.open.fg_stroke = Stroke::new(2.0_f32, LIGHT_ORANGE);
     style.visuals.widgets.noninteractive.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0, ORANGE);
+    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(2.0_f32, ORANGE);
     style.visuals.widgets.inactive.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0, ORANGE);
+    style.visuals.widgets.inactive.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.inactive.fg_stroke = Stroke::new(2.0_f32, ORANGE);
     style.visuals.widgets.hovered.bg_fill = BACKGROUND_COLOR;
-    style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0, BG_STROKE_COLOR);
-    style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0, LIGHT_ORANGE);
+    style.visuals.widgets.hovered.bg_stroke = Stroke::new(2.0_f32, BG_STROKE_COLOR);
+    style.visuals.widgets.hovered.fg_stroke = Stroke::new(2.0_f32, LIGHT_ORANGE);
     style.visuals.selection.bg_fill = PURLPLE;
 }
 fn setup(ctx: &egui::Context) {

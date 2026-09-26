@@ -116,7 +116,7 @@ pub fn backup_shortcuts(steam_settings: &SteamSettings) {
     let backup_folder = get_backups_folder();
     let paths = get_shortcuts_paths(steam_settings);
     let date = OffsetDateTime::now_utc();
-    let format = format_description::parse(DATE_FORMAT);
+    let format = format_description::parse_borrowed::<3>(DATE_FORMAT);
     if let Ok(format) = format {
         let date_string = date.format(&format);
         if let (Ok(date_string), Ok(user_infos)) = (date_string, paths) {

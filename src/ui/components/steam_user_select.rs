@@ -12,7 +12,7 @@ pub fn render_user_select<'a>(
         }
         if !steam_users.is_empty() {
             let combo_box = egui::ComboBox::new("ImageUserSelect", "")
-                .selected_text(format!("Steam user id: {}", &selected_user.user_id));
+                .selected_text(format!("Steam user id: {}", selected_user.user_id));
             combo_box.show_ui(ui, |ui| {
                 for user in steam_users {
                     ui.selectable_value(&mut selected_user, user, &user.user_id);

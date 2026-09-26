@@ -115,10 +115,10 @@ impl HeroicPlatform {
         for install_mode in install_modes {
             if let Ok(mut games) = get_shortcuts_from_install_mode(install_mode) {
                 games.sort_by_key(|m| {
-                    format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name)
+                    format!("{}-{}-{}", m.launch_parameters, m.executable, m.app_name)
                 });
                 games.dedup_by_key(|m| {
-                    format!("{}-{}-{}", m.launch_parameters, m.executable, &m.app_name)
+                    format!("{}-{}-{}", m.launch_parameters, m.executable, m.app_name)
                 });
 
                 for game in games {

@@ -333,7 +333,7 @@ mod test {
             .flat_map(|split| parse_game_config(split))
             .collect();
         assert_eq!(2, games.len());
-        assert_eq!(Some("For Honor"), games.get(0).map(|h| h.shortcut_name));
+        assert_eq!(Some("For Honor"), games.first().map(|h| h.shortcut_name));
         assert_eq!(Some("WATCH_DOGS® 2"), games.get(1).map(|h| h.shortcut_name));
     }
 }
