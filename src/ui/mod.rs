@@ -1,11 +1,11 @@
+mod components;
 mod defines;
+mod images;
 mod ui_backup;
 mod ui_disconnect;
 mod ui_import_games;
 mod ui_settings;
 mod uiapp;
-mod images;
-mod components;
 
 pub use defines::*;
 pub use ui_backup::*;

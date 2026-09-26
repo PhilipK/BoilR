@@ -1,4 +1,4 @@
-//All of this is technically related to Ubisoft Connnect, not Ubisoft Play.
+// Ubisoft Connect (formerly known as Uplay)
 
 use std::path::Path;
 use std::path::PathBuf;
@@ -10,30 +10,30 @@ use crate::platforms::GamesPlatform;
 use crate::platforms::NeedsProton;
 use crate::platforms::ShortcutToImport;
 
-use super::{game::UplayGame, settings::UplaySettings};
+use super::{game::UbisoftGame, settings::UbisoftSettings};
 
 #[derive(Clone)]
-pub struct UplayPlatform {
-    pub settings: UplaySettings,
+pub struct UbisoftPlatform {
+    pub settings: UbisoftSettings,
 }
 
-impl NeedsProton<UplayPlatform> for UplayGame {
+impl NeedsProton<UbisoftPlatform> for UbisoftGame {
     #[cfg(target_os = "windows")]
-    fn needs_proton(&self, _platform: &UplayPlatform) -> bool {
+    fn needs_proton(&self, _platform: &UbisoftPlatform) -> bool {
         false
     }
 
     #[cfg(target_family = "unix")]
-    fn needs_proton(&self, _platform: &UplayPlatform) -> bool {
+    fn needs_proton(&self, _platform: &UbisoftPlatform) -> bool {
         true
     }
 
-    fn create_symlinks(&self, _platform: &UplayPlatform) -> bool {
+    fn create_symlinks(&self, _platform: &UbisoftPlatform) -> bool {
         false
     }
 }
 
-fn get_uplay_games() -> eyre::Result<Vec<UplayGame>> {
+fn get_ubisoft_games() -> eyre::Result<Vec<UbisoftGame>> {
     #[cfg(target_family = "unix")]
     {
         get_games_from_proton()
@@ -45,7 +45,7 @@ fn get_uplay_games() -> eyre::Result<Vec<UplayGame>> {
 }
 
 #[derive(Default)]
-struct UplayPathData {
+struct UbisoftPathData {
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/upc.exe
     exe_path: PathBuf,
     //~/.steam/steam/steamapps/compatdata/X/pfx/drive_c/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/games/
@@ -57,8 +57,8 @@ struct UplayPathData {
 }
 
 #[cfg(target_family = "unix")]
-fn get_launcher_path() -> eyre::Result<UplayPathData> {
-    let mut res = UplayPathData::default();
+fn get_launcher_path() -> eyre::Result<UbisoftPathData> {
+    let mut res = UbisoftPathData::default();
     if let Ok(home) = std::env::var("HOME") {
         let compat_folder_path = Path::new(&home)
             .join(".steam")
@@ -68,7 +68,7 @@ fn get_launcher_path() -> eyre::Result<UplayPathData> {
 
         if let Ok(compat_folder) = std::fs::read_dir(compat_folder_path) {
             for dir in compat_folder.flatten() {
-                let uplay_exe_path = dir
+                let exe_path = dir
                     .path()
                     .join("pfx")
                     .join("drive_c")
@@ -77,7 +77,7 @@ fn get_launcher_path() -> eyre::Result<UplayPathData> {
                     .join("Ubisoft Game Launcher")
                     .join("upc.exe");
 
-                let uplay_games = dir
+                let games_path = dir
                     .path()
                     .join("pfx")
                     .join("drive_c")
@@ -86,21 +86,21 @@ fn get_launcher_path() -> eyre::Result<UplayPathData> {
                     .join("Ubisoft Game Launcher")
                     .join("games");
 
-                if uplay_exe_path.exists() && uplay_games.exists() {
-                    res.exe_path = uplay_exe_path;
-                    res.games_path = uplay_games;
+                if exe_path.exists() && games_path.exists() {
+                    res.exe_path = exe_path;
+                    res.games_path = games_path;
                     res.compat_folder = Some(dir.path());
                     return Ok(res);
                 }
             }
         }
     }
-    Err(eyre::eyre!("Could not find uplay launcher"))
+    Err(eyre::eyre!("Could not find Ubisoft Connect launcher"))
 }
 
 #[cfg(target_os = "windows")]
-fn get_launcher_path() -> eyre::Result<UplayPathData> {
-    let mut res = UplayPathData::default();
+fn get_launcher_path() -> eyre::Result<UbisoftPathData> {
+    let mut res = UbisoftPathData::default();
     use winreg::enums::*;
     use winreg::RegKey;
 
@@ -113,14 +113,14 @@ fn get_launcher_path() -> eyre::Result<UplayPathData> {
         Ok(res)
     } else {
         Err(eyre::eyre!(
-            "Could not find uplay launcher at path {:?}",
+            "Could not find Ubisoft Connect launcher at path {:?}",
             path
         ))
     }
 }
 
 #[cfg(target_os = "windows")]
-fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
+fn get_games_from_winreg() -> eyre::Result<Vec<UbisoftGame>> {
     use winreg::enums::*;
     use winreg::RegKey;
 
@@ -150,7 +150,7 @@ fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
             let name: Result<String, _> = subkey.get_value("DisplayName");
             if let Ok(name) = name {
                 let icon: String = subkey.get_value("DisplayIcon").unwrap_or_default();
-                games.push(UplayGame {
+                games.push(UbisoftGame {
                     name,
                     icon,
                     id,
@@ -166,8 +166,7 @@ fn get_games_from_winreg() -> eyre::Result<Vec<UplayGame>> {
 }
 
 #[cfg(target_family = "unix")]
-fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
-
+fn get_games_from_proton() -> eyre::Result<Vec<UbisoftGame>> {
     let launcher_path = get_launcher_path()?;
     let parent = launcher_path
         .exe_path
@@ -180,25 +179,30 @@ fn get_games_from_proton() -> eyre::Result<Vec<UplayGame>> {
     let buffer = std::fs::read(file)?;
     let splits = get_file_splits(&buffer);
     let configurations = splits.iter().filter(|s| is_valid_game_config(s));
-    let parsed_configurations= configurations.flat_map(|config| parse_game_config(config));
-    let games = parsed_configurations.map(|game|{
-        UplayGame{
-            name:game.shortcut_name.to_string(),
-            icon: parent.join("data").join("games").join(game.icon_image).to_string_lossy().to_string(),
-            id : game.register
-                    .strip_prefix("HKEY_LOCAL_MACHINE\\SOFTWARE\\Ubisoft\\Launcher\\Installs\\")
-                    .unwrap_or_default()
-                    .strip_suffix("\\InstallDir")
-                    .unwrap_or_default()
-                    .to_string(),
-            launcher : launcher_path.exe_path.clone(),
-            launcher_compat_folder: launcher_path.compat_folder.clone(),
-            launch_id: game.launch_id
-        }
+    let parsed_configurations = configurations.flat_map(|config| parse_game_config(config));
+    let games = parsed_configurations.map(|game| UbisoftGame {
+        name: game.shortcut_name.to_string(),
+        icon: parent
+            .join("data")
+            .join("games")
+            .join(game.icon_image)
+            .to_string_lossy()
+            .to_string(),
+        id: game
+            .register
+            .strip_prefix("HKEY_LOCAL_MACHINE\\SOFTWARE\\Ubisoft\\Launcher\\Installs\\")
+            .unwrap_or_default()
+            .strip_suffix("\\InstallDir")
+            .unwrap_or_default()
+            .to_string(),
+        launcher: launcher_path.exe_path.clone(),
+        launcher_compat_folder: launcher_path.compat_folder.clone(),
+        launch_id: game.launch_id,
     });
     Ok(games.collect())
 }
 
+#[allow(dead_code)]
 struct GameConfig<'a> {
     icon_image: &'a str,
     shortcut_name: &'a str,
@@ -206,7 +210,8 @@ struct GameConfig<'a> {
     launch_id: usize,
 }
 
-fn parse_game_config(split: &str) -> Vec<GameConfig> {
+#[allow(dead_code)]
+fn parse_game_config(split: &str) -> Vec<GameConfig<'_>> {
     let mut res = vec![];
     let mut icon_image = "";
     let mut shortcut_name = "";
@@ -259,28 +264,30 @@ fn parse_game_config(split: &str) -> Vec<GameConfig> {
     res
 }
 
+#[allow(dead_code)]
 fn is_valid_game_config(config: &str) -> bool {
     let requires = ["executables:", "online:", "shortcut_name:", "register:"];
     requires.iter().all(|req| config.contains(req))
 }
 
+#[allow(dead_code)]
 fn get_file_splits(buffer: &[u8]) -> Vec<String> {
     let new_string = String::from_utf8_lossy(buffer);
     let sections = new_string.split("version: 2.0").map(|s| s.replace('�', ""));
     sections.collect()
 }
 
-impl FromSettingsString for UplayPlatform {
+impl FromSettingsString for UbisoftPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
-        UplayPlatform {
+        UbisoftPlatform {
             settings: load_settings(s),
         }
     }
 }
 
-impl GamesPlatform for UplayPlatform {
+impl GamesPlatform for UbisoftPlatform {
     fn name(&self) -> &str {
-        "Uplay"
+        "Ubisoft Connect"
     }
 
     fn enabled(&self) -> bool {
@@ -288,12 +295,12 @@ impl GamesPlatform for UplayPlatform {
     }
 
     fn get_shortcut_info(&self) -> eyre::Result<Vec<ShortcutToImport>> {
-        to_shortcuts_simple(get_uplay_games())
+        to_shortcuts_simple(get_ubisoft_games())
     }
 
     fn render_ui(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Uplay");
-        ui.checkbox(&mut self.settings.enabled, "Import from Uplay");
+        ui.heading("Ubisoft Connect");
+        ui.checkbox(&mut self.settings.enabled, "Import from Ubisoft Connect");
     }
 
     fn get_settings_serializable(&self) -> String {
@@ -317,13 +324,16 @@ mod test {
         assert_eq!(501, splits.len());
     }
 
-   #[test]
+    #[test]
     fn can_parse_into_game_config() {
         let content = include_bytes!("testconfiguration");
         let splits = get_file_splits(content);
-        let games:Vec<_> = splits.iter().flat_map(|split| parse_game_config(split)).collect();
+        let games: Vec<_> = splits
+            .iter()
+            .flat_map(|split| parse_game_config(split))
+            .collect();
         assert_eq!(2, games.len());
-        assert_eq!(Some("For Honor"),games.get(0).map(|h|h.shortcut_name));
-        assert_eq!(Some("WATCH_DOGS® 2"),games.get(1).map(|h|h.shortcut_name));
+        assert_eq!(Some("For Honor"), games.get(0).map(|h| h.shortcut_name));
+        assert_eq!(Some("WATCH_DOGS® 2"), games.get(1).map(|h| h.shortcut_name));
     }
 }
