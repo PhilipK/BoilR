@@ -83,6 +83,9 @@ pub fn save_settings(
     }
 
     let config_path = crate::config::get_config_file();
+    if let Some(folder) = config_path.parent() {
+        std::fs::create_dir_all(folder)?;
+    }
     std::fs::write(config_path, toml)?;
     Ok(())
 }

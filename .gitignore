@@ -11,4 +11,5 @@ flatpak/repo
 flatpak/flatpak-cargo-generator.py
 .flatpak-builder
 planning.md
-.gitignore
+.gitignoretarget-deck/
+.dockerhome/

@@ -21,6 +21,7 @@ use std::{fs::File, io::Write, path::Path};
 
 pub const BOILR_TAG: &str = "boilr";
 
+#[derive(Clone, Debug)]
 pub enum SyncProgress {
     NotStarted,
     Starting,
