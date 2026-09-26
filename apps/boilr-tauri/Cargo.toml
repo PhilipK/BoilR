@@ -22,3 +22,7 @@ tauri-build = { version = "2.0.0", features = [] }
 
 [dev-dependencies]
 tauri = { version = "2.0.0", features = ["test", "wry"] }
+
+[features]
+# Launcher detection from inside the Flatpak sandbox (flatpak-spawn), as in the egui Flatpak.
+flatpak = ["boilr/flatpak"]
