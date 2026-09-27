@@ -42,10 +42,15 @@ fn settings() -> Result<Settings, String> {
     Settings::new().map_err(|err| err.to_string())
 }
 
+/// Runs a future to completion from a sync command. Tauri may run these on one of its runtime's
+/// worker threads, where starting a second runtime panics, so reuse the running one there.
 fn block_on<F: std::future::Future>(future: F) -> Result<F::Output, String> {
-    tokio::runtime::Runtime::new()
-        .map(|rt| rt.block_on(future))
-        .map_err(|err| err.to_string())
+    match tokio::runtime::Handle::try_current() {
+        Ok(handle) => Ok(tokio::task::block_in_place(|| handle.block_on(future))),
+        Err(_) => tokio::runtime::Runtime::new()
+            .map(|rt| rt.block_on(future))
+            .map_err(|err| err.to_string()),
+    }
 }
 
 fn client(settings: &Settings) -> Result<steamgriddb_api::Client, String> {
@@ -379,6 +384,16 @@ fn point_shortcuts_at_icons(settings: &Settings) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn block_on_works_on_a_runtime_worker() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .build()
+            .expect("runtime");
+        let result =
+            runtime.block_on(async { tokio::spawn(async { block_on(async { 2 }) }).await });
+        assert_eq!(result.expect("task"), Ok(2));
+    }
 
     #[test]
     fn finds_current_image_with_any_extension() {
