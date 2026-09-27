@@ -68,7 +68,10 @@ pub fn sync_shortcuts(
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     let flatpak_steam = is_flatpak_steam(&settings.steam);
     if flatpak_steam {
-        println!("Steam is a Flatpak; launching Flatpak apps through flatpak-spawn --host");
+        println!(
+            "Steam is a Flatpak; launching Flatpak apps through flatpak-spawn --host. \
+             Steam needs: flatpak override --user --talk-name=org.freedesktop.Flatpak com.valvesoftware.Steam"
+        );
     }
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
@@ -102,7 +105,7 @@ pub fn sync_shortcuts(
         }
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
-    // Collections must use the same app ids as the shortcuts written below.
+    // Apply the same Flatpak rewrite to the collections, so their app ids match the new shortcuts.
     let platform_shortcuts: Vec<(String, Vec<ShortcutOwned>)> = platform_shortcuts
         .iter()
         .map(|(name, shortcuts)| {

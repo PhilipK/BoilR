@@ -29,3 +29,15 @@ I recommend you just use Heroic, Rare, or [Legendary](https://github.com/derrod/
 - Remember to set "compatibility" to a newer Proton version
 - After the install, BoilR can find and add the games
 - Validate that the found games have the correct Proton version
+
+### Flatpak Steam
+
+If Steam itself is the Flatpak (`com.valvesoftware.Steam`), it runs shortcuts inside its sandbox, where it can't start other Flatpak apps directly. BoilR detects this and makes shortcuts for Flatpak apps, including Flatpak Lutris, Bottles and Heroic, start them through `flatpak-spawn --host flatpak run ...` instead.
+
+Steam's Flatpak isn't allowed to do that by default. Grant it once with:
+
+```bash
+flatpak override --user --talk-name=org.freedesktop.Flatpak com.valvesoftware.Steam
+```
+
+This lets Steam start any program on your system outside its sandbox, which is what launching another Flatpak app needs.
