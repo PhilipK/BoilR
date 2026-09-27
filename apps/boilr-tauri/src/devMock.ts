@@ -61,6 +61,17 @@ const withBlacklist = (): PlatformSummary[] =>
     games: p.games.map((g) => ({ ...g, blacklisted: (settings.blacklisted_games ?? []).includes(g.app_id) })),
   }));
 
+const stamp = () => new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+let backups = [
+  { path: "/backup/12345678-2026-09-26-18-02-11-shortcuts.vdf", user_id: "12345678", taken_at: "2026-09-26 18:02:11" },
+  { path: "/backup/12345678-2026-09-20-09-15-40-shortcuts.vdf", user_id: "12345678", taken_at: "2026-09-20 09:15:40" },
+];
+let managed = [
+  { app_id: 3111111111, name: "Hades" },
+  { app_id: 3222222222, name: "Celeste" },
+  { app_id: 3333333333, name: "Hollow Knight" },
+];
+
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 mockIPC(
@@ -106,6 +117,19 @@ mockIPC(
         plan().additions.forEach((a) => importedIds.add(a.shortcut.app_id));
         return { imported_platforms: 3, shortcuts_considered: n, steam_users_updated: 1, images_requested: false, platform_errors: [] };
       }
+      case "list_backups":
+        return backups;
+      case "create_backup":
+        backups = [{ path: `/backup/12345678-${stamp()}-shortcuts.vdf`, user_id: "12345678", taken_at: stamp().replace(/^(\d+-\d+-\d+)-(\d+)-(\d+)-(\d+)$/, "$1 $2:$3:$4") }, ...backups];
+        return backups;
+      case "restore_shortcuts":
+        return backups;
+      case "list_boilr_shortcuts":
+        return managed;
+      case "release_shortcut":
+        managed = managed.filter((m) => m.app_id !== a.appId);
+        settings = { ...settings, blacklisted_games: [...(settings.blacklisted_games ?? []), a.appId] };
+        return settings;
       default:
         console.warn("[devMock] unhandled command", cmd, args);
         return null;
