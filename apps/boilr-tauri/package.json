@@ -1,7 +1,7 @@
 {
   "name": "boilr-tauri-frontend",
   "private": true,
-  "version": "0.0.1",
+  "version": "2.0.0-beta.1",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 1420",

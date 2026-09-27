@@ -12,6 +12,7 @@ const git = (args: string): string => {
   }
 };
 const commit = git("rev-parse --short HEAD") || "unknown";
+const version: string = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
 
 // Browser development only: with BOILR_SGDB_KEY_FILE set, the dev server proxies SteamGridDB
 // so the mock backend can show real artwork. The key stays in this process as a header.
@@ -22,6 +23,7 @@ const dirty = git("status --porcelain --untracked-files=no") ? "+" : "";
 export default defineConfig({
   plugins: [react()],
   define: {
+    __APP_VERSION__: JSON.stringify(version),
     __BUILD_COMMIT__: JSON.stringify(commit + dirty),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     __SGDB_PROXY__: JSON.stringify(Boolean(sgdbKey)),
