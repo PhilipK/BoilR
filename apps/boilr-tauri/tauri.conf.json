@@ -36,7 +36,8 @@
       "appimage"
     ],
     "icon": [
-      "icons/icon.png"
+      "icons/icon.png",
+      "icons/icon.ico"
     ],
     "category": "Game",
     "shortDescription": "Add games from other launchers to Steam"
