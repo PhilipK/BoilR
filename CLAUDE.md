@@ -54,6 +54,7 @@ Core first, then a new UI. Decided by Philip, 2026-09-26.
 - `code_name()` of a platform is the key in users' `settings.toml`. Never change it, even when renaming a platform's display name (Uplay stays `uplay`, Origin stays `origin`, Game Pass stays `gamepass`).
 - `main.rs` denies `unwrap`, `expect`, `panic`, `todo` and slice indexing. Propagate errors with `eyre`.
 - Whenever `Cargo.lock` changes, regenerate `flatpak/cargo-lock.json` with `flatpak/update-cargo-lock-json.sh`, or the Flatpak build breaks. CI job `flatpak_lock_sync` goes red on drift.
+  The same goes for the Tauri app: when `apps/boilr-tauri/Cargo.lock` or `package-lock.json` changes (including dependabot PRs), run `apps/boilr-tauri/flatpak/update-sources.sh` and commit `cargo-sources.json` and `node-sources.json`.
 - Never identify processes by PID. In Flatpak, BoilR runs in its own PID namespace (usually PID 2) and cannot see host processes, so PID files and PID-based "is it running" checks misfire; 1.10.0 shipped a single-instance lock that locked users out this way (fixed in 1.10.1 with an OS file lock).
 - Steam changes its file formats without notice. Collections moved from LevelDB to `userdata/<id>/config/cloudstorage/cloud-storage-namespace-1.json` in late 2025. When a Steam-facing bug appears, check what Steam writes today before trusting the existing code.
 - Release tags have the form `v.1.9.6` (note the dot after `v`). Pushing one triggers `.github/workflows/release_on_v_tag.yml`, which makes a draft release. Releases are Philip's call: see the `release` skill.
