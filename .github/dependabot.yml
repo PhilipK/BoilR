@@ -26,6 +26,34 @@ updates:
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "eframe"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - package-ecosystem: cargo
+    directory: /apps/boilr-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    groups:
+      tauri-cargo-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      tauri-cargo:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: npm
+    directory: /apps/boilr-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    groups:
+      tauri-npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      tauri-npm:
+        applies-to: version-updates
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     schedule:

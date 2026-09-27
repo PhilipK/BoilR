@@ -46,11 +46,12 @@ pub(crate) struct ManifestItem {
 }
 
 fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
-    let exe = manifest.exe();
-    let start_dir = manifest.install_location.clone();
+    let raw_exe = manifest.raw_exe_path();
+    let start_dir = manifest.normalized_install_location();
 
-    let exe = exe.trim_matches('\"');
+    let exe = raw_exe.trim_matches('\"');
     let start_dir = start_dir.trim_matches('\"');
+    let icon = exe;
 
     #[cfg(target_family = "unix")]
     let start_dir_string = format!("\"{start_dir}\"");
@@ -75,7 +76,7 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
         manifest.display_name.as_str(),
         exe,
         start_dir,
-        exe,
+        icon,
         "",
         parameters.as_str(),
     )
@@ -83,7 +84,8 @@ fn exe_shortcut(manifest: ManifestItem) -> ShortcutOwned {
 }
 
 fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
-    let icon = manifest.exe();
+    let icon = manifest.raw_exe_path();
+    let icon = icon.trim_matches('\"');
     let url = match manifest.compat_folder.as_ref() {
         Some(compat_folder) => format!(
             "STEAM_COMPAT_DATA_PATH=\"{}\" %command% -'{}'",
@@ -121,7 +123,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
         manifest.display_name.as_str(),
         launcher_path.as_str(),
         parent_folder.as_str(),
-        icon.as_str(),
+        icon,
         "",
         url.as_str(),
     )
@@ -143,14 +145,34 @@ impl From<ManifestItem> for ShortcutOwned {
 }
 
 impl ManifestItem {
-    fn exe(&self) -> String {
-        let manifest = self;
-        let exe_path = Path::new(&manifest.install_location)
-            .join(&manifest.launch_executable)
-            .to_string_lossy()
-            .to_string();
-        let exe = format!("\"{exe_path}\"");
-        exe
+    pub fn raw_exe_path(&self) -> String {
+        let install_path = Path::new(&self.install_location);
+        let mut full_path = install_path.to_path_buf();
+        for component in self.launch_executable.split(['/', '\\']) {
+            if !component.is_empty() && component != "." {
+                full_path.push(component);
+            }
+        }
+        let path_str = full_path.to_string_lossy().to_string();
+        #[cfg(target_os = "windows")]
+        {
+            path_str.replace('/', "\\")
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            path_str
+        }
+    }
+
+    pub fn normalized_install_location(&self) -> String {
+        #[cfg(target_os = "windows")]
+        {
+            self.install_location.replace('/', "\\")
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.install_location.clone()
+        }
     }
 
     fn get_launch_url(&self) -> String {
@@ -219,6 +241,10 @@ mod tests {
         let shortcut: ShortcutOwned = manifest.clone().into();
 
         assert_eq!(shortcut.launch_options, manifest.get_launch_url());
+        #[cfg(target_os = "windows")]
+        assert_eq!(shortcut.icon, "C:\\Games\\MarvelGOTG\\retail\\gotg.exe");
+        #[cfg(target_family = "unix")]
+        assert_eq!(shortcut.icon, "C:\\Games\\MarvelGOTG/retail/gotg.exe");
     }
     #[test]
     fn generates_shortcut_not_managed() {
@@ -229,9 +255,14 @@ mod tests {
         let shortcut: ShortcutOwned = manifest.into();
 
         #[cfg(target_os = "windows")]
-        assert_eq!(shortcut.exe, "C:\\Games\\MarvelGOTG\\retail/gotg.exe");
+        assert_eq!(shortcut.exe, "C:\\Games\\MarvelGOTG\\retail\\gotg.exe");
         #[cfg(target_family = "unix")]
         assert_eq!(shortcut.exe, "\"C:\\Games\\MarvelGOTG/retail/gotg.exe\"");
+
+        #[cfg(target_os = "windows")]
+        assert_eq!(shortcut.icon, "C:\\Games\\MarvelGOTG\\retail\\gotg.exe");
+        #[cfg(target_family = "unix")]
+        assert_eq!(shortcut.icon, "C:\\Games\\MarvelGOTG/retail/gotg.exe");
 
         assert_eq!(shortcut.launch_options, "");
     }
@@ -246,5 +277,28 @@ mod tests {
         let expected ="com.epicgames.launcher://apps/2a09fb19b47f46dfb11ebd382f132a8f%3A88f4bb0bb06e4962a2042d5e20fb6ace%3A63a665088eb1480298f1e57943b225d8?action=launch&silent=true";
         let actual = shortcut.launch_options;
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_raw_exe_path_normalization() {
+        let json = include_str!("example_item.json");
+        let mut manifest: ManifestItem = serde_json::from_str(json).unwrap();
+        manifest.launch_executable = "subfolder/game.exe".to_string();
+        #[cfg(target_os = "windows")]
+        assert_eq!(
+            manifest.raw_exe_path(),
+            "C:\\Games\\MarvelGOTG\\subfolder\\game.exe"
+        );
+        #[cfg(target_family = "unix")]
+        assert_eq!(
+            manifest.raw_exe_path(),
+            "C:\\Games\\MarvelGOTG/subfolder/game.exe"
+        );
+
+        let shortcut: ShortcutOwned = manifest.into();
+        assert!(!shortcut.icon.starts_with('\"'));
+        assert!(!shortcut.icon.ends_with('\"'));
+        #[cfg(target_os = "windows")]
+        assert!(!shortcut.icon.contains('/'));
     }
 }

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/v2/schema.json",
+  "productName": "BoilR",
+  "version": "0.1.0",
+  "identifier": "io.github.philipk.boilr",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "BoilR",
+        "width": 1280,
+        "height": 800,
+        "url": "index.html",
+        "resizable": true,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "appimage"
+    ],
+    "icon": [
+      "icons/icon.png"
+    ],
+    "category": "Game",
+    "shortDescription": "Add games from other launchers to Steam"
+  }
+}

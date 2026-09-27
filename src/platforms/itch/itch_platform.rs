@@ -117,6 +117,7 @@ impl GamesPlatform for ItchPlatform {
         to_shortcuts(self, self.get_itch_games())
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("Itch.io");
         ui.checkbox(&mut self.settings.enabled, "Import from Itch.io");

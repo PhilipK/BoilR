@@ -30,10 +30,46 @@ jobs:
       run: cargo fmt --all --check
     - name: Clippy
       run: cargo clippy --all-targets -- -D warnings
+    - name: Clippy (library without egui, as used by other front ends)
+      run: cargo clippy -p boilr --lib --no-default-features -- -D warnings
     - name: Test
       run: |
         cargo test
         cargo test --features flatpak
+  tauri_Ubuntu:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/boilr-tauri
+    steps:
+    - uses: actions/checkout@v7
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: apps/boilr-tauri
+    - name: dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        components: clippy, rustfmt
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: apps/boilr-tauri/package-lock.json
+    - run: npm ci
+    - name: Type-check and build the frontend
+      run: npm run build
+    - name: Format
+      run: cargo fmt --check
+    - name: Clippy
+      run: cargo clippy --all-targets -- -D warnings
+    - name: Test
+      run: cargo test
   test_Windows:
     runs-on: windows-latest    
     steps:

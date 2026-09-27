@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use eframe::{egui, App, Frame};
 use egui::{ImageButton, Rounding, Stroke, Vec2};
@@ -8,10 +8,13 @@ use tokio::{
 };
 
 use crate::{
-    config::get_renames_file,
-    platforms::{get_platforms, GamesPlatform, Platforms, ShortcutToImport},
+    platforms::{
+        get_platform_shortcuts, get_platforms, platform_sections, GamesPlatform, Platforms,
+        ShortcutToImport,
+    },
+    renames::load_rename_map,
     settings::{save_settings, Settings},
-    sync::{self, SyncProgress},
+    sync::SyncProgress,
 };
 
 use super::{
@@ -78,7 +81,7 @@ impl MyEguiApp {
             image_selected_state: ImageSelectState::default(),
             backup_state: BackupState::default(),
             disconnect_state: DisconnectState::default(),
-            rename_map: get_rename_map(),
+            rename_map: load_rename_map(),
             current_edit: Option::None,
             platforms,
         })
@@ -123,7 +126,8 @@ impl MyEguiApp {
                 .on_hover_text("Import your games into steam")
                 .clicked()
             {
-                if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                if let Err(err) = save_settings(&self.settings, &platform_sections(&self.platforms))
+                {
                     eprintln!("Failed to save settings {err:?}");
                 }
                 self.run_sync_async();
@@ -133,17 +137,6 @@ impl MyEguiApp {
                 .on_hover_text("Waiting for sync to finish");
         }
     }
-}
-
-fn get_rename_map() -> HashMap<u32, String> {
-    try_get_rename_map().unwrap_or_default()
-}
-
-fn try_get_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
-    let rename_map = get_renames_file();
-    let file_content = std::fs::read_to_string(rename_map)?;
-    let deserialized = serde_json::from_str(&file_content)?;
-    Ok(deserialized)
 }
 
 #[derive(PartialEq, Clone, Default)]
@@ -165,7 +158,7 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
             let platform = platform.clone();
             rt.spawn_blocking(move || {
                 let _ = tx.send(FetchStatus::Fetching);
-                let games_to_sync = sync::get_platform_shortcuts(platform);
+                let games_to_sync = get_platform_shortcuts(platform);
                 let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });
         }
@@ -244,7 +237,9 @@ impl App for MyEguiApp {
                         .on_hover_text("Save settings")
                         .clicked()
                     {
-                        if let Err(err) = save_settings(&self.settings, &self.platforms) {
+                        if let Err(err) =
+                            save_settings(&self.settings, &platform_sections(&self.platforms))
+                        {
                             eprintln!("Failed to save settings: {err:?}");
                         }
                     }
