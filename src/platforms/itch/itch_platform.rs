@@ -79,7 +79,25 @@ fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
 pub fn get_default_location() -> String {
     //If we don't have a home drive we have to just die
     let home = std::env::var("HOME").unwrap_or_default();
-    format!("{home}/.config/itch/")
+    default_location_in(Path::new(&home))
+}
+
+/// The native itch app's folder, or the Flatpak's (`io.itch.itch`) when only that one has a
+/// database (#343).
+#[cfg(target_family = "unix")]
+fn default_location_in(home: &Path) -> String {
+    let native = home.join(".config").join("itch");
+    let flatpak = home
+        .join(".var")
+        .join("app")
+        .join("io.itch.itch")
+        .join("config")
+        .join("itch");
+    let has_db = |folder: &Path| folder.join("db").join("butler.db-wal").exists();
+    if !has_db(&native) && has_db(&flatpak) {
+        return flatpak.to_string_lossy().to_string();
+    }
+    format!("{}/", native.to_string_lossy())
 }
 
 #[cfg(target_os = "windows")]
@@ -154,5 +172,52 @@ impl GamesPlatform for ItchPlatform {
 
     fn code_name(&self) -> &str {
         "itch"
+    }
+}
+
+#[cfg(all(test, target_family = "unix"))]
+mod tests {
+    use super::*;
+
+    fn temp_home(name: &str) -> std::io::Result<std::path::PathBuf> {
+        let home = std::env::temp_dir().join(format!("boilr-itch-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&home);
+        std::fs::create_dir_all(&home)?;
+        Ok(home)
+    }
+
+    fn add_db(folder: &Path) -> std::io::Result<()> {
+        std::fs::create_dir_all(folder.join("db"))?;
+        std::fs::write(folder.join("db").join("butler.db-wal"), b"")
+    }
+
+    #[test]
+    fn prefers_native_itch() -> std::io::Result<()> {
+        let home = temp_home("native")?;
+        add_db(&home.join(".config/itch"))?;
+        add_db(&home.join(".var/app/io.itch.itch/config/itch"))?;
+        let location = default_location_in(&home);
+        std::fs::remove_dir_all(&home)?;
+        assert!(location.ends_with(".config/itch/"));
+        Ok(())
+    }
+
+    #[test]
+    fn falls_back_to_flatpak_itch() -> std::io::Result<()> {
+        let home = temp_home("flatpak")?;
+        add_db(&home.join(".var/app/io.itch.itch/config/itch"))?;
+        let location = default_location_in(&home);
+        std::fs::remove_dir_all(&home)?;
+        assert!(location.ends_with(".var/app/io.itch.itch/config/itch"));
+        Ok(())
+    }
+
+    #[test]
+    fn defaults_to_native_when_neither_exists() -> std::io::Result<()> {
+        let home = temp_home("none")?;
+        let location = default_location_in(&home);
+        std::fs::remove_dir_all(&home)?;
+        assert!(location.ends_with(".config/itch/"));
+        Ok(())
     }
 }
