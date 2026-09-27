@@ -94,10 +94,12 @@ fn default_location_in(home: &Path) -> String {
         .join("config")
         .join("itch");
     let has_db = |folder: &Path| folder.join("db").join("butler.db-wal").exists();
-    if !has_db(&native) && has_db(&flatpak) {
-        return flatpak.to_string_lossy().to_string();
-    }
-    format!("{}/", native.to_string_lossy())
+    let folder = if !has_db(&native) && has_db(&flatpak) {
+        flatpak
+    } else {
+        native
+    };
+    format!("{}/", folder.to_string_lossy())
 }
 
 #[cfg(target_os = "windows")]
@@ -208,7 +210,7 @@ mod tests {
         add_db(&home.join(".var/app/io.itch.itch/config/itch"))?;
         let location = default_location_in(&home);
         std::fs::remove_dir_all(&home)?;
-        assert!(location.ends_with(".var/app/io.itch.itch/config/itch"));
+        assert!(location.ends_with(".var/app/io.itch.itch/config/itch/"));
         Ok(())
     }
 
