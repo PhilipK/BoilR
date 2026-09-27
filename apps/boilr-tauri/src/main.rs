@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod artwork;
 mod library;
 
 use std::{
@@ -264,6 +265,14 @@ fn main() {
             library::restore_shortcuts,
             library::list_boilr_shortcuts,
             library::release_shortcut,
+            artwork::list_steam_accounts,
+            artwork::list_artwork,
+            artwork::artwork_options,
+            artwork::set_artwork,
+            artwork::clear_artwork,
+            artwork::artwork_game_match,
+            artwork::set_artwork_game,
+            artwork::find_missing_artwork,
             ping
         ])
         .run(tauri::generate_context!())
@@ -947,6 +956,22 @@ mod tests {
                 library::restore_shortcuts,
                 library::list_boilr_shortcuts,
                 library::release_shortcut,
+                artwork::list_steam_accounts,
+                artwork::list_artwork,
+                artwork::artwork_options,
+                artwork::set_artwork,
+                artwork::clear_artwork,
+                artwork::artwork_game_match,
+                artwork::set_artwork_game,
+                artwork::find_missing_artwork,
+                artwork::list_steam_accounts,
+                artwork::list_artwork,
+                artwork::artwork_options,
+                artwork::set_artwork,
+                artwork::clear_artwork,
+                artwork::artwork_game_match,
+                artwork::set_artwork_game,
+                artwork::find_missing_artwork,
                 ping
             ])
             .build(mock_context(noop_assets()))

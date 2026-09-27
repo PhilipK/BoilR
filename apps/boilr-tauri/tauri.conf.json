@@ -22,7 +22,13 @@
         "minWidth": 900,
         "minHeight": 600
       }
-    ]
+    ],
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": []
+      }
+    }
   },
   "bundle": {
     "active": true,
