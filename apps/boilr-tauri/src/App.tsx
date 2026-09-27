@@ -26,6 +26,7 @@ import { GameList } from "./components/GameList";
 import { PipeBar } from "./components/PipeBar";
 import { Sources } from "./components/Sources";
 import { SettingsView } from "./components/SettingsView";
+import { useNavigation } from "./lib/navigation";
 
 type View = "games" | "settings";
 
@@ -245,6 +246,14 @@ const App = () => {
     [fetchAll, platformGroups]
   );
 
+  const navStatus = useNavigation({
+    onBack: () => setView("games"),
+    onPrevView: () => setView("games"),
+    onNextView: () => setView("settings"),
+    // Y only moves to the Import button; A confirms, so a stray press never imports.
+    onImport: () => document.getElementById("import-button")?.focus(),
+  });
+
   const plannedAppIds = useMemo(() => new Set(plan?.additions.map((a) => a.shortcut.app_id) ?? []), [plan]);
   const selectedIn = useCallback((p: PlatformSummary) => p.games.filter((g) => isSelected(g.app_id)).length, [isSelected]);
 
@@ -278,7 +287,10 @@ const App = () => {
             </button>
           ))}
         </nav>
-        <button type="button" className="link-btn ml-auto" onClick={rescan} disabled={rescanning || syncing}>
+        <span className="ml-auto text-sm text-mauve" title={`Built ${__BUILD_TIME__}`}>
+          Preview build {__BUILD_COMMIT__}, {new Date(__BUILD_TIME__).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+        </span>
+        <button type="button" className="link-btn" onClick={rescan} disabled={rescanning || syncing}>
           {rescanning ? "Looking…" : "Look for games again"}
         </button>
       </header>
@@ -322,6 +334,7 @@ const App = () => {
             onReset={resetPlatform}
             onSavePlatform={savePlatform}
             focusPlatform={focusPlatform}
+            navStatus={navStatus}
           />
         )}
       </main>
@@ -335,6 +348,7 @@ const App = () => {
         syncError={syncError}
         restartsSteam={Boolean(settings?.steam?.start_steam)}
         hasGames={platforms.some((p) => p.enabled && p.games.length > 0)}
+        padConnected={navStatus.pads.length > 0}
         onImport={runImport}
       />
     </div>

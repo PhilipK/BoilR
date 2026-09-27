@@ -1,5 +1,13 @@
 # Todo
 
+## Parked: controllers in Steam Deck Game Mode (2026-09-27)
+
+Arrow keys, Enter, Escape, Page Up/Down and gamepads work on a desktop (a virtual Xbox pad is
+seen inside the Flatpak with `--device=input`). In Deck Game Mode the web view reports no
+controllers although the window has focus. Next thing to try: the Deck's Flatpak may predate
+`--device=input` (added in Flatpak 1.15.6); test with
+`flatpak override --user --device=all io.github.philipk.boilr.Devel`. Touch works meanwhile.
+
 ## High priority
 
 ### Per-game selection & renaming (Priority: High · Estimate: 8)

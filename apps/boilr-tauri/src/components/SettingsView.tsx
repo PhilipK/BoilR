@@ -5,6 +5,7 @@ import type { SettingsUpdatePayload } from "../types";
 import type { PlatformFieldUpdate, PlatformSettingsField, PlatformSettingsGroup } from "../lib/platformSettings";
 import { groupHasChanges } from "../lib/platformSettings";
 import { SettingRow, Toggle } from "./controls";
+import type { NavigationStatus } from "../lib/navigation";
 
 const FIELD_LABELS: Record<string, string> = {
   enabled: "Include this launcher",
@@ -122,6 +123,7 @@ export const SettingsView = ({
   onReset,
   onSavePlatform,
   focusPlatform,
+  navStatus,
 }: {
   settings: Settings | null;
   onUpdate: (patch: SettingsUpdatePayload) => void;
@@ -134,6 +136,7 @@ export const SettingsView = ({
   onReset: (codeName: string) => void;
   onSavePlatform: (codeName: string) => void;
   focusPlatform: string | null;
+  navStatus: NavigationStatus;
 }) => {
   const steam = settings?.steam ?? {};
   const grid = settings?.steamgrid_db ?? {};
@@ -205,6 +208,18 @@ export const SettingsView = ({
           </SettingRow>
           <SettingRow title="Allow adult artwork" hint="Includes artwork SteamGridDB marks as mature.">
             <Toggle checked={Boolean(grid.allow_nsfw)} label="Allow adult artwork" onChange={(v) => onUpdate({ steamgrid_db: { allow_nsfw: v } })} />
+          </SettingRow>
+        </Section>
+
+        <Section title="Controller" hint="What BoilR receives from your controller. Press any button to wake it up.">
+          <SettingRow title="Controllers seen" hint={navStatus.gamepadApi ? undefined : "This window has no gamepad support; only keys work."}>
+            <span className="text-right text-peach">{navStatus.pads.length ? navStatus.pads.join(", ") : "None"}</span>
+          </SettingRow>
+          <SettingRow title="Last button">
+            <span className="text-peach">{navStatus.lastInput ?? "Nothing yet"}</span>
+          </SettingRow>
+          <SettingRow title="Window has focus" hint="Controllers only work while this is Yes.">
+            <span className="text-peach">{navStatus.windowFocused ? "Yes" : "No"}</span>
           </SettingRow>
         </Section>
 

@@ -38,6 +38,7 @@ export const PipeBar = ({
   syncError,
   restartsSteam,
   hasGames,
+  padConnected,
   onImport,
 }: {
   toAdd: number;
@@ -48,6 +49,7 @@ export const PipeBar = ({
   syncError: string | null;
   restartsSteam: boolean;
   hasGames: boolean;
+  padConnected: boolean;
   onImport: () => void;
 }) => {
   const [showRemovals, setShowRemovals] = useState(false);
@@ -132,7 +134,23 @@ export const PipeBar = ({
           ) : null}
         </div>
 
+        {padConnected ? (
+          <dl aria-label="Controller buttons" className="hidden shrink-0 grid-cols-[auto_auto] items-center gap-x-2 gap-y-1 text-sm text-mauve lg:grid">
+            {[
+              ["A", "Select"],
+              ["B", "Back"],
+              ["Y", "Import"],
+              ["L1 R1", "Switch tab"],
+            ].map(([key, what]) => (
+              <div key={key} className="contents">
+                <dt className="notch justify-self-end bg-harbour px-1.5 font-pixel text-peach">{key}</dt>
+                <dd>{what}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
         <button
+          id="import-button"
           type="button"
           className="btn-primary shrink-0 px-6 py-3 text-lg"
           onClick={onImport}
