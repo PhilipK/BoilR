@@ -27,11 +27,12 @@ import { PipeBar } from "./components/PipeBar";
 import { Sources } from "./components/Sources";
 import { SettingsView } from "./components/SettingsView";
 import { ShortcutsView } from "./components/ShortcutsView";
+import { ArtworkView } from "./components/ArtworkView";
 import { useNavigation } from "./lib/navigation";
 
-const VIEWS = ["games", "shortcuts", "settings"] as const;
+const VIEWS = ["games", "artwork", "shortcuts", "settings"] as const;
 type View = (typeof VIEWS)[number];
-const VIEW_LABELS: Record<View, string> = { games: "Games", shortcuts: "Shortcuts", settings: "Settings" };
+const VIEW_LABELS: Record<View, string> = { games: "Games", artwork: "Artwork", shortcuts: "Shortcuts", settings: "Settings" };
 
 const applySettingsPatch = (current: Settings | null, patch: SettingsUpdatePayload): Settings | null => {
   if (!current) return current;
@@ -324,6 +325,8 @@ const App = () => {
               />
             </div>
           </div>
+        ) : view === "artwork" ? (
+          <ArtworkView settings={settings} onSettingsChanged={setSettings} />
         ) : view === "shortcuts" ? (
           <ShortcutsView
             onSettingsChanged={(s) => {

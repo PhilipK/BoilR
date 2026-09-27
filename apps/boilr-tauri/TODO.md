@@ -16,15 +16,6 @@ controllers although the window has focus. Next thing to try: the Deck's Flatpak
 - **UI approach:** In `apps/boilr-tauri/src/App.tsx`, add per-game checkboxes (backed by a local `Set` of excluded app IDs) and a rename modal or inline edit. Persist changes by updating `blacklisted_games` (for exclusions) via `update_settings` and writing to `renames.json` through a new Tauri command that mirrors egui’s `rename_map` logic.
 - **Edge cases:** Provide a reset option to revert to stored names; ensure renames trigger `calculate_app_id_for_shortcut` exactly once (follow `prepare_additions`).
 
-### Artwork management tools (Priority: High · Estimate: 8)
-- **Goal:** Reintroduce the “Images” experience—browse SteamGridDB alternatives, ban assets, and run the “fix icons” action.
-- **Backend:** Commands already exist (`download_images_for_users`, `fix_all_shortcut_icons`, ban logic in `SteamGridDbSettings`). Add Tauri commands for listing cached search results (`steamgriddb/cached_search.rs`), toggling bans, and invoking `fix_all_shortcut_icons`.
-- **UI approach:** Build a dedicated “Artwork” view with:
-  - A gallery listing for each imported shortcut (hero, icon, big picture).  
-  - Buttons to pick alternate art, ban/unban, and trigger re-download.  
-  - A banner to run the “Fix icons” maintenance task.
-- **Implementation hints:** Inspect egui code under `src/ui/images/` for the flow; reuse `convertFileSrc` to preview local assets.
-
 ### Backup & disconnect flows (Priority: High · Estimate: 5)
 - **Goal:** Match egui’s Backup and Disconnect panels.
 - **Backend:** We already have reusable functions (`src/backups.rs`, `boilr_core::sync::disconnect_shortcut`, etc.). Expose new commands:
@@ -60,11 +51,9 @@ controllers although the window has focus. Next thing to try: the Deck's Flatpak
 - **Goal:** Display the textual status updates we currently print to stdout.  
 - **Approach:** Build on the telemetry console above; at minimum, show the last N log lines in the overview page so users see why a platform failed quickly.
 
-### Artwork preview & editing (Priority: Medium · Estimate: 8)
-- **Goal:** Preview the SteamGridDB artwork BoilR will apply for each shortcut (both planned imports and existing Steam entries) and allow users to change images before syncing.
-- **Backend:** Extend the image helpers so Tauri commands can return candidate art (icon/hero/grid) for each `ShortcutToImport`, respecting user preferences (`prefer_animated`, `allow_nsfw`). For existing Steam shortcuts, surface the resolved grid paths or URLs so the frontend can display current art.
-- **Frontend:** In `App.tsx`, replace the placeholder tiles with real art thumbnails via `convertFileSrc`. Add an “Edit artwork” action that opens a picker similar to the egui image workflow, allowing users to fetch alternates, ban images, or upload custom art. Persist choices using the existing ban/unban logic and rename map as needed.
-- **Notes:** React can rely on the browser’s image decoding without the egui memory loader. Reuse the banning/fix helpers under `boilr_core::steamgriddb` to keep behaviour consistent.
+### Artwork before import (Priority: Medium · Estimate: 5)
+- **Done:** the Artwork tab (`src/artwork.rs`, `ArtworkView.tsx`) manages art for shortcuts already in Steam: browse SteamGridDB options per kind, replace, remove, never download, pick the right SteamGridDB game, download missing art.
+- **Left:** show art on the Games tab for games not imported yet, and let users use an image from their own disk.
 
 ## Later
 
