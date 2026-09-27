@@ -19,6 +19,9 @@ const FOCUSABLE =
 
 // Standard gamepad mapping (https://w3c.github.io/gamepad/#remapping).
 const BUTTON = { a: 0, b: 1, y: 3, lb: 4, rb: 5, up: 12, down: 13, left: 14, right: 15 } as const;
+const PAD_LABELS: Record<string, string> = {
+  up: "up", down: "down", left: "left", right: "right", a: "A", b: "B", y: "Y", lb: "L1", rb: "R1",
+};
 const KEY_DIRECTIONS: Record<string, Direction> = {
   ArrowUp: "up",
   ArrowDown: "down",
@@ -95,7 +98,10 @@ const activate = () => {
  * Turns controller state into navigation, one poll at a time: each press fires once, and held
  * directions repeat after a short delay. Kept free of timers so it can be driven by any loop.
  */
-export const createPadProcessor = (getActions: () => NavigationActions) => {
+export const createPadProcessor = (
+  getActions: () => NavigationActions,
+  onInput: (label: string) => void = () => undefined
+) => {
   const pressed = new Map<string, number>(); // control -> time of next repeat (Infinity: no repeat)
 
   return (pads: readonly Gamepad[], now: number) => {
@@ -120,6 +126,7 @@ export const createPadProcessor = (getActions: () => NavigationActions) => {
       if (next !== undefined && !(isDirection && now >= next)) continue;
       pressed.set(control, isDirection ? now + (next === undefined ? REPEAT_DELAY_MS : REPEAT_INTERVAL_MS) : Infinity);
       document.body.classList.add("nav-controller");
+      onInput(`Controller ${PAD_LABELS[control] ?? control}`);
       const a = getActions();
       if (isDirection) move(control);
       else if (control === "a") activate();
@@ -134,24 +141,49 @@ export const createPadProcessor = (getActions: () => NavigationActions) => {
   };
 };
 
+/** What navigation can see, shown in Settings to diagnose controllers on a Steam Deck. */
+export type NavigationStatus = {
+  /** The web view offers the Gamepad API at all. */
+  gamepadApi: boolean;
+  /** Controllers the web view reports. Most only appear after a button press. */
+  pads: string[];
+  /** The last navigation input received, like "Key ArrowDown" or "Controller A". */
+  lastInput: string | null;
+};
+
+const samePads = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
+
 /**
- * Wires arrow keys and any connected controller to spatial focus movement and BoilR's actions.
- * Returns whether a controller is connected, to show button hints.
+ * Wires arrow keys, Enter, Escape and any connected controller to spatial focus movement and
+ * BoilR's actions.
  */
-export const useNavigation = (actions: NavigationActions): boolean => {
-  const [padConnected, setPadConnected] = useState(false);
+export const useNavigation = (actions: NavigationActions): NavigationStatus => {
+  const gamepadApi = typeof navigator !== "undefined" && "getGamepads" in navigator;
+  const [pads, setPads] = useState<string[]>([]);
+  const [lastInput, setLastInput] = useState<string | null>(null);
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
 
-  // Arrow keys: same movement, except while typing in a text field.
+  // Keyboard, including controller layouts that send keys: arrows move (except left/right while
+  // typing), Enter presses (checkboxes don't toggle on Enter by default), Escape goes back.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
       const dir: Direction | undefined = KEY_DIRECTIONS[e.key];
-      if (!dir) return;
-      if (isTyping(document.activeElement) && (dir === "left" || dir === "right")) return;
-      e.preventDefault();
+      if (dir) {
+        if (isTyping(el) && (dir === "left" || dir === "right")) return;
+        e.preventDefault();
+        move(dir);
+      } else if (e.key === "Enter" && el instanceof HTMLInputElement && el.type === "checkbox") {
+        e.preventDefault();
+        el.click();
+      } else if (e.key === "Escape") {
+        actionsRef.current.onBack();
+      } else {
+        return;
+      }
       document.body.classList.add("nav-controller");
-      move(dir);
+      setLastInput(`Key ${e.key}`);
     };
     const onPointer = () => document.body.classList.remove("nav-controller");
     window.addEventListener("keydown", onKey);
@@ -164,18 +196,19 @@ export const useNavigation = (actions: NavigationActions): boolean => {
 
   // Controllers: poll the Gamepad API each frame.
   useEffect(() => {
-    if (!("getGamepads" in navigator)) return;
-    const process = createPadProcessor(() => actionsRef.current);
+    if (!gamepadApi) return;
+    const process = createPadProcessor(() => actionsRef.current, setLastInput);
     let frame = 0;
     const tick = (now: number) => {
-      const pads = navigator.getGamepads().filter((p): p is Gamepad => Boolean(p));
-      setPadConnected((was) => (was === pads.length > 0 ? was : pads.length > 0));
-      process(pads, now);
+      const connected = navigator.getGamepads().filter((p): p is Gamepad => Boolean(p));
+      const ids = connected.map((p) => p.id);
+      setPads((was) => (samePads(was, ids) ? was : ids));
+      process(connected, now);
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [gamepadApi]);
 
-  return padConnected;
+  return { gamepadApi, pads, lastInput };
 };

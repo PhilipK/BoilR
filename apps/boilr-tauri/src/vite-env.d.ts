@@ -1,1 +1,6 @@
 /// <reference types="vite/client" />
+
+/** Short git commit the frontend was built from; "+" means uncommitted changes. */
+declare const __BUILD_COMMIT__: string;
+/** ISO time the frontend was built. */
+declare const __BUILD_TIME__: string;

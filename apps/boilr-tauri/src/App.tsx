@@ -246,7 +246,7 @@ const App = () => {
     [fetchAll, platformGroups]
   );
 
-  const padConnected = useNavigation({
+  const navStatus = useNavigation({
     onBack: () => setView("games"),
     onPrevView: () => setView("games"),
     onNextView: () => setView("settings"),
@@ -287,7 +287,10 @@ const App = () => {
             </button>
           ))}
         </nav>
-        <button type="button" className="link-btn ml-auto" onClick={rescan} disabled={rescanning || syncing}>
+        <span className="ml-auto text-sm text-mauve" title={`Built ${__BUILD_TIME__}`}>
+          Preview build {__BUILD_COMMIT__}, {new Date(__BUILD_TIME__).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+        </span>
+        <button type="button" className="link-btn" onClick={rescan} disabled={rescanning || syncing}>
           {rescanning ? "Looking…" : "Look for games again"}
         </button>
       </header>
@@ -331,6 +334,7 @@ const App = () => {
             onReset={resetPlatform}
             onSavePlatform={savePlatform}
             focusPlatform={focusPlatform}
+            navStatus={navStatus}
           />
         )}
       </main>
@@ -344,7 +348,7 @@ const App = () => {
         syncError={syncError}
         restartsSteam={Boolean(settings?.steam?.start_steam)}
         hasGames={platforms.some((p) => p.enabled && p.games.length > 0)}
-        padConnected={padConnected}
+        padConnected={navStatus.pads.length > 0}
         onImport={runImport}
       />
     </div>
