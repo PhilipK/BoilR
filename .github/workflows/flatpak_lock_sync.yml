@@ -16,5 +16,5 @@ jobs:
     - uses: actions/setup-python@v7
       with:
         python-version: "3.12"
-    - name: Check flatpak/cargo-lock.json matches Cargo.lock
+    - name: Check the Flatpak offline sources match the lock files
       run: python .github/scripts/check_flatpak_lock.py
