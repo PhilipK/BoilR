@@ -10,12 +10,6 @@ controllers although the window has focus. Next thing to try: the Deck's Flatpak
 
 ## High priority
 
-### Per-game selection & renaming (Priority: High · Estimate: 8)
-- **Goal:** Match egui’s ability to include/exclude individual shortcuts and edit names before import.
-- **Where to start:** Backend already exposes rename map helpers (`src/renames.rs`) and blacklisting happens in `apps/boilr-tauri/src/main.rs::prepare_additions`. Extend the plan/sync commands if extra data is needed (e.g., platform labels per shortcut).
-- **UI approach:** In `apps/boilr-tauri/src/App.tsx`, add per-game checkboxes (backed by a local `Set` of excluded app IDs) and a rename modal or inline edit. Persist changes by updating `blacklisted_games` (for exclusions) via `update_settings` and writing to `renames.json` through a new Tauri command that mirrors egui’s `rename_map` logic.
-- **Edge cases:** Provide a reset option to revert to stored names; ensure renames trigger `calculate_app_id_for_shortcut` exactly once (follow `prepare_additions`).
-
 ### Backup & disconnect flows (Priority: High · Estimate: 5)
 - **Goal:** Match egui’s Backup and Disconnect panels.
 - **Backend:** We already have reusable functions (`src/backups.rs`, `boilr_core::sync::disconnect_shortcut`, etc.). Expose new commands:

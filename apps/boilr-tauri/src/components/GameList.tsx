@@ -2,23 +2,89 @@ import clsx from "clsx";
 import { useMemo, useState } from "react";
 
 import type { PlatformSummary, ShortcutSummary } from "../types";
-import { friendlyError, initials, plural, tileColor, toImageSrc } from "../lib/format";
+import { errorMessage, friendlyError, initials, plural, tileColor, toImageSrc } from "../lib/format";
 import { Check, Toggle } from "./controls";
 import { sourceStatus } from "./Sources";
+
+/** Inline name editor: Enter saves, Escape cancels (without leaving the view). */
+const RenameField = ({
+  game,
+  onSave,
+  onCancel,
+}: {
+  game: ShortcutSummary;
+  onSave: (name: string) => Promise<void>;
+  onCancel: () => void;
+}) => {
+  const [name, setName] = useState(game.display_name);
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    setSaving(true);
+    try {
+      await onSave(name);
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <form
+      className="flex items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void save();
+      }}
+    >
+      <input
+        autoFocus
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.stopPropagation();
+            onCancel();
+          }
+        }}
+        aria-label={`New name for ${game.app_name}`}
+        placeholder={game.app_name}
+        className="field min-w-0 flex-1 py-1"
+      />
+      <button type="submit" className="btn-primary py-1" disabled={saving}>
+        {saving ? "Saving…" : "Save"}
+      </button>
+      <button type="button" className="link-btn" onClick={onCancel} disabled={saving}>
+        Cancel
+      </button>
+    </form>
+  );
+};
 
 const GameRow = ({
   game,
   selected,
   inSteam,
   onToggle,
+  onRename,
   showSource,
 }: {
   game: ShortcutSummary;
   selected: boolean;
   inSteam: boolean;
   onToggle: (value: boolean) => void;
+  onRename: (name: string) => Promise<void>;
   showSource?: string;
 }) => {
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const rename = async (name: string) => {
+    setError(null);
+    try {
+      await onRename(name);
+      setEditing(false);
+    } catch (err) {
+      setError(`Couldn't rename: ${errorMessage(err)}`);
+    }
+  };
+  const renamed = game.display_name !== game.app_name;
   const icon = toImageSrc(game.icon);
   return (
     <li
@@ -39,10 +105,41 @@ const GameRow = ({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-foam">{game.display_name}</p>
-        <p className="truncate text-sm text-mauve">{game.exe}</p>
+        {editing ? (
+          <RenameField
+            game={game}
+            onSave={rename}
+            onCancel={() => setEditing(false)}
+          />
+        ) : (
+          <p className="truncate text-foam">{game.display_name}</p>
+        )}
+        {error ? (
+          <p role="alert" className="text-sm text-ember">
+            {error}
+          </p>
+        ) : renamed && !editing ? (
+          <p className="truncate text-sm text-mauve">
+            Renamed from {game.app_name}.{" "}
+            <button type="button" className="link-btn" onClick={() => void rename(game.app_name)}>
+              Use original name
+            </button>
+          </p>
+        ) : (
+          <p className="truncate text-sm text-mauve">{game.exe}</p>
+        )}
       </div>
-      <div className="flex shrink-0 gap-3 text-sm">
+      <div className="flex shrink-0 items-center gap-3 text-sm">
+        {editing ? null : (
+          <button
+            type="button"
+            className="link-btn text-mauve decoration-mauve/50 hover:text-flame focus-visible:text-flame"
+            onClick={() => setEditing(true)}
+            aria-label={`Rename ${game.display_name}`}
+          >
+            Rename
+          </button>
+        )}
         {showSource ? <span className="text-peach">{showSource}</span> : null}
         {game.needs_proton ? <span className="text-mauve">Runs with Proton</span> : null}
         {selected && inSteam ? <span className="text-mauve">Already in Steam</span> : null}
@@ -60,6 +157,7 @@ export const GameList = ({
   isSelected,
   plannedAppIds,
   onToggleGame,
+  onRenameGame,
   onSetMany,
   onTogglePlatform,
   busyPlatforms,
@@ -70,6 +168,7 @@ export const GameList = ({
   isSelected: (appId: number) => boolean;
   plannedAppIds: Set<number>;
   onToggleGame: (appId: number, selected: boolean) => void;
+  onRenameGame: (game: ShortcutSummary, name: string) => Promise<void>;
   onSetMany: (appIds: number[], selected: boolean) => void;
   onTogglePlatform: (codeName: string, enabled: boolean) => void;
   busyPlatforms: Set<string>;
@@ -80,7 +179,7 @@ export const GameList = ({
   const sources = single ? [single] : platforms.filter((p) => sourceStatus(p) === "games");
 
   const matches = (g: ShortcutSummary) =>
-    !query || g.display_name.toLowerCase().includes(query.trim().toLowerCase());
+    !query || [g.display_name, g.app_name].some((n) => n.toLowerCase().includes(query.trim().toLowerCase()));
 
   const visible = useMemo(
     () => sources.flatMap((p) => p.games.filter(matches).map((g) => ({ game: g, source: p }))),
@@ -152,6 +251,7 @@ export const GameList = ({
                   selected={isSelected(game.app_id)}
                   inSteam={!plannedAppIds.has(game.app_id)}
                   onToggle={(v) => onToggleGame(game.app_id, v)}
+                  onRename={(name) => onRenameGame(game, name)}
                   showSource={single ? undefined : source.name}
                 />
               ))

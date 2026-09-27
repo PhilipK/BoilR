@@ -191,6 +191,12 @@ mockIPC(
         return withBlacklist();
       case "plan_sync":
         return plan();
+      case "rename_game":
+        platforms = platforms.map((p) => ({
+          ...p,
+          games: p.games.map((g) => (g.app_id === a.appId ? { ...g, display_name: a.name.trim() || g.app_name } : g)),
+        }));
+        return null;
       case "update_platform_enabled":
         platforms = platforms.map((p) => (p.code_name === a.codeName ? { ...p, enabled: a.enabled } : p));
         return { platforms: withBlacklist(), plan: plan() };

@@ -9,6 +9,7 @@ import type {
   PlatformSummary,
   PlatformToggleResponse,
   SettingsUpdatePayload,
+  ShortcutSummary,
   SyncOutcome,
   SyncPlan,
   SyncProgressEvent,
@@ -167,6 +168,19 @@ const App = () => {
     [blacklist, updateSettings]
   );
 
+  /** Renames a game in Steam; the plan changes because Steam's id for a shortcut comes from its name. */
+  const renameGame = useCallback(async (game: ShortcutSummary, name: string) => {
+    await invoke("rename_game", { appId: game.app_id, original: game.app_name, name });
+    const displayName = name.trim() || game.app_name;
+    setPlatforms((prev) =>
+      prev.map((p) => ({
+        ...p,
+        games: p.games.map((g) => (g.app_id === game.app_id ? { ...g, display_name: displayName } : g)),
+      }))
+    );
+    setPlan(await invoke<SyncPlan>("plan_sync"));
+  }, []);
+
   const runImport = useCallback(async () => {
     setSyncing(true);
     setSyncError(null);
@@ -318,6 +332,7 @@ const App = () => {
                 isSelected={isSelected}
                 plannedAppIds={plannedAppIds}
                 onToggleGame={(id, v) => setSelected([id], v)}
+                onRenameGame={renameGame}
                 onSetMany={setSelected}
                 onTogglePlatform={togglePlatform}
                 busyPlatforms={platformBusy}
