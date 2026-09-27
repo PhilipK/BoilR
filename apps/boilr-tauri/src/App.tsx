@@ -305,8 +305,8 @@ const App = () => {
             </button>
           ))}
         </nav>
-        <span className="ml-auto text-sm text-mauve" title={`Built ${__BUILD_TIME__}`}>
-          Preview build {__BUILD_COMMIT__}, {new Date(__BUILD_TIME__).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+        <span className="ml-auto text-sm text-mauve" title={`Commit ${__BUILD_COMMIT__}, built ${__BUILD_TIME__}`}>
+          Version {__APP_VERSION__}
         </span>
         <button type="button" className="link-btn" onClick={rescan} disabled={rescanning || syncing}>
           {rescanning ? "Looking…" : "Look for games again"}
