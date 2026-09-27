@@ -1,4 +1,5 @@
 mod collections;
+mod flatpak_steam;
 mod installed_games;
 #[cfg(target_family = "unix")]
 mod proton_vdf_util;
@@ -7,6 +8,7 @@ mod settings;
 mod utils;
 
 pub use collections::*;
+pub use flatpak_steam::*;
 pub use installed_games::*;
 #[cfg(target_family = "unix")]
 pub use proton_vdf_util::*;
