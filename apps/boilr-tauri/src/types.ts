@@ -109,3 +109,15 @@ export type SyncOutcome = {
   images_requested: boolean;
   platform_errors: PlatformError[];
 };
+
+export type BackupEntry = {
+  path: string;
+  user_id: string;
+  /** UTC, "YYYY-MM-DD HH:MM:SS". */
+  taken_at: string;
+};
+
+export type ManagedShortcut = {
+  app_id: number;
+  name: string;
+};
