@@ -21,6 +21,7 @@ sysinfo = "^0.38.4"
 time = { version = "^0.3.47", features = ["formatting"] }
 tokio = { version = "^1.41.0", features = ["full"] }
 toml = "^0.8.19"
+tracing = "^0.1"
 
 [package]
 edition = "2021"
@@ -55,6 +56,11 @@ serde.workspace = true
 tokio.workspace = true
 toml.workspace = true
 
+# Logging
+tracing = { workspace = true, optional = true }
+tracing-subscriber = { version = "^0.3", features = ["env-filter"], optional = true }
+tracing-appender = { version = "^0.2", optional = true }
+
 [dependencies.eframe]
 version = "^0.29.1"
 optional = true
@@ -83,7 +89,7 @@ wayland-cursor = "0.31.7"
 default = ["egui-ui"]
 # The egui desktop interface and the `boilr` binary. Other front ends (the Tauri app)
 # depend on the library with default-features = false.
-egui-ui = ["dep:copypasta", "dep:eframe", "dep:egui", "dep:egui_extras", "dep:image"]
+egui-ui = ["dep:copypasta", "dep:eframe", "dep:egui", "dep:egui_extras", "dep:image", "dep:tracing", "dep:tracing-subscriber", "dep:tracing-appender"]
 # This feature is enabled when building for a flatpak environment
 flatpak = []
 

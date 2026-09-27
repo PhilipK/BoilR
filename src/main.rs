@@ -6,12 +6,14 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 
+mod logging;
 mod single_instance;
 
 use boilr::{platforms, ui};
 use boilr_core::{config, migration};
 
 use color_eyre::eyre::Result;
+use tracing::{error, info};
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -27,15 +29,27 @@ fn main() -> Result<()> {
         }
     };
 
+    // Keep the guard alive for the entire program so file logs are flushed.
+    let _log_guard = logging::init_logging();
+    info!("BoilR starting up");
+
     migration::migrate_config(|| platforms::platform_sections(&platforms::get_platforms()));
 
     let args: Vec<String> = std::env::args().collect();
-    if args.contains(&"--no-ui".to_string()) {
-        ui::run_sync()?;
+    let result = if args.contains(&"--no-ui".to_string()) {
+        info!("Running in headless mode (--no-ui)");
+        ui::run_sync()
     } else {
-        ui::run_ui(args)?;
+        info!("Running in GUI mode");
+        ui::run_ui(args)
+    };
+
+    if let Err(ref e) = result {
+        error!(error = %e, "BoilR encountered an error");
     }
-    Ok(())
+
+    info!("BoilR shutting down");
+    result
 }
 
 fn ensure_config_folder() {

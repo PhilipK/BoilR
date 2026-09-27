@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use egui::ImageButton;
+use tracing::{debug, trace};
 
 use crate::steamgriddb::ImageType;
 use crate::ui::images::{
@@ -81,7 +82,8 @@ fn render_thumbnail(
     image_type: &ImageType,
     user_path: &String,
 ) -> bool {
-    let (_path, key) = shortcut.key(image_type, Path::new(&user_path));
+    let (path, key) = shortcut.key(image_type, Path::new(&user_path));
+    trace!(image_type = ?image_type, path = %path.display(), "Rendering thumbnail");
     let text = format!("Pick {} image", image_type.name());
     // Convert Windows backslashes to forward slashes for file:// URL
     let key_normalized = key.replace('\\', "/");
@@ -96,5 +98,9 @@ fn render_thumbnail(
         image.size(),
     );
     let button = ImageButton::new(image);
-    ui.add_sized(calced, button).on_hover_text(text).clicked()
+    let clicked = ui.add_sized(calced, button).on_hover_text(text).clicked();
+    if clicked {
+        debug!(image_type = ?image_type, "Image type thumbnail clicked");
+    }
+    clicked
 }

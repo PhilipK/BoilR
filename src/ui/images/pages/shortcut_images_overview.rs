@@ -4,6 +4,8 @@ use egui::ImageButton;
 use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tokio::sync::watch;
 
+use tracing::debug;
+
 use crate::{
     steam::SteamUsersInfo,
     steamgriddb::{CachedSearch, ImageType},
@@ -83,6 +85,7 @@ fn render_image(
         .on_hover_text(&shortcut.app_name)
         .clicked()
     {
+        debug!(app_name = %shortcut.app_name, app_id = shortcut.app_id, "Shortcut clicked");
         return Some(Some(UserAction::ShortcutSelected(GameType::Shortcut(
             Box::new(shortcut.clone()),
         ))));
