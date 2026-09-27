@@ -79,7 +79,7 @@ fn parse_bottles(json: &str) -> eyre::Result<Vec<Bottle>> {
         return Ok(list);
     }
     let val: serde_json::Value = serde_json::from_str(trimmed)?;
-    if val.is_null() || (val.is_array() && val.as_array().map_or(false, |a| a.is_empty())) {
+    if val.is_null() || (val.is_array() && val.as_array().is_some_and(|a| a.is_empty())) {
         return Ok(vec![]);
     }
     eyre::bail!("Unexpected JSON structure from bottles-cli");
@@ -91,109 +91,88 @@ fn get_bottles() -> eyre::Result<(Vec<Bottle>, bool)> {
     Ok((bottles, output.is_flatpak))
 }
 
-fn get_bottles_output() -> eyre::Result<BottlesOutput> {
-    // Bottles may be reachable as a Flatpak or as a native bottles-cli. A command that
-    // ran successfully is authoritative, even when it printed nothing: bottles-cli exits
-    // with empty output when the user simply has no bottles, and that is an empty list,
-    // not a failure. Only when nothing ran at all do we surface an error, so a missing
-    // Bottles install cannot be mistaken for "0 games".
-    let mut flatpak_stderr: Option<String> = None;
+/// The outcome of one `bottles-cli ... list bottles` attempt.
+enum ListAttempt {
+    /// The command ran and exited successfully, with its stdout.
+    Ran(String),
+    /// The command ran but exited non-zero, with whatever it wrote to stderr.
+    Failed(String),
+    /// The command could not be spawned at all.
+    Unavailable,
+}
 
+fn run_list_command(mut command: Command) -> ListAttempt {
+    match command.arg("-j").arg("list").arg("bottles").output() {
+        Ok(out) if out.status.success() => {
+            ListAttempt::Ran(String::from_utf8_lossy(&out.stdout).into_owned())
+        }
+        Ok(out) => ListAttempt::Failed(String::from_utf8_lossy(&out.stderr).into_owned()),
+        Err(_) => ListAttempt::Unavailable,
+    }
+}
+
+fn flatpak_list_command() -> Command {
     #[cfg(not(feature = "flatpak"))]
-    {
-        // 1. Try flatpak bottles-cli
-        if let Ok(out) = Command::new("flatpak")
-            .arg("run")
-            .arg("--command=bottles-cli")
-            .arg("com.usebottles.bottles")
-            .arg("-j")
-            .arg("list")
-            .arg("bottles")
-            .output()
-        {
-            if out.status.success() {
-                return Ok(BottlesOutput {
-                    json: String::from_utf8_lossy(&out.stdout).to_string(),
-                    is_flatpak: true,
-                });
-            }
-            flatpak_stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
-        }
-
-        // 2. Fallback to native bottles-cli
-        if let Ok(out) = Command::new("bottles-cli")
-            .arg("-j")
-            .arg("list")
-            .arg("bottles")
-            .output()
-        {
-            if out.status.success() {
-                return Ok(BottlesOutput {
-                    json: String::from_utf8_lossy(&out.stdout).to_string(),
-                    is_flatpak: false,
-                });
-            }
-        }
-    }
+    let mut command = Command::new("flatpak");
     #[cfg(feature = "flatpak")]
-    {
-        // 1. Try flatpak bottles-cli on host
-        if let Ok(out) = Command::new("flatpak-spawn")
-            .arg("--host")
-            .arg("flatpak")
-            .arg("run")
-            .arg("--command=bottles-cli")
-            .arg("com.usebottles.bottles")
-            .arg("-j")
-            .arg("list")
-            .arg("bottles")
-            .output()
-        {
-            if out.status.success() {
-                return Ok(BottlesOutput {
-                    json: String::from_utf8_lossy(&out.stdout).to_string(),
-                    is_flatpak: true,
-                });
-            }
-            flatpak_stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
-        }
+    let mut command = {
+        let mut command = Command::new("flatpak-spawn");
+        command.arg("--host").arg("flatpak");
+        command
+    };
+    command
+        .arg("run")
+        .arg("--command=bottles-cli")
+        .arg("com.usebottles.bottles");
+    command
+}
 
-        // 2. Fallback to native bottles-cli on host
-        if let Ok(out) = Command::new("flatpak-spawn")
-            .arg("--host")
-            .arg("bottles-cli")
-            .arg("-j")
-            .arg("list")
-            .arg("bottles")
-            .output()
-        {
-            if out.status.success() {
-                return Ok(BottlesOutput {
-                    json: String::from_utf8_lossy(&out.stdout).to_string(),
-                    is_flatpak: false,
-                });
-            }
-        }
+fn native_list_command() -> Command {
+    #[cfg(not(feature = "flatpak"))]
+    let command = Command::new("bottles-cli");
+    #[cfg(feature = "flatpak")]
+    let command = {
+        let mut command = Command::new("flatpak-spawn");
+        command.arg("--host").arg("bottles-cli");
+        command
+    };
+    command
+}
+
+fn get_bottles_output() -> eyre::Result<BottlesOutput> {
+    // 1. Try flatpak bottles-cli
+    let flatpak = run_list_command(flatpak_list_command());
+
+    // A command that ran successfully is authoritative even when it listed nothing:
+    // bottles-cli exits cleanly with empty output when the user has no bottles, and that
+    // is an empty list rather than a failure.
+    if let ListAttempt::Ran(json) = &flatpak {
+        return Ok(BottlesOutput {
+            json: json.clone(),
+            is_flatpak: true,
+        });
     }
 
-    // Nothing ran. If the Flatpak attempt did produce stderr, prefer it so a real Bottles
+    // 2. Fallback to native bottles-cli
+    if let ListAttempt::Ran(json) = run_list_command(native_list_command()) {
+        return Ok(BottlesOutput {
+            json,
+            is_flatpak: false,
+        });
+    }
+
+    // Nothing usable ran. Prefer the Flatpak stderr when there is one so a real Bottles
     // failure is not masked as a missing install; bottles_cli_error() keeps the "not found"
-    // wording the Tauri interface keys off. Otherwise neither is installed.
-    Err(match flatpak_stderr {
-        Some(stderr) => bottles_cli_error(&stderr),
-        None => eyre::eyre!(
+    // wording the Tauri interface keys off. With no stderr at all neither command is
+    // installed, which must not reach the user as "0 games".
+    match flatpak {
+        ListAttempt::Failed(stderr) => Err(bottles_cli_error(&stderr)),
+        _ => eyre::bail!(
             "Bottles not found: neither the Flatpak com.usebottles.bottles nor a native \
              bottles-cli is installed"
         ),
-    })
+    }
 }
-
-/// Without Bottles, `flatpak run` fails with "... not installed" and prints nothing to parse.
-fn bottles_cli_error(stderr: &str) -> eyre::Report {
-    if stderr.contains("not installed") {
-        eyre::eyre!("Bottles not found: the Flatpak com.usebottles.bottles is not installed")
-    } else {
-        eyre::eyre!("bottles-cli failed: {}", stderr.trim())
     }
 }
 
@@ -271,16 +250,17 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_bottles_empty_returns_empty_vec() {
-        let res = parse_bottles("").unwrap();
+    fn test_parse_bottles_empty_returns_empty_vec() -> eyre::Result<()> {
+        let res = parse_bottles("")?;
         assert!(res.is_empty());
 
-        let res = parse_bottles("   \n\t  ").unwrap();
+        let res = parse_bottles("   \n\t  ")?;
         assert!(res.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_parse_bottles_valid_map() {
+    fn test_parse_bottles_valid_map() -> eyre::Result<()> {
         let json = r#"{
             "my-bottle": {
                 "Name": "my-bottle",
@@ -291,31 +271,41 @@ mod tests {
                 }
             }
         }"#;
-        let res = parse_bottles(json).unwrap();
-        assert_eq!(res.len(), 1);
-        assert_eq!(res[0].name, "my-bottle");
-        assert_eq!(res[0].external_programs.len(), 1);
+        let res = parse_bottles(json)?;
+        let [bottle] = res.as_slice() else {
+            eyre::bail!("expected exactly one bottle, got {}", res.len());
+        };
+        assert_eq!(bottle.name, "my-bottle");
+        assert_eq!(bottle.external_programs.len(), 1);
         assert_eq!(
-            res[0].external_programs.get("prog1").unwrap().name,
+            bottle
+                .external_programs
+                .get("prog1")
+                .ok_or_else(|| eyre::eyre!("prog1 missing"))?
+                .name,
             "Notepad"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_parse_bottles_missing_external_programs() {
+    fn test_parse_bottles_missing_external_programs() -> eyre::Result<()> {
         let json = r#"{
             "my-bottle": {
                 "Name": "my-bottle"
             }
         }"#;
-        let res = parse_bottles(json).unwrap();
-        assert_eq!(res.len(), 1);
-        assert_eq!(res[0].name, "my-bottle");
-        assert!(res[0].external_programs.is_empty());
+        let res = parse_bottles(json)?;
+        let [bottle] = res.as_slice() else {
+            eyre::bail!("expected exactly one bottle, got {}", res.len());
+        };
+        assert_eq!(bottle.name, "my-bottle");
+        assert!(bottle.external_programs.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_bottles_app_shortcut_generation() {
+    fn test_bottles_app_shortcut_generation() -> eyre::Result<()> {
         let flatpak_app = BottlesApp {
             name: "Game".to_string(),
             bottle: "gaming".to_string(),
@@ -335,5 +325,6 @@ mod tests {
         assert_eq!(shortcut.app_name, "Game");
         assert_eq!(shortcut.exe, "bottles-cli");
         assert_eq!(shortcut.launch_options, "run -b \"gaming\" -p \"Game\"");
+        Ok(())
     }
 }
