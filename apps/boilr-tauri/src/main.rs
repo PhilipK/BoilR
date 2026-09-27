@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod library;
+
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -257,6 +259,11 @@ fn main() {
             update_platform_settings,
             update_platform_enabled,
             run_full_sync,
+            library::list_backups,
+            library::create_backup,
+            library::restore_shortcuts,
+            library::list_boilr_shortcuts,
+            library::release_shortcut,
             ping
         ])
         .run(tauri::generate_context!())
@@ -935,6 +942,11 @@ mod tests {
                 update_platform_settings,
                 update_platform_enabled,
                 run_full_sync,
+                library::list_backups,
+                library::create_backup,
+                library::restore_shortcuts,
+                library::list_boilr_shortcuts,
+                library::release_shortcut,
                 ping
             ])
             .build(mock_context(noop_assets()))

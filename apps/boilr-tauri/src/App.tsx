@@ -26,9 +26,12 @@ import { GameList } from "./components/GameList";
 import { PipeBar } from "./components/PipeBar";
 import { Sources } from "./components/Sources";
 import { SettingsView } from "./components/SettingsView";
+import { ShortcutsView } from "./components/ShortcutsView";
 import { useNavigation } from "./lib/navigation";
 
-type View = "games" | "settings";
+const VIEWS = ["games", "shortcuts", "settings"] as const;
+type View = (typeof VIEWS)[number];
+const VIEW_LABELS: Record<View, string> = { games: "Games", shortcuts: "Shortcuts", settings: "Settings" };
 
 const applySettingsPatch = (current: Settings | null, patch: SettingsUpdatePayload): Settings | null => {
   if (!current) return current;
@@ -248,8 +251,8 @@ const App = () => {
 
   const navStatus = useNavigation({
     onBack: () => setView("games"),
-    onPrevView: () => setView("games"),
-    onNextView: () => setView("settings"),
+    onPrevView: () => setView((v) => VIEWS[Math.max(0, VIEWS.indexOf(v) - 1)]),
+    onNextView: () => setView((v) => VIEWS[Math.min(VIEWS.length - 1, VIEWS.indexOf(v) + 1)]),
     // Y only moves to the Import button; A confirms, so a stray press never imports.
     onImport: () => document.getElementById("import-button")?.focus(),
   });
@@ -272,7 +275,7 @@ const App = () => {
         <img src={logo} alt="" className="pixelated h-9 w-9" />
         <span className="font-pixel text-2xl text-foam">BoilR</span>
         <nav aria-label="Main" className="ml-6 flex gap-1">
-          {(["games", "settings"] as const).map((v) => (
+          {VIEWS.map((v) => (
             <button
               key={v}
               type="button"
@@ -283,7 +286,7 @@ const App = () => {
                 view === v ? "border-flame text-foam" : "border-transparent text-mauve hover:text-peach"
               )}
             >
-              {v === "games" ? "Games" : "Settings"}
+              {VIEW_LABELS[v]}
             </button>
           ))}
         </nav>
@@ -321,6 +324,13 @@ const App = () => {
               />
             </div>
           </div>
+        ) : view === "shortcuts" ? (
+          <ShortcutsView
+            onSettingsChanged={(s) => {
+              setSettings(s);
+              void invoke<SyncPlan>("plan_sync").then(setPlan);
+            }}
+          />
         ) : (
           <SettingsView
             settings={settings}
