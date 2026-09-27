@@ -8,21 +8,11 @@ controllers although the window has focus. Next thing to try: the Deck's Flatpak
 `--device=input` (added in Flatpak 1.15.6); test with
 `flatpak override --user --device=all io.github.philipk.boilr.Devel`. Touch works meanwhile.
 
-## High priority
+## Parity with egui
 
-### Backup & disconnect flows (Priority: High · Estimate: 5)
-- **Goal:** Match egui’s Backup and Disconnect panels.
-- **Backend:** We already have reusable functions (`src/backups.rs`, `boilr_core::sync::disconnect_shortcut`, etc.). Expose new commands:
-  - `list_backups` + `create_backup` + `restore_backup`.
-  - `disconnect_boilr_shortcuts` (wraps existing sync helpers).
-- **UI:** Add tabs mirroring egui: a list of backups with restore buttons, and a disconnect confirmation card explaining the impact.
-- **Considerations:** Backups are per-user; surface user IDs in the list; ensure long-running tasks show progress.
-
-### Consistent platform error messaging (Priority: High · Estimate: 5)
-- **Goal:** Present clear, user-friendly errors when a platform isn’t installed or misconfigured instead of raw OS messages.
-- **Backend:** Normalise `GamesPlatform::get_shortcut_info` errors—wrap common `io::ErrorKind::NotFound`/`PermissionDenied` cases so consumers can distinguish “not installed” from unexpected failures. Consider adding a helper (e.g., `PlatformError::MissingDependency { hint }`) and update each platform module (Epic, Itch, Legendary, Lutris, etc.) accordingly.
-- **UI:** Replace bland messages like “No such file or directory (os error 2)” with actionable hints (“Epic is not installed—install via Heroic or point BoilR at the manifest folder in Settings”). Suppress redundant “No games detected…” text when an error is shown.
-- **References:** Example noisy cases observed on a machine without those launchers: Epic (“Manifests not found”), Flatpak/GOG/Legendary/Lutris (“No such file or directory (os error 2)”), Itch (“Path not found: ~/.config/itch/db/butler.db-wal”), Origin (“Default path not found”).
+Reached once #538 (artwork), #539 (renaming), #540 (Windows CI) and #541 (Bottles "not found")
+are merged: game selection, renaming, backups and hand-over, artwork, settings, and plain-words
+launcher errors. What's below goes beyond egui.
 
 ## Nice to have
 
