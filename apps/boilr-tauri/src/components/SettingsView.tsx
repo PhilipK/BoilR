@@ -218,6 +218,9 @@ export const SettingsView = ({
           <SettingRow title="Last button">
             <span className="text-peach">{navStatus.lastInput ?? "Nothing yet"}</span>
           </SettingRow>
+          <SettingRow title="Window has focus" hint="Controllers only work while this is Yes.">
+            <span className="text-peach">{navStatus.windowFocused ? "Yes" : "No"}</span>
+          </SettingRow>
         </Section>
 
         <Section title="Launchers" hint="Where BoilR looks for each launcher's games.">

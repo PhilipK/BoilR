@@ -149,6 +149,8 @@ export type NavigationStatus = {
   pads: string[];
   /** The last navigation input received, like "Key ArrowDown" or "Controller A". */
   lastInput: string | null;
+  /** Whether the page has focus; web views ignore controllers while unfocused. */
+  windowFocused: boolean;
 };
 
 const samePads = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
@@ -161,6 +163,7 @@ export const useNavigation = (actions: NavigationActions): NavigationStatus => {
   const gamepadApi = typeof navigator !== "undefined" && "getGamepads" in navigator;
   const [pads, setPads] = useState<string[]>([]);
   const [lastInput, setLastInput] = useState<string | null>(null);
+  const [windowFocused, setWindowFocused] = useState(() => document.hasFocus());
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
 
@@ -179,6 +182,13 @@ export const useNavigation = (actions: NavigationActions): NavigationStatus => {
         el.click();
       } else if (e.key === "Escape") {
         actionsRef.current.onBack();
+      } else if (e.key === "PageUp" || e.key === "BrowserBack") {
+        // Tab switching for controller layouts that send keys (L1/R1 in Steam's Web Browser layout).
+        e.preventDefault();
+        actionsRef.current.onPrevView();
+      } else if (e.key === "PageDown" || e.key === "BrowserForward") {
+        e.preventDefault();
+        actionsRef.current.onNextView();
       } else {
         return;
       }
@@ -186,11 +196,16 @@ export const useNavigation = (actions: NavigationActions): NavigationStatus => {
       setLastInput(`Key ${e.key}`);
     };
     const onPointer = () => document.body.classList.remove("nav-controller");
+    const onFocusChange = () => setWindowFocused(document.hasFocus());
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", onPointer);
+    window.addEventListener("focus", onFocusChange);
+    window.addEventListener("blur", onFocusChange);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("focus", onFocusChange);
+      window.removeEventListener("blur", onFocusChange);
     };
   }, []);
 
@@ -210,5 +225,5 @@ export const useNavigation = (actions: NavigationActions): NavigationStatus => {
     return () => cancelAnimationFrame(frame);
   }, [gamepadApi]);
 
-  return { gamepadApi, pads, lastInput };
+  return { gamepadApi, pads, lastInput, windowFocused };
 };
