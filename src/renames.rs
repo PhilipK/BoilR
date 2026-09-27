@@ -13,3 +13,42 @@ pub fn try_load_rename_map() -> Result<HashMap<u32, String>, Box<dyn Error>> {
     let deserialized = serde_json::from_str(&file_content)?;
     Ok(deserialized)
 }
+
+/// Sets the name BoilR gives a game in Steam. An empty name, or the launcher's own name, removes
+/// the rename. Keyed by the app id of the launcher's name, like egui's rename map.
+pub fn set_rename(app_id: u32, original: &str, name: &str) -> Result<(), Box<dyn Error>> {
+    let mut map = load_rename_map();
+    apply_rename(&mut map, app_id, original, name);
+    let path = get_renames_file();
+    if let Some(folder) = path.parent() {
+        std::fs::create_dir_all(folder)?;
+    }
+    std::fs::write(path, serde_json::to_string(&map)?)?;
+    Ok(())
+}
+
+fn apply_rename(map: &mut HashMap<u32, String>, app_id: u32, original: &str, name: &str) {
+    let name = name.trim();
+    if name.is_empty() || name == original {
+        map.remove(&app_id);
+    } else {
+        map.insert(app_id, name.to_string());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renames_and_resets() {
+        let mut map = HashMap::new();
+        apply_rename(&mut map, 7, "Hades", "  Hades II  ");
+        assert_eq!(map.get(&7).map(String::as_str), Some("Hades II"));
+        apply_rename(&mut map, 7, "Hades", "Hades");
+        assert!(map.is_empty());
+        apply_rename(&mut map, 7, "Hades", "Other");
+        apply_rename(&mut map, 7, "Hades", "   ");
+        assert!(map.is_empty());
+    }
+}

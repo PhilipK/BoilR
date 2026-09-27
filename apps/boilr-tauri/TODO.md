@@ -8,27 +8,11 @@ controllers although the window has focus. Next thing to try: the Deck's Flatpak
 `--device=input` (added in Flatpak 1.15.6); test with
 `flatpak override --user --device=all io.github.philipk.boilr.Devel`. Touch works meanwhile.
 
-## High priority
+## Parity with egui
 
-### Per-game selection & renaming (Priority: High · Estimate: 8)
-- **Goal:** Match egui’s ability to include/exclude individual shortcuts and edit names before import.
-- **Where to start:** Backend already exposes rename map helpers (`src/renames.rs`) and blacklisting happens in `apps/boilr-tauri/src/main.rs::prepare_additions`. Extend the plan/sync commands if extra data is needed (e.g., platform labels per shortcut).
-- **UI approach:** In `apps/boilr-tauri/src/App.tsx`, add per-game checkboxes (backed by a local `Set` of excluded app IDs) and a rename modal or inline edit. Persist changes by updating `blacklisted_games` (for exclusions) via `update_settings` and writing to `renames.json` through a new Tauri command that mirrors egui’s `rename_map` logic.
-- **Edge cases:** Provide a reset option to revert to stored names; ensure renames trigger `calculate_app_id_for_shortcut` exactly once (follow `prepare_additions`).
-
-### Backup & disconnect flows (Priority: High · Estimate: 5)
-- **Goal:** Match egui’s Backup and Disconnect panels.
-- **Backend:** We already have reusable functions (`src/backups.rs`, `boilr_core::sync::disconnect_shortcut`, etc.). Expose new commands:
-  - `list_backups` + `create_backup` + `restore_backup`.
-  - `disconnect_boilr_shortcuts` (wraps existing sync helpers).
-- **UI:** Add tabs mirroring egui: a list of backups with restore buttons, and a disconnect confirmation card explaining the impact.
-- **Considerations:** Backups are per-user; surface user IDs in the list; ensure long-running tasks show progress.
-
-### Consistent platform error messaging (Priority: High · Estimate: 5)
-- **Goal:** Present clear, user-friendly errors when a platform isn’t installed or misconfigured instead of raw OS messages.
-- **Backend:** Normalise `GamesPlatform::get_shortcut_info` errors—wrap common `io::ErrorKind::NotFound`/`PermissionDenied` cases so consumers can distinguish “not installed” from unexpected failures. Consider adding a helper (e.g., `PlatformError::MissingDependency { hint }`) and update each platform module (Epic, Itch, Legendary, Lutris, etc.) accordingly.
-- **UI:** Replace bland messages like “No such file or directory (os error 2)” with actionable hints (“Epic is not installed—install via Heroic or point BoilR at the manifest folder in Settings”). Suppress redundant “No games detected…” text when an error is shown.
-- **References:** Example noisy cases observed on a machine without those launchers: Epic (“Manifests not found”), Flatpak/GOG/Legendary/Lutris (“No such file or directory (os error 2)”), Itch (“Path not found: ~/.config/itch/db/butler.db-wal”), Origin (“Default path not found”).
+Reached once #538 (artwork), #539 (renaming), #540 (Windows CI) and #541 (Bottles "not found")
+are merged: game selection, renaming, backups and hand-over, artwork, settings, and plain-words
+launcher errors. What's below goes beyond egui.
 
 ## Nice to have
 
