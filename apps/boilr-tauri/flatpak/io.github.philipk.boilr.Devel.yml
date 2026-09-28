@@ -4,11 +4,12 @@
 #   flatpak run org.flatpak.Builder --user --install-deps-from=flathub --force-clean \
 #     --repo=.flatpak-repo .flatpak-build apps/boilr-tauri/flatpak/io.github.philipk.boilr.Devel.yml
 #
-# `--share=network` during the build lets npm and cargo download dependencies. Flathub forbids
-# that, so a Flathub submission needs generated cargo and npm sources instead.
+# Builds offline, as Flathub requires: cargo and npm dependencies come from cargo-sources.json and
+# node-sources.json. Regenerate both with update-sources.sh whenever Cargo.lock or
+# package-lock.json changes (CI checks this).
 app-id: io.github.philipk.boilr.Devel
 runtime: org.gnome.Platform
-runtime-version: '50'
+runtime-version: '51'
 sdk: org.gnome.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
@@ -40,11 +41,11 @@ finish-args:
 
 build-options:
   append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node22/bin
-  build-args:
-    - --share=network
   env:
-    CARGO_HOME: /run/build/boilr/cargo-home
-    npm_config_cache: /run/build/boilr/npm-cache
+    CARGO_HOME: /run/build/boilr/cargo
+    CARGO_NET_OFFLINE: 'true'
+    npm_config_cache: /run/build/boilr/flatpak-node/npm-cache
+    npm_config_offline: 'true'
 
 modules:
   - name: boilr
@@ -62,9 +63,11 @@ modules:
           - apps/boilr-tauri/node_modules
           - apps/boilr-tauri/target
           - apps/boilr-tauri/dist
+      - cargo-sources.json
+      - node-sources.json
     build-commands:
-      - cd apps/boilr-tauri && npm ci --no-audit --no-fund && npm run build
-      - cd apps/boilr-tauri && cargo build --release --features tauri/custom-protocol,flatpak
+      - cd apps/boilr-tauri && npm ci --offline --no-audit --no-fund && npm run build
+      - cd apps/boilr-tauri && cargo build --offline --release --features tauri/custom-protocol,flatpak
       - install -Dm755 apps/boilr-tauri/target/release/boilr-tauri /app/bin/boilr-tauri
       - install -Dm644 resources/256/io.github.philipk.boilr.png /app/share/icons/hicolor/256x256/apps/io.github.philipk.boilr.Devel.png
       - install -Dm644 resources/128/io.github.philipk.boilr.png /app/share/icons/hicolor/128x128/apps/io.github.philipk.boilr.Devel.png

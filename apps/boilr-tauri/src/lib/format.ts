@@ -6,10 +6,13 @@ export const errorMessage = (err: unknown): string => {
   return "Unknown error";
 };
 
-export const toImageSrc = (icon?: string | null): string | null => {
+/** A displayable URL for a local file path; web and data URLs pass through unchanged. */
+export const toImageSrc = (icon?: string | null, version?: number): string | null => {
   if (!icon) return null;
+  if (/^(https?:|data:)/.test(icon)) return icon;
   try {
-    return convertFileSrc(icon);
+    const src = convertFileSrc(icon);
+    return version ? `${src}?v=${version}` : src;
   } catch {
     return null;
   }

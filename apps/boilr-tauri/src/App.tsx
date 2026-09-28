@@ -9,6 +9,7 @@ import type {
   PlatformSummary,
   PlatformToggleResponse,
   SettingsUpdatePayload,
+  ShortcutSummary,
   SyncOutcome,
   SyncPlan,
   SyncProgressEvent,
@@ -26,9 +27,13 @@ import { GameList } from "./components/GameList";
 import { PipeBar } from "./components/PipeBar";
 import { Sources } from "./components/Sources";
 import { SettingsView } from "./components/SettingsView";
+import { ShortcutsView } from "./components/ShortcutsView";
+import { ArtworkView } from "./components/ArtworkView";
 import { useNavigation } from "./lib/navigation";
 
-type View = "games" | "settings";
+const VIEWS = ["games", "artwork", "shortcuts", "settings"] as const;
+type View = (typeof VIEWS)[number];
+const VIEW_LABELS: Record<View, string> = { games: "Games", artwork: "Artwork", shortcuts: "Shortcuts", settings: "Settings" };
 
 const applySettingsPatch = (current: Settings | null, patch: SettingsUpdatePayload): Settings | null => {
   if (!current) return current;
@@ -163,6 +168,19 @@ const App = () => {
     [blacklist, updateSettings]
   );
 
+  /** Renames a game in Steam; the plan changes because Steam's id for a shortcut comes from its name. */
+  const renameGame = useCallback(async (game: ShortcutSummary, name: string) => {
+    await invoke("rename_game", { appId: game.app_id, original: game.app_name, name });
+    const displayName = name.trim() || game.app_name;
+    setPlatforms((prev) =>
+      prev.map((p) => ({
+        ...p,
+        games: p.games.map((g) => (g.app_id === game.app_id ? { ...g, display_name: displayName } : g)),
+      }))
+    );
+    setPlan(await invoke<SyncPlan>("plan_sync"));
+  }, []);
+
   const runImport = useCallback(async () => {
     setSyncing(true);
     setSyncError(null);
@@ -248,8 +266,8 @@ const App = () => {
 
   const navStatus = useNavigation({
     onBack: () => setView("games"),
-    onPrevView: () => setView("games"),
-    onNextView: () => setView("settings"),
+    onPrevView: () => setView((v) => VIEWS[Math.max(0, VIEWS.indexOf(v) - 1)]),
+    onNextView: () => setView((v) => VIEWS[Math.min(VIEWS.length - 1, VIEWS.indexOf(v) + 1)]),
     // Y only moves to the Import button; A confirms, so a stray press never imports.
     onImport: () => document.getElementById("import-button")?.focus(),
   });
@@ -272,7 +290,7 @@ const App = () => {
         <img src={logo} alt="" className="pixelated h-9 w-9" />
         <span className="font-pixel text-2xl text-foam">BoilR</span>
         <nav aria-label="Main" className="ml-6 flex gap-1">
-          {(["games", "settings"] as const).map((v) => (
+          {VIEWS.map((v) => (
             <button
               key={v}
               type="button"
@@ -283,12 +301,12 @@ const App = () => {
                 view === v ? "border-flame text-foam" : "border-transparent text-mauve hover:text-peach"
               )}
             >
-              {v === "games" ? "Games" : "Settings"}
+              {VIEW_LABELS[v]}
             </button>
           ))}
         </nav>
-        <span className="ml-auto text-sm text-mauve" title={`Built ${__BUILD_TIME__}`}>
-          Preview build {__BUILD_COMMIT__}, {new Date(__BUILD_TIME__).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+        <span className="ml-auto text-sm text-mauve" title={`Commit ${__BUILD_COMMIT__}, built ${__BUILD_TIME__}`}>
+          Version {__APP_VERSION__}
         </span>
         <button type="button" className="link-btn" onClick={rescan} disabled={rescanning || syncing}>
           {rescanning ? "Looking…" : "Look for games again"}
@@ -314,6 +332,7 @@ const App = () => {
                 isSelected={isSelected}
                 plannedAppIds={plannedAppIds}
                 onToggleGame={(id, v) => setSelected([id], v)}
+                onRenameGame={renameGame}
                 onSetMany={setSelected}
                 onTogglePlatform={togglePlatform}
                 busyPlatforms={platformBusy}
@@ -321,6 +340,15 @@ const App = () => {
               />
             </div>
           </div>
+        ) : view === "artwork" ? (
+          <ArtworkView settings={settings} onSettingsChanged={setSettings} />
+        ) : view === "shortcuts" ? (
+          <ShortcutsView
+            onSettingsChanged={(s) => {
+              setSettings(s);
+              void invoke<SyncPlan>("plan_sync").then(setPlan);
+            }}
+          />
         ) : (
           <SettingsView
             settings={settings}

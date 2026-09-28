@@ -1,5 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod artwork;
+mod library;
+
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -8,7 +11,7 @@ use std::{
 use boilr::{
     backups::backup_shortcuts,
     platforms::{get_platforms, GamesPlatform, ShortcutToImport},
-    renames::load_rename_map,
+    renames::{load_rename_map, set_rename},
 };
 use boilr_core::{
     settings::{load_setting_sections, save_settings, Settings},
@@ -126,6 +129,12 @@ async fn run_full_sync(
     tauri::async_runtime::spawn_blocking(move || perform_full_sync(Some(progress_tx)))
         .await
         .map_err(|err| err.to_string())?
+}
+
+/// Sets the name a game gets in Steam; an empty name goes back to the launcher's name.
+#[tauri::command]
+fn rename_game(app_id: u32, original: String, name: String) -> Result<(), String> {
+    set_rename(app_id, &original, &name).map_err(|err| err.to_string())
 }
 
 #[tauri::command]
@@ -257,6 +266,20 @@ fn main() {
             update_platform_settings,
             update_platform_enabled,
             run_full_sync,
+            library::list_backups,
+            library::create_backup,
+            library::restore_shortcuts,
+            library::list_boilr_shortcuts,
+            library::release_shortcut,
+            artwork::list_steam_accounts,
+            artwork::list_artwork,
+            artwork::artwork_options,
+            artwork::set_artwork,
+            artwork::clear_artwork,
+            artwork::artwork_game_match,
+            artwork::set_artwork_game,
+            artwork::find_missing_artwork,
+            rename_game,
             ping
         ])
         .run(tauri::generate_context!())
@@ -935,6 +958,20 @@ mod tests {
                 update_platform_settings,
                 update_platform_enabled,
                 run_full_sync,
+                library::list_backups,
+                library::create_backup,
+                library::restore_shortcuts,
+                library::list_boilr_shortcuts,
+                library::release_shortcut,
+                artwork::list_steam_accounts,
+                artwork::list_artwork,
+                artwork::artwork_options,
+                artwork::set_artwork,
+                artwork::clear_artwork,
+                artwork::artwork_game_match,
+                artwork::set_artwork_game,
+                artwork::find_missing_artwork,
+                rename_game,
                 ping
             ])
             .build(mock_context(noop_assets()))
