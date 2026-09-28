@@ -2,7 +2,7 @@
 mod bottles;
 #[cfg(target_family = "unix")]
 mod flatpak;
-#[cfg(any(target_family = "unix", test))]
+#[cfg(target_family = "unix")]
 mod heroic;
 #[cfg(target_family = "unix")]
 mod legendary;
@@ -30,9 +30,9 @@ mod uplay;
 mod egs;
 pub use platform::*;
 
-#[cfg(any(target_family = "unix", test))]
+#[cfg(target_family = "unix")]
 pub(crate) use gog::get_gog_shortcuts_from_game_folders;
-#[cfg(any(target_family = "unix", test))]
+#[cfg(target_family = "unix")]
 pub(crate) use gog::GogShortcut;
 
 pub use platforms_load::get_platforms;
