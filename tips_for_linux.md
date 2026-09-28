@@ -40,4 +40,4 @@ Steam's Flatpak isn't allowed to do that by default. Grant it once with:
 flatpak override --user --talk-name=org.freedesktop.Flatpak com.valvesoftware.Steam
 ```
 
-This lets Steam start any program on your system outside its sandbox, which is what launching another Flatpak app needs.
+Then restart Steam. This lets Steam start any program on your system outside its sandbox, which is what launching another Flatpak app needs.
