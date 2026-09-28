@@ -47,7 +47,7 @@ Core first, then a new UI. Decided by Philip, 2026-09-26.
 
 1. **Extract a UI-free core.** `crates/boilr-core` exists (settings, Steam, SteamGridDB, sync). The `boilr` crate is a library whose platforms build without egui, and the Tauri app lives in `apps/boilr-tauri` on top of it. Target: `GamesPlatform` has no egui dependency (today `render_ui` takes `&mut egui::Ui`); platforms expose settings as data.
 2. **Keep egui alive meanwhile**: minimal upgrades for user-facing bugs (paste, launch failures, DPI). Several UI paths call `block_on` on the UI thread (import, image download, image picking), causing freezes; fix those only where users hit them.
-3. **Tauri UI** (`apps/boilr-tauri`), shipped as a Flatpak beta beside egui, then replacing it once `apps/boilr-tauri/TODO.md` (feature parity) is done. It already runs on the Steam Deck in Desktop and Game Mode (tested 2026-09-26). Next: a Flatpak build (GNOME runtime), then controller navigation for Game Mode.
+3. **Tauri UI** (`apps/boilr-tauri`): reached egui parity and shipped as 2.0.0-beta.1 on Flathub's `beta` branch (same app id) on 2026-09-27; stable keeps egui until the beta has proven itself. Controller navigation in Steam Deck Game Mode is parked (touch works). Beta upkeep is in the `maintain` skill.
 
 ## Rules that are not obvious from the code
 
