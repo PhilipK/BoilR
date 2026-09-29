@@ -142,8 +142,9 @@ where
                 continue;
             }
             Err(error) => {
-                let message =
-                    format!("Could not access standalone scan path {configured_path:?}: {error}");
+                let message = format!(
+                    "Could not access standalone scan path {configured_path:?}: {error}. If running in Flatpak, use: flatpak override --filesystem=<path> com.github.philipk.BoilR"
+                );
                 eprintln!("{message}");
                 errors.push(message);
                 continue;

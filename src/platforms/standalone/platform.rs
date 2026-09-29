@@ -108,9 +108,6 @@ impl StandalonePlatform {
                     remove_index = Some(index);
                 }
             });
-            if !directory.trim().is_empty() && !Path::new(directory.trim()).is_dir() {
-                ui.colored_label(egui::Color32::RED, "Folder is currently unavailable");
-            }
         }
 
         if let Some(index) = remove_index {
