@@ -6,6 +6,8 @@ use std::{
 
 use super::game::StandaloneGame;
 
+const MAX_SCAN_DEPTH: usize = 8;
+
 const IGNORED_EXECUTABLE_PATTERNS: [&str; 17] = [
     "unins",
     "uninstall",
@@ -50,17 +52,20 @@ pub(crate) fn scan_directories_with_selections(
     selected_executables: &[String],
 ) -> eyre::Result<Vec<StandaloneGame>> {
     let mut candidates = HashMap::new();
+
     let roots = visit_configured_roots(directories, |root| {
         walk_root(root, |executable| {
             consider_executable(root, executable, &mut candidates);
         })
     })?;
+
     add_manual_selections(selected_executables, &roots, &mut candidates);
 
     let mut games: Vec<StandaloneGame> = candidates
         .into_values()
         .map(|candidate| candidate.game)
         .collect();
+
     games.sort_by(|left, right| {
         left.title
             .to_lowercase()
@@ -72,6 +77,7 @@ pub(crate) fn scan_directories_with_selections(
                     .cmp(&right.executable.to_string_lossy().to_lowercase())
             })
     });
+
     Ok(games)
 }
 
@@ -80,6 +86,7 @@ pub(crate) fn find_unmatched_executables(
     directories: &[String],
 ) -> eyre::Result<Vec<ManualExecutableCandidate>> {
     let mut candidates = HashMap::new();
+
     visit_configured_roots(directories, |root| {
         walk_root(root, |executable| {
             consider_unmatched_executable(root, executable, &mut candidates);
@@ -87,6 +94,7 @@ pub(crate) fn find_unmatched_executables(
     })?;
 
     let mut candidates: Vec<ManualExecutableCandidate> = candidates.into_values().collect();
+
     candidates.sort_by(|left, right| {
         left.title
             .to_lowercase()
@@ -98,6 +106,7 @@ pub(crate) fn find_unmatched_executables(
                     .cmp(&right.executable.to_string_lossy().to_lowercase())
             })
     });
+
     Ok(candidates)
 }
 
@@ -110,6 +119,7 @@ where
         .map(|directory| directory.trim())
         .filter(|directory| !directory.is_empty())
         .collect();
+
     if configured_directories.is_empty() {
         return Err(eyre::eyre!("No standalone scan directories configured"));
     }
@@ -121,6 +131,7 @@ where
 
     for configured_directory in configured_directories {
         let configured_path = Path::new(configured_directory);
+
         let canonical_root = match configured_path.canonicalize() {
             Ok(root) if root.is_dir() => root,
             Ok(_) => {
@@ -187,9 +198,10 @@ where
     F: FnMut(&Path),
 {
     let initial_entries = fs::read_dir(root)?;
-    let mut stack = vec![(root.to_path_buf(), Some(initial_entries))];
 
-    while let Some((directory, supplied_entries)) = stack.pop() {
+    let mut stack = vec![(root.to_path_buf(), Some(initial_entries), 0usize)];
+
+    while let Some((directory, supplied_entries, depth)) = stack.pop() {
         let entries = match supplied_entries {
             Some(entries) => entries,
             None => match fs::read_dir(&directory) {
@@ -209,6 +221,7 @@ where
                     continue;
                 }
             };
+
             let file_type = match entry.file_type() {
                 Ok(file_type) => file_type,
                 Err(error) => {
@@ -223,8 +236,15 @@ where
             if file_type.is_symlink() {
                 continue;
             }
+
             if file_type.is_dir() {
-                stack.push((entry.path(), None));
+                let path = entry.path();
+
+                if depth >= MAX_SCAN_DEPTH || should_skip_directory(&path) {
+                    continue;
+                }
+
+                stack.push((path, None, depth + 1));
             } else if file_type.is_file() {
                 visit(&entry.path());
             }
@@ -234,6 +254,16 @@ where
     Ok(())
 }
 
+fn should_skip_directory(path: &Path) -> bool {
+    let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
+
+    name.starts_with('.')
+        || name.eq_ignore_ascii_case("compatdata")
+        || name.eq_ignore_ascii_case("steamapps")
+}
+
 fn add_manual_selections(
     selected_executables: &[String],
     roots: &[PathBuf],
@@ -241,6 +271,7 @@ fn add_manual_selections(
 ) {
     for selected_executable in selected_executables {
         let executable = Path::new(selected_executable.trim());
+
         if !executable.is_file()
             || !is_safe_executable(executable)
             || !is_executable_under_roots(executable, roots)
@@ -248,12 +279,15 @@ fn add_manual_selections(
             eprintln!("Selected standalone executable is unavailable: {executable:?}");
             continue;
         }
+
         let Some((matched_directory, title)) = fallback_game_identity(executable) else {
             continue;
         };
+
         let key = matched_directory
             .canonicalize()
             .unwrap_or(matched_directory);
+
         candidates.insert(
             key,
             Candidate {
@@ -271,6 +305,7 @@ fn is_executable_under_roots(executable: &Path, roots: &[PathBuf]) -> bool {
     let Ok(canonical_executable) = executable.canonicalize() else {
         return false;
     };
+
     roots.iter().any(|root| {
         root.canonicalize()
             .is_ok_and(|canonical_root| canonical_executable.starts_with(canonical_root))
@@ -286,18 +321,23 @@ fn consider_unmatched_executable(
     if !is_safe_executable(executable) {
         return;
     }
+
     let Some(stem) = normalized_stem(executable) else {
         return;
     };
+
     if find_matching_ancestor(root, executable, &stem).is_some() {
         return;
     }
+
     let Some((game_directory, title)) = fallback_game_identity(executable) else {
         return;
     };
+
     let key = executable
         .canonicalize()
         .unwrap_or_else(|_| executable.to_path_buf());
+
     candidates.insert(
         key,
         ManualExecutableCandidate {
@@ -324,14 +364,17 @@ fn consider_executable(
     let Some((matched_directory, title)) = find_matching_ancestor(root, executable, &stem) else {
         return;
     };
+
     let distance = executable
         .parent()
         .and_then(|parent| parent.strip_prefix(&matched_directory).ok())
         .map(|relative| relative.components().count())
         .unwrap_or(usize::MAX);
+
     let key = matched_directory
         .canonicalize()
         .unwrap_or_else(|_| matched_directory.clone());
+
     let candidate = Candidate {
         game: StandaloneGame {
             title,
@@ -361,17 +404,20 @@ fn is_safe_executable(path: &Path) -> bool {
     if !has_exe_extension(path) {
         return false;
     }
+
     normalized_stem(path).is_some_and(|stem| !stem.is_empty() && !is_ignored_executable(&stem))
 }
 
 fn fallback_game_identity(executable: &Path) -> Option<(PathBuf, String)> {
     let mut directory = executable.parent()?.to_path_buf();
+
     while directory.file_name().is_some_and(|name| {
         is_generic_executable_directory(&normalize_name(&name.to_string_lossy()))
     }) {
         let Some(parent) = directory.parent() else {
             break;
         };
+
         directory = parent.to_path_buf();
     }
 
@@ -383,6 +429,7 @@ fn fallback_game_identity(executable: &Path) -> Option<(PathBuf, String)> {
                 .file_stem()
                 .map(|name| name.to_string_lossy().to_string())
         })?;
+
     Some((directory, title))
 }
 
@@ -429,18 +476,23 @@ fn find_matching_ancestor(
     normalized_stem: &str,
 ) -> Option<(PathBuf, String)> {
     let mut current = executable.parent();
+
     while let Some(directory) = current {
         if let Some(folder_name) = directory.file_name() {
             let title = folder_name.to_string_lossy();
+
             if normalize_name(&title) == normalized_stem {
                 return Some((directory.to_path_buf(), title.to_string()));
             }
         }
+
         if directory == root {
             break;
         }
+
         current = directory.parent();
     }
+
     None
 }
 
@@ -470,24 +522,32 @@ mod tests {
     impl TestDirectory {
         fn new() -> eyre::Result<Self> {
             let id = NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed);
+
             let path = std::env::temp_dir()
                 .join(format!("boilr-standalone-test-{}-{id}", std::process::id()));
+
             fs::create_dir_all(&path)?;
+
             Ok(Self { path })
         }
 
         fn directory(&self, relative: &str) -> eyre::Result<PathBuf> {
             let path = self.path.join(relative);
+
             fs::create_dir_all(&path)?;
+
             Ok(path)
         }
 
         fn file(&self, relative: &str) -> eyre::Result<PathBuf> {
             let path = self.path.join(relative);
+
             if let Some(parent) = path.parent() {
                 fs::create_dir_all(parent)?;
             }
+
             File::create(&path)?;
+
             Ok(path)
         }
 
@@ -518,6 +578,7 @@ mod tests {
             games.first().map(|game| &game.executable),
             Some(&executable)
         );
+
         Ok(())
     }
 
@@ -549,6 +610,7 @@ mod tests {
             &[test_directory.configured_path()],
             &[executable.to_string_lossy().to_string()],
         )?;
+
         assert_eq!(games.len(), 1);
         assert_eq!(
             games.first().map(|game| game.title.as_str()),
@@ -558,6 +620,7 @@ mod tests {
             games.first().map(|game| &game.executable),
             Some(&executable)
         );
+
         Ok(())
     }
 
@@ -573,12 +636,14 @@ mod tests {
         )?;
 
         assert!(games.is_empty());
+
         Ok(())
     }
 
     #[test]
     fn manual_selection_overrides_automatic_choice_for_folder() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
+
         test_directory.file("Death Stranding 2/DeathStranding2.exe")?;
         let selected = test_directory.file("Death Stranding 2/DS2.exe")?;
 
@@ -589,6 +654,7 @@ mod tests {
 
         assert_eq!(games.len(), 1);
         assert_eq!(games.first().map(|game| &game.executable), Some(&selected));
+
         Ok(())
     }
 
@@ -596,6 +662,7 @@ mod tests {
     fn configured_root_can_be_the_game_directory() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
         let game_root = test_directory.directory("Root Game")?;
+
         test_directory.file("Root Game/RootGame.exe")?;
 
         let games = scan_directories(&[game_root.to_string_lossy().to_string()])?;
@@ -604,12 +671,14 @@ mod tests {
             games.first().map(|game| game.title.as_str()),
             Some("Root Game")
         );
+
         Ok(())
     }
 
     #[test]
     fn rejects_non_matching_and_ignored_executables() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
+
         test_directory.file("Some Game/Other.exe")?;
         test_directory.file("Launcher/Launcher.exe")?;
         test_directory.file("Updater/Updater.exe")?;
@@ -619,18 +688,21 @@ mod tests {
         let games = scan_directories(&[test_directory.configured_path()])?;
 
         assert!(games.is_empty());
+
         Ok(())
     }
 
     #[test]
     fn prefers_executable_closest_to_matching_folder() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
+
         let closest = test_directory.file("A Game/A Game.exe")?;
         test_directory.file("A Game/bin/A_Game.exe")?;
 
         let games = scan_directories(&[test_directory.configured_path()])?;
 
         assert_eq!(games.first().map(|game| &game.executable), Some(&closest));
+
         Ok(())
     }
 
@@ -638,6 +710,7 @@ mod tests {
     fn deduplicates_overlapping_roots() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
         let game_root = test_directory.directory("Duplicate Game")?;
+
         test_directory.file("Duplicate Game/DuplicateGame.exe")?;
 
         let games = scan_directories(&[
@@ -646,13 +719,16 @@ mod tests {
         ])?;
 
         assert_eq!(games.len(), 1);
+
         Ok(())
     }
 
     #[test]
     fn continues_when_another_root_is_missing() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
+
         test_directory.file("Valid Game/ValidGame.exe")?;
+
         let missing = test_directory.path.join("missing");
 
         let games = scan_directories(&[
@@ -661,6 +737,7 @@ mod tests {
         ])?;
 
         assert_eq!(games.len(), 1);
+
         Ok(())
     }
 
@@ -679,6 +756,7 @@ mod tests {
         let result = scan_directories(&[missing.to_string_lossy().to_string()]);
 
         assert!(result.is_err());
+
         Ok(())
     }
 
@@ -689,6 +767,7 @@ mod tests {
         let games = scan_directories(&[test_directory.configured_path()])?;
 
         assert!(games.is_empty());
+
         Ok(())
     }
 
@@ -699,12 +778,15 @@ mod tests {
 
         let test_directory = TestDirectory::new()?;
         let outside = TestDirectory::new()?;
+
         outside.file("Linked Game/LinkedGame.exe")?;
+
         symlink(&outside.path, test_directory.path.join("linked"))?;
 
         let games = scan_directories(&[test_directory.configured_path()])?;
 
         assert!(games.is_empty());
+
         Ok(())
     }
 
@@ -715,8 +797,11 @@ mod tests {
 
         let test_directory = TestDirectory::new()?;
         let outside = TestDirectory::new()?;
+
         outside.file("Linked Game/LinkedGame.exe")?;
+
         let link_result = symlink_dir(&outside.path, test_directory.path.join("linked"));
+
         if link_result.is_err() {
             return Ok(());
         }
@@ -724,12 +809,14 @@ mod tests {
         let games = scan_directories(&[test_directory.configured_path()])?;
 
         assert!(games.is_empty());
+
         Ok(())
     }
 
     #[test]
     fn lexical_path_breaks_equal_distance_ties() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
+
         let alphabetically_first = test_directory.file("Tie Game/a/TieGame.exe")?;
         test_directory.file("Tie Game/b/TieGame.exe")?;
 
@@ -739,6 +826,7 @@ mod tests {
             games.first().map(|game| &game.executable),
             Some(&alphabetically_first)
         );
+
         Ok(())
     }
 
@@ -751,11 +839,13 @@ mod tests {
     fn executable_match_does_not_escape_configured_root() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
         let game_root = test_directory.directory("Outer Game/scan-root")?;
+
         test_directory.file("Outer Game/scan-root/bin/OuterGame.exe")?;
 
         let games = scan_directories(&[game_root.to_string_lossy().to_string()])?;
 
         assert!(games.is_empty());
+
         Ok(())
     }
 
@@ -767,6 +857,7 @@ mod tests {
         let result = scan_directories(&[file.to_string_lossy().to_string()]);
 
         assert!(result.is_err());
+
         Ok(())
     }
 
@@ -774,5 +865,44 @@ mod tests {
     fn helper_accepts_only_exe_extension() {
         assert!(has_exe_extension(Path::new("game.EXE")));
         assert!(!has_exe_extension(Path::new("game.com")));
+    }
+
+    #[test]
+    fn skips_hidden_steam_and_compatibility_directories() -> eyre::Result<()> {
+        let test_directory = TestDirectory::new()?;
+
+        test_directory.file(".hidden/Hidden Game/HiddenGame.exe")?;
+        test_directory.file("steamapps/Steam Game/SteamGame.exe")?;
+        test_directory.file("compatdata/Compat Game/CompatGame.exe")?;
+
+        let games = scan_directories(&[test_directory.configured_path()])?;
+
+        assert!(games.is_empty());
+
+        Ok(())
+    }
+
+    #[test]
+    fn limits_scan_depth() -> eyre::Result<()> {
+        let test_directory = TestDirectory::new()?;
+
+        let mut relative_path = String::new();
+
+        for depth in 0..=MAX_SCAN_DEPTH + 1 {
+            if !relative_path.is_empty() {
+                relative_path.push('/');
+            }
+
+            relative_path.push_str(&format!("level-{depth}"));
+        }
+
+        let executable_path = format!("{relative_path}/Deep Game.exe");
+        test_directory.file(&executable_path)?;
+
+        let games = scan_directories(&[test_directory.configured_path()])?;
+
+        assert!(games.is_empty());
+
+        Ok(())
     }
 }
