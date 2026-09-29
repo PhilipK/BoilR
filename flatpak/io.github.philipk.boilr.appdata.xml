@@ -26,6 +26,18 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+<release version="2.0.0-beta.1" date="2026-09-27" type="development">
+      <description>
+        <p>Beta of BoilR's new interface. Settings and renames carry over from BoilR 1.x.</p>
+        <ul>
+          <li>New look, sized for the Steam Deck's touch screen as well as the desktop</li>
+          <li>Pick games to import, rename them, and see what changes before importing</li>
+          <li>Artwork tab: browse and pick covers, banners, logos and icons from SteamGridDB, or fix a wrong match</li>
+          <li>Shortcuts tab: back up and restore Steam shortcuts, or hand one over to edit it yourself</li>
+          <li>Clearer messages when a launcher is not installed</li>
+        </ul>
+      </description>
+    </release>
 <release version="1.10.1" date="2026-09-26">
       <description>
         <ul>

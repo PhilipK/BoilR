@@ -56,7 +56,7 @@ jobs:
       with:
         toolchain: stable
         components: clippy, rustfmt
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
         node-version: 22
         cache: npm
@@ -66,6 +66,35 @@ jobs:
       run: npm run build
     - name: Format
       run: cargo fmt --check
+    - name: Clippy
+      run: cargo clippy --all-targets -- -D warnings
+    - name: Test
+      run: cargo test
+  tauri_Windows:
+    # The Windows-only launchers (Game Pass, Amazon, Playnite) only compile here.
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/boilr-tauri
+    steps:
+    - uses: actions/checkout@v7
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: apps/boilr-tauri
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        components: clippy
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: apps/boilr-tauri/package-lock.json
+    - run: npm ci
+    - name: Type-check and build the frontend
+      run: npm run build
     - name: Clippy
       run: cargo clippy --all-targets -- -D warnings
     - name: Test

@@ -95,7 +95,19 @@ fn get_bottles_output() -> eyre::Result<String> {
                 .output()?
         }
     };
+    if !output.status.success() {
+        return Err(bottles_cli_error(&String::from_utf8_lossy(&output.stderr)));
+    }
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+/// Without Bottles, `flatpak run` fails with "... not installed" and prints nothing to parse.
+fn bottles_cli_error(stderr: &str) -> eyre::Report {
+    if stderr.contains("not installed") {
+        eyre::eyre!("Bottles not found: the Flatpak com.usebottles.bottles is not installed")
+    } else {
+        eyre::eyre!("bottles-cli failed: {}", stderr.trim())
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -153,5 +165,19 @@ impl GamesPlatform for BottlesPlatform {
 
     fn code_name(&self) -> &str {
         "bottles"
+    }
+}
+
+#[cfg(test)]
+mod error_tests {
+    use super::*;
+
+    #[test]
+    fn missing_bottles_reads_as_not_found() {
+        let err =
+            bottles_cli_error("error: app/com.usebottles.bottles/x86_64/master not installed\n");
+        assert!(err.to_string().contains("not found"));
+        let err = bottles_cli_error("Traceback: boom");
+        assert_eq!(err.to_string(), "bottles-cli failed: Traceback: boom");
     }
 }

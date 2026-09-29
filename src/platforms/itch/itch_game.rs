@@ -18,12 +18,21 @@ pub struct ItchGame {
 impl From<ItchGame> for ShortcutOwned {
     fn from(game: ItchGame) -> Self {
         let exe = Path::new(&game.install_path).join(&game.executable);
-        let exe = exe.to_string_lossy().to_string();
+        let mut exe_string = exe.to_string_lossy().to_string();
+        if exe_string.contains(' ') && !exe_string.starts_with('\"') {
+            exe_string = format!("\"{exe_string}\"");
+        }
+
+        let mut start_dir_string = game.install_path;
+        if start_dir_string.contains(' ') && !start_dir_string.starts_with('\"') {
+            start_dir_string = format!("\"{start_dir_string}\"");
+        }
+
         let shortcut = Shortcut::new(
             "0",
             game.title.as_str(),
-            exe.as_str(),
-            &game.install_path,
+            exe_string.as_str(),
+            start_dir_string.as_str(),
             "",
             "",
             "",

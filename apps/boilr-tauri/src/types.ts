@@ -109,3 +109,57 @@ export type SyncOutcome = {
   images_requested: boolean;
   platform_errors: PlatformError[];
 };
+
+export type BackupEntry = {
+  path: string;
+  user_id: string;
+  /** UTC, "YYYY-MM-DD HH:MM:SS". */
+  taken_at: string;
+};
+
+export type ManagedShortcut = {
+  app_id: number;
+  name: string;
+};
+
+export type ArtworkKind = "grid" | "wide_grid" | "hero" | "logo" | "icon" | "big_picture";
+
+export type LocalImage = {
+  path: string;
+  /** Last modified, seconds; changes when the image is replaced. */
+  version: number;
+};
+
+export type SteamAccount = {
+  user_id: string;
+  shortcut_count: number;
+};
+
+export type ArtworkGame = {
+  app_id: number;
+  name: string;
+  from_boilr: boolean;
+  images: Partial<Record<ArtworkKind, LocalImage>>;
+  never_download: ArtworkKind[];
+};
+
+export type ArtworkOption = {
+  id: number;
+  thumb: string;
+  url: string;
+  extension: string;
+  width: number;
+  height: number;
+  author: string;
+};
+
+export type GameCandidate = {
+  id: number;
+  name: string;
+  year: number | null;
+};
+
+export type GameMatch = {
+  current_id: number | null;
+  candidates: GameCandidate[];
+};
