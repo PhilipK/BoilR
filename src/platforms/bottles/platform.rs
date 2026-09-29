@@ -173,6 +173,13 @@ fn get_bottles_output() -> eyre::Result<BottlesOutput> {
         ),
     }
 }
+
+/// Without Bottles, `flatpak run` fails with "... not installed" and prints nothing to parse.
+fn bottles_cli_error(stderr: &str) -> eyre::Report {
+    if stderr.contains("not installed") {
+        eyre::eyre!("Bottles not found: the Flatpak com.usebottles.bottles is not installed")
+    } else {
+        eyre::eyre!("bottles-cli failed: {}", stderr.trim())
     }
 }
 
@@ -247,6 +254,36 @@ mod tests {
         assert!(err.to_string().contains("not found"));
         let err = bottles_cli_error("Traceback: boom");
         assert_eq!(err.to_string(), "bottles-cli failed: Traceback: boom");
+    }
+
+    /// When neither command could be spawned there is no stderr to forward, but the user
+    /// must still see a "not found" message. The Tauri interface files errors containing
+    /// "not found" under "not installed" rather than "needs a look"
+    /// (apps/boilr-tauri/src/lib/format.ts), so wording this as a generic failure would
+    /// show every user without Bottles a broken launcher again.
+    #[test]
+    fn neither_command_available_reads_as_not_found() {
+        let err = match run_list_command(Command::new("boilr-no-such-bottles-cli")) {
+            ListAttempt::Failed(stderr) => bottles_cli_error(&stderr),
+            _ => eyre::eyre!(
+                "Bottles not found: neither the Flatpak com.usebottles.bottles nor a native \
+                 bottles-cli is installed"
+            ),
+        };
+        assert!(
+            err.to_string().contains("not found"),
+            "expected a not-found error, got {}",
+            err
+        );
+    }
+
+    /// A Flatpak failure that is not a missing install has to keep its own stderr, so a
+    /// real Bottles error is not hidden behind a "not found" message.
+    #[test]
+    fn flatpak_failure_keeps_its_stderr() {
+        let err = bottles_cli_error("Traceback: bottles exploded");
+        assert!(err.to_string().contains("bottles exploded"));
+        assert!(!err.to_string().contains("not found"));
     }
 
     #[test]
