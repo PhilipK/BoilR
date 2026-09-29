@@ -69,8 +69,8 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     use super::egs::EpicPlatform;
     use super::gog::GogPlatform;
     use super::itch::ItchPlatform;
-    use super::standalone::StandalonePlatform;
     use super::origin::EAPlatform;
+    use super::standalone::StandalonePlatform;
     use super::uplay::UbisoftPlatform;
 
     match name {

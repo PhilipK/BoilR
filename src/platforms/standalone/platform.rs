@@ -1,3 +1,4 @@
+#[cfg(feature = "egui-ui")]
 use std::{collections::BTreeMap, path::Path};
 
 use serde::{Deserialize, Serialize};
@@ -6,9 +7,10 @@ use crate::platforms::{
     load_settings, to_shortcuts, FromSettingsString, GamesPlatform, ShortcutToImport,
 };
 
-use super::scanner::{
-    find_unmatched_executables, scan_directories_with_selections, ManualExecutableCandidate,
-};
+use super::scanner::scan_directories_with_selections;
+
+#[cfg(feature = "egui-ui")]
+use super::scanner::{find_unmatched_executables, ManualExecutableCandidate};
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub(crate) struct StandaloneSettings {
@@ -22,8 +24,14 @@ pub(crate) struct StandaloneSettings {
 #[derive(Clone, Default)]
 pub(crate) struct StandalonePlatform {
     pub(crate) settings: StandaloneSettings,
+
+    #[cfg(feature = "egui-ui")]
     pending_directory: String,
+
+    #[cfg(feature = "egui-ui")]
     candidate_filter: String,
+
+    #[cfg(feature = "egui-ui")]
     unmatched_executables: Option<Result<Vec<ManualExecutableCandidate>, String>>,
 }
 
@@ -31,8 +39,14 @@ impl FromSettingsString for StandalonePlatform {
     fn from_settings_string<S: AsRef<str>>(input: S) -> Self {
         Self {
             settings: load_settings(input),
+
+            #[cfg(feature = "egui-ui")]
             pending_directory: String::new(),
+
+            #[cfg(feature = "egui-ui")]
             candidate_filter: String::new(),
+
+            #[cfg(feature = "egui-ui")]
             unmatched_executables: None,
         }
     }
@@ -65,11 +79,13 @@ impl GamesPlatform for StandalonePlatform {
         toml::to_string(&self.settings).unwrap_or_default()
     }
 
+    #[cfg(feature = "egui-ui")]
     fn render_ui(&mut self, ui: &mut egui::Ui) {
         self.render_standalone_settings(ui);
     }
 }
 
+#[cfg(feature = "egui-ui")]
 impl StandalonePlatform {
     fn render_standalone_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Standalone / Loose Folders");
@@ -281,6 +297,7 @@ impl StandalonePlatform {
     }
 }
 
+#[cfg(feature = "egui-ui")]
 fn plural_suffix(count: usize) -> &'static str {
     if count == 1 {
         ""
@@ -332,6 +349,7 @@ mod tests {
         assert!(!platform.enabled());
     }
 
+    #[cfg(feature = "egui-ui")]
     #[test]
     fn settings_ui_renders_at_narrow_width() {
         egui::__run_test_ui(|ui| {

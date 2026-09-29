@@ -175,8 +175,7 @@ fn run_powershell_command(cmd: &str) -> Result<String, Error> {
 
     match output.status.success() {
         true => Ok(String::from_utf8_lossy(&output.stdout).to_string()),
-        false => Err(Error::new(
-            std::io::ErrorKind::Other,
+        false => Err(Error::other(
             String::from_utf8_lossy(&output.stderr).to_string(),
         )),
     }

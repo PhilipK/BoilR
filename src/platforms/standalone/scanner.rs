@@ -32,6 +32,7 @@ struct Candidate {
     distance: usize,
 }
 
+#[cfg(feature = "egui-ui")]
 #[derive(Debug, Clone)]
 pub(crate) struct ManualExecutableCandidate {
     pub(crate) title: String,
@@ -74,6 +75,7 @@ pub(crate) fn scan_directories_with_selections(
     Ok(games)
 }
 
+#[cfg(feature = "egui-ui")]
 pub(crate) fn find_unmatched_executables(
     directories: &[String],
 ) -> eyre::Result<Vec<ManualExecutableCandidate>> {
@@ -275,6 +277,7 @@ fn is_executable_under_roots(executable: &Path, roots: &[PathBuf]) -> bool {
     })
 }
 
+#[cfg(feature = "egui-ui")]
 fn consider_unmatched_executable(
     root: &Path,
     executable: &Path,
@@ -518,6 +521,7 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(feature = "egui-ui")]
     #[test]
     fn lists_and_imports_manually_selected_unmatched_executable() -> eyre::Result<()> {
         let test_directory = TestDirectory::new()?;
