@@ -5,6 +5,9 @@
 
 @import "tailwindcss";
 @plugin "@tailwindcss/forms";
+/* Keep Tailwind 3's hover: v4 limits it to (hover: hover) devices, and the Deck's webview
+   may not report that. */
+@custom-variant hover (&:hover);
 
 /* BoilR's palette is the 8-colour pixel sunset the original egui app used.
    `initial` drops Tailwind's default colours and fonts; transparent and current stay built in. */
