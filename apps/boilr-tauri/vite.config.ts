@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 // Build stamp shown in the app, so testers can tell which code they are running.
 const git = (args: string): string => {
@@ -21,7 +22,7 @@ const sgdbKey = sgdbKeyFile ? readFileSync(sgdbKeyFile, "utf8").trim() : "";
 const dirty = git("status --porcelain --untracked-files=no") ? "+" : "";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   define: {
     __APP_VERSION__: JSON.stringify(version),
     __BUILD_COMMIT__: JSON.stringify(commit + dirty),

@@ -52,7 +52,7 @@ const ASPECT: Record<ArtworkKind, string> = {
 
 /** Logos and icons are often transparent: show them on a pixel checkerboard. */
 const CHECKER =
-  "bg-[length:16px_16px] bg-[linear-gradient(45deg,theme(colors.harbour)_25%,transparent_25%,transparent_75%,theme(colors.harbour)_75%),linear-gradient(45deg,theme(colors.harbour)_25%,transparent_25%,transparent_75%,theme(colors.harbour)_75%)] bg-[position:0_0,8px_8px] bg-deep";
+  "bg-[length:16px_16px] bg-[linear-gradient(45deg,var(--color-harbour)_25%,transparent_25%,transparent_75%,var(--color-harbour)_75%),linear-gradient(45deg,var(--color-harbour)_25%,transparent_25%,transparent_75%,var(--color-harbour)_75%)] bg-[position:0_0,8px_8px] bg-deep";
 
 const imageSrc = (game: ArtworkGame, kind: ArtworkKind) => {
   const image = game.images[kind];
@@ -169,7 +169,7 @@ const Preview = ({ game }: { game: ArtworkGame }) => {
               className="max-h-full max-w-full object-contain object-left-bottom"
             />
           ) : (
-            <span className="font-pixel text-2xl text-foam drop-shadow-[2px_2px_0_theme(colors.deep)]">
+            <span className="font-pixel text-2xl text-foam drop-shadow-[2px_2px_0_var(--color-deep)]">
               {game.name}
             </span>
           )}
