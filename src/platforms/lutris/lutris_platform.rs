@@ -61,13 +61,30 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
             }
         }
     } else {
+        // Inside BoilR's Flatpak sandbox a native Lutris is only reachable on the host (#262).
+        #[cfg(not(feature = "flatpak"))]
         let mut command = Command::new(&settings.executable);
+        #[cfg(feature = "flatpak")]
+        let mut command = {
+            let mut command = Command::new("flatpak-spawn");
+            command.arg("--host").arg(&settings.executable);
+            command
+        };
         command.arg("--json");
-        if settings.installed {
+        let output = if settings.installed {
             command.arg("-lo").output()?
         } else {
             command.arg("-a").output()?
+        };
+        #[cfg(feature = "flatpak")]
+        if !output.status.success() {
+            return Err(eyre::eyre!(
+                "Could not run {} on the host: {}",
+                settings.executable,
+                String::from_utf8_lossy(&output.stderr).trim()
+            ));
         }
+        output
     };
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
