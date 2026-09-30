@@ -344,7 +344,7 @@ fn perform_full_sync(
     }
 
     if settings.steam.stop_steam {
-        ensure_steam_stopped();
+        ensure_steam_stopped(&settings.steam);
     }
 
     backup_shortcuts(&settings.steam);

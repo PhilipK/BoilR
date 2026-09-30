@@ -136,7 +136,7 @@ impl MyEguiApp {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
-            crate::steam::ensure_steam_stopped();
+            crate::steam::ensure_steam_stopped(&settings.steam);
         }
 
         self.status_reciever = reciever;
