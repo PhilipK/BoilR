@@ -79,8 +79,10 @@ pub fn sync_shortcuts(
             games_found: all_shortcuts.len(),
         });
     }
+    let mut previous_ids = HashMap::new();
     for shortcut in &mut all_shortcuts {
         if let Some(rename) = renames.get(&shortcut.app_id) {
+            let original_id = shortcut.app_id;
             shortcut.app_name = rename.clone();
             let new_shortcut = Shortcut::new(
                 "0",
@@ -92,6 +94,7 @@ pub fn sync_shortcuts(
                 "",
             );
             shortcut.app_id = calculate_app_id_for_shortcut(&new_shortcut);
+            previous_ids.insert(shortcut.app_id, original_id);
         }
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
@@ -109,7 +112,7 @@ pub fn sync_shortcuts(
         );
 
         let mut user_shortcuts = all_shortcuts.clone();
-        keep_steam_fields(&shortcut_info.shortcuts, &mut user_shortcuts);
+        keep_steam_fields(&shortcut_info.shortcuts, &mut user_shortcuts, &previous_ids);
 
         remove_old_shortcuts(&mut shortcut_info);
         remove_shortcuts_with_same_appid(&mut shortcut_info, &user_shortcuts);
@@ -164,16 +167,36 @@ impl IsBoilRShortcut for ShortcutOwned {
 }
 
 /// Steam stores some per-game state in `shortcuts.vdf` itself: the "Include in VR Library"
-/// flag (#379) and the last time the game was played (#389). A sync replaces each shortcut
-/// with a freshly built one, so copy that state over from the shortcut Steam already has
-/// under the same app id.
-fn keep_steam_fields(existing: &[ShortcutOwned], new_shortcuts: &mut [ShortcutOwned]) {
-    let existing_by_id: HashMap<u32, &ShortcutOwned> =
-        existing.iter().map(|s| (s.app_id, s)).collect();
+/// flag (#379), the last time the game was played (#389), and the overlay, desktop
+/// configuration and hidden switches from the game's properties. A sync replaces each
+/// shortcut with a freshly built one, so copy that state over from the shortcut Steam
+/// already has under the same app id. `previous_ids` maps a renamed game's new app id to
+/// its old one, so the first sync after a rename still finds Steam's entry.
+fn keep_steam_fields(
+    existing: &[ShortcutOwned],
+    new_shortcuts: &mut [ShortcutOwned],
+    previous_ids: &HashMap<u32, u32>,
+) {
+    let mut existing_by_id: HashMap<u32, &ShortcutOwned> = HashMap::new();
+    for old in existing {
+        // With duplicates, the one Steam last updated is the one the user sees.
+        let entry = existing_by_id.entry(old.app_id).or_insert(old);
+        if old.last_play_time > entry.last_play_time {
+            *entry = old;
+        }
+    }
     for shortcut in new_shortcuts {
-        if let Some(old) = existing_by_id.get(&shortcut.app_id) {
+        let old = existing_by_id.get(&shortcut.app_id).or_else(|| {
+            previous_ids
+                .get(&shortcut.app_id)
+                .and_then(|id| existing_by_id.get(id))
+        });
+        if let Some(old) = old {
             shortcut.open_vr = old.open_vr;
             shortcut.last_play_time = old.last_play_time;
+            shortcut.allow_overlay = old.allow_overlay;
+            shortcut.allow_desktop_config = old.allow_desktop_config;
+            shortcut.is_hidden = old.is_hidden;
         }
     }
 }
@@ -317,11 +340,59 @@ mod tests {
         old.last_play_time = 1_700_000_000;
         let mut new_shortcuts = vec![shortcut("Game", "/usr/bin/game")];
 
-        keep_steam_fields(&[old], &mut new_shortcuts);
+        keep_steam_fields(&[old], &mut new_shortcuts, &HashMap::new());
 
         let kept = new_shortcuts.first();
         assert_eq!(kept.map(|s| s.open_vr), Some(1));
         assert_eq!(kept.map(|s| s.last_play_time), Some(1_700_000_000));
+    }
+
+    #[test]
+    fn keeps_properties_set_in_steam() {
+        let mut old = shortcut("Game", "/usr/bin/game");
+        old.allow_overlay = false;
+        old.allow_desktop_config = false;
+        old.is_hidden = true;
+        let mut new_shortcuts = vec![shortcut("Game", "/usr/bin/game")];
+
+        keep_steam_fields(&[old], &mut new_shortcuts, &HashMap::new());
+
+        let kept = new_shortcuts.first();
+        assert_eq!(kept.map(|s| s.allow_overlay), Some(false));
+        assert_eq!(kept.map(|s| s.allow_desktop_config), Some(false));
+        assert_eq!(kept.map(|s| s.is_hidden), Some(true));
+    }
+
+    #[test]
+    fn renamed_game_keeps_state_from_its_old_app_id() {
+        let mut old = shortcut("Old Name", "/usr/bin/game");
+        old.last_play_time = 1_700_000_000;
+        let old_id = old.app_id;
+        let mut new_shortcuts = vec![shortcut("New Name", "/usr/bin/game")];
+        let new_id = new_shortcuts.first().map(|s| s.app_id).unwrap_or_default();
+        let previous_ids = HashMap::from([(new_id, old_id)]);
+
+        keep_steam_fields(&[old], &mut new_shortcuts, &previous_ids);
+
+        assert_eq!(
+            new_shortcuts.first().map(|s| s.last_play_time),
+            Some(1_700_000_000)
+        );
+    }
+
+    #[test]
+    fn duplicate_entries_use_the_most_recently_played() {
+        let mut played = shortcut("Game", "/usr/bin/game");
+        played.last_play_time = 1_700_000_000;
+        let stale = shortcut("Game", "/usr/bin/game");
+        let mut new_shortcuts = vec![shortcut("Game", "/usr/bin/game")];
+
+        keep_steam_fields(&[played, stale], &mut new_shortcuts, &HashMap::new());
+
+        assert_eq!(
+            new_shortcuts.first().map(|s| s.last_play_time),
+            Some(1_700_000_000)
+        );
     }
 
     #[test]
@@ -331,7 +402,7 @@ mod tests {
         old.last_play_time = 1_700_000_000;
         let mut new_shortcuts = vec![shortcut("Game", "/usr/bin/game")];
 
-        keep_steam_fields(&[old], &mut new_shortcuts);
+        keep_steam_fields(&[old], &mut new_shortcuts, &HashMap::new());
 
         let fresh = new_shortcuts.first();
         assert_eq!(fresh.map(|s| s.open_vr), Some(0));
