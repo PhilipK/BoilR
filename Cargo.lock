@@ -562,7 +562,7 @@ dependencies = [
  "anyhow",
  "arrayvec",
  "log",
- "nom",
+ "nom 7.1.3",
  "num-rational",
  "v_frame",
 ]
@@ -704,7 +704,7 @@ dependencies = [
  "futures",
  "image",
  "is_executable",
- "nom",
+ "nom 8.0.0",
  "roxmltree 0.21.1",
  "serde",
  "serde_json",
@@ -728,7 +728,7 @@ dependencies = [
  "dashmap",
  "eyre",
  "futures",
- "nom",
+ "nom 8.0.0",
  "reqwest 0.12.9",
  "rusty-leveldb",
  "serde",
@@ -3007,6 +3007,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nom"
+version = "8.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df9761775871bdef83bee530e60050f7e54b1105350d6884eb0fb4f46c2f9405"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "nom_locate"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3014,7 +3023,7 @@ checksum = "b1e299bf5ea7b212e811e71174c5d1a5d065c4c0ad0c8691ecb1f97e3e66025e"
 dependencies = [
  "bytecount",
  "memchr",
- "nom",
+ "nom 7.1.3",
 ]
 
 [[package]]
@@ -4645,18 +4654,18 @@ dependencies = [
 
 [[package]]
 name = "sqlite"
-version = "0.36.1"
+version = "0.37.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dfe6fb16f2bee6452feeb4d12bfa404fbcd3cfc121b2950e501d1ae9cae718e"
+checksum = "31467cfc047d7020d19d998c6516de1984e70e32887a3240c00ad82c60b0eb03"
 dependencies = [
  "sqlite3-sys",
 ]
 
 [[package]]
 name = "sqlite3-src"
-version = "0.6.1"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "174d4a6df77c27db281fb23de1a6d968f3aaaa4807c2a1afa8056b971f947b4a"
+checksum = "2739bac4e1ca6527391698167b1392332d00123c9fc11eca16311291db6829f3"
 dependencies = [
  "cc",
  "pkg-config",
@@ -4664,9 +4673,9 @@ dependencies = [
 
 [[package]]
 name = "sqlite3-sys"
-version = "0.17.0"
+version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3901ada7090c3c3584dc92ec7ef1b7091868d13bfe6d7de9f0bcaffee7d0ade5"
+checksum = "14dbf3ab4cbad14cc5516d2f9cb2d5941938eb12a33dc16fbbb8fa6919da748a"
 dependencies = [
  "sqlite3-src",
 ]
@@ -4691,7 +4700,7 @@ checksum = "d0543ebdb23a93b196aceebc53f70cc5a573bb74248a974b3f5fa3883e6a89b6"
 dependencies = [
  "ascii",
  "crc32fast",
- "nom",
+ "nom 7.1.3",
  "nom_locate",
 ]
 
@@ -6365,7 +6374,7 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "463705a63313cd4301184381c5e8042f0a7e9b4bb63653f216311d4ae74690b7"
 dependencies = [
- "nom",
+ "nom 7.1.3",
 ]
 
 [[package]]
