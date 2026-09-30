@@ -1,7 +1,7 @@
 use nom::{
     bytes::complete::{tag, take_until},
     multi::many0,
-    IResult,
+    IResult, Parser,
 };
 
 use serde::Deserialize;
@@ -18,7 +18,7 @@ struct Candidate {
 }
 
 pub(crate) fn parse_butler_db(content: &[u8]) -> nom::IResult<&[u8], Vec<DbPaths>> {
-    many0(parse_path)(content)
+    many0(parse_path).parse(content)
 }
 
 fn parse_path(i: &[u8]) -> nom::IResult<&[u8], DbPaths> {
