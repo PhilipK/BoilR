@@ -74,7 +74,7 @@ winres = "^0.1.12"
 [target."cfg(windows)".dependencies]
 winreg = "^0.52.0"
 sqlite = "^0.37.3"
-roxmltree = "^0.20.0"
+roxmltree = "^0.21.1"
 
 [target.'cfg(not(windows))'.dependencies]
 wayland-cursor = "0.31.7"
