@@ -62,7 +62,13 @@ impl From<HeroicGameType> for ShortcutOwned {
                     ),
                     InstallationMode::UserBin => ("heroic", launch_parameter),
                 };
-                Shortcut::new("0", title.as_str(), exe, "", "", "", parameter.as_str()).to_owned()
+                let mut shortcut =
+                    Shortcut::new("0", title.as_str(), exe, "", "", "", parameter.as_str())
+                        .to_owned();
+                shortcut.tags.push("Heroic".to_owned());
+                shortcut.tags.push("Ready TO Play".to_owned());
+                shortcut.tags.push("Installed".to_owned());
+                shortcut
             }
         }
     }
