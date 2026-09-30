@@ -108,10 +108,13 @@ pub fn sync_shortcuts(
             user.user_id
         );
 
-        remove_old_shortcuts(&mut shortcut_info);
-        remove_shortcuts_with_same_appid(&mut shortcut_info, &all_shortcuts);
+        let mut user_shortcuts = all_shortcuts.clone();
+        keep_steam_fields(&shortcut_info.shortcuts, &mut user_shortcuts);
 
-        shortcut_info.shortcuts.extend(all_shortcuts.clone());
+        remove_old_shortcuts(&mut shortcut_info);
+        remove_shortcuts_with_same_appid(&mut shortcut_info, &user_shortcuts);
+
+        shortcut_info.shortcuts.extend(user_shortcuts);
 
         if let Err(e) = save_shortcuts(&shortcut_info.shortcuts, Path::new(&shortcut_info.path)) {
             eprintln!("Failed to save shortcuts for user {}: {}", user.user_id, e);
@@ -157,6 +160,21 @@ impl IsBoilRShortcut for ShortcutOwned {
     fn is_boilr_shortcut(&self) -> bool {
         let boilr_tag = BOILR_TAG.to_string();
         self.tags.contains(&boilr_tag) || self.dev_kit_game_id.starts_with(&boilr_tag)
+    }
+}
+
+/// Steam stores some per-game state in `shortcuts.vdf` itself: the "Include in VR Library"
+/// flag (#379) and the last time the game was played (#389). A sync replaces each shortcut
+/// with a freshly built one, so copy that state over from the shortcut Steam already has
+/// under the same app id.
+fn keep_steam_fields(existing: &[ShortcutOwned], new_shortcuts: &mut [ShortcutOwned]) {
+    let existing_by_id: HashMap<u32, &ShortcutOwned> =
+        existing.iter().map(|s| (s.app_id, s)).collect();
+    for shortcut in new_shortcuts {
+        if let Some(old) = existing_by_id.get(&shortcut.app_id) {
+            shortcut.open_vr = old.open_vr;
+            shortcut.last_play_time = old.last_play_time;
+        }
     }
 }
 
@@ -281,5 +299,42 @@ fn save_shortcuts(shortcuts: &[ShortcutOwned], path: &Path) -> Result<(), String
                 e
             ))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn shortcut(name: &str, exe: &str) -> ShortcutOwned {
+        Shortcut::new("0", name, exe, "", "", "", "").to_owned()
+    }
+
+    #[test]
+    fn keeps_vr_flag_and_last_play_time_of_existing_shortcut() {
+        let mut old = shortcut("Game", "/usr/bin/game");
+        old.open_vr = 1;
+        old.last_play_time = 1_700_000_000;
+        let mut new_shortcuts = vec![shortcut("Game", "/usr/bin/game")];
+
+        keep_steam_fields(&[old], &mut new_shortcuts);
+
+        let kept = new_shortcuts.first();
+        assert_eq!(kept.map(|s| s.open_vr), Some(1));
+        assert_eq!(kept.map(|s| s.last_play_time), Some(1_700_000_000));
+    }
+
+    #[test]
+    fn new_games_start_without_steam_state() {
+        let mut old = shortcut("Other", "/usr/bin/other");
+        old.open_vr = 1;
+        old.last_play_time = 1_700_000_000;
+        let mut new_shortcuts = vec![shortcut("Game", "/usr/bin/game")];
+
+        keep_steam_fields(&[old], &mut new_shortcuts);
+
+        let fresh = new_shortcuts.first();
+        assert_eq!(fresh.map(|s| s.open_vr), Some(0));
+        assert_eq!(fresh.map(|s| s.last_play_time), Some(0));
     }
 }
