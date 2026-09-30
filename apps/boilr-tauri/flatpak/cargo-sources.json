@@ -5085,40 +5085,40 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/sqlite/sqlite-0.36.2.crate",
-        "sha256": "6843ff5d46230ca95be07e59876757d7c4dd88f5204eeede7271dab03ac4bed3",
-        "dest": "cargo/vendor/sqlite-0.36.2"
+        "url": "https://static.crates.io/crates/sqlite/sqlite-0.37.3.crate",
+        "sha256": "31467cfc047d7020d19d998c6516de1984e70e32887a3240c00ad82c60b0eb03",
+        "dest": "cargo/vendor/sqlite-0.37.3"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"6843ff5d46230ca95be07e59876757d7c4dd88f5204eeede7271dab03ac4bed3\", \"files\": {}}",
-        "dest": "cargo/vendor/sqlite-0.36.2",
+        "contents": "{\"package\": \"31467cfc047d7020d19d998c6516de1984e70e32887a3240c00ad82c60b0eb03\", \"files\": {}}",
+        "dest": "cargo/vendor/sqlite-0.37.3",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/sqlite3-src/sqlite3-src-0.6.1.crate",
-        "sha256": "174d4a6df77c27db281fb23de1a6d968f3aaaa4807c2a1afa8056b971f947b4a",
-        "dest": "cargo/vendor/sqlite3-src-0.6.1"
+        "url": "https://static.crates.io/crates/sqlite3-src/sqlite3-src-0.7.1.crate",
+        "sha256": "2739bac4e1ca6527391698167b1392332d00123c9fc11eca16311291db6829f3",
+        "dest": "cargo/vendor/sqlite3-src-0.7.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"174d4a6df77c27db281fb23de1a6d968f3aaaa4807c2a1afa8056b971f947b4a\", \"files\": {}}",
-        "dest": "cargo/vendor/sqlite3-src-0.6.1",
+        "contents": "{\"package\": \"2739bac4e1ca6527391698167b1392332d00123c9fc11eca16311291db6829f3\", \"files\": {}}",
+        "dest": "cargo/vendor/sqlite3-src-0.7.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/sqlite3-sys/sqlite3-sys-0.17.0.crate",
-        "sha256": "3901ada7090c3c3584dc92ec7ef1b7091868d13bfe6d7de9f0bcaffee7d0ade5",
-        "dest": "cargo/vendor/sqlite3-sys-0.17.0"
+        "url": "https://static.crates.io/crates/sqlite3-sys/sqlite3-sys-0.18.2.crate",
+        "sha256": "14dbf3ab4cbad14cc5516d2f9cb2d5941938eb12a33dc16fbbb8fa6919da748a",
+        "dest": "cargo/vendor/sqlite3-sys-0.18.2"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3901ada7090c3c3584dc92ec7ef1b7091868d13bfe6d7de9f0bcaffee7d0ade5\", \"files\": {}}",
-        "dest": "cargo/vendor/sqlite3-sys-0.17.0",
+        "contents": "{\"package\": \"14dbf3ab4cbad14cc5516d2f9cb2d5941938eb12a33dc16fbbb8fa6919da748a\", \"files\": {}}",
+        "dest": "cargo/vendor/sqlite3-sys-0.18.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {
