@@ -20,9 +20,32 @@ If you are on Linux (or a Steam Deck) you can install BoilR from [flathub](https
 Be aware that the flatpak version has some limitations compared to the native version.
 There is also an [AUR package](https://aur.archlinux.org/packages/steam-boilr-gui)
 
+## Try the BoilR 2.0 beta
+
+BoilR 2.0 has a new interface, built to work well on the Steam Deck (including touch in Game Mode). It is available as a beta on Flathub for Linux and Steam Deck.
+
+Add the Flathub beta repository and install the beta:
+
+```bash
+flatpak remote-add --if-not-exists --user flathub-beta https://flathub.org/beta-repo/flathub-beta.flatpakrepo
+flatpak install --user flathub-beta io.github.philipk.boilr
+```
+
+The beta installs next to the stable version. To choose which one opens from your app menu:
+
+```bash
+flatpak make-current io.github.philipk.boilr beta    # use the beta
+flatpak make-current io.github.philipk.boilr stable  # go back to the stable version
+```
+
+To remove the beta again: `flatpak uninstall io.github.philipk.boilr//beta`.
+
+Please report anything that does not work in the beta as an [issue](https://github.com/PhilipK/BoilR/issues), and mention that you are using the beta.
+
 ## Index
 - [BoilR](#boilr)
   - [Getting started](#getting-started)
+  - [Try the BoilR 2.0 beta](#try-the-boilr-20-beta)
   - [Index](#index)
   - [Features](#features)
   - [Integrations](#integrations)
