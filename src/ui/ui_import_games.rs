@@ -8,6 +8,7 @@ use tokio::task::JoinHandle;
 
 use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
+use crate::renames::apply_rename;
 #[cfg(target_family = "unix")]
 use crate::steam::setup_proton_games;
 use crate::sync;
@@ -77,13 +78,21 @@ impl MyEguiApp {
                                     let mut import_game = !self.settings.blacklisted_games.contains(&shortcut.app_id);
                                     ui.horizontal(|ui|{
                                         if self.current_edit == Option::Some(shortcut.app_id){
-                                            if let Some(new_name) = self.rename_map.get_mut(&shortcut.app_id){
-                                                ui.text_edit_singleline(new_name).request_focus();
+                                            if let Some(edited) = self.rename_map.get(&shortcut.app_id){
+                                                let mut edited = edited.clone();
+                                                ui.text_edit_singleline(&mut edited).request_focus();
                                                 if ui.button("Rename").clicked() {
-                                                    if new_name.is_empty(){
-                                                        *new_name = shortcut.app_name.to_string();
+                                                    if edited.is_empty(){
+                                                        edited = shortcut.app_name.to_string();
                                                     }
                                                     self.current_edit = Option::None;
+                                                    // The editor is seeded with the launcher's own name so the
+                                                    // field has text, so confirming without a change leaves a
+                                                    // no-op entry in renames.json. apply_rename is the rule
+                                                    // that drops it (#561).
+                                                    let (app_id, original, name) =
+                                                        (shortcut.app_id, shortcut.app_name.to_string(), edited);
+                                                    apply_rename(&mut self.rename_map, app_id, &original, &name);
                                                     let rename_file_path = get_renames_file();
                                                     let contents = serde_json::to_string(&self.rename_map);
                                                     if let Ok(contents) = contents{
