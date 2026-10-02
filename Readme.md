@@ -56,6 +56,7 @@ Please report anything that does not work in the beta as an [issue](https://gith
     - [Run as CLI](#run-as-cli)
     - [Rename shortcuts](#rename-shortcuts)
     - [Try the native version over the flatpak](#try-the-native-version-over-the-flatpak)
+    - [Games won't launch from Flatpak Steam](#games-wont-launch-from-flatpak-steam)
   - [Contributions](#contributions)
     - [How can I help/contribute?](#how-can-i-helpcontribute)
     - [I found a bug, what do I do?](#i-found-a-bug-what-do-i-do)
@@ -134,6 +135,16 @@ If you want to revert back to the original name, just clear the name and click r
 
 In general, the native (downloaded form the releases page) version of BoilR is the more reliable one.
 If you experience bugs or errors please try the native version and see if that fixes your problem.
+
+### Games won't launch from Flatpak Steam
+
+If Steam is installed as a Flatpak (`com.valvesoftware.Steam`, the default on many Linux distributions) and games from Flatpak Lutris, Bottles, Heroic or other Flatpak apps won't start from Steam, run this once in a terminal and restart Steam:
+
+```bash
+flatpak override --user --talk-name=org.freedesktop.Flatpak com.valvesoftware.Steam
+```
+
+Flatpak Steam can't start other Flatpak apps from its sandbox, so BoilR's shortcuts launch them through `flatpak-spawn --host`, and this command allows Steam to do that. It lets Steam start programs outside its sandbox. See [Tips for Linux](tips_for_linux.md#flatpak-steam) for details.
 
 ## Contributions 
 

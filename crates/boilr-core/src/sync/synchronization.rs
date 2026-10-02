@@ -6,8 +6,8 @@ use tokio::sync::watch::Sender;
 use crate::{
     settings::Settings,
     steam::{
-        get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
-        SteamUsersInfo,
+        get_shortcuts_for_user, get_shortcuts_paths, is_flatpak_steam, run_flatpak_on_host,
+        write_collections, Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
 };
@@ -66,6 +66,13 @@ pub fn sync_shortcuts(
     renames: &HashMap<u32, String>,
 ) -> eyre::Result<Vec<SteamUsersInfo>> {
     let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
+    let flatpak_steam = is_flatpak_steam(&settings.steam);
+    if flatpak_steam {
+        println!(
+            "Steam is a Flatpak; launching Flatpak apps through flatpak-spawn --host. \
+             Steam needs: flatpak override --user --talk-name=org.freedesktop.Flatpak com.valvesoftware.Steam"
+        );
+    }
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
@@ -96,8 +103,22 @@ pub fn sync_shortcuts(
             shortcut.app_id = calculate_app_id_for_shortcut(&new_shortcut);
             previous_ids.insert(shortcut.app_id, original_id);
         }
+        if flatpak_steam {
+            run_flatpak_on_host(shortcut);
+        }
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
+    // Apply the same Flatpak rewrite to the collections, so their app ids match the new shortcuts.
+    let platform_shortcuts: Vec<(String, Vec<ShortcutOwned>)> = platform_shortcuts
+        .iter()
+        .map(|(name, shortcuts)| {
+            let mut shortcuts = shortcuts.clone();
+            if flatpak_steam {
+                shortcuts.iter_mut().for_each(run_flatpak_on_host);
+            }
+            (name.clone(), shortcuts)
+        })
+        .collect();
     println!("Found {} user(s)", userinfo_shortcuts.len());
     let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user| {
         let shortcut_info = get_shortcuts_for_user(user).ok();
@@ -128,7 +149,7 @@ pub fn sync_shortcuts(
         }
 
         if settings.steam.create_collections {
-            match write_shortcut_collections(&user.user_id, platform_shortcuts) {
+            match write_shortcut_collections(&user.user_id, &platform_shortcuts) {
                 Ok(_) => (),
                 Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
             }
