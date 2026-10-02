@@ -65,7 +65,7 @@ pub fn sync_shortcuts(
     sender: &mut Option<Sender<SyncProgress>>,
     renames: &HashMap<u32, String>,
 ) -> eyre::Result<Vec<SteamUsersInfo>> {
-    let mut userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
+    let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
@@ -99,11 +99,16 @@ pub fn sync_shortcuts(
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
     println!("Found {} user(s)", userinfo_shortcuts.len());
-    let ok_shorcuts = userinfo_shortcuts.iter_mut().filter_map(|user| {
-        let shortcut_info = get_shortcuts_for_user(user).ok();
-        shortcut_info.map(|shortcut_info| (user, shortcut_info))
-    });
-    for (user, mut shortcut_info) in ok_shorcuts {
+    // Read every user's shortcuts before writing any. A file that can't be read is not
+    // skipped: the user would see an import that "worked" but changed nothing (#558).
+    let mut users_shortcuts = vec![];
+    for user in userinfo_shortcuts.iter() {
+        let shortcut_info = get_shortcuts_for_user(user).map_err(|err| {
+            eyre::format_err!("{err}. Nothing was imported and the file was left as it is.")
+        })?;
+        users_shortcuts.push((user, shortcut_info));
+    }
+    for (user, mut shortcut_info) in users_shortcuts {
         let start_time = std::time::Instant::now();
         println!(
             "Found {} shortcuts for user: {}",

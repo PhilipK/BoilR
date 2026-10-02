@@ -154,8 +154,24 @@ impl MyEguiApp {
 
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
-                let usersinfo =
-                    sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)?;
+                let usersinfo = match sync::sync_shortcuts(
+                    &settings,
+                    &import_games,
+                    &mut some_sender,
+                    &renames,
+                ) {
+                    Ok(usersinfo) => usersinfo,
+                    Err(err) => {
+                        // Nobody reads this task's result when the UI started it, so
+                        // without this the status would stay on "Found N games" forever.
+                        if let Some(sender) = some_sender {
+                            let _ = sender.send(SyncProgress::Error {
+                                message: err.to_string(),
+                            });
+                        }
+                        return Err(err);
+                    }
+                };
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
