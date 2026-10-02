@@ -29,6 +29,10 @@ pub struct ImageSelectState {
 
     /// Receiver for async name search results (for "correct grid ID" feature)
     pub name_search: Receiver<FetchStatus<Vec<steamgriddb_api::search::SearchResult>>>,
+
+    /// Whether the shortcut list and images were reloaded after the last finished
+    /// import or download. Reset whenever a new one starts.
+    pub refreshed_after_sync: bool,
 }
 
 impl Default for ImageSelectState {
@@ -47,6 +51,7 @@ impl Default for ImageSelectState {
             steam_games: None,
             grid_id_search: watch::channel(FetchStatus::NeedsFetched).1,
             name_search: watch::channel(FetchStatus::NeedsFetched).1,
+            refreshed_after_sync: false,
         }
     }
 }
