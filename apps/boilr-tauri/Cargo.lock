@@ -185,7 +185,7 @@ dependencies = [
 
 [[package]]
 name = "boilr"
-version = "1.10.1"
+version = "1.11.0"
 dependencies = [
  "boilr-core",
  "color-eyre",
@@ -4155,9 +4155,9 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "steam_shortcuts_util"
-version = "1.1.8"
+version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0543ebdb23a93b196aceebc53f70cc5a573bb74248a974b3f5fa3883e6a89b6"
+checksum = "c7e0c9bee47630fbfad0df3951421aa55aa2f68dcf0f9a62764550d44925d59d"
 dependencies = [
  "ascii",
  "crc32fast",

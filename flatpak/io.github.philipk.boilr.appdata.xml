@@ -38,6 +38,21 @@ https://hughsie.github.io/oars/index.html
         </ul>
       </description>
     </release>
+<release version="1.11.0" date="2026-10-02">
+      <description>
+        <ul>
+          <li>Import games that are not in any launcher: scan folders for standalone games</li>
+          <li>Heroic: import Amazon games, and stop importing DLC as separate games</li>
+          <li>Re-importing keeps Steam's own settings for a game: VR flag, last played, overlay and hidden</li>
+          <li>The list of games to import is sorted by name</li>
+          <li>Images tab: new games show up without a restart, and images no longer reload endlessly after an import</li>
+          <li>A damaged Steam shortcuts file now gives an error message instead of a crash, and is left untouched</li>
+          <li>Steam is asked to shut down before it is closed by force</li>
+          <li>Fixes for Bottles, itch.io and Epic Games paths and icons</li>
+          <li>Game Pass is now called Xbox</li>
+        </ul>
+      </description>
+    </release>
 <release version="1.10.1" date="2026-09-26">
       <description>
         <ul>

@@ -14,7 +14,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 tauri = { version = "2.0.0", features = ["wry", "protocol-asset"] }
 tokio = { version = "1.41.0", features = ["rt-multi-thread"] }
-steam_shortcuts_util = "1.1.8"
+steam_shortcuts_util = "1.1.9"
 steamgriddb_api = "0.3.1"
 time = "0.3"
 toml = "0.9.8"
