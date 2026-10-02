@@ -12,9 +12,10 @@ pub fn get_shortcuts_for_user(user: &SteamUsersInfo) -> eyre::Result<ShortcutInf
 
     let new_path = match &user.shortcut_path {
         Some(shortcut_path) => {
-            let content = std::fs::read(shortcut_path)?;
+            let content = std::fs::read(shortcut_path)
+                .map_err(|e| eyre::format_err!("Could not read {shortcut_path}: {e}"))?;
             shortcuts = parse_shortcuts(content.as_slice())
-                .map_err(|e| eyre::format_err!("Could not parse shortcuts: {:?}", e))?
+                .map_err(|e| eyre::format_err!("Could not read {shortcut_path}: {e}"))?
                 .iter()
                 .map(|s| s.to_owned())
                 .collect();
@@ -175,4 +176,32 @@ pub fn get_users_images(data_folder: &str) -> Result<Vec<String>, Box<dyn Error>
         })
         .collect();
     Ok(file_names)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unreadable_shortcuts_file_is_an_error_naming_the_file() -> eyre::Result<()> {
+        let folder = std::env::temp_dir().join(format!("boilr-test-{}", std::process::id()));
+        let config = folder.join("config");
+        std::fs::create_dir_all(&config)?;
+        let shortcut_path = config.join("shortcuts.vdf");
+        std::fs::write(&shortcut_path, b"this is not a shortcuts file")?;
+
+        let user = SteamUsersInfo {
+            steam_user_data_folder: folder.to_string_lossy().to_string(),
+            shortcut_path: Some(shortcut_path.to_string_lossy().to_string()),
+            user_id: "1".to_string(),
+        };
+        let result = get_shortcuts_for_user(&user);
+        std::fs::remove_dir_all(&folder)?;
+
+        let Err(err) = result else {
+            eyre::bail!("a file that is not a shortcuts file must not parse");
+        };
+        assert!(err.to_string().contains("shortcuts.vdf"), "{err}");
+        Ok(())
+    }
 }
