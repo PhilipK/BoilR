@@ -184,15 +184,20 @@ fn get_shortcuts_from_location<P: AsRef<Path>>(path: P) -> eyre::Result<Vec<Hero
     let installed_json_path = path.as_ref();
     if installed_json_path.exists() {
         let json = std::fs::read_to_string(installed_json_path)?;
-        let games_map = serde_json::from_str::<HashMap<String, HeroicGame>>(&json)?;
-        let mut games = vec![];
-        for game in games_map.values() {
-            games.push(game.clone());
-        }
-        Ok(games)
+        parse_installed_games(&json)
     } else {
         Ok(vec![])
     }
+}
+
+/// Legendary lists installed DLC next to the games in `installed.json`. A DLC can't be
+/// launched on its own, so it must not become a shortcut (#557).
+fn parse_installed_games(json: &str) -> eyre::Result<Vec<HeroicGame>> {
+    let games_map = serde_json::from_str::<HashMap<String, HeroicGame>>(json)?;
+    Ok(games_map
+        .into_values()
+        .filter(|game| !game.is_dlc)
+        .collect())
 }
 
 impl HeroicPlatform {
@@ -409,6 +414,35 @@ impl GamesPlatform for HeroicPlatform {
 mod tests {
     use super::*;
     use steam_shortcuts_util::shortcut::ShortcutOwned;
+
+    #[test]
+    fn test_parse_installed_games_skips_dlc() -> eyre::Result<()> {
+        let json = r#"{
+            "Eider": {
+                "app_name": "Eider",
+                "title": "HITMAN World of Assassination",
+                "is_dlc": false,
+                "install_path": "/home/deck/Games/Heroic/HITMAN3",
+                "executable": "Launcher.exe",
+                "launch_parameters": ""
+            },
+            "0a73eaedcac84bd28b567dbec764c5cb": {
+                "app_name": "0a73eaedcac84bd28b567dbec764c5cb",
+                "title": "HITMAN 3 - Seven Deadly Sins Collection",
+                "is_dlc": true,
+                "install_path": "/home/deck/Games/Heroic/HITMAN3",
+                "executable": "",
+                "launch_parameters": ""
+            }
+        }"#;
+
+        let games = parse_installed_games(json)?;
+        let [game] = games.as_slice() else {
+            eyre::bail!("expected exactly one game, got {}", games.len());
+        };
+        assert_eq!(game.app_name, "Eider");
+        Ok(())
+    }
 
     #[test]
     fn test_parse_nile_games_list_format() -> eyre::Result<()> {
