@@ -84,10 +84,18 @@ pub fn get_platform_shortcuts(
     platform: Box<dyn GamesPlatform>,
 ) -> eyre::Result<Vec<ShortcutToImport>> {
     if platform.enabled() {
-        platform.get_shortcut_info()
+        let mut shortcuts = platform.get_shortcut_info()?;
+        sort_by_name(&mut shortcuts);
+        Ok(shortcuts)
     } else {
         Ok(vec![])
     }
+}
+
+/// Launchers report games in whatever order their files or databases hold them, so the
+/// import list is sorted by name to make a game findable (#564).
+fn sort_by_name(shortcuts: &mut [ShortcutToImport]) {
+    shortcuts.sort_by_cached_key(|s| s.shortcut.app_name.to_lowercase());
 }
 
 /// Each platform's settings as `(code_name, serialized settings)`, the shape
@@ -97,4 +105,29 @@ pub fn platform_sections(platforms: &[Box<dyn GamesPlatform>]) -> Vec<(String, S
         .iter()
         .map(|p| (p.code_name().to_string(), p.get_settings_serializable()))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use steam_shortcuts_util::Shortcut;
+
+    fn shortcut(name: &str) -> ShortcutToImport {
+        ShortcutToImport {
+            shortcut: Shortcut::new("0", name, "exe", "", "", "", "").to_owned(),
+            needs_proton: false,
+            needs_symlinks: false,
+        }
+    }
+
+    #[test]
+    fn sort_by_name_ignores_case() {
+        let mut shortcuts = vec![shortcut("celeste"), shortcut("Zelda"), shortcut("Ape Out")];
+        sort_by_name(&mut shortcuts);
+        let names: Vec<&str> = shortcuts
+            .iter()
+            .map(|s| s.shortcut.app_name.as_str())
+            .collect();
+        assert_eq!(names, ["Ape Out", "celeste", "Zelda"]);
+    }
 }

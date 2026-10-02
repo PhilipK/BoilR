@@ -10,7 +10,7 @@ use std::{
 
 use boilr::{
     backups::backup_shortcuts,
-    platforms::{get_platforms, GamesPlatform, ShortcutToImport},
+    platforms::{get_platform_shortcuts, get_platforms, GamesPlatform, ShortcutToImport},
     renames::{load_rename_map, set_rename},
 };
 use boilr_core::{
@@ -414,7 +414,7 @@ fn gather_platform_snapshots() -> Vec<PlatformSnapshot> {
             continue;
         }
 
-        match platform.get_shortcut_info() {
+        match get_platform_shortcuts(platform) {
             Ok(shortcuts) => snapshots.push(PlatformSnapshot {
                 display_name,
                 code_name,
