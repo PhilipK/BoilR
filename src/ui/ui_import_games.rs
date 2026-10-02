@@ -140,6 +140,7 @@ impl MyEguiApp {
         }
 
         self.status_reciever = reciever;
+        self.image_selected_state.refreshed_after_sync = false;
         let renames = self.rename_map.clone();
         let all_ready = all_ready(&self.games_to_sync);
         let _ = sender.send(SyncProgress::Starting);
