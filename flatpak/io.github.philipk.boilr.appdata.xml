@@ -37,7 +37,7 @@ https://hughsie.github.io/oars/index.html
           <li>The list of games to import is sorted by name</li>
           <li>A damaged Steam shortcuts file gives an error message and is left untouched</li>
           <li>Steam is asked to shut down before it is closed by force</li>
-          <li>Fixes for Bottles launch arguments, itch.io and Epic Games paths</li>
+          <li>Fixes for Bottles launch arguments and the Flatpak itch.io folder</li>
         </ul>
       </description>
     </release>
