@@ -52,7 +52,7 @@ fn load_settings() -> Result<Settings, String> {
     Settings::new().map_err(|err| err.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn discover_games() -> Result<Vec<PlatformSummary>, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let snapshots = gather_platform_snapshots();
@@ -137,7 +137,7 @@ fn rename_game(app_id: u32, original: String, name: String) -> Result<(), String
     set_rename(app_id, &original, &name).map_err(|err| err.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn plan_sync() -> Result<SyncPlan, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let rename_map = load_rename_map();

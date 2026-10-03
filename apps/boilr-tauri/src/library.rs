@@ -85,7 +85,7 @@ pub struct ManagedShortcut {
 }
 
 /// Shortcuts BoilR currently manages (updates, and removes when the game is gone).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn list_boilr_shortcuts() -> Result<Vec<ManagedShortcut>, String> {
     let users = get_shortcuts_paths(&settings()?.steam).map_err(|err| err.to_string())?;
     let mut result: Vec<ManagedShortcut> = users
