@@ -52,7 +52,7 @@ fn load_settings() -> Result<Settings, String> {
     Settings::new().map_err(|err| err.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn discover_games() -> Result<Vec<PlatformSummary>, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let snapshots = gather_platform_snapshots();
@@ -137,7 +137,7 @@ fn rename_game(app_id: u32, original: String, name: String) -> Result<(), String
     set_rename(app_id, &original, &name).map_err(|err| err.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn plan_sync() -> Result<SyncPlan, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let rename_map = load_rename_map();
@@ -247,6 +247,13 @@ fn update_platform_settings(
 }
 
 fn main() {
+    // WebKitGTK's DMA-BUF renderer leaves a blank or crashing window on some drivers (NVIDIA
+    // proprietary, some Mesa setups, #559). Shared memory keeps GPU rendering and works there.
+    // Set before any thread starts; a value the user set wins.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DMABUF_RENDERER_FORCE_SHM").is_none() {
+        std::env::set_var("WEBKIT_DMABUF_RENDERER_FORCE_SHM", "1");
+    }
     tauri::Builder::default()
         .setup(|app| {
             let handle = app.handle().clone();
