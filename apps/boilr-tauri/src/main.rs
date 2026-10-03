@@ -247,6 +247,13 @@ fn update_platform_settings(
 }
 
 fn main() {
+    // WebKitGTK's DMA-BUF renderer leaves a blank or crashing window on some drivers (NVIDIA
+    // proprietary, some Mesa setups, #559). Shared memory keeps GPU rendering and works there.
+    // Set before any thread starts; a value the user set wins.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DMABUF_RENDERER_FORCE_SHM").is_none() {
+        std::env::set_var("WEBKIT_DMABUF_RENDERER_FORCE_SHM", "1");
+    }
     tauri::Builder::default()
         .setup(|app| {
             let handle = app.handle().clone();

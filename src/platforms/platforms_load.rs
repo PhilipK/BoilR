@@ -22,6 +22,10 @@ const PLATFORM_NAMES: [&str; 15] = [
     "standalone",
 ];
 
+// Listed in PLATFORM_NAMES so their settings sections are known everywhere, but they only build on Windows.
+#[cfg(target_family = "unix")]
+const WINDOWS_ONLY_PLATFORMS: [&str; 3] = ["amazon", "playnite", "gamepass"];
+
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
 
 pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
@@ -96,6 +100,10 @@ pub fn get_platforms() -> Platforms {
 
     let mut platforms = vec![];
     for name in PLATFORM_NAMES {
+        #[cfg(target_family = "unix")]
+        if WINDOWS_ONLY_PLATFORMS.contains(&name) {
+            continue;
+        }
         let default = String::from("");
         let settings = sections.get(name).unwrap_or(&default);
         match load_platform(name, settings) {

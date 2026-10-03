@@ -26,6 +26,21 @@ https://hughsie.github.io/oars/index.html
 -->
   <content_rating type="oars-1.1" />
   <releases>
+<release version="2.0.0-beta.2" date="2026-10-03" type="development">
+      <description>
+        <p>Second beta of BoilR's new interface, with everything from BoilR 1.11.0.</p>
+        <ul>
+          <li>Starts on NVIDIA and other drivers where the window stayed blank</li>
+          <li>Import games that are not in any launcher: scan folders for standalone games</li>
+          <li>Heroic: import Amazon games, and stop importing DLC as separate games</li>
+          <li>Re-importing keeps Steam's own settings for a game: VR flag, last played, overlay and hidden</li>
+          <li>The list of games to import is sorted by name</li>
+          <li>A damaged Steam shortcuts file gives an error message and is left untouched</li>
+          <li>Steam is asked to shut down before it is closed by force</li>
+          <li>Fixes for Bottles launch arguments, itch.io and Epic Games paths</li>
+        </ul>
+      </description>
+    </release>
 <release version="2.0.0-beta.1" date="2026-09-27" type="development">
       <description>
         <p>Beta of BoilR's new interface. Settings and renames carry over from BoilR 1.x.</p>
