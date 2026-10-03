@@ -85,7 +85,10 @@ const GameRow = ({
     }
   };
   const renamed = game.display_name !== game.app_name;
-  const icon = toImageSrc(game.icon);
+  // Launchers often give an .exe as the icon (Steam extracts it); the web view can't show those.
+  const [brokenIcon, setBrokenIcon] = useState<string | null>(null);
+  const iconSrc = toImageSrc(game.icon);
+  const icon = iconSrc !== brokenIcon ? iconSrc : null;
   return (
     <li
       className={clsx(
@@ -95,7 +98,12 @@ const GameRow = ({
     >
       <Check checked={selected} onChange={onToggle} label={`Import ${game.display_name}`} />
       {icon ? (
-        <img src={icon} alt="" className="h-10 w-10 shrink-0 object-cover notch" />
+        <img
+          src={icon}
+          alt=""
+          onError={() => setBrokenIcon(icon)}
+          className="h-10 w-10 shrink-0 object-cover notch"
+        />
       ) : (
         <span
           aria-hidden
