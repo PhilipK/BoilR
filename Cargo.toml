@@ -72,7 +72,7 @@ optional = true
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.52.0"
+winreg = "^0.56.0"
 sqlite = "^0.37.3"
 roxmltree = "^0.21.1"
 
