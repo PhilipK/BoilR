@@ -167,10 +167,12 @@ fn get_bottles_output() -> eyre::Result<BottlesOutput> {
     // installed, which must not reach the user as "0 games".
     match flatpak {
         ListAttempt::Failed(stderr) => Err(bottles_cli_error(&stderr)),
-        _ => eyre::bail!(
-            "Bottles not found: neither the Flatpak com.usebottles.bottles nor a native \
+        _ => {
+            eyre::bail!(
+                "Bottles not found: neither the Flatpak com.usebottles.bottles nor a native \
              bottles-cli is installed"
-        ),
+            );
+        }
     }
 }
 
