@@ -7607,19 +7607,6 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/winreg/winreg-0.52.0.crate",
-        "sha256": "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5",
-        "dest": "cargo/vendor/winreg-0.52.0"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5\", \"files\": {}}",
-        "dest": "cargo/vendor/winreg-0.52.0",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/winreg/winreg-0.55.0.crate",
         "sha256": "cb5a765337c50e9ec252c2069be9bf91c7df47afb103b642ba3a53bf8101be97",
         "dest": "cargo/vendor/winreg-0.55.0"
@@ -7628,6 +7615,19 @@
         "type": "inline",
         "contents": "{\"package\": \"cb5a765337c50e9ec252c2069be9bf91c7df47afb103b642ba3a53bf8101be97\", \"files\": {}}",
         "dest": "cargo/vendor/winreg-0.55.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/winreg/winreg-0.56.0.crate",
+        "sha256": "7d6f32a0ff4a9f6f01231eb2059cc85479330739333e0e58cadf03b6af2cca10",
+        "dest": "cargo/vendor/winreg-0.56.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"7d6f32a0ff4a9f6f01231eb2059cc85479330739333e0e58cadf03b6af2cca10\", \"files\": {}}",
+        "dest": "cargo/vendor/winreg-0.56.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
