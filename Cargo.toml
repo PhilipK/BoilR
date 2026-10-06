@@ -19,7 +19,7 @@ steam_shortcuts_util = "^1.1.9"
 steamgriddb_api = "^0.3.1"
 sysinfo = "^0.38.4"
 time = { version = "^0.3.47", features = ["formatting"] }
-tokio = { version = "^1.41.0", features = ["full"] }
+tokio = { version = "^1.53.2", features = ["full"] }
 toml = "^1.1.6"
 
 [package]
