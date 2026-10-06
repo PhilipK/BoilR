@@ -8,13 +8,47 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   flatpak_lock_sync:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+
     - uses: actions/setup-python@v7
       with:
         python-version: "3.12"
+
+    - name: Fetch Generator and Sync Flatpak Sources
+      if: github.actor == 'dependabot[bot]'
+      run: |
+        echo "Dependabot activity detected. Syncing flatpak generation tooling..."
+        mkdir -p tools
+        curl -sSL https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/refs/heads/master/cargo/flatpak-cargo-generator.py -o tools/flatpak-cargo-generator.py
+
+        if [ -f "Cargo.lock" ]; then
+          python3 tools/flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
+        fi
+
+        if [ -f "apps/boilr-tauri/Cargo.lock" ]; then
+          python3 tools/flatpak-cargo-generator.py apps/boilr-tauri/Cargo.lock -o flatpak/tauri-cargo-sources.json
+        fi
+
+    - name: Commit Drift Fixes to Dependabot Branch
+      if: github.actor == 'dependabot[bot]'
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        if [ -n "$(git status --porcelain flatpak/)" ]; then
+          git add flatpak/*.json
+          git commit -m "chore: auto-sync flatpak offline sources for cargo update"
+          git push origin HEAD:${{ github.head_ref }}
+        else
+          echo "No drift detected between lock files and flatpak sources."
+        fi
+
     - name: Check the Flatpak offline sources match the lock files
       run: python .github/scripts/check_flatpak_lock.py
