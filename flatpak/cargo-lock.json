@@ -3512,14 +3512,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/memmap2/memmap2-0.9.3.crate",
-        "sha256": "45fd3a57831bf88bc63f8cebc0cf956116276e97fef3966103e96416209f7c92",
-        "dest": "cargo/vendor/memmap2-0.9.3"
+        "url": "https://static.crates.io/crates/memmap2/memmap2-0.9.11.crate",
+        "sha256": "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0",
+        "dest": "cargo/vendor/memmap2-0.9.11"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"45fd3a57831bf88bc63f8cebc0cf956116276e97fef3966103e96416209f7c92\", \"files\": {}}",
-        "dest": "cargo/vendor/memmap2-0.9.3",
+        "contents": "{\"package\": \"d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0\", \"files\": {}}",
+        "dest": "cargo/vendor/memmap2-0.9.11",
         "dest-filename": ".cargo-checksum.json"
     },
     {
