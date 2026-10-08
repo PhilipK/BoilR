@@ -4,7 +4,7 @@ default-members = [".", "crates/boilr-core"]
 exclude = ["apps/boilr-tauri"]
 
 [workspace.dependencies]
-base64 = "^0.22.1"
+base64 = "^0.23.1"
 config = "^0.15.6"
 dashmap = { version = "^6.1.0", features = ["serde"] }
 eyre = "^0.6.12"
