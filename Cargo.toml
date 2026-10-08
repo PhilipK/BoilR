@@ -4,18 +4,18 @@ default-members = [".", "crates/boilr-core"]
 exclude = ["apps/boilr-tauri"]
 
 [workspace.dependencies]
-base64 = "^0.22.1"
+base64 = "^0.23.1"
 config = "^0.15.6"
 dashmap = { version = "^6.1.0", features = ["serde"] }
 eyre = "^0.6.12"
 futures = "^0.3.31"
-nom = "^7.1.1"
+nom = "^8.0.0"
 reqwest = { version = "^0.12.9", default-features = false, features = ["json", "rustls-tls"] }
 # Pinned: 3.0.3 made WriteBatch::new() private (used by steam/collections.rs).
 rusty-leveldb = "=3.0.0"
 serde = { version = "^1.0.217", features = ["derive"] }
 serde_json = "^1.0.132"
-steam_shortcuts_util = "^1.1.8"
+steam_shortcuts_util = "^1.1.9"
 steamgriddb_api = "^0.3.1"
 sysinfo = "^0.38.4"
 time = { version = "^0.3.47", features = ["formatting"] }
@@ -25,7 +25,7 @@ toml = "^1.1.6"
 [package]
 edition = "2021"
 name = "boilr"
-version = "1.10.1"
+version = "1.11.0"
 
 [lib]
 name = "boilr"
@@ -72,9 +72,9 @@ optional = true
 winres = "^0.1.12"
 
 [target."cfg(windows)".dependencies]
-winreg = "^0.52.0"
-sqlite = "^0.36.1"
-roxmltree = "^0.20.0"
+winreg = "^0.56.0"
+sqlite = "^0.37.3"
+roxmltree = "^0.21.1"
 
 [target.'cfg(not(windows))'.dependencies]
 wayland-cursor = "0.31.7"

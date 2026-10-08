@@ -101,10 +101,6 @@ impl MyEguiApp {
                 ui.label(format!("Downloading {to_download} images"));
                 ui.ctx().request_repaint();
             }
-            crate::sync::SyncProgress::Done => {
-                ui.ctx().request_repaint();
-                return Some(UserAction::RefreshImages);
-            }
             crate::sync::SyncProgress::Error { ref message } => {
                 ui.colored_label(egui::Color32::RED, format!("Error: {}", message));
             }
@@ -178,6 +174,23 @@ impl MyEguiApp {
                 action = self.render_ui_image_action(ui);
             });
 
+        // A finished import or download changes shortcuts.vdf and the grid folder. Reload
+        // once per finished run: doing it every frame made the images flicker forever and
+        // threw the reloaded list away (#560).
+        let sync_done = matches!(
+            *self.status_reciever.borrow(),
+            crate::sync::SyncProgress::Done
+        );
+        if sync_done && !self.image_selected_state.refreshed_after_sync {
+            self.image_selected_state.refreshed_after_sync = true;
+            if matches!(action, UserAction::NoAction) {
+                action = UserAction::RefreshImages;
+            } else {
+                self.refresh_user_shortcuts();
+                ui.ctx().forget_all_images();
+            }
+        }
+
         match action {
             UserAction::UserSelected(user) => {
                 self.handle_user_selected(user);
@@ -220,13 +233,18 @@ impl MyEguiApp {
                 ui.ctx().forget_all_images();
             }
             UserAction::RefreshImages => {
-                let user = self.image_selected_state.steam_user.clone();
-                if let Some(user) = &user {
-                    load_image_grids(user);
-                }
+                self.refresh_user_shortcuts();
                 ui.ctx().forget_all_images();
+                ui.ctx().request_repaint();
             }
         };
+    }
+
+    fn refresh_user_shortcuts(&mut self) {
+        let state = &mut self.image_selected_state;
+        if let Some(user) = &state.steam_user {
+            state.user_shortcuts = Some(load_image_grids(user));
+        }
     }
 
     fn handle_image_type_cleared(&mut self, image_type: ImageType, should_ban: bool) {
@@ -255,6 +273,7 @@ impl MyEguiApp {
         if let Some(users) = &self.image_selected_state.steam_users {
             let (sender, reciever) = watch::channel(SyncProgress::FindingImages);
             self.status_reciever = reciever;
+            self.image_selected_state.refreshed_after_sync = false;
             let mut sender_op = Some(sender);
             let settings = self.settings.clone();
             let users = users.clone();

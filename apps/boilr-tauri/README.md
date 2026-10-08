@@ -18,6 +18,14 @@ Open http://127.0.0.1:1420. Outside Tauri, `src/devMock.ts` answers the backend 
 sample data (launchers with errors, Flatpak apps, an old shortcut to remove, a simulated sync),
 so the whole interface can be clicked through without Rust or Steam.
 
+The Artwork tab shows drawn placeholders by default. To judge it with real SteamGridDB art, point
+the dev server at a file holding your API key; it then proxies SteamGridDB and adds the key
+itself, so the key never reaches the page:
+
+```bash
+BOILR_SGDB_KEY_FILE=~/path/to/apikey.txt npm run dev
+```
+
 ## Run the real app
 
 ```bash

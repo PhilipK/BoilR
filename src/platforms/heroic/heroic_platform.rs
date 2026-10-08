@@ -1,6 +1,8 @@
 use serde::Deserialize;
 
 use super::{HeroicGame, HeroicGameType, HeroicSettings};
+use eyre::WrapErr;
+
 use crate::platforms::{load_settings, FromSettingsString, GamesPlatform};
 use crate::platforms::{to_shortcuts, NeedsProton, ShortcutToImport};
 use std::collections::HashMap;
@@ -34,6 +36,123 @@ struct HeroicGogPath {
     install_path: String,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+struct NileInstalledEntry {
+    #[serde(alias = "appName", alias = "app_name")]
+    id: String,
+    #[serde(alias = "install_path", alias = "installPath")]
+    path: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    version: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(untagged)]
+enum NileInstalledConfig {
+    List(Vec<NileInstalledEntry>),
+    Wrapped { installed: Vec<NileInstalledEntry> },
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct NileProduct {
+    id: String,
+    #[serde(default)]
+    title: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct NileLibraryEntry {
+    product: NileProduct,
+}
+
+fn get_nile_config_location(install_mode: &InstallationMode, file_name: &str) -> PathBuf {
+    let home_dir = std::env::var("HOME").unwrap_or_default();
+    let config_dir = match install_mode {
+        InstallationMode::FlatPak => {
+            ".var/app/com.heroicgameslauncher.hgl/config/heroic/nile_config/nile"
+        }
+        InstallationMode::UserBin => ".config/heroic/nile_config/nile",
+    };
+    Path::new(&home_dir).join(config_dir).join(file_name)
+}
+
+fn parse_nile_games(
+    installed_content: &str,
+    library_content: Option<&str>,
+    install_mode: InstallationMode,
+) -> eyre::Result<Vec<HeroicGameType>> {
+    let entries = match serde_json::from_str::<NileInstalledConfig>(installed_content)? {
+        NileInstalledConfig::List(list) => list,
+        NileInstalledConfig::Wrapped { installed } => installed,
+    };
+
+    // Titles are cosmetic: a library.json that does not parse falls back to folder names.
+
+    let mut title_map = HashMap::new();
+    if let Some(lib_content) = library_content {
+        if let Ok(lib_entries) = serde_json::from_str::<Vec<NileLibraryEntry>>(lib_content) {
+            for entry in lib_entries {
+                if let Some(title) = entry.product.title {
+                    title_map.insert(entry.product.id, title);
+                }
+            }
+        }
+    }
+
+    let mut games = vec![];
+    for entry in entries {
+        let path = Path::new(&entry.path);
+        let title = title_map
+            .get(&entry.id)
+            .cloned()
+            .or_else(|| path.file_name().map(|n| n.to_string_lossy().to_string()))
+            .unwrap_or_else(|| entry.id.clone());
+
+        games.push(HeroicGameType::Heroic {
+            title,
+            app_name: entry.id,
+            install_mode,
+        });
+    }
+
+    Ok(games)
+}
+
+fn get_nile_games(install_modes: &[InstallationMode]) -> eyre::Result<Vec<HeroicGameType>> {
+    let mut nile_shortcuts = vec![];
+
+    for install_mode in install_modes {
+        let installed_file = get_nile_config_location(install_mode, "installed.json");
+        // No Nile config for this install mode: nothing is installed through it.
+        if !installed_file.exists() {
+            continue;
+        }
+        // A file that exists but cannot be read or parsed is an error, so Amazon
+        // games do not silently vanish if Nile changes its format.
+        let installed_content = std::fs::read_to_string(&installed_file)
+            .wrap_err_with(|| format!("Could not read {}", installed_file.display()))?;
+
+        let library_file = get_nile_config_location(install_mode, "library.json");
+        let library_content = std::fs::read_to_string(&library_file).ok();
+
+        let games = parse_nile_games(
+            &installed_content,
+            library_content.as_deref(),
+            *install_mode,
+        )
+        .wrap_err_with(|| format!("Could not parse {}", installed_file.display()))?;
+
+        nile_shortcuts.extend(games);
+    }
+
+    // dedup_by only drops adjacent duplicates (Flatpak and native Heroic both installed).
+    nile_shortcuts.sort_by(|a, b| a.app_name().cmp(b.app_name()));
+    nile_shortcuts.dedup_by(|a, b| a.app_name() == b.app_name());
+
+    Ok(nile_shortcuts)
+}
+
 fn get_installed_json_location(install_mode: &InstallationMode) -> PathBuf {
     let home_dir = std::env::var("HOME").unwrap_or_else(|_| "".to_string());
     match install_mode {
@@ -65,15 +184,20 @@ fn get_shortcuts_from_location<P: AsRef<Path>>(path: P) -> eyre::Result<Vec<Hero
     let installed_json_path = path.as_ref();
     if installed_json_path.exists() {
         let json = std::fs::read_to_string(installed_json_path)?;
-        let games_map = serde_json::from_str::<HashMap<String, HeroicGame>>(&json)?;
-        let mut games = vec![];
-        for game in games_map.values() {
-            games.push(game.clone());
-        }
-        Ok(games)
+        parse_installed_games(&json)
     } else {
         Ok(vec![])
     }
+}
+
+/// Legendary lists installed DLC next to the games in `installed.json`. A DLC can't be
+/// launched on its own, so it must not become a shortcut (#557).
+fn parse_installed_games(json: &str) -> eyre::Result<Vec<HeroicGame>> {
+    let games_map = serde_json::from_str::<HashMap<String, HeroicGame>>(json)?;
+    Ok(games_map
+        .into_values()
+        .filter(|game| !game.is_dlc)
+        .collect())
 }
 
 impl HeroicPlatform {
@@ -83,6 +207,8 @@ impl HeroicPlatform {
         let mut heroic_games = self.get_epic_games(&install_modes)?;
         let gog_games = get_gog_games(&self.settings, &install_modes)?;
         heroic_games.extend(gog_games);
+        let nile_games = get_nile_games(&install_modes)?;
+        heroic_games.extend(nile_games);
         Ok(heroic_games)
     }
 }
@@ -281,5 +407,147 @@ impl GamesPlatform for HeroicPlatform {
 
     fn code_name(&self) -> &str {
         "heroic"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use steam_shortcuts_util::shortcut::ShortcutOwned;
+
+    #[test]
+    fn test_parse_installed_games_skips_dlc() -> eyre::Result<()> {
+        let json = r#"{
+            "Eider": {
+                "app_name": "Eider",
+                "title": "HITMAN World of Assassination",
+                "is_dlc": false,
+                "install_path": "/home/deck/Games/Heroic/HITMAN3",
+                "executable": "Launcher.exe",
+                "launch_parameters": ""
+            },
+            "0a73eaedcac84bd28b567dbec764c5cb": {
+                "app_name": "0a73eaedcac84bd28b567dbec764c5cb",
+                "title": "HITMAN 3 - Seven Deadly Sins Collection",
+                "is_dlc": true,
+                "install_path": "/home/deck/Games/Heroic/HITMAN3",
+                "executable": "",
+                "launch_parameters": ""
+            }
+        }"#;
+
+        let games = parse_installed_games(json)?;
+        let [game] = games.as_slice() else {
+            eyre::bail!("expected exactly one game, got {}", games.len());
+        };
+        assert_eq!(game.app_name, "Eider");
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_nile_games_list_format() -> eyre::Result<()> {
+        let json = r#"[
+            {
+                "id": "amzn1.adg.product.test1",
+                "path": "/home/deck/Games/nile/Fallout New Vegas",
+                "version": "1.0"
+            }
+        ]"#;
+
+        let games = parse_nile_games(json, None, InstallationMode::FlatPak)?;
+        let [game] = games.as_slice() else {
+            eyre::bail!("expected exactly one game, got {}", games.len());
+        };
+        assert_eq!(game.app_name(), "amzn1.adg.product.test1");
+        assert_eq!(game.title(), "Fallout New Vegas");
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_nile_games_wrapped_format() -> eyre::Result<()> {
+        let json = r#"{
+            "installed": [
+                {
+                    "id": "amzn1.adg.product.test2",
+                    "path": "/home/deck/Games/nile/Morrowind",
+                    "version": "1.2"
+                }
+            ]
+        }"#;
+
+        let games = parse_nile_games(json, None, InstallationMode::UserBin)?;
+        let [game] = games.as_slice() else {
+            eyre::bail!("expected exactly one game, got {}", games.len());
+        };
+        assert_eq!(game.app_name(), "amzn1.adg.product.test2");
+        assert_eq!(game.title(), "Morrowind");
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_nile_games_with_library_title() -> eyre::Result<()> {
+        let installed_json = r#"[
+            {
+                "id": "amzn1.adg.product.test3",
+                "path": "/home/deck/Games/nile/FNV",
+                "version": "1.0"
+            }
+        ]"#;
+
+        let library_json = r#"[
+            {
+                "product": {
+                    "id": "amzn1.adg.product.test3",
+                    "title": "Fallout: New Vegas Ultimate Edition"
+                }
+            }
+        ]"#;
+
+        let games = parse_nile_games(
+            installed_json,
+            Some(library_json),
+            InstallationMode::FlatPak,
+        )?;
+        let [game] = games.as_slice() else {
+            eyre::bail!("expected exactly one game, got {}", games.len());
+        };
+        assert_eq!(game.app_name(), "amzn1.adg.product.test3");
+        assert_eq!(game.title(), "Fallout: New Vegas Ultimate Edition");
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_nile_games_rejects_unparseable_installed_json() {
+        assert!(parse_nile_games("{ not json", None, InstallationMode::FlatPak).is_err());
+    }
+
+    #[test]
+    fn test_parse_nile_games_falls_back_to_folder_name_on_bad_library() -> eyre::Result<()> {
+        let installed_json = r#"[{"id": "amzn1.adg.product.test4", "path": "/games/Morrowind"}]"#;
+        let games = parse_nile_games(installed_json, Some("not json"), InstallationMode::FlatPak)?;
+        let [game] = games.as_slice() else {
+            eyre::bail!("expected exactly one game, got {}", games.len());
+        };
+        assert_eq!(game.title(), "Morrowind");
+        Ok(())
+    }
+
+    #[test]
+    fn test_nile_shortcut_owned_conversion() {
+        let game = HeroicGameType::Heroic {
+            title: "Fallout: New Vegas".to_string(),
+            app_name: "amzn1.adg.product.test1".to_string(),
+            install_mode: InstallationMode::FlatPak,
+        };
+
+        let shortcut: ShortcutOwned = game.into();
+        assert_eq!(shortcut.app_name, "Fallout: New Vegas");
+        assert_eq!(shortcut.exe, "flatpak");
+        assert!(shortcut
+            .launch_options
+            .contains("heroic://launch/amzn1.adg.product.test1"));
+        assert!(shortcut.tags.contains(&"Heroic".to_string()));
+        assert!(shortcut.tags.contains(&"Ready TO Play".to_string()));
+        assert!(shortcut.tags.contains(&"Installed".to_string()));
     }
 }

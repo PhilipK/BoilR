@@ -1,5 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod artwork;
+mod library;
+
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -7,8 +10,8 @@ use std::{
 
 use boilr::{
     backups::backup_shortcuts,
-    platforms::{get_platforms, GamesPlatform, ShortcutToImport},
-    renames::load_rename_map,
+    platforms::{get_platform_shortcuts, get_platforms, GamesPlatform, ShortcutToImport},
+    renames::{load_rename_map, set_rename},
 };
 use boilr_core::{
     settings::{load_setting_sections, save_settings, Settings},
@@ -49,7 +52,7 @@ fn load_settings() -> Result<Settings, String> {
     Settings::new().map_err(|err| err.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn discover_games() -> Result<Vec<PlatformSummary>, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let snapshots = gather_platform_snapshots();
@@ -128,7 +131,13 @@ async fn run_full_sync(
         .map_err(|err| err.to_string())?
 }
 
+/// Sets the name a game gets in Steam; an empty name goes back to the launcher's name.
 #[tauri::command]
+fn rename_game(app_id: u32, original: String, name: String) -> Result<(), String> {
+    set_rename(app_id, &original, &name).map_err(|err| err.to_string())
+}
+
+#[tauri::command(async)]
 fn plan_sync() -> Result<SyncPlan, String> {
     let settings = Settings::new().map_err(|err| err.to_string())?;
     let rename_map = load_rename_map();
@@ -238,6 +247,13 @@ fn update_platform_settings(
 }
 
 fn main() {
+    // WebKitGTK's DMA-BUF renderer leaves a blank or crashing window on some drivers (NVIDIA
+    // proprietary, some Mesa setups, #559). Shared memory keeps GPU rendering and works there.
+    // Set before any thread starts; a value the user set wins.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DMABUF_RENDERER_FORCE_SHM").is_none() {
+        std::env::set_var("WEBKIT_DMABUF_RENDERER_FORCE_SHM", "1");
+    }
     tauri::Builder::default()
         .setup(|app| {
             let handle = app.handle().clone();
@@ -257,6 +273,20 @@ fn main() {
             update_platform_settings,
             update_platform_enabled,
             run_full_sync,
+            library::list_backups,
+            library::create_backup,
+            library::restore_shortcuts,
+            library::list_boilr_shortcuts,
+            library::release_shortcut,
+            artwork::list_steam_accounts,
+            artwork::list_artwork,
+            artwork::artwork_options,
+            artwork::set_artwork,
+            artwork::clear_artwork,
+            artwork::artwork_game_match,
+            artwork::set_artwork_game,
+            artwork::find_missing_artwork,
+            rename_game,
             ping
         ])
         .run(tauri::generate_context!())
@@ -321,7 +351,7 @@ fn perform_full_sync(
     }
 
     if settings.steam.stop_steam {
-        ensure_steam_stopped();
+        ensure_steam_stopped(&settings.steam);
     }
 
     backup_shortcuts(&settings.steam);
@@ -391,7 +421,7 @@ fn gather_platform_snapshots() -> Vec<PlatformSnapshot> {
             continue;
         }
 
-        match platform.get_shortcut_info() {
+        match get_platform_shortcuts(platform) {
             Ok(shortcuts) => snapshots.push(PlatformSnapshot {
                 display_name,
                 code_name,
@@ -935,6 +965,20 @@ mod tests {
                 update_platform_settings,
                 update_platform_enabled,
                 run_full_sync,
+                library::list_backups,
+                library::create_backup,
+                library::restore_shortcuts,
+                library::list_boilr_shortcuts,
+                library::release_shortcut,
+                artwork::list_steam_accounts,
+                artwork::list_artwork,
+                artwork::artwork_options,
+                artwork::set_artwork,
+                artwork::clear_artwork,
+                artwork::artwork_game_match,
+                artwork::set_artwork_game,
+                artwork::find_missing_artwork,
+                rename_game,
                 ping
             ])
             .build(mock_context(noop_assets()))

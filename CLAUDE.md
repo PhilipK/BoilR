@@ -47,13 +47,14 @@ Core first, then a new UI. Decided by Philip, 2026-09-26.
 
 1. **Extract a UI-free core.** `crates/boilr-core` exists (settings, Steam, SteamGridDB, sync). The `boilr` crate is a library whose platforms build without egui, and the Tauri app lives in `apps/boilr-tauri` on top of it. Target: `GamesPlatform` has no egui dependency (today `render_ui` takes `&mut egui::Ui`); platforms expose settings as data.
 2. **Keep egui alive meanwhile**: minimal upgrades for user-facing bugs (paste, launch failures, DPI). Several UI paths call `block_on` on the UI thread (import, image download, image picking), causing freezes; fix those only where users hit them.
-3. **Tauri UI** (`apps/boilr-tauri`), shipped as a Flatpak beta beside egui, then replacing it once `apps/boilr-tauri/TODO.md` (feature parity) is done. It already runs on the Steam Deck in Desktop and Game Mode (tested 2026-09-26). Next: a Flatpak build (GNOME runtime), then controller navigation for Game Mode.
+3. **Tauri UI** (`apps/boilr-tauri`): reached egui parity and shipped as 2.0.0-beta.1 on Flathub's `beta` branch (same app id) on 2026-09-27; stable keeps egui until the beta has proven itself. Controller navigation in Steam Deck Game Mode is parked (touch works). Beta upkeep is in the `maintain` skill.
 
 ## Rules that are not obvious from the code
 
 - `code_name()` of a platform is the key in users' `settings.toml`. Never change it, even when renaming a platform's display name (Uplay stays `uplay`, Origin stays `origin`, Game Pass stays `gamepass`).
 - `main.rs` denies `unwrap`, `expect`, `panic`, `todo` and slice indexing. Propagate errors with `eyre`.
 - Whenever `Cargo.lock` changes, regenerate `flatpak/cargo-lock.json` with `flatpak/update-cargo-lock-json.sh`, or the Flatpak build breaks. CI job `flatpak_lock_sync` goes red on drift.
+  The same goes for the Tauri app: when `apps/boilr-tauri/Cargo.lock` or `package-lock.json` changes (including dependabot PRs), run `apps/boilr-tauri/flatpak/update-sources.sh` and commit `cargo-sources.json` and `node-sources.json`.
 - Never identify processes by PID. In Flatpak, BoilR runs in its own PID namespace (usually PID 2) and cannot see host processes, so PID files and PID-based "is it running" checks misfire; 1.10.0 shipped a single-instance lock that locked users out this way (fixed in 1.10.1 with an OS file lock).
 - Steam changes its file formats without notice. Collections moved from LevelDB to `userdata/<id>/config/cloudstorage/cloud-storage-namespace-1.json` in late 2025. When a Steam-facing bug appears, check what Steam writes today before trusting the existing code.
 - Release tags have the form `v.1.9.6` (note the dot after `v`). Pushing one triggers `.github/workflows/release_on_v_tag.yml`, which makes a draft release. Releases are Philip's call: see the `release` skill.

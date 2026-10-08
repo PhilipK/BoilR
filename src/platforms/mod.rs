@@ -18,13 +18,14 @@ mod amazon;
 mod playnite;
 
 #[cfg(not(target_family = "unix"))]
-mod gamepass;
+mod xbox;
 
 mod gog;
 mod itch;
 mod origin;
 mod platform;
 mod platforms_load;
+mod standalone;
 mod uplay;
 
 mod egs;

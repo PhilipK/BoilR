@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use super::GamesPlatform;
 
 use crate::settings::load_setting_sections;
-const PLATFORM_NAMES: [&str; 14] = [
+const PLATFORM_NAMES: [&str; 15] = [
     "amazon",
     "bottles",
     "epic_games",
@@ -19,7 +19,12 @@ const PLATFORM_NAMES: [&str; 14] = [
     "minigalaxy",
     "playnite",
     "gamepass",
+    "standalone",
 ];
+
+// Listed in PLATFORM_NAMES so their settings sections are known everywhere, but they only build on Windows.
+#[cfg(target_family = "unix")]
+const WINDOWS_ONLY_PLATFORMS: [&str; 3] = ["amazon", "playnite", "gamepass"];
 
 pub type Platforms = Vec<Box<dyn GamesPlatform>>;
 
@@ -34,12 +39,12 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     {
         //Windows only platforms
         use super::amazon::AmazonPlatform;
-        use super::gamepass::GamePassPlatForm;
         use super::playnite::PlaynitePlatform;
+        use super::xbox::XboxPlatForm;
         match name {
             "amazon" => return load::<AmazonPlatform>(s),
             "playnite" => return load::<PlaynitePlatform>(s),
-            "gamepass" => return load::<GamePassPlatForm>(s),
+            "gamepass" => return load::<XboxPlatForm>(s),
             _ => {}
         }
     }
@@ -69,6 +74,7 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
     use super::gog::GogPlatform;
     use super::itch::ItchPlatform;
     use super::origin::EAPlatform;
+    use super::standalone::StandalonePlatform;
     use super::uplay::UbisoftPlatform;
 
     match name {
@@ -76,6 +82,7 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
         "uplay" => load::<UbisoftPlatform>(s),
         "itch" => load::<ItchPlatform>(s),
         "gog" => load::<GogPlatform>(s),
+        "standalone" => load::<StandalonePlatform>(s),
         "origin" => load::<EAPlatform>(s),
         _ => Err(eyre::format_err!("Unknown platform named {name}")),
     }
@@ -93,6 +100,10 @@ pub fn get_platforms() -> Platforms {
 
     let mut platforms = vec![];
     for name in PLATFORM_NAMES {
+        #[cfg(target_family = "unix")]
+        if WINDOWS_ONLY_PLATFORMS.contains(&name) {
+            continue;
+        }
         let default = String::from("");
         let settings = sections.get(name).unwrap_or(&default);
         match load_platform(name, settings) {

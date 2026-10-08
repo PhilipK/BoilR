@@ -8,6 +8,7 @@ use tokio::task::JoinHandle;
 
 use crate::config::get_renames_file;
 use crate::platforms::ShortcutToImport;
+use crate::renames::apply_rename;
 #[cfg(target_family = "unix")]
 use crate::steam::setup_proton_games;
 use crate::sync;
@@ -77,19 +78,32 @@ impl MyEguiApp {
                                     let mut import_game = !self.settings.blacklisted_games.contains(&shortcut.app_id);
                                     ui.horizontal(|ui|{
                                         if self.current_edit == Option::Some(shortcut.app_id){
+                                            // The field stays bound to the map entry. egui is immediate
+                                            // mode: TextEdit writes each keystroke into the String it is
+                                            // handed and keeps no copy of the text, so a value rebuilt
+                                            // every frame shows a typed character for one frame and drops
+                                            // it on the next. The borrow of rename_map has to end before
+                                            // apply_rename takes the map, so the text is copied out on click.
+                                            let mut confirmed = None;
                                             if let Some(new_name) = self.rename_map.get_mut(&shortcut.app_id){
                                                 ui.text_edit_singleline(new_name).request_focus();
                                                 if ui.button("Rename").clicked() {
-                                                    if new_name.is_empty(){
-                                                        *new_name = shortcut.app_name.to_string();
-                                                    }
-                                                    self.current_edit = Option::None;
-                                                    let rename_file_path = get_renames_file();
-                                                    let contents = serde_json::to_string(&self.rename_map);
-                                                    if let Ok(contents) = contents{
-                                                        let res = std::fs::write(&rename_file_path, contents);
-                                                        println!("Write rename file at {rename_file_path:?} with result: {res:?}");
-                                                    }
+                                                    confirmed = Some(new_name.clone());
+                                                }
+                                            }
+                                            if let Some(name) = confirmed {
+                                                self.current_edit = Option::None;
+                                                // The editor is seeded with the launcher's own name so the
+                                                // field has text, so confirming without a change leaves a
+                                                // no-op entry in renames.json. apply_rename is the rule
+                                                // that drops it (#561), and it already reads an empty
+                                                // field as "remove", so there is no fallback here.
+                                                apply_rename(&mut self.rename_map, shortcut.app_id, &shortcut.app_name, &name);
+                                                let rename_file_path = get_renames_file();
+                                                let contents = serde_json::to_string(&self.rename_map);
+                                                if let Ok(contents) = contents{
+                                                    let res = std::fs::write(&rename_file_path, contents);
+                                                    println!("Write rename file at {rename_file_path:?} with result: {res:?}");
                                                 }
                                             }
                                         }  else {
@@ -136,10 +150,11 @@ impl MyEguiApp {
         let (sender, reciever) = watch::channel(SyncProgress::NotStarted);
         let settings = self.settings.clone();
         if settings.steam.stop_steam {
-            crate::steam::ensure_steam_stopped();
+            crate::steam::ensure_steam_stopped(&settings.steam);
         }
 
         self.status_reciever = reciever;
+        self.image_selected_state.refreshed_after_sync = false;
         let renames = self.rename_map.clone();
         let all_ready = all_ready(&self.games_to_sync);
         let _ = sender.send(SyncProgress::Starting);
@@ -153,8 +168,24 @@ impl MyEguiApp {
 
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
-                let usersinfo =
-                    sync::sync_shortcuts(&settings, &import_games, &mut some_sender, &renames)?;
+                let usersinfo = match sync::sync_shortcuts(
+                    &settings,
+                    &import_games,
+                    &mut some_sender,
+                    &renames,
+                ) {
+                    Ok(usersinfo) => usersinfo,
+                    Err(err) => {
+                        // Nobody reads this task's result when the UI started it, so
+                        // without this the status would stay on "Found N games" forever.
+                        if let Some(sender) = some_sender {
+                            let _ = sender.send(SyncProgress::Error {
+                                message: err.to_string(),
+                            });
+                        }
+                        return Err(err);
+                    }
+                };
                 let task = download_images(&settings, &usersinfo, &mut some_sender);
                 block_on(task);
                 //Run a second time to fix up shortcuts after images are downloaded
@@ -215,5 +246,84 @@ where
         if let Err(err) = setup_proton_games(&shortcuts_to_proton) {
             eprintln!("failed to save proton settings: {err:?}");
         }
+    }
+}
+
+#[cfg(test)]
+mod rename_field_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    /// One frame of the rename field. `bound_to_entry` picks the binding under test: the map entry
+    /// itself, which is what the Import tab uses, or a clone rebuilt each frame, which is what
+    /// happened when this was first routed through `apply_rename`. `typed` is delivered through
+    /// `RawInput` rather than `Context::input_mut`, because the next `run` starts from whatever input
+    /// it is handed and would discard anything queued in between frames.
+    fn rename_field_frame(
+        ctx: &egui::Context,
+        map: &mut HashMap<u32, String>,
+        app_id: u32,
+        bound_to_entry: bool,
+        typed: Option<&str>,
+    ) {
+        let mut input: egui::RawInput = Default::default();
+        if let Some(typed) = typed {
+            input.events.push(egui::Event::Text(typed.to_owned()));
+        }
+        let _ = ctx.run(input, |ctx| {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                if bound_to_entry {
+                    if let Some(value) = map.get_mut(&app_id) {
+                        ui.text_edit_singleline(value).request_focus();
+                    }
+                } else if let Some(entry) = map.get(&app_id) {
+                    let mut edited = entry.clone();
+                    ui.text_edit_singleline(&mut edited).request_focus();
+                }
+            });
+        });
+    }
+
+    /// egui is immediate mode: `TextEdit` writes each keystroke into the `String` it is handed and
+    /// keeps no copy of the text itself. So the field has to stay bound to the map entry — a value
+    /// rebuilt every frame shows a typed character for one frame and drops it on the next, which
+    /// leaves the only confirmable text being the seed the editor opens with.
+    #[test]
+    fn typed_text_survives_into_the_next_frame() {
+        let mut map = HashMap::new();
+        map.insert(7, "Hades".to_string());
+        let ctx = egui::Context::default();
+
+        rename_field_frame(&ctx, &mut map, 7, true, None); // take focus
+        rename_field_frame(&ctx, &mut map, 7, true, Some(" II"));
+        assert_eq!(map.get(&7).map(String::as_str), Some("Hades II"));
+
+        // The next frame renders with no input at all; what was typed is still what the field holds.
+        rename_field_frame(&ctx, &mut map, 7, true, None);
+        assert_eq!(
+            map.get(&7).map(String::as_str),
+            Some("Hades II"),
+            "the field has to still hold what was typed on the following frame"
+        );
+    }
+
+    /// The regression this guards: bound to a per-frame clone, the keystroke is written into a value
+    /// that is dropped at the end of the frame, so the map entry never sees it and confirming the
+    /// rename can only ever record the seed.
+    #[test]
+    fn a_per_frame_clone_of_the_entry_loses_the_keystroke() {
+        let mut map = HashMap::new();
+        map.insert(7, "Hades".to_string());
+        let ctx = egui::Context::default();
+
+        rename_field_frame(&ctx, &mut map, 7, false, None);
+        rename_field_frame(&ctx, &mut map, 7, false, Some(" II"));
+        rename_field_frame(&ctx, &mut map, 7, false, None);
+
+        assert_eq!(
+            map.get(&7).map(String::as_str),
+            Some("Hades"),
+            "a field bound to a per-frame clone cannot hold what was typed"
+        );
     }
 }
