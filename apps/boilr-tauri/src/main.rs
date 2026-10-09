@@ -938,7 +938,7 @@ mod tests {
     use std::sync::{Mutex, OnceLock};
     use tauri::{
         ipc::CallbackFn,
-        test::{get_ipc_response, mock_builder, mock_context, noop_assets, INVOKE_KEY},
+        test::{get_ipc_response, mock_builder, INVOKE_KEY},
         webview::InvokeRequest,
         WebviewWindowBuilder,
     };
@@ -981,7 +981,7 @@ mod tests {
                 rename_game,
                 ping
             ])
-            .build(mock_context(noop_assets()))
+            .build(tauri::generate_context!())
             .expect("failed to build tauri app for tests");
 
         WebviewWindowBuilder::new(&app, "main", Default::default())
