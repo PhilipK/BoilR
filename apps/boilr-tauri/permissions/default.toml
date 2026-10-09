@@ -1,0 +1,32 @@
+[default]
+description = "Default permissions for BoilR commands"
+permissions = ["allow-boilr-commands"]
+
+[[permission]]
+identifier = "allow-boilr-commands"
+description = "Permits all application IPC commands"
+commands.allow = [
+  "load_settings",
+  "discover_games",
+  "plan_sync",
+  "update_settings",
+  "list_platform_settings",
+  "update_platform_settings",
+  "update_platform_enabled",
+  "run_full_sync",
+  "list_backups",
+  "create_backup",
+  "restore_shortcuts",
+  "list_boilr_shortcuts",
+  "release_shortcut",
+  "list_steam_accounts",
+  "list_artwork",
+  "artwork_options",
+  "set_artwork",
+  "clear_artwork",
+  "artwork_game_match",
+  "set_artwork_game",
+  "find_missing_artwork",
+  "rename_game",
+  "ping"
+]
