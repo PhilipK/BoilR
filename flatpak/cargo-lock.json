@@ -743,6 +743,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/base64/base64-0.23.1.crate",
+        "sha256": "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5",
+        "dest": "cargo/vendor/base64-0.23.1"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5\", \"files\": {}}",
+        "dest": "cargo/vendor/base64-0.23.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/bit-set/bit-set-0.6.0.crate",
         "sha256": "f0481a0e032742109b1133a095184ee93d88f3dc9e0d28a5d033dc77a073f44f",
         "dest": "cargo/vendor/bit-set-0.6.0"
@@ -1237,14 +1250,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/config/config-0.15.26.crate",
-        "sha256": "790374c727a4cb20877dd2cc99ce7011cbe03b0b8df083acccd37df0d161304d",
-        "dest": "cargo/vendor/config-0.15.26"
+        "url": "https://static.crates.io/crates/config/config-0.15.27.crate",
+        "sha256": "38e9fbc53afcec54441422f1c596cd054655b32e70e1cbac956651b7b175a404",
+        "dest": "cargo/vendor/config-0.15.27"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"790374c727a4cb20877dd2cc99ce7011cbe03b0b8df083acccd37df0d161304d\", \"files\": {}}",
-        "dest": "cargo/vendor/config-0.15.26",
+        "contents": "{\"package\": \"38e9fbc53afcec54441422f1c596cd054655b32e70e1cbac956651b7b175a404\", \"files\": {}}",
+        "dest": "cargo/vendor/config-0.15.27",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -7048,14 +7061,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/wayland-cursor/wayland-cursor-0.31.7.crate",
-        "sha256": "32b08bc3aafdb0035e7fe0fdf17ba0c09c268732707dca4ae098f60cb28c9e4c",
-        "dest": "cargo/vendor/wayland-cursor-0.31.7"
+        "url": "https://static.crates.io/crates/wayland-cursor/wayland-cursor-0.31.12.crate",
+        "sha256": "5864c4b5b6064b06b1e8b74ead4a98a6c45a285fe7a0e784d24735f011fdb078",
+        "dest": "cargo/vendor/wayland-cursor-0.31.12"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"32b08bc3aafdb0035e7fe0fdf17ba0c09c268732707dca4ae098f60cb28c9e4c\", \"files\": {}}",
-        "dest": "cargo/vendor/wayland-cursor-0.31.7",
+        "contents": "{\"package\": \"5864c4b5b6064b06b1e8b74ead4a98a6c45a285fe7a0e784d24735f011fdb078\", \"files\": {}}",
+        "dest": "cargo/vendor/wayland-cursor-0.31.12",
         "dest-filename": ".cargo-checksum.json"
     },
     {
