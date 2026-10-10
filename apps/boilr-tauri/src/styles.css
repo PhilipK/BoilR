@@ -3,9 +3,38 @@
 @import "@fontsource/atkinson-hyperlegible-next/400.css";
 @import "@fontsource/atkinson-hyperlegible-next/700.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+/* Keep Tailwind 3's hover: v4 limits it to (hover: hover) devices, and the Deck's webview
+   may not report that. */
+@custom-variant hover (&:hover);
+
+/* BoilR's palette is the 8-colour pixel sunset the original egui app used.
+   `initial` drops Tailwind's default colours and fonts; transparent and current stay built in. */
+@theme {
+  --color-*: initial;
+  --color-night: #0d2b45;
+  --color-deep: #0a1e3c;
+  --color-harbour: #203c56;
+  --color-dusk: #544e68;
+  --color-mauve: #8d697a;
+  --color-ember: #d08159;
+  --color-flame: #ffaa5e;
+  --color-peach: #ffd4a3;
+  --color-foam: #ffecd6;
+
+  --font-*: initial;
+  --font-pixel: "Pixelify Sans", monospace;
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+}
+
+@layer base {
+  /* Tailwind 4 dropped the pointer cursor on buttons; BoilR keeps it. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 :root {
   color-scheme: dark;
@@ -24,50 +53,55 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid theme("colors.flame");
+  outline: 2px solid var(--color-flame);
+  outline-offset: 2px;
+}
+/* Fields show focus with their flame border instead. */
+.field:focus-visible {
+  outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
 /* With a controller or arrow keys there is no pointer, so focus must always be obvious. */
 /* Inset, so scroll areas don't clip it. */
 body.nav-controller :focus:not(input) {
-  outline: 3px solid theme("colors.flame");
+  outline: 3px solid var(--color-flame);
   outline-offset: -3px;
 }
 body.nav-controller label:focus-within {
-  outline: 3px solid theme("colors.flame");
+  outline: 3px solid var(--color-flame);
   outline-offset: 2px;
 }
-/* Stepped corners clip outlines, so pixel buttons light up instead. */
-body.nav-controller .btn:focus:not(:disabled) {
-  outline: none;
-  background-color: theme("colors.foam");
-  color: theme("colors.deep");
+
+/* Stepped 4px corners, like the pixel art. */
+@utility notch {
+  clip-path: polygon(
+    0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+  );
+}
+
+@utility pixelated {
+  image-rendering: pixelated;
+}
+
+@utility scroll-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-dusk) transparent;
 }
 
 @layer components {
-  /* Stepped 4px corners, like the pixel art. */
-  .notch {
-    clip-path: polygon(
-      0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
-      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
-      4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
-    );
-  }
-
-  .pixelated {
-    image-rendering: pixelated;
-  }
-
-  .btn {
+  .btn-primary,
+  .btn-quiet {
     @apply notch inline-flex items-center justify-center gap-2 px-4 py-2 font-pixel text-base
       transition-colors disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-flame text-deep hover:bg-peach disabled:bg-harbour disabled:text-mauve;
+    @apply bg-flame text-deep hover:bg-peach disabled:bg-harbour disabled:text-mauve;
   }
   .btn-quiet {
-    @apply btn bg-harbour text-peach hover:bg-dusk disabled:bg-harbour disabled:text-mauve;
+    @apply bg-harbour text-peach hover:bg-dusk disabled:bg-harbour disabled:text-mauve;
   }
   .link-btn {
     @apply text-sm text-flame underline decoration-2 underline-offset-4 hover:text-peach
@@ -78,11 +112,15 @@ body.nav-controller .btn:focus:not(:disabled) {
     @apply w-full border-2 border-harbour bg-deep px-3 py-2 text-foam placeholder:text-mauve
       focus:border-flame focus:ring-0;
   }
+}
 
-  .scroll-quiet {
-    scrollbar-width: thin;
-    scrollbar-color: theme("colors.dusk") transparent;
-  }
+/* Stepped corners clip outlines, so a focused pixel button lights up instead.
+   Outside a layer so it beats the unlayered outline rules above. */
+.btn-primary:focus:not(:disabled),
+.btn-quiet:focus:not(:disabled) {
+  outline: none;
+  background-color: var(--color-foam);
+  color: var(--color-deep);
 }
 
 /* Copper pipe with a rivet every 40px. */
@@ -91,9 +129,9 @@ body.nav-controller .btn:focus:not(:disabled) {
     repeating-linear-gradient(
       90deg,
       transparent 0 36px,
-      theme("colors.ember") 36px 40px
+      var(--color-ember) 36px 40px
     ),
-    theme("colors.flame");
+    var(--color-flame);
   background-size: 100% 4px, auto;
   background-position: 0 50%, 0 0;
   background-repeat: repeat-x;
