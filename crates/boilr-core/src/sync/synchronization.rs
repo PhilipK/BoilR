@@ -6,8 +6,8 @@ use tokio::sync::watch::Sender;
 use crate::{
     settings::Settings,
     steam::{
-        get_shortcuts_for_user, get_shortcuts_paths, write_collections, Collection, ShortcutInfo,
-        SteamUsersInfo,
+        get_shortcuts_for_user, get_shortcuts_paths, is_flatpak_steam, run_flatpak_on_host,
+        write_collections, Collection, ShortcutInfo, SteamUsersInfo,
     },
     steamgriddb::{download_images_for_users, ImageType},
 };
@@ -66,6 +66,13 @@ pub fn sync_shortcuts(
     renames: &HashMap<u32, String>,
 ) -> eyre::Result<Vec<SteamUsersInfo>> {
     let userinfo_shortcuts = get_shortcuts_paths(&settings.steam)?;
+    let flatpak_steam = is_flatpak_steam(&settings.steam);
+    if flatpak_steam {
+        println!(
+            "Steam is a Flatpak; launching Flatpak apps through flatpak-spawn --host. \
+             Steam needs: flatpak override --user --talk-name=org.freedesktop.Flatpak com.valvesoftware.Steam"
+        );
+    }
     let mut all_shortcuts: Vec<ShortcutOwned> = platform_shortcuts
         .iter()
         .flat_map(|s| s.1.clone())
@@ -81,7 +88,16 @@ pub fn sync_shortcuts(
     }
     let mut previous_ids = HashMap::new();
     for shortcut in &mut all_shortcuts {
-        if let Some(rename) = renames.get(&shortcut.app_id) {
+        // Renames are keyed by the platform's app id, so look up before the Flatpak rewrite.
+        let rename = renames.get(&shortcut.app_id);
+        if flatpak_steam {
+            let id_before = shortcut.app_id;
+            run_flatpak_on_host(shortcut);
+            if shortcut.app_id != id_before {
+                previous_ids.insert(shortcut.app_id, id_before);
+            }
+        }
+        if let Some(rename) = rename {
             let original_id = shortcut.app_id;
             shortcut.app_name = rename.clone();
             let new_shortcut = Shortcut::new(
@@ -98,6 +114,17 @@ pub fn sync_shortcuts(
         }
         println!("Appid: {} name: {}", shortcut.app_id, shortcut.app_name);
     }
+    // Apply the same Flatpak rewrite to the collections, so their app ids match the new shortcuts.
+    let platform_shortcuts: Vec<(String, Vec<ShortcutOwned>)> = platform_shortcuts
+        .iter()
+        .map(|(name, shortcuts)| {
+            let mut shortcuts = shortcuts.clone();
+            if flatpak_steam {
+                shortcuts.iter_mut().for_each(run_flatpak_on_host);
+            }
+            (name.clone(), shortcuts)
+        })
+        .collect();
     println!("Found {} user(s)", userinfo_shortcuts.len());
     // Read every user's shortcuts before writing any. A file that can't be read is not
     // skipped: the user would see an import that "worked" but changed nothing (#558).
@@ -133,7 +160,7 @@ pub fn sync_shortcuts(
         }
 
         if settings.steam.create_collections {
-            match write_shortcut_collections(&user.user_id, platform_shortcuts) {
+            match write_shortcut_collections(&user.user_id, &platform_shortcuts) {
                 Ok(_) => (),
                 Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
             }
