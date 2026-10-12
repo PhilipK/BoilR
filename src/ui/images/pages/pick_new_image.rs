@@ -122,8 +122,13 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
             app_name: app_name.to_string(),
             image_type: *selected_image_type,
         };
+        let settings = app.settings.clone();
         app.rt.spawn_blocking(move || {
-            let _ = block_on(crate::steamgriddb::download_to_download(&to_download));
+            if block_on(crate::steamgriddb::download_to_download(&to_download)).is_ok() {
+                if let Err(e) = crate::sync::fix_all_shortcut_icons(&settings) {
+                    eprintln!("Could not fix shortcuts with error {e}");
+                }
+            }
         });
 
         {
