@@ -440,4 +440,41 @@ mod tests {
         assert_eq!(fresh.map(|s| s.open_vr), Some(0));
         assert_eq!(fresh.map(|s| s.last_play_time), Some(0));
     }
+
+    #[test]
+    fn updates_shortcut_icon_when_the_old_image_was_replaced() -> eyre::Result<()> {
+        let temp_dir = std::env::temp_dir().join(format!(
+            "boilr-icon-fix-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        let grid_dir = temp_dir.join("config").join("grid");
+        std::fs::create_dir_all(&grid_dir)?;
+
+        let mut game = shortcut("Game", "/usr/bin/game");
+        game.icon = grid_dir
+            .join("removed-icon.png")
+            .to_string_lossy()
+            .to_string();
+        let replacement_icon = grid_dir.join(ImageType::Icon.file_name(game.app_id, "png"));
+        std::fs::write(&replacement_icon, b"icon")?;
+        let replacement_icon = replacement_icon.to_string_lossy().into_owned();
+        let user = SteamUsersInfo {
+            steam_user_data_folder: temp_dir.to_string_lossy().to_string(),
+            shortcut_path: None,
+            user_id: "1".to_string(),
+        };
+        let mut shortcuts = vec![game];
+
+        assert!(fix_shortcut_icons(&user, &mut shortcuts, false));
+        assert_eq!(
+            shortcuts.first().map(|shortcut| &shortcut.icon),
+            Some(&replacement_icon)
+        );
+
+        std::fs::remove_dir_all(temp_dir)?;
+        Ok(())
+    }
 }
