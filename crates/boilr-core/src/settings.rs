@@ -1,6 +1,6 @@
 use crate::{config::get_config_file, steam::SteamSettings, steamgriddb::SteamGridDbSettings};
 
-use config::{Config, ConfigError, Environment, File};
+use config::{Config, ConfigError, Environment, File, Map};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, env};
 
@@ -31,9 +31,8 @@ impl Settings {
             // Add in a local configuration file
             // This file shouldn't be checked in to git
             .add_source(File::with_name("local.toml").required(false))
-            // Add in settings from the environment (with a prefix of STEAMSYNC)
-            // Eg.. `STEAMSYNC_DEBUG=1 ./target/app` would set the `debug` key
-            .add_source(Environment::with_prefix("boilr").separator("-"))
+            .add_source(legacy_env_overrides(None))
+            .add_source(env_overrides(None))
             .build()?;
         let mut settings = config.try_deserialize::<Settings>()?;
         sanitize_auth_key(&mut settings);
@@ -105,10 +104,57 @@ fn add_sections(
     }
 }
 
+/// Environment overrides, e.g. `BOILR_STEAMGRID_DB__AUTH_KEY=... boilr --no-ui` sets
+/// `steamgrid_db.auth_key`. `__` separates sections because keys contain `_`.
+fn env_overrides(source: Option<Map<String, String>>) -> Environment {
+    Environment::with_prefix("boilr")
+        .prefix_separator("_")
+        .separator("__")
+        .source(source)
+}
+
+/// The old `boilr-steamgrid_db-auth_key` form. Shells can't set names containing `-` (#367),
+/// but `env` can, so it keeps working.
+fn legacy_env_overrides(source: Option<Map<String, String>>) -> Environment {
+    Environment::with_prefix("boilr")
+        .separator("-")
+        .source(source)
+}
+
 fn sanitize_auth_key(result: &mut Settings) {
     if let Some(auth_key) = result.steamgrid_db.auth_key.as_ref() {
         if auth_key == "Write your authentication key between these quotes" {
             result.steamgrid_db.auth_key = None;
         }
+    }
+}
+
+#[cfg(test)]
+mod env_tests {
+    use super::*;
+
+    fn auth_key_from(env: &[(&str, &str)]) -> Option<String> {
+        let source: Map<String, String> = env
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+        let config = Config::builder()
+            .add_source(legacy_env_overrides(Some(source.clone())))
+            .add_source(env_overrides(Some(source)))
+            .build()
+            .ok()?;
+        config.get_string("steamgrid_db.auth_key").ok()
+    }
+
+    #[test]
+    fn shell_friendly_env_var_sets_auth_key() {
+        let key = auth_key_from(&[("BOILR_STEAMGRID_DB__AUTH_KEY", "abc")]);
+        assert_eq!(key.as_deref(), Some("abc"));
+    }
+
+    #[test]
+    fn legacy_dash_env_var_still_sets_auth_key() {
+        let key = auth_key_from(&[("boilr-steamgrid_db-auth_key", "abc")]);
+        assert_eq!(key.as_deref(), Some("abc"));
     }
 }
