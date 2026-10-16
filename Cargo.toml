@@ -10,7 +10,7 @@ dashmap = { version = "^6.1.0", features = ["serde"] }
 eyre = "^0.6.12"
 futures = "^0.3.31"
 nom = "^8.0.0"
-reqwest = { version = "^0.12.9", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "^0.13.5", default-features = false, features = ["json", "rustls"] }
 # Pinned: 3.0.3 made WriteBatch::new() private (used by steam/collections.rs).
 rusty-leveldb = "=3.0.0"
 serde = { version = "^1.0.217", features = ["derive"] }
@@ -54,6 +54,7 @@ futures.workspace = true
 serde.workspace = true
 tokio.workspace = true
 toml.workspace = true
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 
 [dependencies.eframe]
 version = "^0.29.1"
