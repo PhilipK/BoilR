@@ -2,7 +2,7 @@
 # Regenerates the offline cargo and npm sources the Flatpak builds from. Run after any change to
 # apps/boilr-tauri/Cargo.lock or package-lock.json; CI (flatpak_lock_sync) fails when they drift.
 # Needs git and python3 (with venv).
-set -euo pipefail
+set -Eeuo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 tools="$(mktemp -d)"
