@@ -86,6 +86,28 @@ fn get_flatpak_applications() -> std::io::Result<std::process::Output> {
     }
 }
 
+/// Whether the Flatpak app `app_id` is installed on the host, from the exit status of
+/// `flatpak info`. flatpak translates its "not installed" message, so matching that text
+/// misses non-English desktops. `None` when flatpak itself could not be run. Inside BoilR's
+/// Flatpak, a host without `flatpak` also reads as not installed.
+pub(crate) fn flatpak_app_installed(app_id: &str) -> Option<bool> {
+    use std::process::Command;
+    #[cfg(not(feature = "flatpak"))]
+    let mut command = Command::new("flatpak");
+    #[cfg(feature = "flatpak")]
+    let mut command = {
+        let mut command = Command::new("flatpak-spawn");
+        command.arg("--host").arg("flatpak");
+        command
+    };
+    command
+        .arg("info")
+        .arg(app_id)
+        .output()
+        .ok()
+        .map(|o| o.status.success())
+}
+
 impl FromSettingsString for FlatpakPlatform {
     fn from_settings_string<S: AsRef<str>>(s: S) -> Self {
         FlatpakPlatform {
@@ -125,6 +147,16 @@ impl GamesPlatform for FlatpakPlatform {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Without flatpak on the machine this is `None`; with it, `flatpak info` fails for an
+    /// app that does not exist. Either way it must never read as installed.
+    #[test]
+    fn unknown_app_is_not_installed() {
+        assert_ne!(
+            flatpak_app_installed("io.github.philipk.BoilRNoSuchApp"),
+            Some(true)
+        );
+    }
 
     #[test]
     fn lists_apps_but_not_boilr_itself() {

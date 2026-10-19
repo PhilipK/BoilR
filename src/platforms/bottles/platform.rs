@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
+use crate::platforms::flatpak::flatpak_app_installed;
 use crate::platforms::{
     load_settings, to_shortcuts_simple, FromSettingsString, GamesPlatform, ShortcutToImport,
 };
@@ -166,7 +167,10 @@ fn get_bottles_output() -> eyre::Result<BottlesOutput> {
     // wording the Tauri interface keys off. With no stderr at all neither command is
     // installed, which must not reach the user as "0 games".
     match flatpak {
-        ListAttempt::Failed(stderr) => Err(bottles_cli_error(&stderr)),
+        ListAttempt::Failed(stderr) => {
+            let missing = flatpak_app_installed("com.usebottles.bottles") == Some(false);
+            Err(bottles_cli_error(missing, &stderr))
+        }
         _ => {
             eyre::bail!(
                 "Bottles not found: neither the Flatpak com.usebottles.bottles nor a native \
@@ -176,9 +180,10 @@ fn get_bottles_output() -> eyre::Result<BottlesOutput> {
     }
 }
 
-/// Without Bottles, `flatpak run` fails with "... not installed" and prints nothing to parse.
-fn bottles_cli_error(stderr: &str) -> eyre::Report {
-    if stderr.contains("not installed") {
+/// Without Bottles, `flatpak run` fails and prints nothing to parse. `flatpak_missing` means
+/// `flatpak info` found no Flatpak Bottles.
+fn bottles_cli_error(flatpak_missing: bool, stderr: &str) -> eyre::Report {
+    if flatpak_missing {
         eyre::eyre!("Bottles not found: the Flatpak com.usebottles.bottles is not installed")
     } else {
         eyre::eyre!("bottles-cli failed: {}", stderr.trim())
@@ -251,10 +256,9 @@ mod tests {
 
     #[test]
     fn missing_bottles_reads_as_not_found() {
-        let err =
-            bottles_cli_error("error: app/com.usebottles.bottles/x86_64/master not installed\n");
+        let err = bottles_cli_error(true, "Fehler: com.usebottles.bottles nicht installiert\n");
         assert!(err.to_string().contains("not found"));
-        let err = bottles_cli_error("Traceback: boom");
+        let err = bottles_cli_error(false, "Traceback: boom");
         assert_eq!(err.to_string(), "bottles-cli failed: Traceback: boom");
     }
 
@@ -266,7 +270,7 @@ mod tests {
     #[test]
     fn neither_command_available_reads_as_not_found() {
         let err = match run_list_command(Command::new("boilr-no-such-bottles-cli")) {
-            ListAttempt::Failed(stderr) => bottles_cli_error(&stderr),
+            ListAttempt::Failed(stderr) => bottles_cli_error(false, &stderr),
             _ => eyre::eyre!(
                 "Bottles not found: neither the Flatpak com.usebottles.bottles nor a native \
                  bottles-cli is installed"
@@ -283,7 +287,7 @@ mod tests {
     /// real Bottles error is not hidden behind a "not found" message.
     #[test]
     fn flatpak_failure_keeps_its_stderr() {
-        let err = bottles_cli_error("Traceback: bottles exploded");
+        let err = bottles_cli_error(false, "Traceback: bottles exploded");
         assert!(err.to_string().contains("bottles exploded"));
         assert!(!err.to_string().contains("not found"));
     }

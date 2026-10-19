@@ -1,6 +1,7 @@
 use super::game_list_parser::parse_lutris_games;
 use super::lutris_game::LutrisGame;
 use super::settings::LutrisSettings;
+use crate::platforms::flatpak::flatpak_app_installed;
 use crate::platforms::{
     load_settings, to_shortcuts_simple, FromSettingsString, GamesPlatform, ShortcutToImport,
 };
@@ -89,8 +90,11 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
     };
 
     if !output.status.success() && output.stdout.trim_ascii().is_empty() {
+        let missing =
+            settings.flatpak && flatpak_app_installed(&settings.flatpak_image) == Some(false);
         return Err(lutris_run_error(
             settings,
+            missing,
             &String::from_utf8_lossy(&output.stderr),
         ));
     }
@@ -98,11 +102,15 @@ fn get_lutris_command_output(settings: &LutrisSettings) -> eyre::Result<String> 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
-/// A failed run prints no game list, which used to reach the user as "0 games". Without
-/// Lutris, `flatpak run` fails with "... not installed"; "not found" marks it as not
-/// installed in the UI.
-fn lutris_run_error(settings: &LutrisSettings, stderr: &str) -> eyre::Report {
-    if settings.flatpak && stderr.contains("not installed") {
+/// A failed run prints no game list, which used to reach the user as "0 games".
+/// `flatpak_missing` means `flatpak info` found no Flatpak Lutris; "not found" marks it as
+/// not installed in the UI.
+fn lutris_run_error(
+    settings: &LutrisSettings,
+    flatpak_missing: bool,
+    stderr: &str,
+) -> eyre::Report {
+    if flatpak_missing {
         return eyre::eyre!(
             "Lutris not found: the Flatpak {} is not installed",
             settings.flatpak_image
@@ -217,7 +225,8 @@ mod tests {
         let settings = LutrisSettings::default();
         let error = lutris_run_error(
             &settings,
-            "error: app/net.lutris.Lutris/x86_64/master not installed\n",
+            true,
+            "Fehler: net.lutris.Lutris nicht installiert\n",
         );
         assert_eq!(
             error.to_string(),
@@ -231,7 +240,7 @@ mod tests {
             flatpak: false,
             ..Default::default()
         };
-        let error = lutris_run_error(&settings, "Traceback\nKeyError: 'games'\n");
+        let error = lutris_run_error(&settings, false, "Traceback\nKeyError: 'games'\n");
         assert_eq!(error.to_string(), "lutris failed: KeyError: 'games'");
         assert!(!error.to_string().contains("not found"));
     }
