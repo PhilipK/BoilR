@@ -1,7 +1,7 @@
 #!/bin/bash
 # Builds the Tauri AppImage, then repacks it without the bundled libwayland-*,
 # which clash with the host's Mesa ("Could not create default EGL display").
-set -euo pipefail
+set -Eeuo pipefail
 cd /work/apps/boilr-tauri
 npx --yes @tauri-apps/cli@2 build --bundles appimage
 cd /work/target-deck/release/bundle/appimage
