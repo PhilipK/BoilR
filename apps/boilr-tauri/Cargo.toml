@@ -18,6 +18,7 @@ steam_shortcuts_util = "1.1.9"
 steamgriddb_api = "0.3.1"
 time = "0.3"
 toml = "0.9.8"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 
 [build-dependencies]
 tauri-build = { version = "2.0.0", features = [] }
