@@ -98,7 +98,7 @@ pub fn render_page_pick_image(
     None
 }
 
-pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
+pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage, ctx: &egui::Context) {
     //We must have a user here
     let state = &app.image_selected_state;
     if let (Some(user), Some(selected_image_type), Some(selected_shortcut)) = (
@@ -123,12 +123,25 @@ pub fn handle_image_selected(app: &mut MyEguiApp, image: PossibleImage) {
             image_type: *selected_image_type,
         };
         let settings = app.settings.clone();
+        let ctx = ctx.clone();
         app.rt.spawn_blocking(move || {
-            if block_on(crate::steamgriddb::download_to_download(&to_download)).is_ok() {
-                if let Err(e) = crate::sync::fix_all_shortcut_icons(&settings) {
-                    eprintln!("Could not fix shortcuts with error {e}");
+            match block_on(crate::steamgriddb::download_to_download(&to_download)) {
+                Ok(()) => {
+                    if let Err(e) = crate::sync::fix_all_shortcut_icons(&settings) {
+                        eprintln!("Could not fix shortcuts with error {e}");
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Could not download image with error {e}");
+                    // The download creates the file before fetching; don't leave an
+                    // empty one behind for the previews to pick.
+                    let _ = std::fs::remove_file(&to_download.path);
                 }
             }
+            // egui caches the failed load of the file deleted above; reload once the new
+            // file is there (#572).
+            ctx.forget_all_images();
+            ctx.request_repaint();
         });
 
         {
