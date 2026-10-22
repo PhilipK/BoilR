@@ -202,7 +202,7 @@ impl MyEguiApp {
                 self.handle_image_type_selected(image_type);
             }
             UserAction::ImageSelected(image) => {
-                handle_image_selected(self, image);
+                handle_image_selected(self, image, ui.ctx());
                 // Request repaint to refresh images after download starts
                 ui.ctx().request_repaint();
                 ui.ctx().forget_all_images();
