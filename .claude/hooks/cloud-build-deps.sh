@@ -1,4 +1,5 @@
 #!/bin/bash
+set -Eeuo pipefail
 # Installs BoilR's build dependencies in Claude Code cloud sessions (no-op locally).
 [ "$CLAUDE_CODE_REMOTE" = "true" ] || exit 0
 
