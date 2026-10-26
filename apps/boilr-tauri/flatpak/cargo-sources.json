@@ -340,19 +340,6 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/build_const/build_const-0.2.2.crate",
-        "sha256": "b4ae4235e6dac0694637c763029ecea1a2ec9e4e06ec2729bd21ba4d9c863eb7",
-        "dest": "cargo/vendor/build_const-0.2.2"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"b4ae4235e6dac0694637c763029ecea1a2ec9e4e06ec2729bd21ba4d9c863eb7\", \"files\": {}}",
-        "dest": "cargo/vendor/build_const-0.2.2",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/bumpalo/bumpalo-3.19.0.crate",
         "sha256": "46c5e41b57b8bba42a04676d81cb89e9ee8e859a1a66f80a5a72e1cb76b34d43",
         "dest": "cargo/vendor/bumpalo-3.19.0"
@@ -808,14 +795,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/crc/crc-1.8.1.crate",
-        "sha256": "d663548de7f5cca343f1e0a48d14dcfb0e9eb4e079ec58883b7251539fa10aeb",
-        "dest": "cargo/vendor/crc-1.8.1"
+        "url": "https://static.crates.io/crates/crc32c/crc32c-0.6.8.crate",
+        "sha256": "3a47af21622d091a8f0fb295b88bc886ac74efcc613efc19f5d0b21de5c89e47",
+        "dest": "cargo/vendor/crc32c-0.6.8"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"d663548de7f5cca343f1e0a48d14dcfb0e9eb4e079ec58883b7251539fa10aeb\", \"files\": {}}",
-        "dest": "cargo/vendor/crc-1.8.1",
+        "contents": "{\"package\": \"3a47af21622d091a8f0fb295b88bc886ac74efcc613efc19f5d0b21de5c89e47\", \"files\": {}}",
+        "dest": "cargo/vendor/crc32c-0.6.8",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4734,14 +4721,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/rusty-leveldb/rusty-leveldb-3.0.0.crate",
-        "sha256": "3453f8c92d48f99810f59095444eda0622ae8485ac899ad97a574fd7cb9aa9c4",
-        "dest": "cargo/vendor/rusty-leveldb-3.0.0"
+        "url": "https://static.crates.io/crates/rusty-leveldb/rusty-leveldb-4.0.2.crate",
+        "sha256": "e5cedca2c163b3a98ee5bec9025dfaa7d5b64edc1ff0b8f034bf1977fa58f4c9",
+        "dest": "cargo/vendor/rusty-leveldb-4.0.2"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3453f8c92d48f99810f59095444eda0622ae8485ac899ad97a574fd7cb9aa9c4\", \"files\": {}}",
-        "dest": "cargo/vendor/rusty-leveldb-3.0.0",
+        "contents": "{\"package\": \"e5cedca2c163b3a98ee5bec9025dfaa7d5b64edc1ff0b8f034bf1977fa58f4c9\", \"files\": {}}",
+        "dest": "cargo/vendor/rusty-leveldb-4.0.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {
