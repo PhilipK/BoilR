@@ -276,7 +276,12 @@ impl MyEguiApp {
             self.image_selected_state.refreshed_after_sync = false;
             let mut sender_op = Some(sender);
             let settings = self.settings.clone();
-            let users = users.clone();
+            // The button sits under the selected account's games, so only download for that
+            // account; other accounts' shortcuts made it fetch hundreds of images (#368).
+            let users = match &self.image_selected_state.steam_user {
+                Some(user) => vec![user.clone()],
+                None => users.clone(),
+            };
             self.rt.spawn_blocking(move || {
                 let task = download_images(&settings, &users, &mut sender_op);
                 block_on(task);
