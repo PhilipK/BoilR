@@ -199,7 +199,46 @@ fn get_games_from_proton() -> eyre::Result<Vec<UbisoftGame>> {
         launcher_compat_folder: launcher_path.compat_folder.clone(),
         launch_id: game.launch_id,
     });
-    Ok(games.collect())
+    // The configuration cache lists every game the launcher knows about, installed or not
+    // (#377). The launcher registers installed games in the prefix registry, as on Windows.
+    let installed = launcher_path
+        .compat_folder
+        .as_ref()
+        .and_then(|folder| std::fs::read_to_string(folder.join("pfx").join("system.reg")).ok())
+        .map(|reg| installed_ids_from_wine_registry(&reg));
+    Ok(games
+        .filter(|game| match &installed {
+            Some(ids) => ids.contains(&game.id),
+            None => true,
+        })
+        .collect())
+}
+
+/// Ids of installed games from a Wine `system.reg` (HKEY_LOCAL_MACHINE): the keys
+/// `[Software\\Wow6432Node\\Ubisoft\\Launcher\\Installs\\<id>]` that have an `InstallDir`.
+#[cfg(any(target_family = "unix", test))]
+fn installed_ids_from_wine_registry(reg: &str) -> Vec<String> {
+    const PREFIXES: [&str; 2] = [
+        "[software\\\\wow6432node\\\\ubisoft\\\\launcher\\\\installs\\\\",
+        "[software\\\\ubisoft\\\\launcher\\\\installs\\\\",
+    ];
+    let mut ids = vec![];
+    let mut current: Option<String> = None;
+    for line in reg.lines().map(str::trim) {
+        if line.starts_with('[') {
+            let lower = line.to_lowercase();
+            current = PREFIXES.iter().find_map(|prefix| {
+                let rest = lower.strip_prefix(prefix)?;
+                let id = rest.split(']').next()?;
+                (!id.is_empty() && !id.contains('\\')).then(|| id.to_string())
+            });
+        } else if let Some(id) = &current {
+            if line.to_lowercase().starts_with("\"installdir\"=") && !ids.contains(id) {
+                ids.push(id.clone());
+            }
+        }
+    }
+    ids
 }
 
 #[allow(dead_code)]
@@ -317,6 +356,26 @@ impl GamesPlatform for UbisoftPlatform {
 mod test {
 
     use super::*;
+
+    #[test]
+    fn finds_installed_ids_in_wine_registry() {
+        let reg = r#"WINE REGISTRY Version 2
+[Software\\Wow6432Node\\Ubisoft\\Launcher] 1700000000
+"InstallDir"="C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\"
+
+[Software\\Wow6432Node\\Ubisoft\\Launcher\\Installs\\635] 1700000001
+#time=1da0000000000000
+"InstallDir"="C:/Program Files (x86)/Ubisoft/Ubisoft Game Launcher/games/Far Cry 3/"
+"Language"="en-US"
+
+[Software\\Wow6432Node\\Ubisoft\\Launcher\\Installs\\720] 1700000002
+"Language"="en-US"
+
+[Software\\Ubisoft\\Launcher\\Installs\\5595] 1700000003
+"InstallDir"="C:/Games/Assassin's Creed Valhalla/"
+"#;
+        assert_eq!(installed_ids_from_wine_registry(reg), vec!["635", "5595"]);
+    }
 
     #[test]
     fn can_parse_configuration_file() {
