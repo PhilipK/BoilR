@@ -4,10 +4,32 @@ use steam_shortcuts_util::{shortcut::ShortcutOwned, Shortcut};
 
 #[derive(Clone)]
 pub struct EAGame {
+    /// The `.mfst` id (URL-encoded offer ids), or the content ids from the game's installer
+    /// data, comma-separated; see [`EAGame::found_by`].
     pub id: String,
     pub title: String,
     pub launcher_location: PathBuf,
     pub launcher_compat_folder: Option<PathBuf>,
+    pub found_by: FoundBy,
+}
+
+/// Where BoilR found an installed EA game, which decides what its id is and how it starts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FoundBy {
+    /// Origin's `.mfst` manifest: the id holds offer ids.
+    Manifest,
+    /// The game's installer data (the current EA app): the id holds content ids, which the
+    /// EA app's `origin2://` link takes (Playnite's EaLibrary, `EaControllerHelper.cs`).
+    /// Only found on Windows.
+    #[cfg_attr(not(windows), allow(dead_code))]
+    InstallerData,
+}
+
+fn launch_url(game: &EAGame) -> String {
+    match game.found_by {
+        FoundBy::Manifest => make_launch_url(&game.id, &game.launcher_location),
+        FoundBy::InstallerData => format!("origin2://game/launch?offerIds={}", game.id),
+    }
 }
 
 fn make_launch_url(id: &str, launcher_location: &std::path::Path) -> String {
@@ -30,7 +52,7 @@ fn make_launch_url(id: &str, launcher_location: &std::path::Path) -> String {
 
 impl From<EAGame> for ShortcutOwned {
     fn from(game: EAGame) -> Self {
-        let url = make_launch_url(&game.id, &game.launcher_location);
+        let url = launch_url(&game);
         let launch = match game.launcher_compat_folder {
             Some(compat_folder) => format!(
                 "STEAM_COMPAT_DATA_PATH=\"{}\" %command% \"{url}\"",
@@ -54,5 +76,27 @@ impl From<EAGame> for ShortcutOwned {
         owned_shortcut.tags.push("Installed".to_owned());
 
         owned_shortcut
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_game_found_by_its_installer_data_opens_through_the_ea_app() {
+        let game = EAGame {
+            id: "alice2_dd,1002139".to_string(),
+            title: "Alice: Madness Returns".to_string(),
+            launcher_location: PathBuf::from(r"C:\EA\EADesktop.exe"),
+            launcher_compat_folder: None,
+            found_by: FoundBy::InstallerData,
+        };
+        let shortcut: ShortcutOwned = game.into();
+        assert_eq!(
+            shortcut.launch_options,
+            "\"origin2://game/launch?offerIds=alice2_dd,1002139\""
+        );
+        assert!(shortcut.tags.contains(&"Installed".to_string()));
     }
 }
