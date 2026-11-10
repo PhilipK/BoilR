@@ -1,3 +1,5 @@
+#[cfg(windows)]
+mod installer_data;
 mod origin_game;
 mod origin_platform;
 mod settings;
