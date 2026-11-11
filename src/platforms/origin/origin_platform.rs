@@ -46,6 +46,10 @@ impl EAPlatform {
         };
         // The current EA app writes no `.mfst` manifests; its games are found by their
         // installer data. A game found both ways is listed once, as its manifest has it.
+        // These games start through `origin2://` links, which only the program Windows opens
+        // them with handles (the EA app's EALauncher.exe); EADesktop.exe ignores them.
+        #[cfg(windows)]
+        let link_handler = super::installer_data::link_handler(&ea_folders.exe_path);
         #[cfg(windows)]
         for found in super::installer_data::installed_games() {
             let known = games.iter().any(|game| {
@@ -56,7 +60,7 @@ impl EAPlatform {
                 games.push(EAGame {
                     id: found.content_ids.join(","),
                     title: found.title,
-                    launcher_location: ea_folders.exe_path.clone(),
+                    launcher_location: link_handler.clone(),
                     launcher_compat_folder: None,
                     found_by: FoundBy::InstallerData,
                 });

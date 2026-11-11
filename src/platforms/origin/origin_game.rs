@@ -19,7 +19,8 @@ pub enum FoundBy {
     /// Origin's `.mfst` manifest: the id holds offer ids.
     Manifest,
     /// The game's installer data (the current EA app): the id holds content ids, which the
-    /// EA app's `origin2://` link takes (Playnite's EaLibrary, `EaControllerHelper.cs`).
+    /// EA app's `origin2://` link takes (Playnite's EaLibrary, `EaControllerHelper.cs`). The
+    /// launcher is the program Windows opens those links with (EALauncher.exe).
     /// Only found on Windows.
     #[cfg_attr(not(windows), allow(dead_code))]
     InstallerData,
