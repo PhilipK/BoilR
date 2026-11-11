@@ -219,23 +219,22 @@ async fn search_for_images_to_download<T: SearchSettings>(
     let mut to_download = vec![];
     let grid_folder = Path::new(user_data_folder).join("config").join("grid");
     for image_type in types {
-        let images_needed = shortcuts
+        // Each shortcut with the SteamGridDB game id its name search found.
+        let wanted: Vec<(&ShortcutOwned, usize)> = shortcuts
             .iter()
-            .filter(|s| search_results.contains_key(&s.app_id))
             .filter(|s| !search_settins.is_image_banned(&image_type, s.app_id))
-            .filter(|s| !known_images.contains(&image_type.file_name_no_extension(s.app_id)));
-        let image_ids: Vec<usize> = images_needed
-            .clone()
-            .filter_map(|s| search_results.get(&s.app_id))
-            .copied()
+            .filter(|s| !known_images.contains(&image_type.file_name_no_extension(s.app_id)))
+            .filter_map(|s| search_results.get(&s.app_id).map(|game_id| (s, *game_id)))
             .collect();
 
-        let shortcuts: Vec<&ShortcutOwned> = images_needed.collect();
-
-        for image_ids in image_ids.chunks(99) {
+        // SteamGridDB answers at most 99 ids per request. Pair every answer with the shortcut
+        // of its own batch: indexing into the full list put batches 2 and up on the first
+        // 99 games, which then showed other games' artwork while the rest got none.
+        for batch in wanted.chunks(99) {
+            let image_ids: Vec<usize> = batch.iter().map(|(_, game_id)| *game_id).collect();
             let image_search_result = get_images_for_ids(
                 client,
-                image_ids,
+                &image_ids,
                 &image_type,
                 search_settins.download_animated(),
                 search_settins.allow_nsfw(),
@@ -243,15 +242,10 @@ async fn search_for_images_to_download<T: SearchSettings>(
             .await;
             match image_search_result {
                 Ok(images) => {
-                    let images = images.iter().enumerate().filter_map(|(index, image)| {
-                        if let (Some(shortcut), Some(image_id)) =
-                            (shortcuts.get(index), image_ids.get(index))
-                        {
-                            Some((image, shortcut, image_id))
-                        } else {
-                            None
-                        }
-                    });
+                    let images = images
+                        .iter()
+                        .zip(batch)
+                        .map(|(image, (shortcut, game_id))| (image, *shortcut, game_id));
                     let download_for_this_type = stream::iter(images)
                         .filter_map(|(image, shortcut, game_id)| {
                             let extension = image
