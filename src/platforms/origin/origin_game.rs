@@ -62,11 +62,19 @@ impl From<EAGame> for ShortcutOwned {
             None => format!("\"{url}\""),
         };
         let launcher_location = format!("\"{}\"", game.launcher_location.to_string_lossy());
+        // Steam on Windows starts a shortcut in its StartDir and fails with OS error 123
+        // ("Failed running GameID ..." in logs/gameprocess_log.txt) when it is empty.
+        let start_dir = game
+            .launcher_location
+            .parent()
+            .filter(|folder| !folder.as_os_str().is_empty())
+            .map(|folder| format!("\"{}\"", folder.to_string_lossy()))
+            .unwrap_or_default();
         let mut owned_shortcut = Shortcut::new(
             "0",
             game.title.as_str(),
             &launcher_location,
-            "",
+            &start_dir,
             "",
             "",
             launch.as_str(),
@@ -89,11 +97,15 @@ mod tests {
         let game = EAGame {
             id: "alice2_dd,1002139".to_string(),
             title: "Alice: Madness Returns".to_string(),
-            launcher_location: PathBuf::from(r"C:\EA\EADesktop.exe"),
+            launcher_location: PathBuf::from(r"C:\EA Desktop\EALauncher.exe"),
             launcher_compat_folder: None,
             found_by: FoundBy::InstallerData,
         };
         let shortcut: ShortcutOwned = game.into();
+        assert_eq!(shortcut.exe, "\"C:\\EA Desktop\\EALauncher.exe\"");
+        // Only Windows reads `C:\` paths as folders.
+        #[cfg(windows)]
+        assert_eq!(shortcut.start_dir, "\"C:\\EA Desktop\"");
         assert_eq!(
             shortcut.launch_options,
             "\"origin2://game/launch?offerIds=alice2_dd,1002139\""
