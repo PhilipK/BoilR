@@ -120,9 +120,60 @@ pub(crate) fn installed_games() -> Vec<InstalledGame> {
     games
 }
 
+/// The program a Windows `shell\open\command` runs: `"C:\..\EALauncher.exe" "%1"`, or the
+/// same without quotes around the program (the EA app registers `origin2` that way).
+pub(crate) fn command_program(command: &str) -> Option<PathBuf> {
+    let command = command.trim();
+    let program = match command.strip_prefix('"') {
+        Some(quoted) => quoted.split('"').next()?,
+        None => {
+            let end = command.to_ascii_lowercase().find(".exe")? + ".exe".len();
+            command.get(..end)?
+        }
+    };
+    let program = program.trim();
+    (!program.is_empty()).then(|| PathBuf::from(program))
+}
+
+/// The program that opens `origin2://` links, which start EA app games: the one Windows has
+/// registered for them, else `EALauncher.exe` next to the EA app, else the EA app itself.
+#[cfg(windows)]
+pub(crate) fn link_handler(ea_app: &Path) -> PathBuf {
+    use winreg::{enums::HKEY_CLASSES_ROOT, RegKey};
+
+    RegKey::predef(HKEY_CLASSES_ROOT)
+        .open_subkey("origin2\\shell\\open\\command")
+        .and_then(|key| key.get_value::<String, _>(""))
+        .ok()
+        .and_then(|command| command_program(&command))
+        .into_iter()
+        .chain(std::iter::once(ea_app.with_file_name("EALauncher.exe")))
+        .find(|program| program.is_file())
+        .unwrap_or_else(|| ea_app.to_path_buf())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn finds_the_program_of_a_shell_command() {
+        assert_eq!(
+            command_program(
+                r#"C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EALauncher.exe "%1""#
+            ),
+            Some(PathBuf::from(
+                r"C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EALauncher.exe"
+            ))
+        );
+        assert_eq!(
+            command_program(r#""C:\EA Desktop\EALauncher.EXE" "%1""#),
+            Some(PathBuf::from(r"C:\EA Desktop\EALauncher.EXE"))
+        );
+        assert_eq!(command_program(""), None);
+        assert_eq!(command_program("\"\" \"%1\""), None);
+        assert_eq!(command_program("no program here"), None);
+    }
 
     const ALICE: &str = r#"<?xml version='1.0' encoding='utf-8'?>
 <DiPManifest version="4.0">
@@ -187,6 +238,9 @@ mod tests {
     #[test]
     #[ignore = "reads this computer's installed programs"]
     fn lists_the_games_installed_here() {
+        let ea_app =
+            Path::new(r"C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe");
+        println!("origin2 links open with {}", link_handler(ea_app).display());
         for game in installed_games() {
             println!(
                 "{} {:?} {}",
