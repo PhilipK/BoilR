@@ -938,7 +938,7 @@ mod tests {
     use std::sync::{Mutex, OnceLock};
     use tauri::{
         ipc::CallbackFn,
-        test::{get_ipc_response, mock_builder, mock_context, noop_assets, INVOKE_KEY},
+        test::{get_ipc_response, mock_builder, INVOKE_KEY},
         webview::InvokeRequest,
         WebviewWindowBuilder,
     };
@@ -981,7 +981,7 @@ mod tests {
                 rename_game,
                 ping
             ])
-            .build(mock_context(noop_assets()))
+            .build(tauri::generate_context!())
             .expect("failed to build tauri app for tests");
 
         WebviewWindowBuilder::new(&app, "main", Default::default())
@@ -990,11 +990,17 @@ mod tests {
     }
 
     fn invoke_request(cmd: &str) -> InvokeRequest {
+        let url = if cfg!(windows) {
+            "http://tauri.localhost"
+        } else {
+            "tauri://localhost"
+        };
+
         InvokeRequest {
             cmd: cmd.into(),
             callback: CallbackFn(0),
             error: CallbackFn(1),
-            url: "http://tauri.localhost".parse().unwrap(),
+            url: url.parse().unwrap(),
             body: Default::default(),
             headers: Default::default(),
             invoke_key: INVOKE_KEY.to_string(),
@@ -1265,5 +1271,37 @@ mod tests {
         }
 
         let _ = fs::remove_dir_all(&workspace_config);
+    }
+
+    #[test]
+    fn library_list_backups_command_returns_payload() {
+        let webview = build_mock_webview();
+        let response = get_ipc_response(&webview, invoke_request("list_backups"))
+            .expect("list_backups command should succeed through IPC");
+        assert!(response.deserialize::<Vec<String>>().is_ok());
+    }
+
+    #[test]
+    fn artwork_list_steam_accounts_command_returns_payload() {
+        let webview = build_mock_webview();
+        match get_ipc_response(&webview, invoke_request("list_steam_accounts")) {
+            Ok(response) => {
+                assert!(response.deserialize::<serde_json::Value>().is_ok());
+            }
+            Err(err) => {
+                let err_msg = format!("{err:?}");
+                // Verify the command was not blocked by Tauri ACL
+                assert!(
+                    !err_msg.contains("not allowed"),
+                    "command was rejected by ACL: {err_msg}"
+                );
+                // Confirm the error originated from the command's own logic
+                assert!(
+                    err_msg.contains("Steam folder not found")
+                        || err_msg.contains("No Steam accounts found"),
+                    "unexpected IPC error: {err_msg}"
+                );
+            }
+        }
     }
 }
