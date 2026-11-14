@@ -115,6 +115,7 @@ pub struct AmazonGame {
 impl From<AmazonGame> for ShortcutOwned {
     fn from(game: AmazonGame) -> Self {
         let launch = format!("amazon-games://play/{}", game.id);
+        let identity = crate::sync::shortcut_identity("amazon", &game.id);
         let exe = game.launcher_path.to_string_lossy().to_string();
         let start_dir = game
             .launcher_path
@@ -122,7 +123,7 @@ impl From<AmazonGame> for ShortcutOwned {
             .unwrap_or_else(|| Path::new(""))
             .to_string_lossy()
             .to_string();
-        Shortcut::new(
+        let mut shortcut = Shortcut::new(
             "0",
             game.title.as_str(),
             exe.as_str(),
@@ -131,7 +132,9 @@ impl From<AmazonGame> for ShortcutOwned {
             "",
             launch.as_str(),
         )
-        .to_owned()
+        .to_owned();
+        shortcut.dev_kit_game_id = identity;
+        shortcut
     }
 }
 

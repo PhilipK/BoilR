@@ -67,6 +67,7 @@ fn discover_games() -> Result<Vec<PlatformSummary>, String> {
                     shortcut,
                     needs_proton,
                     needs_symlinks,
+                    installed: _,
                 } = shortcut;
                 let app_id = shortcut.app_id;
                 let display_name = rename_map

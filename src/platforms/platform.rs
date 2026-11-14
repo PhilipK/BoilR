@@ -28,6 +28,9 @@ pub struct ShortcutToImport {
     pub shortcut: ShortcutOwned,
     pub needs_proton: bool,
     pub needs_symlinks: bool,
+    /// False for games a store account owns but that are not installed; their shortcut
+    /// installs the game. Every launcher platform reports installed games.
+    pub installed: bool,
 }
 
 pub(crate) fn to_shortcuts<T, P>(
@@ -48,6 +51,7 @@ where
             shortcut,
             needs_proton,
             needs_symlinks,
+            installed: true,
         });
     }
     Ok(shortcut_info)
@@ -69,6 +73,7 @@ where
             shortcut,
             needs_proton,
             needs_symlinks,
+            installed: true,
         });
     }
     Ok(shortcut_info)
@@ -117,6 +122,7 @@ mod tests {
             shortcut: Shortcut::new("0", name, "exe", "", "", "", "").to_owned(),
             needs_proton: false,
             needs_symlinks: false,
+            installed: true,
         }
     }
 

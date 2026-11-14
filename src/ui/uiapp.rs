@@ -158,6 +158,9 @@ fn create_games_to_sync(rt: &mut Runtime, platforms: &[Box<dyn GamesPlatform>]) 
             let platform = platform.clone();
             rt.spawn_blocking(move || {
                 let _ = tx.send(FetchStatus::Fetching);
+                // A store account's list is fetched again first when it got old. Every
+                // source loads on its own thread, so this holds up no other source.
+                crate::platforms::accounts::refresh_stale_library(platform.code_name());
                 let games_to_sync = get_platform_shortcuts(platform);
                 let _ = tx.send(FetchStatus::Fetched(games_to_sync));
             });

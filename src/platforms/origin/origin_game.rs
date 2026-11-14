@@ -51,6 +51,14 @@ fn make_launch_url(id: &str, launcher_location: &std::path::Path) -> String {
     }
 }
 
+/// Every id in the `.mfst` id (URL-encoded, possibly several offers). The first is the
+/// game's own offer; the account may list the game under any of them, and the sync matches
+/// an owned entry on any (see `accounts::arrange_owned`).
+fn manifest_identity(id: &str) -> Option<String> {
+    let ids = boilr_stores::ea::manifest_ids(id);
+    (!ids.is_empty()).then(|| crate::sync::shortcut_identity("ea", &ids.join(",")))
+}
+
 impl From<EAGame> for ShortcutOwned {
     fn from(game: EAGame) -> Self {
         let url = launch_url(&game);
@@ -84,6 +92,9 @@ impl From<EAGame> for ShortcutOwned {
             launch.as_str(),
         )
         .to_owned();
+        if let Some(identity) = manifest_identity(&game.id) {
+            owned_shortcut.dev_kit_game_id = identity;
+        }
         owned_shortcut.tags.push("Origin/EA Desktop".to_owned());
         owned_shortcut.tags.push("Ready TO Play".to_owned());
         owned_shortcut.tags.push("Installed".to_owned());
@@ -116,6 +127,16 @@ mod tests {
             shortcut.launch_options,
             "\"origin2://game/launch?offerIds=alice2_dd,1002139\""
         );
+        assert_eq!(shortcut.dev_kit_game_id, "boilr:ea:alice2_dd,1002139");
         assert!(shortcut.tags.contains(&"Installed".to_string()));
+    }
+
+    #[test]
+    fn identity_lists_every_offer_of_a_manifest_id() {
+        assert_eq!(
+            manifest_identity("OFB-EAST%3a52735,OFB-EAST%3a1"),
+            Some("boilr:ea:OFB-EAST:52735,OFB-EAST:1".to_string())
+        );
+        assert_eq!(manifest_identity(""), None);
     }
 }

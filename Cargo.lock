@@ -699,6 +699,7 @@ name = "boilr"
 version = "1.11.0"
 dependencies = [
  "boilr-core",
+ "boilr-stores",
  "color-eyre",
  "copypasta",
  "dyn-clone",
@@ -720,6 +721,7 @@ dependencies = [
  "time",
  "tokio",
  "toml 1.2.1+spec-1.1.0",
+ "url",
  "wayland-cursor",
  "winreg 0.56.0",
  "winres",

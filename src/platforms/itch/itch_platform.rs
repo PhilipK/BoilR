@@ -68,6 +68,7 @@ fn dbpath_to_game(paths: &DbPaths) -> Option<ItchGame> {
                         install_path: paths.base_path.to_owned(),
                         executable: executable.to_owned(),
                         title: re.game.title,
+                        game_id: re.game.id,
                     });
                 }
             }

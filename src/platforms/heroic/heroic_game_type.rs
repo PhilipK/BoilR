@@ -12,6 +12,8 @@ pub enum HeroicGameType {
         title: String,
         app_name: String,
         install_mode: InstallationMode,
+        /// The store the game comes from (`epic`, `gog` or `amazon`), for its identity.
+        store: &'static str,
     },
 }
 
@@ -20,11 +22,7 @@ impl HeroicGameType {
         match self {
             HeroicGameType::Epic(g) => g.app_name.as_ref(),
             HeroicGameType::Gog(g, _) => g.game_id.as_ref(),
-            HeroicGameType::Heroic {
-                title: _,
-                app_name,
-                install_mode: _,
-            } => app_name,
+            HeroicGameType::Heroic { app_name, .. } => app_name,
         }
     }
 
@@ -33,11 +31,7 @@ impl HeroicGameType {
         match self {
             HeroicGameType::Epic(g) => g.title.as_ref(),
             HeroicGameType::Gog(g, _) => g.name.as_ref(),
-            HeroicGameType::Heroic {
-                title,
-                app_name: _,
-                install_mode: _,
-            } => title.as_ref(),
+            HeroicGameType::Heroic { title, .. } => title.as_ref(),
         }
     }
 }
@@ -51,6 +45,7 @@ impl From<HeroicGameType> for ShortcutOwned {
                 title,
                 app_name,
                 install_mode,
+                store,
             } => {
                 let launch_parameter = format!("heroic://launch/{app_name}");
                 let (exe, parameter) = match install_mode {
@@ -68,6 +63,7 @@ impl From<HeroicGameType> for ShortcutOwned {
                 shortcut.tags.push("Heroic".to_owned());
                 shortcut.tags.push("Ready TO Play".to_owned());
                 shortcut.tags.push("Installed".to_owned());
+                shortcut.dev_kit_game_id = crate::sync::shortcut_identity(store, &app_name);
                 shortcut
             }
         }

@@ -38,6 +38,8 @@ required-features = ["egui-ui"]
 
 [dependencies]
 boilr-core = { path = "crates/boilr-core" }
+boilr-stores = { path = "crates/boilr-stores" }
+url = "^2.5.4"
 copypasta = { version = "^0.10.1", optional = true }
 flate2 = "^1.0.34"
 is_executable = "^1.0.4"

@@ -13,6 +13,9 @@ pub struct ItchGame {
     pub install_path: String,
     pub executable: String,
     pub title: String,
+    /// The itch.io game id from butler's receipt, which matches the account's owned games.
+    #[serde(default)]
+    pub game_id: Option<u64>,
 }
 
 impl From<ItchGame> for ShortcutOwned {
@@ -42,6 +45,10 @@ impl From<ItchGame> for ShortcutOwned {
         owned_shortcut.tags.push("Itch".to_owned());
         owned_shortcut.tags.push("Ready TO Play".to_owned());
         owned_shortcut.tags.push("Installed".to_owned());
+        if let Some(id) = game.game_id {
+            owned_shortcut.dev_kit_game_id =
+                crate::sync::shortcut_identity("itch", &id.to_string());
+        }
 
         owned_shortcut
     }

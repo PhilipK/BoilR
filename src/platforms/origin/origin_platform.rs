@@ -53,7 +53,7 @@ impl EAPlatform {
         #[cfg(windows)]
         for found in super::installer_data::installed_games() {
             let known = games.iter().any(|game| {
-                let ids = manifest_ids(&game.id);
+                let ids = boilr_stores::ea::manifest_ids(&game.id);
                 found.content_ids.iter().any(|id| ids.contains(id))
             });
             if !known {
@@ -94,23 +94,6 @@ fn manifest_games(content_folder: &Path, ea_folders: &EAPathData) -> eyre::Resul
             })
         });
     Ok(games.collect())
-}
-
-/// Every id in a `.mfst` id: it is URL-encoded and can name several offers
-/// (`OFB-EAST%3a52735,OFB-EAST%3a1`).
-#[cfg_attr(not(windows), allow(dead_code))]
-fn manifest_ids(manifest_id: &str) -> Vec<String> {
-    let decoded = manifest_id
-        .replace("%3a", ":")
-        .replace("%3A", ":")
-        .replace("%2c", ",")
-        .replace("%2C", ",");
-    decoded
-        .split(',')
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
-        .map(str::to_string)
-        .collect()
 }
 
 fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {
@@ -287,19 +270,5 @@ impl FromSettingsString for EAPlatform {
         EAPlatform {
             settings: load_settings(s),
         }
-    }
-}
-
-#[cfg(test)]
-mod manifest_tests {
-    use super::manifest_ids;
-
-    #[test]
-    fn manifest_ids_are_decoded_and_split() {
-        assert_eq!(
-            manifest_ids("OFB-EAST%3a52735,OFB-EAST%3A1"),
-            vec!["OFB-EAST:52735", "OFB-EAST:1"]
-        );
-        assert!(manifest_ids("").is_empty());
     }
 }

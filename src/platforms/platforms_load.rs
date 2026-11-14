@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use super::GamesPlatform;
 
 use crate::settings::load_setting_sections;
-const PLATFORM_NAMES: [&str; 15] = [
+const PLATFORM_NAMES: [&str; 22] = [
     "amazon",
     "bottles",
     "epic_games",
@@ -20,6 +20,14 @@ const PLATFORM_NAMES: [&str; 15] = [
     "playnite",
     "gamepass",
     "standalone",
+    // Store accounts: every owned game, installed or not.
+    "epic_account",
+    "gog_account",
+    "amazon_account",
+    "ea_account",
+    "battlenet_account",
+    "humble_account",
+    "itch_account",
 ];
 
 // Listed in PLATFORM_NAMES so their settings sections are known everywhere, but they only build on Windows.
@@ -34,6 +42,10 @@ pub fn load_platform<A: AsRef<str>, B: AsRef<str>>(
 ) -> eyre::Result<Box<dyn GamesPlatform>> {
     let name = name.as_ref();
     let s = settings_string.as_ref();
+
+    if let Some(store) = super::accounts::store_for_code_name(name) {
+        return Ok(Box::new(super::accounts::AccountPlatform::new(store, s)));
+    }
 
     #[cfg(not(target_family = "unix"))]
     {
