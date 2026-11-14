@@ -1,0 +1,33 @@
+{
+  "response": {
+    "success": {
+      "extensions": {
+        "device_info": {
+          "device_name": "Jane's 3rd AGSLauncher for Windows",
+          "device_serial_number": "SERIALFROMAMAZON",
+          "device_type": "A2UMVHOX7UP4V7"
+        },
+        "customer_info": {
+          "account_pool": "Amazon",
+          "user_id": "amzn1.account.TEST",
+          "home_region": "NA",
+          "name": "Jane Player",
+          "given_name": "Jane"
+        }
+      },
+      "tokens": {
+        "mac_dms": {
+          "device_private_key": "MIIE...",
+          "adp_token": "{enc:...}"
+        },
+        "bearer": {
+          "access_token": "Atna|access",
+          "refresh_token": "Atnr|refresh",
+          "expires_in": "3600"
+        }
+      },
+      "customer_id": "amzn1.account.TEST"
+    }
+  },
+  "request_id": "00000000-0000-0000-0000-000000000000"
+}

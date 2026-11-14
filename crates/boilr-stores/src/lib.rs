@@ -845,6 +845,34 @@ mod tests {
     }
 
     #[test]
+    fn a_sign_in_keeps_its_state_until_it_ends() {
+        let _alone = alone();
+        // Amazon's sign-in link carries a PKCE challenge: the link the user opened and the
+        // login that finishes it must share the verifier.
+        let opened = pending_login(StoreId::Amazon);
+        let finished = pending_login(StoreId::Amazon);
+        assert_eq!(opened.start_url, finished.start_url);
+        assert_eq!(opened.state, finished.state);
+
+        end_pending_login(StoreId::Amazon);
+        assert_ne!(pending_login(StoreId::Amazon).state, opened.state);
+        end_pending_login(StoreId::Amazon);
+    }
+
+    #[test]
+    fn reading_a_status_starts_no_login() {
+        let _alone = alone();
+        end_pending_login(StoreId::Amazon);
+        let status = account_status(StoreId::Amazon);
+        assert!(status.webview_login);
+        assert!(matches!(status.manual, ManualLogin::Paste { .. }));
+        assert!(!PENDING_LOGINS
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .contains_key(&StoreId::Amazon));
+    }
+
+    #[test]
     fn recent_failures_hold_off_retries_and_survive_a_restart() {
         let _alone = alone();
         let store = StoreId::Humble;
@@ -914,6 +942,35 @@ mod tests {
         assert!(http::is_transient(&outage) && !http::is_login_rejected(&outage));
         let plain = redacted(eyre::format_err!("unexpected answer"));
         assert!(!http::is_transient(&plain) && !http::is_login_rejected(&plain));
+    }
+
+    #[test]
+    fn debug_output_shows_no_secrets() {
+        let session = Session {
+            account_name: Some("player".into()),
+            data: serde_json::json!({ "refresh_token": "SECRET" }),
+        };
+        let cookie = Cookie {
+            name: "sid".into(),
+            value: "SECRET".into(),
+            domain: "accounts.ea.com".into(),
+        };
+        let capture = LoginCapture {
+            final_url: Some("https://x/?code=SECRET".into()),
+            page_text: Some("SECRET".into()),
+            cookies: vec![cookie.clone()],
+            pasted: Some("SECRET".into()),
+        };
+        let pending = begin_login(StoreId::Amazon);
+        let shown = format!("{session:?} {cookie:?} {capture:?} {pending:?}");
+        assert!(!shown.contains("SECRET"), "{shown}");
+        assert!(shown.contains("player") && shown.contains("accounts.ea.com"));
+        let verifier = pending
+            .state
+            .get("code_verifier")
+            .and_then(|v| v.as_str())
+            .unwrap_or("no verifier in the state");
+        assert!(!shown.contains(verifier), "{shown}");
     }
 
     #[test]

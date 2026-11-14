@@ -1,0 +1,24 @@
+{
+  "entitlements": [
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000004",
+      "product": {
+        "id": "amzn1.adg.product.11111111-1111-1111-1111-111111111111",
+        "productLine": "Sonic:Game",
+        "title": "Fallout: New Vegas Ultimate Edition"
+      }
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000005",
+      "product": {
+        "id": "amzn1.adg.product.33333333-3333-3333-3333-333333333333",
+        "productLine": "Sonic:Game",
+        "title": "Second Game",
+        "sku": ""
+      }
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000006"
+    }
+  ]
+}
