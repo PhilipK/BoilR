@@ -15,6 +15,7 @@ const FIELD_LABELS: Record<string, string> = {
   installed: "Only installed games",
   create_symlinks: "Create folder shortcuts",
   safe_launch: "Launch through the launcher",
+  steam_overlay: "Steam overlay also when the launcher is open (closes it before each game)",
 };
 
 const Section = ({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) => (
