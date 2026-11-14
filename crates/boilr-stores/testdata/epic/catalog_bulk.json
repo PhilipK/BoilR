@@ -1,0 +1,78 @@
+{
+  "cat-fortnite": {
+    "id": "cat-fortnite",
+    "title": "Fortnite",
+    "namespace": "ns-fortnite",
+    "categories": [{"path": "games"}, {"path": "applications"}],
+    "customAttributes": {
+      "CanRunOffline": {"type": "STRING", "value": "false"},
+      "com.epicgames.app.productSlug": {"type": "STRING", "value": "fortnite"}
+    },
+    "mainGameItem": null
+  },
+  "cat-control": {
+    "id": "cat-control",
+    "title": "Control™ Ultimate Edition",
+    "namespace": "ns-control",
+    "categories": [{"path": "public"}, {"path": "games"}, {"path": "applications"}],
+    "customAttributes": {
+      "com.epicgames.app.productSlug": {"type": "STRING", "value": "control/home"}
+    }
+  },
+  "cat-control-dlc": {
+    "id": "cat-control-dlc",
+    "title": "Control - AWE",
+    "namespace": "ns-control",
+    "categories": [{"path": "addons"}, {"path": "applications"}],
+    "mainGameItem": {"id": "cat-control", "namespace": "ns-control"}
+  },
+  "cat-control-launchable": {
+    "id": "cat-control-launchable",
+    "title": "Control Standalone Expansion",
+    "namespace": "ns-control",
+    "categories": [{"path": "addons"}, {"path": "addons/launchable"}, {"path": "applications"}],
+    "mainGameItem": {"id": "cat-control", "namespace": "ns-control"}
+  },
+  "cat-ea": {
+    "id": "cat-ea",
+    "title": "Star Wars Jedi: Fallen Order®",
+    "namespace": "ns-ea",
+    "categories": [{"path": "games"}, {"path": "applications"}],
+    "customAttributes": {
+      "ThirdPartyManagedApp": {"type": "STRING", "value": "The EA App"},
+      "partnerLinkType": {"type": "STRING", "value": "ea"}
+    }
+  },
+  "cat-ubi": {
+    "id": "cat-ubi",
+    "title": "Assassin's Creed Valhalla",
+    "namespace": "ns-ubi",
+    "categories": [{"path": "games"}, {"path": "applications"}],
+    "customAttributes": {
+      "ThirdPartyManagedProvider": {"type": "STRING", "value": "UbisoftConnect"},
+      "partnerLinkType": {"type": "STRING", "value": "ubisoft"}
+    }
+  },
+  "cat-soundtrack": {
+    "id": "cat-soundtrack",
+    "title": "Original Soundtrack",
+    "namespace": "ns-extras",
+    "categories": [{"path": "digitalextras"}, {"path": "applications"}]
+  },
+  "cat-plugin": {
+    "id": "cat-plugin",
+    "title": "Engine Plugin",
+    "namespace": "ns-plugin",
+    "categories": [{"path": "plugins/engine"}, {"path": "applications"}]
+  },
+  "cat-noapps": {
+    "id": "cat-noapps",
+    "title": "A bundle",
+    "namespace": "ns-noapps",
+    "categories": [{"path": "bundles"}]
+  },
+  "cat-broken": {
+    "id": 12,
+    "categories": "not a list"
+  }
+}

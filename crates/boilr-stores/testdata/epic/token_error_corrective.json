@@ -1,0 +1,11 @@
+{
+  "errorCode": "errors.com.epicgames.oauth.corrective_action_required",
+  "errorMessage": "Corrective action is required to continue.",
+  "messageVars": [],
+  "numericErrorCode": 18206,
+  "originatingService": "com.epicgames.account.public",
+  "intent": "prod",
+  "correctiveAction": "PRIVACY_POLICY_ACCEPTANCE",
+  "continuationUrl": "https://www.epicgames.com/id/login/corrective?continuation=abc",
+  "continuation": "abc"
+}

@@ -1,0 +1,17 @@
+{
+  "access_token": "eg1~access",
+  "expires_in": 7200,
+  "expires_at": "2026-11-08T14:00:00.000Z",
+  "token_type": "bearer",
+  "refresh_token": "eg1~refresh",
+  "refresh_expires": 1987200,
+  "refresh_expires_at": "2026-12-01T12:00:00.000Z",
+  "account_id": "0123456789abcdef0123456789abcdef",
+  "client_id": "34a02cf8f4414e29b15921876da36f9a",
+  "internal_client": true,
+  "client_service": "launcher",
+  "displayName": "Player One",
+  "app": "launcher",
+  "in_app_id": "0123456789abcdef0123456789abcdef",
+  "device_id": "fedcba9876543210fedcba9876543210"
+}
