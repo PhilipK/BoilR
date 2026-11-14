@@ -247,6 +247,11 @@ fn update_platform_settings(
 }
 
 fn main() {
+    // A Steam shortcut that waits for its game (boilr_core::launch_and_wait): no window.
+    let launch_args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(result) = boilr_core::launch_and_wait::run_if_asked(&launch_args) {
+        std::process::exit(if result.is_ok() { 0 } else { 1 });
+    }
     // WebKitGTK's DMA-BUF renderer leaves a blank or crashing window on some drivers (NVIDIA
     // proprietary, some Mesa setups, #559). Shared memory keeps GPU rendering and works there.
     // Set before any thread starts; a value the user set wins.
