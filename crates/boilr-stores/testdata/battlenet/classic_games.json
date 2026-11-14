@@ -1,0 +1,19 @@
+{
+  "classicGames": [
+    {
+      "localizedGameName": "Warcraft III: Reign of Chaos",
+      "regionalGameFranchiseIconFilename": "warcraft-iii-reign-of-chaos.png",
+      "cdKeys": ["XXXX-XXXX-XXXX-XXXX"]
+    },
+    {
+      "localizedGameName": "Warcraft III: The Frozen Throne",
+      "regionalGameFranchiseIconFilename": "warcraft-iii-the-frozen-throne.png",
+      "cdKeys": ["YYYY-YYYY-YYYY-YYYY"]
+    },
+    {
+      "localizedGameName": "Diablo II",
+      "regionalGameFranchiseIconFilename": "diablo-ii.png",
+      "cdKeys": ["ZZZZ-ZZZZ-ZZZZ-ZZZZ"]
+    }
+  ]
+}

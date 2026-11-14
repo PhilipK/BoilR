@@ -376,6 +376,243 @@ pub fn query_param(url: &str, name: &str) -> Option<String> {
         .map(|(_, v)| v.into_owned())
 }
 
+/// A client whose cookie jar is seeded from a saved session, so cookies follow redirects and
+/// cookies a store renews can be read back into the session. Used by the cookie-session
+/// stores (EA, Battle.net).
+pub mod cookie_jar {
+    use std::sync::Arc;
+
+    use reqwest::{cookie::Jar, Client};
+
+    use crate::{http, Cookie};
+
+    /// The jar of a client made by [`client_with`], and the cookies it started with.
+    pub(crate) struct SessionJar {
+        jar: Arc<Jar>,
+        seeded: Vec<Cookie>,
+    }
+
+    impl std::ops::Deref for SessionJar {
+        type Target = Jar;
+
+        fn deref(&self) -> &Jar {
+            &self.jar
+        }
+    }
+
+    pub(crate) fn client_with(cookies: &[Cookie]) -> eyre::Result<(Client, SessionJar)> {
+        let jar = Arc::new(Jar::default());
+        for cookie in cookies {
+            add(&jar, cookie);
+        }
+        let client = http::builder().cookie_provider(jar.clone()).build()?;
+        let seeded = cookies.to_vec();
+        Ok((client, SessionJar { jar, seeded }))
+    }
+
+    /// Adds a saved cookie for its domain and every subdomain.
+    ///
+    /// A login window hands cookies over without saying whether they are host-only: the
+    /// `cookie` crate drops a domain's leading dot, so `.battle.net` and a host-only
+    /// `battle.net` cookie look the same. Treating each one as a domain cookie sends it to
+    /// the hosts the browser would have sent it to (and, for a cookie that was host-only, to
+    /// that host's subdomains as well, which stores do not mind). A cookie the store renews
+    /// for the same domain and path replaces the saved one.
+    fn add(jar: &Jar, cookie: &Cookie) {
+        let host = cookie.domain.trim_start_matches('.');
+        if host.is_empty() || cookie.name.is_empty() {
+            return;
+        }
+        let Ok(url) = url::Url::parse(&format!("https://{host}/")) else {
+            return;
+        };
+        jar.add_cookie_str(
+            &format!("{}={}; Domain={host}; Path=/", cookie.name, cookie.value),
+            &url,
+        );
+    }
+
+    /// `at` as a URL: a full URL as it is, a bare host as `https://<host>/`.
+    fn url_of(at: &str) -> Option<url::Url> {
+        if at.contains("://") {
+            url::Url::parse(at).ok()
+        } else {
+            url::Url::parse(&format!("https://{at}/")).ok()
+        }
+    }
+
+    /// The `name=value` pairs the jar would send to `at` (a host or a URL).
+    pub(crate) fn pairs_for(jar: &Jar, at: &str) -> Vec<(String, String)> {
+        use reqwest::cookie::CookieStore;
+        let Some(url) = url_of(at) else {
+            return vec![];
+        };
+        let Some(header) = jar.cookies(&url) else {
+            return vec![];
+        };
+        header
+            .to_str()
+            .unwrap_or_default()
+            .split(';')
+            .filter_map(|pair| {
+                let (name, value) = pair.trim().split_once('=')?;
+                Some((name.to_string(), value.to_string()))
+            })
+            .collect()
+    }
+
+    /// Copies renewed cookie values from the jar into `cookies`, and adds cookies the stores
+    /// set since. `at` lists the hosts or URLs BoilR calls; give the URL a store renews its
+    /// cookies on when they are scoped to a path (`https://accounts.ea.com/connect/auth`).
+    ///
+    /// A cookie renewed for a deeper path than `/` sits in the jar next to the seeded one.
+    /// Of two values for one name, the one that is not the seeded value is the renewed one.
+    pub(crate) fn refresh(cookies: &mut Vec<Cookie>, jar: &SessionJar, at: &[&str]) {
+        for at in at {
+            let Some(host) = url_of(at).and_then(|url| url.host_str().map(str::to_string)) else {
+                continue;
+            };
+            let pairs = pairs_for(jar, at);
+            let mut done: Vec<&str> = Vec::new();
+            for (name, _) in &pairs {
+                if done.contains(&name.as_str()) {
+                    continue;
+                }
+                done.push(name);
+                let seeded = jar
+                    .seeded
+                    .iter()
+                    .find(|c| &c.name == name && http::domain_matches(&c.domain, &host))
+                    .map(|c| c.value.as_str());
+                let mut values = pairs.iter().filter(|(n, _)| n == name).map(|(_, v)| v);
+                let Some(value) = values
+                    .clone()
+                    .find(|v| Some(v.as_str()) != seeded)
+                    .or_else(|| values.next())
+                else {
+                    continue;
+                };
+                match cookies
+                    .iter_mut()
+                    .find(|c| &c.name == name && http::domain_matches(&c.domain, &host))
+                {
+                    Some(existing) => existing.value = value.clone(),
+                    None => cookies.push(Cookie {
+                        name: name.clone(),
+                        value: value.clone(),
+                        domain: host.clone(),
+                    }),
+                }
+            }
+        }
+    }
+
+    /// The cookies a browser would send to any of `hosts`, one per name and domain (the
+    /// last wins). Cookies for other hosts of the same site (its shop, its forum, trackers)
+    /// are not needed to list games, so they are not kept.
+    pub(crate) fn keep_for_hosts(cookies: &[Cookie], hosts: &[&str]) -> Vec<Cookie> {
+        let mut kept: Vec<Cookie> = Vec::new();
+        for cookie in cookies {
+            let domain = cookie.domain.trim_start_matches('.');
+            if domain.is_empty()
+                || !hosts
+                    .iter()
+                    .any(|host| http::domain_matches(&cookie.domain, host))
+            {
+                continue;
+            }
+            kept.retain(|c| !(c.name == cookie.name && c.domain == cookie.domain));
+            kept.push(cookie.clone());
+        }
+        kept
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        fn cookie(name: &str, value: &str, domain: &str) -> Cookie {
+            Cookie {
+                name: name.into(),
+                value: value.into(),
+                domain: domain.into(),
+            }
+        }
+
+        #[test]
+        fn cookies_reach_subdomains_whatever_the_capture_calls_their_domain() -> eyre::Result<()> {
+            // A login window reports `.battle.net` as `battle.net` (no leading dot).
+            let captured = vec![
+                cookie("login", "1", "battle.net"),
+                cookie("host", "2", "oauth.battle.net"),
+                cookie("dotted", "3", ".battle.net"),
+            ];
+            let (_client, jar) = client_with(&captured)?;
+            let mut names: Vec<String> = pairs_for(&jar, "oauth.battle.net")
+                .into_iter()
+                .map(|(name, _)| name)
+                .collect();
+            names.sort();
+            assert_eq!(names, vec!["dotted", "host", "login"]);
+            let other: Vec<String> = pairs_for(&jar, "account.battle.net")
+                .into_iter()
+                .map(|(name, _)| name)
+                .collect();
+            assert!(other.contains(&"login".to_string()));
+            assert!(!other.contains(&"host".to_string()));
+            assert!(pairs_for(&jar, "example.com").is_empty());
+            Ok(())
+        }
+
+        #[test]
+        fn renewed_cookies_are_read_back_whatever_their_path() -> eyre::Result<()> {
+            let mut saved = vec![
+                cookie("sid", "old", "accounts.ea.com"),
+                cookie("remid", "keep", "accounts.ea.com"),
+            ];
+            let (_client, jar) = client_with(&saved)?;
+            let auth = url::Url::parse("https://accounts.ea.com/connect/auth")?;
+            // The store renews `sid` without a path, so it is scoped to `/connect`.
+            jar.add_cookie_str("sid=new", &auth);
+            jar.add_cookie_str("fresh=1; Path=/", &auth);
+
+            let at = ["https://accounts.ea.com/connect/auth"];
+            refresh(&mut saved, &jar, &at);
+            // Twice gives the same answer.
+            refresh(&mut saved, &jar, &at);
+
+            let value = |name: &str| {
+                saved
+                    .iter()
+                    .find(|c| c.name == name)
+                    .map(|c| c.value.clone())
+            };
+            assert_eq!(value("sid").as_deref(), Some("new"));
+            assert_eq!(value("remid").as_deref(), Some("keep"));
+            assert_eq!(value("fresh").as_deref(), Some("1"));
+            assert_eq!(saved.len(), 3);
+            Ok(())
+        }
+
+        #[test]
+        fn only_cookies_for_the_hosts_in_use_are_kept() {
+            let captured = vec![
+                cookie("sid", "1", "accounts.ea.com"),
+                cookie("site", "2", "ea.com"),
+                cookie("shop", "3", "www.ea.com"),
+                cookie("sid", "4", "accounts.ea.com"),
+                cookie("other", "5", "example.com"),
+            ];
+            let kept = keep_for_hosts(&captured, &["accounts.ea.com"]);
+            let names: Vec<(&str, &str)> = kept
+                .iter()
+                .map(|c| (c.name.as_str(), c.value.as_str()))
+                .collect();
+            assert_eq!(names, vec![("site", "2"), ("sid", "4")]);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

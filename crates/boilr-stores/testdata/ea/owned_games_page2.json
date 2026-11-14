@@ -1,0 +1,85 @@
+{
+  "data": {
+    "me": {
+      "id": "1234",
+      "ownedGameProducts": {
+        "next": null,
+        "totalCount": 4,
+        "items": [
+          {
+            "id": "OFB-EAST:52735",
+            "originOfferId": "OFB-EAST:52735",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_zumas-revenge-standard-edition-mac-pc-ww-juno-3pdd_VideoGameProduct_nl_pc",
+              "name": "Zuma's Revenge™",
+              "downloadable": true,
+              "gameSlug": "zumas-revenge",
+              "isUngatedTrial": false,
+              "lifecycleStatus": [
+                {
+                  "lifecycleType": "SELF",
+                  "downloadDate": "2009-09-15T04:00:00.000Z",
+                  "playableStartDate": "2009-09-15T04:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": "2017-01-01T00:00:00.000Z",
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                }
+              ],
+              "availableInSubscription": [],
+              "trialDetails": null,
+              "baseItem": {
+                "id": "en_zumas-revenge_VideoGame_nl_pc",
+                "baseGameSlug": null,
+                "gameType": "BASE_GAME",
+                "title": "Zuma's Revenge!",
+                "prereleaseGameType": null,
+                "hasGameHubPage": true,
+                "isLauncher": false,
+                "__typename": "Game"
+              },
+              "gamePlatformDetails": {
+                "gamePlatform": "MAC_PC",
+                "__typename": "GamePlatformDetails"
+              },
+              "gameProductUser": {
+                "ownershipMethods": [
+                  "PURCHASE",
+                  "ENTITLEMENT_GRANT"
+                ],
+                "initialEntitlementDate": "2015-08-17T21:39:00.000Z",
+                "entitlementId": "1008020756412",
+                "gameProductUserTrial": null,
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "purchaseStatus": {
+                "repurchasable": false,
+                "__typename": "PurchaseStatus"
+              },
+              "downloadPackageTypeDetails": [
+                {
+                  "platform": "MAC",
+                  "downloadPackageType": "DOWNLOAD_IN_PLACE",
+                  "__typename": "DownloadPackageTypeDetails"
+                },
+                {
+                  "platform": "PC",
+                  "downloadPackageType": "DOWNLOAD_IN_PLACE",
+                  "__typename": "DownloadPackageTypeDetails"
+                }
+              ],
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          }
+        ],
+        "__typename": "UserGameProductCursorPage"
+      },
+      "__typename": "User"
+    }
+  }
+}

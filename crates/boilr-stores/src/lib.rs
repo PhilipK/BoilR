@@ -162,7 +162,7 @@ impl std::fmt::Debug for Session {
 }
 
 /// A cookie captured from a login webview. `domain` is as the webview reports it, which
-/// does not tell a host-only cookie from a domain cookie.
+/// does not tell a host-only cookie from a domain cookie (see [`http::cookie_jar`]).
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Cookie {
     pub name: String,

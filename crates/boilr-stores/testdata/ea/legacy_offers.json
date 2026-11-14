@@ -1,0 +1,42 @@
+{
+  "data": {
+    "legacyOffers": [
+      {
+        "offerId": "Origin.OFR.50.0002487",
+        "contentId": "1028663",
+        "displayName": "A Way Out",
+        "basePlatform": "PCWIN",
+        "softwarePlatform": "PCWIN",
+        "installCheckOverride": "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Hazelight\\AWayOut\\Install Dir]\\Haze1\\Binaries\\Win64\\AWayOut.exe",
+        "installationDirectory": "AWayOut"
+      },
+      {
+        "offerId": "DR:225064100",
+        "contentId": "70619",
+        "displayName": "Battlefield 3™",
+        "basePlatform": "PCWIN",
+        "softwarePlatform": "PCWIN",
+        "installCheckOverride": "[HKEY_LOCAL_MACHINE\\SOFTWARE\\EA Games\\Battlefield 3\\Install Dir]\\bf3.exe",
+        "installationDirectory": "Battlefield 3"
+      },
+      {
+        "offerId": "OFB-EAST:57289",
+        "contentId": "1003310",
+        "displayName": "Crysis® (2007)",
+        "basePlatform": "PCWIN",
+        "softwarePlatform": "PCWIN",
+        "installCheckOverride": "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Electronic Arts\\Crysis\\Install Dir]Bin32\\Crysis.exe",
+        "installationDirectory": "Crysis"
+      },
+      {
+        "offerId": "OFB-EAST:52735",
+        "contentId": "1002139",
+        "displayName": "Zuma's Revenge™",
+        "basePlatform": "MAC/PCWIN",
+        "softwarePlatform": "PCWIN",
+        "installCheckOverride": "[HKEY_LOCAL_MACHINE\\SOFTWARE\\PopCap Games\\Zumas Revenge\\Install Dir]\\ZumasRevenge.exe",
+        "installationDirectory": "Zuma's Revenge"
+      }
+    ]
+  }
+}
