@@ -8,9 +8,18 @@ prefer_animated = false
 banned_images = []
 only_download_boilr_images = false
 allow_nsfw = false
+match_by_store_id = true
 
 [steam]
 create_collections = false
 optimize_for_big_picture = false
 stop_steam = false
 start_steam = false
+
+[owned_games]
+skip_games_in_steam = true
+skip_installed_elsewhere = true
+multi_store = "preferred"
+store_order = ["gog", "epic", "amazon", "ea", "battlenet", "humble", "itch"]
+name_label = "none"
+confirm_above = 100
