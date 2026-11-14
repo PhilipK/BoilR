@@ -1002,6 +1002,49 @@ mod tests {
         }
     }
 
+    /// Tauri only lets the `main` window call commands that `build.rs` declares and
+    /// `capabilities/main.json` grants. A command missing from either is refused at runtime.
+    #[test]
+    fn every_command_is_declared_and_granted_to_the_main_window() {
+        let main_rs = include_str!("main.rs");
+        let build_rs = include_str!("../build.rs");
+        let capability: serde_json::Value =
+            serde_json::from_str(include_str!("../capabilities/main.json"))
+                .expect("capability is JSON");
+        let start = main_rs
+            .find("generate_handler![")
+            .expect("main.rs registers commands");
+        let handler = &main_rs[start + "generate_handler![".len()..];
+        let handler = &handler[..handler.find(']').expect("handler list ends")];
+        let commands: Vec<&str> = handler
+            .split(',')
+            .map(str::trim)
+            .filter(|c| !c.is_empty())
+            .map(|c| c.rsplit("::").next().unwrap_or(c))
+            .collect();
+        let granted: Vec<&str> = capability["permissions"]
+            .as_array()
+            .expect("permissions list")
+            .iter()
+            .filter_map(|p| p.as_str())
+            .collect();
+        assert_eq!(capability["windows"], serde_json::json!(["main"]));
+        assert!(granted.contains(&"core:default"));
+        for command in &commands {
+            assert!(
+                build_rs.contains(&format!("\"{command}\"")),
+                "{command} is missing from build.rs"
+            );
+            let permission = format!("allow-{}", command.replace('_', "-"));
+            assert!(
+                granted.contains(&permission.as_str()),
+                "{permission} is missing from capabilities/main.json"
+            );
+        }
+        // Nothing granted that is not a command.
+        assert_eq!(granted.len(), commands.len() + 1);
+    }
+
     #[test]
     fn ping_command_returns_pong() {
         let webview = build_mock_webview();
