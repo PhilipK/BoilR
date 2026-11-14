@@ -1,0 +1,101 @@
+{
+  "page": 1,
+  "per_page": 500,
+  "owned_keys": [
+    {
+      "id": 11111111,
+      "game_id": 284880,
+      "purchase_id": 2222222,
+      "downloads": 3,
+      "created_at": "2019-01-24T10:00:00.000000000Z",
+      "updated_at": "2019-01-24T10:00:00.000000000Z",
+      "game": {
+        "id": 284880,
+        "title": "Pikuniku",
+        "url": "https://sectordub.itch.io/pikuniku",
+        "cover_url": "https://img.itch.zone/aW1nLzEyMzQ1Ni5wbmc=/315x250%23c/abc.png",
+        "type": "default",
+        "classification": "game",
+        "min_price": 1299,
+        "traits": ["p_windows", "p_linux", "p_osx", "can_be_bought"],
+        "created_at": "2018-06-01T10:00:00.000000000Z",
+        "published_at": "2019-01-24T10:00:00.000000000Z",
+        "user": {
+          "id": 1000,
+          "username": "sectordub",
+          "display_name": "Sectordub",
+          "url": "https://sectordub.itch.io",
+          "cover_url": "https://img.itch.zone/user.png"
+        }
+      }
+    },
+    {
+      "id": 11111112,
+      "game_id": 555,
+      "downloads": 0,
+      "created_at": "2020-06-10T10:00:00.000000000Z",
+      "updated_at": "2020-06-10T10:00:00.000000000Z",
+      "game": {
+        "id": 555,
+        "title": "Tileset Pack",
+        "url": "https://artist.itch.io/tileset-pack",
+        "type": "default",
+        "classification": "assets",
+        "traits": []
+      }
+    },
+    {
+      "id": 11111113,
+      "game_id": 556,
+      "game": {
+        "id": 556,
+        "title": "Some Soundtrack",
+        "url": "https://composer.itch.io/ost",
+        "type": "default",
+        "classification": "soundtrack",
+        "traits": []
+      }
+    },
+    {
+      "id": 11111114,
+      "game_id": 123456,
+      "game": {
+        "id": 123456,
+        "title": "Pixel Tool™",
+        "url": "https://dev.itch.io/pixel-tool",
+        "type": "default",
+        "classification": "tool",
+        "traits": ["p_windows", "has_demo"]
+      }
+    },
+    {
+      "id": 11111115,
+      "game_id": 557,
+      "game": null
+    },
+    {
+      "id": 11111116,
+      "game_id": 284880,
+      "game": {
+        "id": 284880,
+        "title": "Pikuniku",
+        "url": "https://sectordub.itch.io/pikuniku",
+        "type": "default",
+        "classification": "game",
+        "traits": ["p_windows", "p_linux", "p_osx"]
+      }
+    },
+    {
+      "id": 11111117,
+      "game_id": 777,
+      "game": {
+        "id": 777,
+        "title": "Browser Jam Game",
+        "url": "https://jammer.itch.io/browser-jam-game",
+        "type": "html",
+        "classification": "game",
+        "traits": []
+      }
+    }
+  ]
+}
