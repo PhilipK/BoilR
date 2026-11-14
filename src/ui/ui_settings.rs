@@ -30,6 +30,8 @@ impl MyEguiApp {
 
                 self.render_steam_settings(ui);
 
+                self.render_owned_games_settings(ui);
+
                 for platform in &mut self.platforms {
                     platform.render_ui(ui);
                     ui.add_space(SECTION_SPACING);
@@ -121,7 +123,104 @@ impl MyEguiApp {
                 &mut self.settings.steamgrid_db.allow_nsfw,
                 "Allow NSFW images",
             );
+            ui.checkbox(
+                &mut self.settings.steamgrid_db.match_by_store_id,
+                "Find Epic, EA and Battle.net games by store id first",
+            )
+            .on_hover_text("More accurate than searching by name; the name search is still used when this finds nothing");
         }
+        ui.add_space(SECTION_SPACING);
+    }
+
+    /// `[owned_games]`: how games a store account owns but that are not installed appear.
+    fn render_owned_games_settings(&mut self, ui: &mut egui::Ui) {
+        use crate::owned::{MultiStore, NameLabel, DEFAULT_STORE_ORDER};
+
+        ui.heading("Owned games that are not installed");
+        let owned = &mut self.settings.owned_games;
+        ui.checkbox(
+            &mut owned.skip_games_in_steam,
+            "Skip games Steam already has",
+        );
+        ui.checkbox(
+            &mut owned.skip_installed_elsewhere,
+            "Skip games installed from another store",
+        );
+        egui::ComboBox::from_label("A game owned in several stores")
+            .selected_text(match owned.multi_store {
+                MultiStore::Preferred => "One entry, from the preferred store",
+                MultiStore::LabelStore => "One entry per store, named after it",
+                MultiStore::All => "One entry per store",
+            })
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    &mut owned.multi_store,
+                    MultiStore::Preferred,
+                    "One entry, from the preferred store",
+                );
+                ui.selectable_value(
+                    &mut owned.multi_store,
+                    MultiStore::LabelStore,
+                    "One entry per store, named after it",
+                );
+                ui.selectable_value(
+                    &mut owned.multi_store,
+                    MultiStore::All,
+                    "One entry per store",
+                );
+            });
+        ui.label("Preferred stores, first wins:");
+        let mut order: Vec<String> = owned.store_order.clone();
+        for store in DEFAULT_STORE_ORDER {
+            if !order.iter().any(|s| s == store) {
+                order.push(store.to_string());
+            }
+        }
+        let mut swap: Option<(usize, usize)> = None;
+        let last = order.len().saturating_sub(1);
+        for (index, store) in order.iter().enumerate() {
+            ui.horizontal(|ui| {
+                ui.label(format!(
+                    "{}. {}",
+                    index + 1,
+                    crate::owned::store_label(store)
+                ));
+                if ui.add_enabled(index > 0, egui::Button::new("Up")).clicked() {
+                    swap = Some((index, index - 1));
+                }
+                if ui
+                    .add_enabled(index < last, egui::Button::new("Down"))
+                    .clicked()
+                {
+                    swap = Some((index, index + 1));
+                }
+            });
+        }
+        if let Some((a, b)) = swap {
+            order.swap(a, b);
+        }
+        owned.store_order = order;
+        egui::ComboBox::from_label("Name in Steam")
+            .selected_text(match owned.name_label {
+                NameLabel::None => "Only the title",
+                NameLabel::NotInstalled => "Title (Not installed)",
+                NameLabel::Store => "Title (GOG)",
+                NameLabel::StoreAndNotInstalled => "Title (GOG, not installed)",
+            })
+            .show_ui(ui, |ui| {
+                ui.selectable_value(&mut owned.name_label, NameLabel::None, "Only the title");
+                ui.selectable_value(
+                    &mut owned.name_label,
+                    NameLabel::NotInstalled,
+                    "Title (Not installed)",
+                );
+                ui.selectable_value(&mut owned.name_label, NameLabel::Store, "Title (GOG)");
+                ui.selectable_value(
+                    &mut owned.name_label,
+                    NameLabel::StoreAndNotInstalled,
+                    "Title (GOG, not installed)",
+                );
+            });
         ui.add_space(SECTION_SPACING);
     }
 }
