@@ -206,6 +206,16 @@ export const SettingsView = ({
           <SettingRow title="Only BoilR's games" hint="Leaves artwork on your other Steam shortcuts alone.">
             <Toggle checked={Boolean(grid.only_download_boilr_images)} label="Only BoilR's games" onChange={(v) => onUpdate({ steamgrid_db: { only_download_boilr_images: v } })} />
           </SettingRow>
+          <SettingRow
+            title="Match by store id"
+            hint="Finds Epic, EA and Battle.net games by their store id before searching by name, which is more accurate."
+          >
+            <Toggle
+              checked={grid.match_by_store_id ?? true}
+              label="Match by store id"
+              onChange={(v) => onUpdate({ steamgrid_db: { match_by_store_id: v } })}
+            />
+          </SettingRow>
           <SettingRow title="Allow adult artwork" hint="Includes artwork SteamGridDB marks as mature.">
             <Toggle checked={Boolean(grid.allow_nsfw)} label="Allow adult artwork" onChange={(v) => onUpdate({ steamgrid_db: { allow_nsfw: v } })} />
           </SettingRow>

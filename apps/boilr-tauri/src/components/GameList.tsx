@@ -134,7 +134,7 @@ const GameRow = ({
             </button>
           </p>
         ) : (
-          <p className="truncate text-sm text-mauve">{game.exe}</p>
+          <p className="truncate text-sm text-mauve">{game.opens ?? game.exe}</p>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-3 text-sm">
@@ -149,6 +149,7 @@ const GameRow = ({
           </button>
         )}
         {showSource ? <span className="text-peach">{showSource}</span> : null}
+        {game.installed ? null : <span className="text-mauve">Not installed</span>}
         {game.needs_proton ? <span className="text-mauve">Runs with Proton</span> : null}
         {selected && inSteam ? <span className="text-mauve">Already in Steam</span> : null}
       </div>

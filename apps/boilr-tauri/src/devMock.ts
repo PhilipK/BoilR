@@ -2,7 +2,7 @@
 // clicked through in a normal browser (`npm run dev`). Never loaded inside Tauri.
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
-import type { PlatformSummary, ShortcutSummary, SyncPlan } from "./types";
+import type { PlatformSummary, ShortcutSummary, StoreAccount, SyncPlan } from "./types";
 import type { Settings } from "./settings";
 import type { ArtworkGame, ArtworkKind, ArtworkOption } from "./types";
 
@@ -17,11 +17,27 @@ const game = (name: string, exe = `/games/${name}`): ShortcutSummary => ({
   needs_proton: false,
   needs_symlinks: false,
   blacklisted: false,
+  installed: true,
+});
+
+const owned = (name: string): ShortcutSummary => ({
+  ...game(name, "xdg-open"),
+  installed: false,
+  opens: "Opens its store page on www.gog.com",
 });
 
 let settings: Settings = {
   steam: { stop_steam: false, start_steam: false, create_collections: false, optimize_for_big_picture: false, location: null },
-  steamgrid_db: { enabled: true, prefer_animated: false, allow_nsfw: false, only_download_boilr_images: false, auth_key: "sample-key" },
+  steamgrid_db: { enabled: true, prefer_animated: false, allow_nsfw: false, only_download_boilr_images: false, auth_key: "sample-key", match_by_store_id: true },
+  owned_games: {
+    skip_games_in_steam: true,
+    skip_installed_elsewhere: true,
+    multi_store: "preferred",
+    store_order: ["gog", "epic", "amazon", "ea", "battlenet", "humble", "itch"],
+    name_label: "none",
+    // Low, so the confirmation before importing shows with the mock's few games.
+    confirm_above: 2,
+  },
   blacklisted_games: [],
 };
 
@@ -35,7 +51,59 @@ let platforms: PlatformSummary[] = [
   { code_name: "legendary", name: "Legendary", enabled: true, error: "No such file or directory (os error 2)", games: [] },
   { code_name: "flatpak", name: "Flatpak", enabled: true, error: null, games: ["Ludusavi", "Modrinth App", "OrcaSlicer", "Snapmaker_Orca", "Vinegar"].map((n) => game(n, "flatpak")) },
   { code_name: "minigalaxy", name: "MiniGalaxy", enabled: false, error: null, games: [] },
+  { code_name: "gog_account", name: "GOG account", enabled: true, error: null, games: ["Unreal Gold", "The Witcher 3: Wild Hunt", "Stardew Valley"].map(owned) },
+  { code_name: "epic_account", name: "Epic Games account", enabled: false, error: null, games: [] },
 ];
+
+const account = (key: string, name: string, extra: Partial<StoreAccount> = {}): StoreAccount => ({
+  store: key,
+  key,
+  name,
+  signed_in: false,
+  account_name: null,
+  game_count: null,
+  fetched_at: null,
+  manual: {
+    kind: "paste",
+    url: `https://example.com/${key}/login`,
+    instructions: "Sign in in your browser, then paste the address your browser ends on.",
+    placeholder: "https://…",
+  },
+  webview_login: true,
+  last_error: null,
+  needs_sign_in: false,
+  code_name: `${key}_account`,
+  enabled: false,
+  install_with: "auto",
+  skip_prereleases: true,
+  heroic_available: true,
+  ...extra,
+});
+
+let accounts: StoreAccount[] = [
+  account("epic", "Epic Games Store"),
+  account("gog", "GOG", { signed_in: true, account_name: "player1", game_count: 3, fetched_at: Math.floor(Date.now() / 1000) - 3600, enabled: true }),
+  account("amazon", "Amazon Games"),
+  account("ea", "EA app", { manual: { kind: "unsupported" } }),
+  account("battlenet", "Battle.net", { manual: { kind: "unsupported" } }),
+  account("humble", "Humble Bundle", {
+    signed_in: true,
+    game_count: 12,
+    fetched_at: Math.floor(Date.now() / 1000) - 3 * 86400,
+    enabled: true,
+    needs_sign_in: true,
+    last_error: "Humble Bundle did not accept the saved login. Sign in again.",
+  }),
+  account("itch", "itch.io", {
+    webview_login: false,
+    manual: { kind: "paste", url: "https://itch.io/user/settings/api-keys", instructions: "Sign in to itch.io in your browser, generate a new API key on your API keys page, and paste the key here.", placeholder: "API key" },
+  }),
+];
+
+const updateAccount = (key: string, change: Partial<StoreAccount>): StoreAccount | undefined => {
+  accounts = accounts.map((a) => (a.key === key ? { ...a, ...change } : a));
+  return accounts.find((a) => a.key === key);
+};
 
 const importedIds = new Set<number>();
 const plan = (): SyncPlan => ({
@@ -44,7 +112,7 @@ const plan = (): SyncPlan => ({
     .flatMap((p) =>
       p.games
         .filter((g) => !(settings.blacklisted_games ?? []).includes(g.app_id) && !importedIds.has(g.app_id))
-        .map((g) => ({ platform: p.name, platform_code: p.code_name, needs_proton: false, needs_symlinks: false, shortcut: g }))
+        .map((g) => ({ platform: p.name, platform_code: p.code_name, needs_proton: false, needs_symlinks: false, installed: g.installed, shortcut: g }))
     ),
   removals: importedIds.size ? [] : [
     {
@@ -178,12 +246,59 @@ mockIPC(
     switch (cmd) {
       case "load_settings":
         return settings;
+      case "list_store_accounts":
+        return accounts;
+      case "update_store_account":
+        return updateAccount(a.store, {
+          ...(a.enabled === undefined ? {} : { enabled: a.enabled }),
+          ...(a.installWith === undefined ? {} : { install_with: a.installWith }),
+          ...(a.skipPrereleases === undefined ? {} : { skip_prereleases: a.skipPrereleases }),
+        });
+      case "refresh_store_library":
+        await delay(800);
+        if (accounts.find((x) => x.key === a.store)?.needs_sign_in) {
+          throw "The store rejected the saved login (401 Unauthorized from https://www.humblebundle.com/api/v1/user/order). Sign in again.";
+        }
+        return updateAccount(a.store, { fetched_at: Math.floor(Date.now() / 1000), last_error: null });
+      case "sign_out_store":
+        return updateAccount(a.store, {
+          signed_in: false,
+          account_name: null,
+          game_count: null,
+          fetched_at: null,
+          last_error: null,
+          needs_sign_in: false,
+          enabled: false,
+        });
+      case "submit_store_login":
+        await delay(800);
+        return updateAccount(a.store, { signed_in: true, account_name: "player1", game_count: 12, fetched_at: Math.floor(Date.now() / 1000), last_error: null, needs_sign_in: false, notice: "This account owns 12 games. Turn on \"Add every game this account owns\" to add them to Steam." });
+      case "open_store_sign_in_page":
+        return null;
+      case "start_store_login":
+        // Battle.net shows a sign-in that fails.
+        if (a.store === "battlenet") {
+          setTimeout(() => {
+            void emit("store-login", {
+              store: a.store,
+              ok: false,
+              message: "Signing in to Battle.net did not finish: Battle.net says this sign-in is not signed in.",
+            });
+          }, 1500);
+          return null;
+        }
+        setTimeout(() => {
+          updateAccount(a.store, { signed_in: true, account_name: "player1", game_count: 42, fetched_at: Math.floor(Date.now() / 1000), last_error: null, needs_sign_in: false });
+          void emit("store-login", { store: a.store, ok: true, message: "Signed in as player1. This account owns 42 games. Turn on \"Add every game this account owns\" to add them to Steam." });
+        }, 1500);
+        return null;
       case "update_settings":
         settings = {
           ...settings,
           ...a.update,
           steam: { ...settings.steam, ...a.update?.steam },
           steamgrid_db: { ...settings.steamgrid_db, ...a.update?.steamgrid_db },
+          owned_games: { ...settings.owned_games, ...a.update?.owned_games },
         };
         return settings;
       case "discover_games":

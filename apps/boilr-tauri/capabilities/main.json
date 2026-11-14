@@ -27,6 +27,13 @@
     "allow-artwork-game-match",
     "allow-set-artwork-game",
     "allow-find-missing-artwork",
+    "allow-list-store-accounts",
+    "allow-update-store-account",
+    "allow-refresh-store-library",
+    "allow-sign-out-store",
+    "allow-submit-store-login",
+    "allow-start-store-login",
+    "allow-open-store-sign-in-page",
     "allow-rename-game",
     "allow-ping"
   ]

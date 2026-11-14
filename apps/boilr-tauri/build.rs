@@ -24,6 +24,13 @@ const COMMANDS: &[&str] = &[
     "artwork_game_match",
     "set_artwork_game",
     "find_missing_artwork",
+    "list_store_accounts",
+    "update_store_account",
+    "refresh_store_library",
+    "sign_out_store",
+    "submit_store_login",
+    "start_store_login",
+    "open_store_sign_in_page",
     "rename_game",
     "ping",
 ];

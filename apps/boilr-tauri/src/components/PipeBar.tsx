@@ -39,6 +39,8 @@ export const PipeBar = ({
   restartsSteam,
   hasGames,
   padConnected,
+  notInstalledToAdd,
+  confirmAbove,
   onImport,
 }: {
   toAdd: number;
@@ -50,9 +52,23 @@ export const PipeBar = ({
   restartsSteam: boolean;
   hasGames: boolean;
   padConnected: boolean;
+  /** Games that are not installed among those to add. */
+  notInstalledToAdd: number;
+  /** Ask first when more than this many not-installed games would be added; 0 never asks. */
+  confirmAbove: number;
   onImport: () => void;
 }) => {
   const [showRemovals, setShowRemovals] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const needsConfirmation = confirmAbove > 0 && notInstalledToAdd > confirmAbove;
+  const startImport = () => {
+    if (needsConfirmation && !confirming) {
+      setConfirming(true);
+      return;
+    }
+    setConfirming(false);
+    onImport();
+  };
   const nothingToDo = toAdd === 0 && removals.length === 0;
 
   let status: string;
@@ -90,6 +106,28 @@ export const PipeBar = ({
               </li>
             ))}
           </ul>
+        </div>
+      ) : null}
+
+      {confirming ? (
+        <div
+          role="alertdialog"
+          aria-label="Confirm import"
+          className="absolute bottom-full right-4 mb-2 w-96 max-w-[calc(100vw-2rem)] border-2 border-flame bg-deep p-4 notch"
+        >
+          <p className="font-pixel text-foam">Add {plural(notInstalledToAdd, "game")} that are not installed?</p>
+          <p className="mt-1 text-sm text-mauve">
+            Each one becomes an entry in your Steam library. You can leave stores out or change how these games
+            appear on the Accounts page.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button type="button" className="btn-primary px-4" onClick={startImport}>
+              Import anyway
+            </button>
+            <button type="button" className="btn-quiet" onClick={() => setConfirming(false)}>
+              Cancel
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -153,7 +191,7 @@ export const PipeBar = ({
           id="import-button"
           type="button"
           className="btn-primary shrink-0 px-6 py-3 text-lg"
-          onClick={onImport}
+          onClick={startImport}
           disabled={syncing || nothingToDo}
         >
           {buttonLabel}
