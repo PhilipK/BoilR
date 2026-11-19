@@ -61,6 +61,7 @@ impl From<HeroicGame> for ShortcutOwned {
         owned_shortcut.tags.push("Heroic".to_owned());
         owned_shortcut.tags.push("Ready TO Play".to_owned());
         owned_shortcut.tags.push("Installed".to_owned());
+        owned_shortcut.dev_kit_game_id = crate::sync::shortcut_identity("epic", &game.app_name);
 
         owned_shortcut
     }

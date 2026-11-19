@@ -1,0 +1,56 @@
+{
+  "responseMetadata": {
+    "stateToken": "state"
+  },
+  "records": [
+    {
+      "namespace": "ns-control",
+      "catalogItemId": "cat-control",
+      "appName": "Calluna",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-control",
+      "catalogItemId": "cat-control-launchable",
+      "appName": "CallunaExpansionLauncher",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-ea",
+      "catalogItemId": "cat-ea",
+      "appName": "EAGame",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-ubi",
+      "catalogItemId": "cat-ubi",
+      "appName": "UbiGame",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-extras",
+      "catalogItemId": "cat-soundtrack",
+      "appName": "Soundtrack",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-plugin",
+      "catalogItemId": "cat-plugin",
+      "appName": "EnginePlugin",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-noapps",
+      "catalogItemId": "cat-noapps",
+      "appName": "NotAnApplication",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    }
+  ]
+}

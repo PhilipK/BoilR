@@ -113,6 +113,7 @@ fn parse_nile_games(
             title,
             app_name: entry.id,
             install_mode,
+            store: "amazon",
         });
     }
 
@@ -254,6 +255,7 @@ impl HeroicPlatform {
                             title: game.title,
                             app_name: game.app_name,
                             install_mode: *install_mode,
+                            store: "epic",
                         });
                     } else if game.is_installed() {
                         shortcuts.push(HeroicGameType::Epic(game));
@@ -301,6 +303,7 @@ fn get_gog_games(
                     title: title.unwrap_or_default().to_string_lossy().to_string(),
                     app_name: p.app_name.clone(),
                     install_mode: **install_mode,
+                    store: "gog",
                 })
             } else {
                 None
@@ -538,6 +541,7 @@ mod tests {
             title: "Fallout: New Vegas".to_string(),
             app_name: "amzn1.adg.product.test1".to_string(),
             install_mode: InstallationMode::FlatPak,
+            store: "amazon",
         };
 
         let shortcut: ShortcutOwned = game.into();

@@ -1,0 +1,263 @@
+{
+  "data": {
+    "me": {
+      "id": "1234",
+      "ownedGameProducts": {
+        "next": "Mw==",
+        "totalCount": 4,
+        "items": [
+          {
+            "id": "Origin.OFR.50.0002487",
+            "originOfferId": "Origin.OFR.50.0002487",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_a-way-out-pc-jp-juno_VideoGameProduct_nl_pc",
+              "name": "A Way Out",
+              "downloadable": true,
+              "gameSlug": "a-way-out",
+              "isUngatedTrial": false,
+              "lifecycleStatus": [
+                {
+                  "lifecycleType": "SELF",
+                  "downloadDate": "2018-03-16T17:00:00.000Z",
+                  "playableStartDate": "2018-03-22T23:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": null,
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                },
+                {
+                  "lifecycleType": "ORIGIN_ACCESS_BASIC",
+                  "downloadDate": "2018-03-16T17:00:00.000Z",
+                  "playableStartDate": "2018-03-22T23:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": null,
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                },
+                {
+                  "lifecycleType": "ORIGIN_ACCESS_PREMIER",
+                  "downloadDate": "2018-03-16T17:00:00.000Z",
+                  "playableStartDate": "2018-03-22T23:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": null,
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                }
+              ],
+              "availableInSubscription": [],
+              "trialDetails": null,
+              "baseItem": {
+                "id": "en_a-way-out_VideoGame_nl_pc",
+                "baseGameSlug": null,
+                "gameType": "BASE_GAME",
+                "title": "A Way Out",
+                "prereleaseGameType": null,
+                "hasGameHubPage": true,
+                "isLauncher": false,
+                "__typename": "Game"
+              },
+              "gamePlatformDetails": {
+                "gamePlatform": "PC",
+                "__typename": "GamePlatformDetails"
+              },
+              "gameProductUser": {
+                "ownershipMethods": [
+                  "STEAM"
+                ],
+                "initialEntitlementDate": "2021-07-01T22:14:00.000Z",
+                "entitlementId": "1015233356412",
+                "gameProductUserTrial": null,
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "purchaseStatus": {
+                "repurchasable": false,
+                "__typename": "PurchaseStatus"
+              },
+              "downloadPackageTypeDetails": [
+                {
+                  "platform": "PC",
+                  "downloadPackageType": "DOWNLOAD_IN_PLACE",
+                  "__typename": "DownloadPackageTypeDetails"
+                }
+              ],
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          },
+          {
+            "id": "DR:225064100",
+            "originOfferId": "DR:225064100",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_battlefield-3-standard-edition-pc-row-juno-odc_VideoGameProduct_nl_pc",
+              "name": "Battlefield 3",
+              "downloadable": true,
+              "gameSlug": "battlefield-3",
+              "isUngatedTrial": false,
+              "lifecycleStatus": [
+                {
+                  "lifecycleType": "SELF",
+                  "downloadDate": "2011-10-28T14:00:00.000Z",
+                  "playableStartDate": "2011-10-28T00:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": "2016-01-12T17:00:00.000Z",
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                }
+              ],
+              "availableInSubscription": [],
+              "trialDetails": null,
+              "baseItem": {
+                "id": "en_battlefield-3_VideoGame_nl_pc",
+                "baseGameSlug": null,
+                "gameType": "BASE_GAME",
+                "title": "Battlefield 3",
+                "prereleaseGameType": null,
+                "hasGameHubPage": true,
+                "isLauncher": false,
+                "__typename": "Game"
+              },
+              "gamePlatformDetails": {
+                "gamePlatform": "PC",
+                "__typename": "GamePlatformDetails"
+              },
+              "gameProductUser": {
+                "ownershipMethods": [
+                  "PURCHASE",
+                  "ENTITLEMENT_GRANT"
+                ],
+                "initialEntitlementDate": "2012-03-12T00:00:00.000Z",
+                "entitlementId": null,
+                "gameProductUserTrial": null,
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "purchaseStatus": {
+                "repurchasable": false,
+                "__typename": "PurchaseStatus"
+              },
+              "downloadPackageTypeDetails": [
+                {
+                  "platform": "PC",
+                  "downloadPackageType": "DOWNLOAD_IN_PLACE",
+                  "__typename": "DownloadPackageTypeDetails"
+                }
+              ],
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          },
+          {
+            "id": "OFB-EAST:57289",
+            "originOfferId": "OFB-EAST:57289",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_crysis-standard-edition-pc-ww-juno-odc-3pdd_VideoGameProduct_nl_pc",
+              "name": "Crysis",
+              "downloadable": true,
+              "gameSlug": "crysis",
+              "isUngatedTrial": false,
+              "lifecycleStatus": [
+                {
+                  "lifecycleType": "SELF",
+                  "downloadDate": "2007-11-16T00:00:00.000Z",
+                  "playableStartDate": "2007-11-16T00:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": "2017-01-01T00:00:00.000Z",
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                },
+                {
+                  "lifecycleType": "ORIGIN_ACCESS_BASIC",
+                  "downloadDate": "2007-11-16T00:00:00.000Z",
+                  "playableStartDate": "2007-11-16T00:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": "2016-08-08T00:00:00.000Z",
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                },
+                {
+                  "lifecycleType": "ORIGIN_ACCESS_PREMIER",
+                  "downloadDate": "2007-11-16T00:00:00.000Z",
+                  "playableStartDate": "2007-11-16T00:00:00.000Z",
+                  "playableEndDate": null,
+                  "acquisitionStartDate": "2016-08-08T00:00:00.000Z",
+                  "acquisitionEndDate": null,
+                  "revealDate": "2024-01-31T00:00:00.000Z",
+                  "sunsetDate": null,
+                  "__typename": "LifecycleStatus"
+                }
+              ],
+              "availableInSubscription": [
+                {
+                  "id": "lPljc4ONl3NvB8RweMkTMsUnM7fW9JwP7fGOX1EfMdQfMTkYRdfplDN3nD3gIiKxIHw79Rp0N5dM5EZjBz4K3f2E16yZaK1gL1kXMwQ=",
+                  "slug": "origin-access-basic",
+                  "__typename": "GameSubscription"
+                },
+                {
+                  "id": "lPljc4ONl3NvB8RweM4CPs4gLIHQ5bcX6r/RAwhfcMMVMTlTTsLpkj000CHuZTS/KTZnugVqXsYOxnR7AB4czeeX0ayGcpdqM3wbIhc4IQ4=",
+                  "slug": "origin-access-premier",
+                  "__typename": "GameSubscription"
+                }
+              ],
+              "trialDetails": null,
+              "baseItem": {
+                "id": "en_crysis_VideoGame_nl_pc",
+                "baseGameSlug": null,
+                "gameType": "BASE_GAME",
+                "title": "Crysis",
+                "prereleaseGameType": null,
+                "hasGameHubPage": true,
+                "isLauncher": false,
+                "__typename": "Game"
+              },
+              "gamePlatformDetails": {
+                "gamePlatform": "PC",
+                "__typename": "GamePlatformDetails"
+              },
+              "gameProductUser": {
+                "ownershipMethods": [
+                  "XGP_VAULT"
+                ],
+                "initialEntitlementDate": "2022-07-25T12:13:00.000Z",
+                "entitlementId": "1016710156412",
+                "gameProductUserTrial": null,
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "purchaseStatus": {
+                "repurchasable": false,
+                "__typename": "PurchaseStatus"
+              },
+              "downloadPackageTypeDetails": [
+                {
+                  "platform": "PC",
+                  "downloadPackageType": "DOWNLOAD_IN_PLACE",
+                  "__typename": "DownloadPackageTypeDetails"
+                }
+              ],
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          }
+        ],
+        "__typename": "UserGameProductCursorPage"
+      },
+      "__typename": "User"
+    }
+  }
+}

@@ -20,6 +20,7 @@ mod playnite;
 #[cfg(not(target_family = "unix"))]
 mod xbox;
 
+pub mod accounts;
 mod gog;
 mod itch;
 mod origin;

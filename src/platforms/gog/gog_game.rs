@@ -40,6 +40,7 @@ impl From<GogShortcut> for ShortcutOwned {
     fn from(gogs: GogShortcut) -> Self {
         let exe = Path::new(&gogs.game_folder).join(gogs.path);
         let icon_file = format!("goggame-{}.ico", gogs.game_id);
+        let identity = crate::sync::shortcut_identity("gog", &gogs.game_id);
         let icon_path = Path::new(&gogs.game_folder).join(icon_file);
         let icon = if icon_path.exists() {
             icon_path.to_string_lossy().to_string()
@@ -66,6 +67,7 @@ impl From<GogShortcut> for ShortcutOwned {
             &gogs.arguments,
         );
         let mut owned_shortcut = shortcut.to_owned();
+        owned_shortcut.dev_kit_game_id = identity;
         owned_shortcut.tags.push("Gog".to_owned());
         owned_shortcut.tags.push("Ready TO Play".to_owned());
         owned_shortcut.tags.push("Installed".to_owned());

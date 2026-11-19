@@ -75,4 +75,34 @@ mod tests {
         assert_eq!(games[1].service.clone().unwrap_or_default(), "steam");
         Ok(())
     }
+
+    #[test]
+    fn games_of_a_store_account_carry_their_store_identity() -> eyre::Result<()> {
+        use steam_shortcuts_util::shortcut::ShortcutOwned;
+
+        let content = include_str!("test_output.txt");
+        let games = parse_lutris_games(content)?;
+
+        let dishonored = games.iter().find(|g| g.slug == "dishonored_2");
+        assert_eq!(
+            dishonored.and_then(|g| g.identity()),
+            Some("boilr:gog:1431426311".to_string())
+        );
+        let shortcut: Option<ShortcutOwned> = dishonored.cloned().map(Into::into);
+        assert_eq!(
+            shortcut.map(|s| s.dev_kit_game_id),
+            Some("boilr:gog:1431426311".to_string())
+        );
+
+        // A game without a record of its store has none.
+        let plain = LutrisGame {
+            details: None,
+            ..games
+                .first()
+                .cloned()
+                .ok_or_else(|| eyre::eyre!("no games"))?
+        };
+        assert_eq!(plain.identity(), None);
+        Ok(())
+    }
 }

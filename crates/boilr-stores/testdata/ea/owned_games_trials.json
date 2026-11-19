@@ -1,0 +1,123 @@
+{
+  "data": {
+    "me": {
+      "id": "1234",
+      "ownedGameProducts": {
+        "next": null,
+        "totalCount": 3,
+        "items": [
+          {
+            "id": "Origin.OFR.50.0002487",
+            "originOfferId": "Origin.OFR.50.0002487",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_a-way-out-pc-jp-juno_VideoGameProduct_nl_pc",
+              "name": "A Way Out",
+              "downloadable": true,
+              "gameSlug": "a-way-out",
+              "isUngatedTrial": false,
+              "trialDetails": {
+                "trialDurationHours": 10000,
+                "trialType": "OPEN_TRIAL",
+                "__typename": "TrialDetails"
+              },
+              "baseItem": {
+                "id": "en_a-way-out_VideoGame_nl_pc",
+                "gameType": "BASE_GAME",
+                "title": "A Way Out",
+                "__typename": "Game"
+              },
+              "gameProductUser": {
+                "ownershipMethods": ["PURCHASE", "ENTITLEMENT_GRANT"],
+                "initialEntitlementDate": "2018-04-20T18:50:00.000Z",
+                "entitlementId": "1011742656412",
+                "gameProductUserTrial": {
+                  "trialTimeRemainingSeconds": 35978466,
+                  "__typename": "GameProductUserTrial"
+                },
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          },
+          {
+            "id": "Origin.OFR.50.0009001",
+            "originOfferId": "Origin.OFR.50.0009001",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_some-game-open-trial-pc_VideoGameProduct_nl_pc",
+              "name": "Some Game Open Trial",
+              "downloadable": true,
+              "gameSlug": "some-game",
+              "isUngatedTrial": true,
+              "trialDetails": {
+                "trialDurationHours": 10,
+                "trialType": "OPEN_TRIAL",
+                "__typename": "TrialDetails"
+              },
+              "baseItem": {
+                "id": "en_some-game_VideoGame_nl_pc",
+                "gameType": "BASE_GAME",
+                "title": "Some Game",
+                "__typename": "Game"
+              },
+              "gameProductUser": {
+                "ownershipMethods": ["ENTITLEMENT_GRANT"],
+                "initialEntitlementDate": "2026-10-01T10:00:00.000Z",
+                "entitlementId": "1019999999999",
+                "gameProductUserTrial": {
+                  "trialTimeRemainingSeconds": 30000,
+                  "__typename": "GameProductUserTrial"
+                },
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          },
+          {
+            "id": "Origin.OFR.50.0009002",
+            "originOfferId": "Origin.OFR.50.0009002",
+            "status": "ACTIVE",
+            "product": {
+              "id": "en_bought-after-the-trial-pc_VideoGameProduct_nl_pc",
+              "name": "Bought After The Trial",
+              "downloadable": true,
+              "gameSlug": "bought-after-the-trial",
+              "isUngatedTrial": true,
+              "trialDetails": {
+                "trialDurationHours": 10,
+                "trialType": "OPEN_TRIAL",
+                "__typename": "TrialDetails"
+              },
+              "baseItem": {
+                "id": "en_bought-after-the-trial_VideoGame_nl_pc",
+                "gameType": "BASE_GAME",
+                "title": "Bought After The Trial",
+                "__typename": "Game"
+              },
+              "gameProductUser": {
+                "ownershipMethods": ["PURCHASE", "ENTITLEMENT_GRANT"],
+                "initialEntitlementDate": "2026-10-01T10:00:00.000Z",
+                "entitlementId": "1019999999998",
+                "gameProductUserTrial": {
+                  "trialTimeRemainingSeconds": 0,
+                  "__typename": "GameProductUserTrial"
+                },
+                "status": "ACTIVE",
+                "__typename": "GameProductUser"
+              },
+              "__typename": "GameProduct"
+            },
+            "__typename": "UserGameProduct"
+          }
+        ],
+        "__typename": "UserGameProductCursorPage"
+      },
+      "__typename": "User"
+    }
+  }
+}

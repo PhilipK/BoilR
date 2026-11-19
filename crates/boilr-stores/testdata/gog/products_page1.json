@@ -1,0 +1,74 @@
+{
+  "sortBy": "title",
+  "page": 1,
+  "totalProducts": 7,
+  "totalPages": 2,
+  "productsPerPage": 6,
+  "moviesCount": 0,
+  "tags": [],
+  "products": [
+    {
+      "isGalaxyCompatible": true,
+      "id": 1207658924,
+      "availability": {"isAvailable": true, "isAvailableInAccount": true},
+      "title": "Unreal Gold",
+      "image": "//images-1.gog-statics.com/abc",
+      "url": "/game/unreal_gold",
+      "worksOn": {"Windows": true, "Mac": false, "Linux": false},
+      "category": "Shooter",
+      "rating": 0,
+      "isComingSoon": false,
+      "isMovie": false,
+      "isGame": true,
+      "slug": "unreal_gold",
+      "isNew": false,
+      "dlcCount": 0,
+      "releaseDate": {"date": "1998-05-22 00:00:00.000000", "timezone_type": 3, "timezone": "Europe/Nicosia"},
+      "isBaseProductMissing": false,
+      "isHidingDisabled": false,
+      "isInDevelopment": false,
+      "isHidden": false
+    },
+    {
+      "id": 1207664663,
+      "title": "The Witcher: Enhanced Edition ",
+      "url": "/game/the_witcher",
+      "isMovie": false,
+      "isGame": true,
+      "slug": "the_witcher",
+      "dlcCount": 2,
+      "isBaseProductMissing": false
+    },
+    {
+      "id": 1207666213,
+      "title": "Some Documentary",
+      "isMovie": true,
+      "isGame": false,
+      "slug": "some_documentary",
+      "isBaseProductMissing": false
+    },
+    {
+      "id": 1495134320,
+      "title": "Some Game - Soundtrack DLC",
+      "isMovie": false,
+      "isGame": true,
+      "slug": "some_game_soundtrack",
+      "isBaseProductMissing": true
+    },
+    {
+      "id": 1980301910,
+      "title": "The Witcher Goodies Collection",
+      "isMovie": false,
+      "isGame": true,
+      "slug": "the_witcher_goodies_collection",
+      "isBaseProductMissing": false
+    },
+    {
+      "id": "1423049311",
+      "title": "Absolute Drift",
+      "isMovie": false,
+      "isGame": true,
+      "slug": ""
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod accounts;
 mod artwork;
 mod library;
 
@@ -10,7 +11,10 @@ use std::{
 
 use boilr::{
     backups::backup_shortcuts,
-    platforms::{get_platform_shortcuts, get_platforms, GamesPlatform, ShortcutToImport},
+    platforms::{
+        accounts::{arrange_owned, not_installed_collection},
+        get_platform_shortcuts, get_platforms, GamesPlatform, ShortcutToImport,
+    },
     renames::{load_rename_map, set_rename},
 };
 use boilr_core::{
@@ -22,10 +26,7 @@ use boilr_core::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use steam_shortcuts_util::{
-    calculate_app_id_for_shortcut,
-    shortcut::{Shortcut, ShortcutOwned},
-};
+use steam_shortcuts_util::shortcut::ShortcutOwned;
 use tauri::{Emitter, Manager};
 use tokio::runtime::Runtime;
 use toml::Value;
@@ -67,23 +68,31 @@ fn discover_games() -> Result<Vec<PlatformSummary>, String> {
                     shortcut,
                     needs_proton,
                     needs_symlinks,
+                    installed,
                 } = shortcut;
                 let app_id = shortcut.app_id;
-                let display_name = rename_map
-                    .get(&app_id)
+                let display_name = sync::rename_for(&shortcut, &rename_map)
                     .cloned()
                     .unwrap_or_else(|| shortcut.app_name.clone());
                 let blacklisted = settings.blacklisted_games.contains(&app_id);
+                let opens = (!installed).then(|| {
+                    boilr::platforms::accounts::describe_install_target(
+                        &shortcut.exe,
+                        &shortcut.launch_options,
+                    )
+                });
                 games.push(ShortcutSummary {
                     app_id,
                     app_name: shortcut.app_name,
                     display_name,
+                    opens,
                     exe: shortcut.exe,
                     start_dir: shortcut.start_dir,
                     icon: icon_to_option(&shortcut.icon),
                     needs_proton,
                     needs_symlinks,
                     blacklisted,
+                    installed,
                 });
             }
         }
@@ -190,6 +199,31 @@ fn update_settings(update: SettingsUpdate) -> Result<Settings, String> {
         if let Some(value) = grid.auth_key {
             settings.steamgrid_db.auth_key = value;
         }
+        if let Some(value) = grid.match_by_store_id {
+            settings.steamgrid_db.match_by_store_id = value;
+        }
+    }
+
+    if let Some(owned) = update.owned_games {
+        let current = &mut settings.owned_games;
+        if let Some(value) = owned.skip_games_in_steam {
+            current.skip_games_in_steam = value;
+        }
+        if let Some(value) = owned.skip_installed_elsewhere {
+            current.skip_installed_elsewhere = value;
+        }
+        if let Some(value) = owned.multi_store {
+            current.multi_store = value;
+        }
+        if let Some(value) = owned.store_order {
+            current.store_order = value;
+        }
+        if let Some(value) = owned.name_label {
+            current.name_label = value;
+        }
+        if let Some(value) = owned.confirm_above {
+            current.confirm_above = value;
+        }
     }
 
     if let Some(blacklisted) = update.blacklisted_games {
@@ -262,6 +296,7 @@ fn main() {
                     eprintln!("Failed to emit {event} event: {err}");
                 }
             })));
+            accounts::refresh_libraries_in_background(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -286,6 +321,13 @@ fn main() {
             artwork::artwork_game_match,
             artwork::set_artwork_game,
             artwork::find_missing_artwork,
+            accounts::list_store_accounts,
+            accounts::update_store_account,
+            accounts::refresh_store_library,
+            accounts::sign_out_store,
+            accounts::submit_store_login,
+            accounts::start_store_login,
+            accounts::open_store_sign_in_page,
             rename_game,
             ping
         ])
@@ -359,11 +401,16 @@ fn perform_full_sync(
     #[cfg(target_family = "unix")]
     prepare_proton(&platform_shortcuts);
 
+    let extra_collections: Vec<(String, Vec<u32>)> =
+        not_installed_collection(platform_shortcuts.iter().map(|(_, list)| list))
+            .into_iter()
+            .collect();
     let import_games = to_shortcut_owned(platform_shortcuts);
     let mut progress_for_sync = progress.clone();
-    let users = sync::sync_shortcuts(
+    let users = sync::sync_shortcuts_with_collections(
         &settings,
         &import_games,
+        &extra_collections,
         &mut progress_for_sync,
         &rename_map,
     )
@@ -439,6 +486,19 @@ fn gather_platform_snapshots() -> Vec<PlatformSnapshot> {
         }
     }
 
+    // Which games that are not installed go in, and under what name ([owned_games]). An
+    // owned game that is installed shows up once, as the installed game.
+    match Settings::new() {
+        Ok(settings) => {
+            arrange_owned(
+                snapshots
+                    .iter_mut()
+                    .filter_map(|snapshot| snapshot.shortcuts.as_mut()),
+                &settings,
+            );
+        }
+        Err(err) => eprintln!("Could not read the settings for owned games: {err}"),
+    }
     snapshots
 }
 
@@ -498,18 +558,13 @@ fn prepare_additions(
             }
 
             let mut shortcut = entry.shortcut.clone();
-            if let Some(rename) = rename_map.get(&entry.shortcut.app_id) {
+            if let Some(rename) = sync::rename_for(&entry.shortcut, rename_map) {
+                // The id the sync gives it: a game that is not installed keeps its id.
+                let owned = sync::has_owned_app_id(&shortcut);
                 shortcut.app_name = rename.clone();
-                let template = Shortcut::new(
-                    "0",
-                    shortcut.app_name.as_str(),
-                    &shortcut.exe,
-                    "",
-                    "",
-                    "",
-                    "",
-                );
-                shortcut.app_id = calculate_app_id_for_shortcut(&template);
+                if !owned {
+                    shortcut.app_id = sync::app_id_after_change(&shortcut);
+                }
             }
 
             let display_name = shortcut.app_name.clone();
@@ -524,6 +579,7 @@ fn prepare_additions(
                 platform_code: snapshot.code_name.clone(),
                 needs_proton: entry.needs_proton,
                 needs_symlinks: entry.needs_symlinks,
+                installed: entry.installed,
                 shortcut: PlannedShortcut {
                     app_id: shortcut.app_id,
                     app_name,
@@ -819,12 +875,18 @@ struct ShortcutSummary {
     app_id: u32,
     app_name: String,
     display_name: String,
+    /// For a game that is not installed, what its shortcut does ("Opens GOG Galaxy to
+    /// install it"), shown instead of the launcher's path.
+    #[serde(default)]
+    opens: Option<String>,
     exe: String,
     start_dir: String,
     icon: Option<String>,
     needs_proton: bool,
     needs_symlinks: bool,
     blacklisted: bool,
+    /// False for games a store account owns that are not installed.
+    installed: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -839,6 +901,7 @@ struct AdditionPlan {
     platform_code: String,
     needs_proton: bool,
     needs_symlinks: bool,
+    installed: bool,
     shortcut: PlannedShortcut,
 }
 
@@ -883,6 +946,17 @@ struct SettingsUpdate {
     #[serde(rename = "steamgrid_db")]
     steamgrid_db: Option<SteamGridDbUpdate>,
     blacklisted_games: Option<Vec<u32>>,
+    owned_games: Option<OwnedGamesUpdate>,
+}
+
+#[derive(Debug, Deserialize)]
+struct OwnedGamesUpdate {
+    skip_games_in_steam: Option<bool>,
+    skip_installed_elsewhere: Option<bool>,
+    multi_store: Option<boilr_core::owned::MultiStore>,
+    store_order: Option<Vec<String>>,
+    name_label: Option<boilr_core::owned::NameLabel>,
+    confirm_above: Option<usize>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -901,6 +975,7 @@ struct SteamGridDbUpdate {
     allow_nsfw: Option<bool>,
     only_download_boilr_images: Option<bool>,
     auth_key: Option<Option<String>>,
+    match_by_store_id: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -999,6 +1074,49 @@ mod tests {
             headers: Default::default(),
             invoke_key: INVOKE_KEY.to_string(),
         }
+    }
+
+    /// Tauri only lets the `main` window call commands that `build.rs` declares and
+    /// `capabilities/main.json` grants. A command missing from either is refused at runtime.
+    #[test]
+    fn every_command_is_declared_and_granted_to_the_main_window() {
+        let main_rs = include_str!("main.rs");
+        let build_rs = include_str!("../build.rs");
+        let capability: serde_json::Value =
+            serde_json::from_str(include_str!("../capabilities/main.json"))
+                .expect("capability is JSON");
+        let start = main_rs
+            .find("generate_handler![")
+            .expect("main.rs registers commands");
+        let handler = &main_rs[start + "generate_handler![".len()..];
+        let handler = &handler[..handler.find(']').expect("handler list ends")];
+        let commands: Vec<&str> = handler
+            .split(',')
+            .map(str::trim)
+            .filter(|c| !c.is_empty())
+            .map(|c| c.rsplit("::").next().unwrap_or(c))
+            .collect();
+        let granted: Vec<&str> = capability["permissions"]
+            .as_array()
+            .expect("permissions list")
+            .iter()
+            .filter_map(|p| p.as_str())
+            .collect();
+        assert_eq!(capability["windows"], serde_json::json!(["main"]));
+        assert!(granted.contains(&"core:default"));
+        for command in &commands {
+            assert!(
+                build_rs.contains(&format!("\"{command}\"")),
+                "{command} is missing from build.rs"
+            );
+            let permission = format!("allow-{}", command.replace('_', "-"));
+            assert!(
+                granted.contains(&permission.as_str()),
+                "{permission} is missing from capabilities/main.json"
+            );
+        }
+        // Nothing granted that is not a command.
+        assert_eq!(granted.len(), commands.len() + 1);
     }
 
     #[test]

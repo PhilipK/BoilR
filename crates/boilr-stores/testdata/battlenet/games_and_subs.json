@@ -1,0 +1,70 @@
+{
+  "gameAccounts": [
+    {
+      "titleId": 5730135,
+      "localizedGameName": "World of Warcraft®",
+      "gameAccountName": "WoW1",
+      "gameAccountUniqueId": { "gameAccountId": 11111111, "gameServiceRegionId": 2, "programId": 5730135 },
+      "gameAccountRegion": "EU",
+      "regionalGameFranchiseIconFilename": "world-of-warcraft.svg",
+      "gameAccountStatus": "Good",
+      "titleHasSubscriptions": true,
+      "titleHasGameTime": true
+    },
+    {
+      "titleId": 5730135,
+      "localizedGameName": "World of Warcraft®",
+      "gameAccountName": "WoW2",
+      "gameAccountUniqueId": { "gameAccountId": 22222222, "gameServiceRegionId": 2, "programId": 5730135 },
+      "gameAccountRegion": "EU",
+      "regionalGameFranchiseIconFilename": "world-of-warcraft.svg",
+      "gameAccountStatus": "Good",
+      "titleHasSubscriptions": true,
+      "titleHasGameTime": true
+    },
+    {
+      "titleId": 5272175,
+      "localizedGameName": "Overwatch® 2",
+      "gameAccountName": "Overwatch",
+      "gameAccountUniqueId": { "gameAccountId": 33333333, "gameServiceRegionId": 2, "programId": 5272175 },
+      "gameAccountRegion": "EU",
+      "regionalGameFranchiseIconFilename": "overwatch.svg",
+      "gameAccountStatus": "Good",
+      "titleHasSubscriptions": false,
+      "titleHasGameTime": false
+    },
+    {
+      "titleId": 1465140039,
+      "localizedGameName": "Hearthstone®",
+      "gameAccountName": "Hearthstone",
+      "gameAccountUniqueId": { "gameAccountId": 44444444, "gameServiceRegionId": 2, "programId": 1465140039 },
+      "gameAccountRegion": "EU",
+      "regionalGameFranchiseIconFilename": "hearthstone.svg",
+      "gameAccountStatus": "Good",
+      "titleHasSubscriptions": false,
+      "titleHasGameTime": false
+    },
+    {
+      "titleId": 4613486,
+      "localizedGameName": "Diablo® IV",
+      "gameAccountName": "Diablo IV",
+      "gameAccountUniqueId": { "gameAccountId": 55555555, "gameServiceRegionId": 2, "programId": 4613486 },
+      "gameAccountRegion": "EU",
+      "regionalGameFranchiseIconFilename": "diablo-iv.svg",
+      "gameAccountStatus": "Good",
+      "titleHasSubscriptions": false,
+      "titleHasGameTime": false
+    },
+    {
+      "titleId": 987654321,
+      "localizedGameName": "A Game BoilR Does Not Know",
+      "gameAccountName": "Unknown",
+      "gameAccountUniqueId": { "gameAccountId": 66666666, "gameServiceRegionId": 2, "programId": 987654321 },
+      "gameAccountRegion": "EU",
+      "regionalGameFranchiseIconFilename": null,
+      "gameAccountStatus": "Good",
+      "titleHasSubscriptions": false,
+      "titleHasGameTime": false
+    }
+  ]
+}

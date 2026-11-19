@@ -10,6 +10,13 @@ pub struct SteamGridDbSettings {
     pub banned_images: Vec<String>,
     pub only_download_boilr_images: bool,
     pub allow_nsfw: bool,
+    /// Find a game's artwork by its store id (Epic, EA, Battle.net) before searching by name.
+    #[serde(default = "default_true")]
+    pub match_by_store_id: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl SteamGridDbSettings {

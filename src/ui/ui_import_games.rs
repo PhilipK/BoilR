@@ -159,7 +159,18 @@ impl MyEguiApp {
         let all_ready = all_ready(&self.games_to_sync);
         let _ = sender.send(SyncProgress::Starting);
         if all_ready {
-            let shortcuts_to_import = get_all_games(&self.games_to_sync);
+            let mut shortcuts_to_import = get_all_games(&self.games_to_sync);
+            // Which games that are not installed go in, and their names: [owned_games].
+            crate::platforms::accounts::arrange_owned(
+                shortcuts_to_import.iter_mut().map(|(_, list)| list),
+                &settings,
+            );
+            let extra_collections: Vec<(String, Vec<u32>)> =
+                crate::platforms::accounts::not_installed_collection(
+                    shortcuts_to_import.iter().map(|(_, list)| list),
+                )
+                .into_iter()
+                .collect();
             let handle: JoinHandle<eyre::Result<()>> = self.rt.spawn_blocking(move || {
                 #[cfg(target_family = "unix")]
                 setup_proton(shortcuts_to_import.iter());
@@ -168,9 +179,10 @@ impl MyEguiApp {
 
                 let mut some_sender = Some(sender);
                 backup_shortcuts(&settings.steam);
-                let usersinfo = match sync::sync_shortcuts(
+                let usersinfo = match sync::sync_shortcuts_with_collections(
                     &settings,
                     &import_games,
+                    &extra_collections,
                     &mut some_sender,
                     &renames,
                 ) {

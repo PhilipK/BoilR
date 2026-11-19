@@ -1,0 +1,11 @@
+{
+  "errors": [
+    {
+      "message": "Not authenticated.",
+      "locations": [{ "line": 2, "column": 3 }],
+      "path": ["me"],
+      "extensions": { "code": "UNAUTHENTICATED" }
+    }
+  ],
+  "data": null
+}

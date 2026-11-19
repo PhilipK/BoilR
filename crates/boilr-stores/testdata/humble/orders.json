@@ -1,0 +1,128 @@
+{
+  "aAbBcC123": {
+    "gamekey": "aAbBcC123",
+    "uid": "U1",
+    "product": {
+      "category": "bundle",
+      "machine_name": "indiebundle",
+      "human_name": "Humble Indie Bundle"
+    },
+    "subproducts": [
+      {
+        "machine_name": "fez_indiebundle",
+        "human_name": "FEZ",
+        "url": "http://fezgame.com/",
+        "icon": "https://hb.imgix.net/fez.png",
+        "library_family_name": null,
+        "downloads": [
+          {
+            "machine_name": "fez_windows",
+            "platform": "windows",
+            "android_app_only": false,
+            "download_struct": [
+              {
+                "name": "Download",
+                "human_size": "500 MB",
+                "file_size": 524288000,
+                "md5": "0123456789abcdef0123456789abcdef",
+                "url": { "web": "https://dl.humble.com/fez.exe", "bittorrent": "https://dl.humble.com/fez.exe.torrent" }
+              }
+            ]
+          },
+          { "machine_name": "fez_mac", "platform": "mac", "download_struct": [] },
+          { "machine_name": "fez_linux", "platform": "linux", "download_struct": [] },
+          { "machine_name": "fez_linux_deb", "platform": "linux", "download_struct": [] }
+        ]
+      },
+      {
+        "machine_name": "fez_soundtrack",
+        "human_name": "FEZ Soundtrack",
+        "downloads": [{ "machine_name": "fez_soundtrack_audio", "platform": "audio", "download_struct": [] }]
+      },
+      {
+        "machine_name": "bundle_ebook",
+        "human_name": "Making Of: The Book",
+        "downloads": [{ "machine_name": "bundle_ebook", "platform": "ebook", "download_struct": [] }]
+      },
+      {
+        "machine_name": "pocketgame_android",
+        "human_name": "Pocket Game",
+        "downloads": [{ "machine_name": "pocketgame_apk", "platform": "android", "android_app_only": true, "download_struct": [] }]
+      },
+      {
+        "machine_name": "steamonly_indiebundle",
+        "human_name": "Steam Only Game",
+        "downloads": []
+      },
+      {
+        "machine_name": "keyedgame_indiebundle",
+        "human_name": "Keyed Game",
+        "downloads": [{ "machine_name": "keyedgame_windows", "platform": "windows", "download_struct": [] }]
+      }
+    ],
+    "tpkd_dict": {
+      "all_tpks": [
+        {
+          "machine_name": "steamonly_indiebundle_steam",
+          "gamekey": "aAbBcC123",
+          "key_type": "steam",
+          "key_type_human_name": "Steam",
+          "human_name": "Steam Only Game Steam Key",
+          "visible": true
+        },
+        {
+          "machine_name": "keyedgame_indiebundle_steam",
+          "gamekey": "aAbBcC123",
+          "key_type": "steam",
+          "key_type_human_name": "Steam",
+          "human_name": "Keyed Game (Steam)",
+          "visible": true
+        }
+      ]
+    },
+    "path_ids": ["U1"]
+  },
+  "dDeEfF456": {
+    "gamekey": "dDeEfF456",
+    "product": {
+      "category": "storefront",
+      "machine_name": "store_order",
+      "human_name": "Humble Store order"
+    },
+    "subproducts": [
+      {
+        "machine_name": "fez_store",
+        "human_name": "FEZ",
+        "downloads": [{ "machine_name": "fez_store_windows", "platform": "windows", "download_struct": [] }]
+      },
+      {
+        "machine_name": "worldofgoo_linux",
+        "human_name": "World of Goo",
+        "downloads": [{ "machine_name": "worldofgoo_linux_tar", "platform": "linux", "download_struct": [] }]
+      },
+      {
+        "machine_name": null,
+        "human_name": "Broken Entry",
+        "downloads": [{ "platform": "windows" }]
+      }
+    ],
+    "tpkd_dict": { "all_tpks": [] }
+  },
+  "gGhHiI789": {
+    "gamekey": "gGhHiI789",
+    "product": {
+      "category": "subscriptioncontent",
+      "machine_name": "choice_2024",
+      "human_name": "Humble Choice"
+    },
+    "subproducts": [
+      {
+        "machine_name": "anothergame_store",
+        "human_name": "Another Game™",
+        "downloads": [{ "machine_name": "anothergame_windows", "platform": "windows", "download_struct": null }]
+      }
+    ],
+    "tpkd_dict": null
+  },
+  "zNullOrder": null
+}

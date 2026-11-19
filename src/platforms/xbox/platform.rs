@@ -70,6 +70,7 @@ impl GamesPlatform for XboxPlatForm {
                             shortcut: shortcut.to_owned(),
                             needs_proton: false,
                             needs_symlinks: false,
+                            installed: true,
                         }
                     })
             });

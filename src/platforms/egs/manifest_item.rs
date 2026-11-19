@@ -132,6 +132,7 @@ fn launcher_shortcut(manifest: ManifestItem) -> ShortcutOwned {
 
 impl From<ManifestItem> for ShortcutOwned {
     fn from(manifest: ManifestItem) -> Self {
+        let identity = crate::sync::shortcut_identity("epic", &manifest.app_name);
         let mut owned_shortcut = if manifest.needs_launcher() {
             launcher_shortcut(manifest)
         } else {
@@ -140,6 +141,7 @@ impl From<ManifestItem> for ShortcutOwned {
         owned_shortcut.tags.push("EGS".to_owned());
         owned_shortcut.tags.push("Ready TO Play".to_owned());
         owned_shortcut.tags.push("Installed".to_owned());
+        owned_shortcut.dev_kit_game_id = identity;
         owned_shortcut
     }
 }

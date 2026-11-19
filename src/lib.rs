@@ -16,4 +16,4 @@ pub mod ui;
 
 // Importing the core modules at the crate root keeps `crate::settings` etc. paths working.
 #[allow(unused_imports)]
-use boilr_core::{config, migration, settings, steam, steamgriddb, sync};
+use boilr_core::{config, migration, owned, settings, steam, steamgriddb, sync};

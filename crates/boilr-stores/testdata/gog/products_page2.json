@@ -1,0 +1,17 @@
+{
+  "sortBy": "title",
+  "page": 2,
+  "totalProducts": 7,
+  "totalPages": 2,
+  "productsPerPage": 6,
+  "products": [
+    {
+      "id": 1207665503,
+      "title": "Zeus + Poseidon",
+      "isMovie": false,
+      "isGame": true,
+      "slug": "zeus_poseidon",
+      "isBaseProductMissing": false
+    }
+  ]
+}

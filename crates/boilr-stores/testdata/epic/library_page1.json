@@ -1,0 +1,52 @@
+{
+  "responseMetadata": {
+    "nextCursor": "cursor-page-2",
+    "stateToken": "state"
+  },
+  "records": [
+    {
+      "namespace": "ns-fortnite",
+      "catalogItemId": "cat-fortnite",
+      "appName": "Fortnite",
+      "productId": "prod-fortnite",
+      "sandboxName": "Live",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2020-01-01T00:00:00.000Z"
+    },
+    {
+      "namespace": "ue",
+      "catalogItemId": "cat-ue-asset",
+      "appName": "SomeMarketplaceAsset",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-private",
+      "catalogItemId": "cat-private",
+      "appName": "DevBuild",
+      "sandboxType": "PRIVATE",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-noapp",
+      "catalogItemId": "cat-noapp",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-control",
+      "catalogItemId": "cat-control",
+      "appName": "Calluna",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    },
+    {
+      "namespace": "ns-control",
+      "catalogItemId": "cat-control-dlc",
+      "appName": "CallunaDLC1",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION"
+    }
+  ]
+}

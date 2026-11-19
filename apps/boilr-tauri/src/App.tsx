@@ -9,7 +9,9 @@ import type {
   PlatformSummary,
   PlatformToggleResponse,
   SettingsUpdatePayload,
+  LoginResult,
   ShortcutSummary,
+  StoreLoginEvent,
   SyncOutcome,
   SyncPlan,
   SyncProgressEvent,
@@ -29,11 +31,21 @@ import { Sources } from "./components/Sources";
 import { SettingsView } from "./components/SettingsView";
 import { ShortcutsView } from "./components/ShortcutsView";
 import { ArtworkView } from "./components/ArtworkView";
+import { AccountsView } from "./components/AccountsView";
 import { useNavigation } from "./lib/navigation";
 
-const VIEWS = ["games", "artwork", "shortcuts", "settings"] as const;
+const VIEWS = ["games", "accounts", "artwork", "shortcuts", "settings"] as const;
 type View = (typeof VIEWS)[number];
-const VIEW_LABELS: Record<View, string> = { games: "Games", artwork: "Artwork", shortcuts: "Shortcuts", settings: "Settings" };
+const VIEW_LABELS: Record<View, string> = {
+  games: "Games",
+  accounts: "Accounts",
+  artwork: "Artwork",
+  shortcuts: "Shortcuts",
+  settings: "Settings",
+};
+
+/** Store accounts have their own view; their settings stay out of the launcher list. */
+const isAccountSource = (codeName: string) => codeName.endsWith("_account");
 
 const applySettingsPatch = (current: Settings | null, patch: SettingsUpdatePayload): Settings | null => {
   if (!current) return current;
@@ -41,6 +53,7 @@ const applySettingsPatch = (current: Settings | null, patch: SettingsUpdatePaylo
     ...current,
     steam: { ...(current.steam ?? {}), ...(patch.steam ?? {}) },
     steamgrid_db: { ...(current.steamgrid_db ?? {}), ...(patch.steamgrid_db ?? {}) },
+    owned_games: { ...(current.owned_games ?? {}), ...(patch.owned_games ?? {}) },
     blacklisted_games: patch.blacklisted_games ? [...patch.blacklisted_games] : current.blacklisted_games,
   };
 };
@@ -108,7 +121,7 @@ const App = () => {
     setPlatformLoading(true);
     try {
       const payload = await invoke<PlatformSettingsPayload[]>("list_platform_settings");
-      setPlatformGroups(payload.map(buildPlatformSettingsGroup));
+      setPlatformGroups(payload.filter((p) => !isAccountSource(p.code_name)).map(buildPlatformSettingsGroup));
     } catch (err) {
       setPlatformError(errorMessage(err));
     } finally {
@@ -140,6 +153,56 @@ const App = () => {
     }
   }, [fetchAll, fetchPlatformSettings, view]);
 
+  // Signing in, out or refreshing a library changes the game list and the import plan.
+  const refreshAfterAccountChange = useCallback(() => {
+    void fetchAll().catch((err) => setLoadError(errorMessage(err)));
+  }, [fetchAll]);
+
+  // A login window can finish while another view is open, so the result is caught here,
+  // not in the accounts view; that view shows it when it is (or next becomes) visible.
+  const [loginResult, setLoginResult] = useState<LoginResult | null>(null);
+  const clearLoginResult = useCallback(() => setLoginResult(null), []);
+  useEffect(() => {
+    let active = true;
+    let unlisten: (() => void) | null = null;
+    let seq = 0;
+    listen<StoreLoginEvent>("store-login", (event) => {
+      if (!active) return;
+      seq += 1;
+      setLoginResult({ ...event.payload, seq });
+      if (event.payload.ok) refreshAfterAccountChange();
+    })
+      .then((stop) => {
+        unlisten = stop;
+      })
+      .catch((err) => console.error("Failed to listen for store logins", err));
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, [refreshAfterAccountChange]);
+
+  // Libraries that got old are fetched again in the background after the app starts. The
+  // game list shows what was last fetched and is read again once new lists are in.
+  const [librariesVersion, setLibrariesVersion] = useState(0);
+  useEffect(() => {
+    let active = true;
+    let unlisten: (() => void) | null = null;
+    listen<string[]>("store-libraries-refreshed", () => {
+      if (!active) return;
+      setLibrariesVersion((version) => version + 1);
+      refreshAfterAccountChange();
+    })
+      .then((stop) => {
+        unlisten = stop;
+      })
+      .catch((err) => console.error("Failed to listen for refreshed libraries", err));
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, [refreshAfterAccountChange]);
+
   const updateSettings = useCallback(
     async (patch: SettingsUpdatePayload) => {
       setSettingsError(null);
@@ -147,6 +210,8 @@ const App = () => {
       try {
         setSettings(await invoke<Settings>("update_settings", { update: patch }));
         if (patch.blacklisted_games) setPlan(await invoke<SyncPlan>("plan_sync"));
+        // Which not-installed games go in, and their names, change with these.
+        if (patch.owned_games) await fetchAll();
       } catch (err) {
         setSettingsError(errorMessage(err));
         await fetchAll().catch(() => undefined);
@@ -216,6 +281,10 @@ const App = () => {
   );
 
   const openPlatformSettings = useCallback((codeName: string) => {
+    if (isAccountSource(codeName)) {
+      setView("accounts");
+      return;
+    }
     setFocusPlatform(codeName);
     setView("settings");
   }, []);
@@ -340,6 +409,15 @@ const App = () => {
               />
             </div>
           </div>
+        ) : view === "accounts" ? (
+          <AccountsView
+            settings={settings}
+            onSettingsChange={updateSettings}
+            onAccountsChanged={refreshAfterAccountChange}
+            loginResult={loginResult}
+            onLoginResultSeen={clearLoginResult}
+            librariesVersion={librariesVersion}
+          />
         ) : view === "artwork" ? (
           <ArtworkView settings={settings} onSettingsChanged={setSettings} />
         ) : view === "shortcuts" ? (
@@ -377,6 +455,8 @@ const App = () => {
         restartsSteam={Boolean(settings?.steam?.start_steam)}
         hasGames={platforms.some((p) => p.enabled && p.games.length > 0)}
         padConnected={navStatus.pads.length > 0}
+        notInstalledToAdd={plan?.additions.filter((a) => !a.installed).length ?? 0}
+        confirmAbove={settings?.owned_games?.confirm_above ?? 100}
         onImport={runImport}
       />
     </div>

@@ -1,0 +1,10 @@
+{
+  "errorCode": "errors.com.epicgames.account.oauth.authorization_code_not_found",
+  "errorMessage": "Sorry the authorization code you supplied was not found. It is possible that it was no longer valid",
+  "messageVars": [],
+  "numericErrorCode": 18059,
+  "originatingService": "com.epicgames.account.public",
+  "intent": "prod",
+  "error_description": "Sorry the authorization code you supplied was not found. It is possible that it was no longer valid",
+  "error": "invalid_grant"
+}

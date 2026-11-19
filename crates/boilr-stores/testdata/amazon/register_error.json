@@ -1,0 +1,10 @@
+{
+  "response": {
+    "error": {
+      "code": "InvalidValue",
+      "message": "Authorization code is invalid",
+      "index": "0"
+    }
+  },
+  "request_id": "00000000-0000-0000-0000-000000000001"
+}
