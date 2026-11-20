@@ -160,7 +160,11 @@ pub fn sync_shortcuts(
         }
 
         if settings.steam.create_collections {
-            match write_shortcut_collections(&user.user_id, &platform_shortcuts) {
+            match write_shortcut_collections(
+                &user.user_id,
+                Path::new(&user.steam_user_data_folder),
+                &platform_shortcuts,
+            ) {
                 Ok(_) => (),
                 Err(_e) => eprintln!("Could not write collections, make sure steam is shut down"),
             }
@@ -308,6 +312,7 @@ fn fix_shortcut_icons(
 
 fn write_shortcut_collections<S: AsRef<str>>(
     steam_id: S,
+    user_data_folder: &Path,
     platform_results: &[(String, Vec<ShortcutOwned>)],
 ) -> Result<(), Box<dyn Error>> {
     let mut collections = vec![];
@@ -323,7 +328,7 @@ fn write_shortcut_collections<S: AsRef<str>>(
         });
     }
     println!("Writing {} collections ", collections.len());
-    write_collections(steam_id.as_ref(), &collections)?;
+    write_collections(steam_id.as_ref(), user_data_folder, &collections)?;
     Ok(())
 }
 
