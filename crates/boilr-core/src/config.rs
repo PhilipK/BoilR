@@ -3,8 +3,17 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[cfg(target_family = "unix")]
+/// The folder BoilR keeps its settings and caches in. `BOILR_CONFIG_HOME` replaces it on every
+/// system; tests use that to stay away from the user's own settings.
 pub fn get_config_folder() -> PathBuf {
+    match std::env::var_os("BOILR_CONFIG_HOME").filter(|dir| !dir.is_empty()) {
+        Some(dir) => PathBuf::from(dir),
+        None => default_config_folder(),
+    }
+}
+
+#[cfg(target_family = "unix")]
+fn default_config_folder() -> PathBuf {
     let config_home = std::env::var("XDG_CONFIG_HOME");
     let home = std::env::var("HOME");
     match (config_home, home) {
@@ -15,7 +24,7 @@ pub fn get_config_folder() -> PathBuf {
 }
 
 #[cfg(windows)]
-pub fn get_config_folder() -> PathBuf {
+fn default_config_folder() -> PathBuf {
     let config_home = std::env::var("APPDATA");
     match config_home {
         Ok(p) => Path::new(&p).join("boilr"),
@@ -52,11 +61,12 @@ pub fn get_boilr_links_path() -> PathBuf {
     get_config_folder().join("links")
 }
 
-#[cfg(test)]
+// Both tests read XDG_CONFIG_HOME, which only Unix uses.
+#[cfg(all(test, target_family = "unix"))]
 mod tests {
     use std::path::PathBuf;
 
-    use super::get_config_folder;
+    use super::default_config_folder as get_config_folder;
 
     #[test]
     #[cfg(target_family = "unix")]
