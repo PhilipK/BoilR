@@ -9,11 +9,16 @@
 mod single_instance;
 
 use boilr::{platforms, ui};
-use boilr_core::{config, migration};
+use boilr_core::{config, launch_and_wait, migration};
 
 use color_eyre::eyre::Result;
 
 fn main() -> Result<()> {
+    // A Steam shortcut that waits for its game: no interface, no instance lock.
+    let launch_args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(result) = launch_and_wait::run_if_asked(&launch_args) {
+        return result;
+    }
     color_eyre::install()?;
     ensure_config_folder();
 

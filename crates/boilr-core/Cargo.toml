@@ -22,3 +22,8 @@ sysinfo.workspace = true
 time.workspace = true
 tokio.workspace = true
 toml.workspace = true
+
+[target."cfg(windows)".dependencies]
+# Already in the lockfile through winreg and sysinfo: no new crate. Finds and closes a
+# launcher's window (launch_and_wait).
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
