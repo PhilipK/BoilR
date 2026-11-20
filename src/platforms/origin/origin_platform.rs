@@ -7,7 +7,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::{origin_game::EAGame, EASettings};
+use super::{
+    origin_game::{EAGame, FoundBy},
+    EASettings,
+};
 
 #[derive(Clone)]
 pub struct EAPlatform {
@@ -32,31 +35,82 @@ impl NeedsProton<EAPlatform> for EAGame {
 
 impl EAPlatform {
     fn get_shortcuts(&self) -> eyre::Result<Vec<EAGame>> {
-        let ea_folders =
-            get_default_locations().ok_or(eyre::format_err!("Default path not found"))?;
-        let content_folder = ea_folders.local_content_path;
-        let launcher_exe = ea_folders.exe_path;
-        let game_folders = content_folder.join("LocalContent").read_dir()?;
-        let games = game_folders
-            .filter_map(|folder| folder.ok())
-            .filter_map(|game_folder| {
-                let game_title = game_folder.file_name().to_string_lossy().to_string();
-                let mfst_content = get_folder_mfst_file_content(&game_folder.path());
-                let id = match mfst_content {
-                    Some(c) => parse_id_from_file(c.as_str())
-                        .ok()
-                        .map(|(_, id_str)| String::from(id_str)),
-                    None => None,
-                };
-                id.map(|id| EAGame {
-                    id,
-                    title: game_title,
-                    launcher_location: launcher_exe.clone(),
-                    launcher_compat_folder: ea_folders.compat_folder.clone(),
-                })
+        let ea_folders = get_default_locations().ok_or(eyre::format_err!(
+            "Did not find the EA app or Origin. Install the EA app, or turn this source off."
+        ))?;
+        // Only added to on Windows, where the EA app's installer data is read.
+        #[cfg_attr(not(windows), allow(unused_mut))]
+        let mut games = match &ea_folders.local_content_path {
+            Some(content_folder) => manifest_games(content_folder, &ea_folders)?,
+            None => vec![],
+        };
+        // The current EA app writes no `.mfst` manifests; its games are found by their
+        // installer data. A game found both ways is listed once, as its manifest has it.
+        // These games start through `origin2://` links, which only the program Windows opens
+        // them with handles (the EA app's EALauncher.exe); EADesktop.exe ignores them.
+        #[cfg(windows)]
+        let link_handler = super::installer_data::link_handler(&ea_folders.exe_path);
+        #[cfg(windows)]
+        for found in super::installer_data::installed_games() {
+            let known = games.iter().any(|game| {
+                let ids = manifest_ids(&game.id);
+                found.content_ids.iter().any(|id| ids.contains(id))
             });
-        Ok(games.collect())
+            if !known {
+                games.push(EAGame {
+                    id: found.content_ids.join(","),
+                    title: found.title,
+                    launcher_location: link_handler.clone(),
+                    launcher_compat_folder: None,
+                    found_by: FoundBy::InstallerData,
+                });
+            }
+        }
+        Ok(games)
     }
+}
+
+/// The games Origin (and early versions of the EA app) listed in `.mfst` manifests.
+fn manifest_games(content_folder: &Path, ea_folders: &EAPathData) -> eyre::Result<Vec<EAGame>> {
+    let launcher_exe = &ea_folders.exe_path;
+    let game_folders = content_folder.join("LocalContent").read_dir()?;
+    let games = game_folders
+        .filter_map(|folder| folder.ok())
+        .filter_map(|game_folder| {
+            let game_title = game_folder.file_name().to_string_lossy().to_string();
+            let mfst_content = get_folder_mfst_file_content(&game_folder.path());
+            let id = match mfst_content {
+                Some(c) => parse_id_from_file(c.as_str())
+                    .ok()
+                    .map(|(_, id_str)| String::from(id_str)),
+                None => None,
+            };
+            id.map(|id| EAGame {
+                id,
+                title: game_title,
+                launcher_location: launcher_exe.clone(),
+                launcher_compat_folder: ea_folders.compat_folder.clone(),
+                found_by: FoundBy::Manifest,
+            })
+        });
+    Ok(games.collect())
+}
+
+/// Every id in a `.mfst` id: it is URL-encoded and can name several offers
+/// (`OFB-EAST%3a52735,OFB-EAST%3a1`).
+#[cfg_attr(not(windows), allow(dead_code))]
+fn manifest_ids(manifest_id: &str) -> Vec<String> {
+    let decoded = manifest_id
+        .replace("%3a", ":")
+        .replace("%3A", ":")
+        .replace("%2c", ",")
+        .replace("%2C", ",");
+    decoded
+        .split(',')
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 fn get_folder_mfst_file_content(game_folder_path: &Path) -> Option<String> {
@@ -92,8 +146,9 @@ fn parse_id_from_file(i: &str) -> nom::IResult<&str, &str> {
 struct EAPathData {
     // Path to the EA Desktop / Origin launcher executable
     exe_path: PathBuf,
-    // Path to the folder containing LocalContent (with .mfst game manifests)
-    local_content_path: PathBuf,
+    // Path to the folder containing LocalContent (with .mfst game manifests), when there is
+    // one: the current EA app no longer writes it.
+    local_content_path: Option<PathBuf>,
     // Proton compat folder (Linux only)
     compat_folder: Option<PathBuf>,
 }
@@ -127,7 +182,7 @@ fn get_default_locations() -> Option<EAPathData> {
 
                 if origin_exe_path.exists() && origin_local_content.exists() {
                     res.exe_path = origin_exe_path;
-                    res.local_content_path = origin_local_content;
+                    res.local_content_path = Some(origin_local_content);
                     res.compat_folder = Some(dir.path());
                     return Some(res);
                 }
@@ -139,24 +194,17 @@ fn get_default_locations() -> Option<EAPathData> {
 
 #[cfg(target_os = "windows")]
 fn get_default_locations() -> Option<EAPathData> {
-    let mut res = EAPathData::default();
-    if let Ok(program_data) = std::env::var("PROGRAMDATA") {
-        // EA Desktop still writes .mfst manifests here for backwards compat
-        let origin_folder = Path::new(&program_data).join("Origin");
-        if origin_folder.exists() {
-            res.local_content_path = origin_folder;
-        } else {
-            return None;
-        }
-    } else {
-        return None;
-    }
-    let exe_path = get_exe_path();
-    match exe_path {
-        Some(exe_path) => res.exe_path = exe_path,
-        None => return None,
-    }
-    Some(res)
+    // Origin and early versions of the EA app wrote .mfst manifests here; the current EA
+    // app does not, so its games are found by their installer data instead.
+    let local_content_path = std::env::var("PROGRAMDATA")
+        .ok()
+        .map(|program_data| Path::new(&program_data).join("Origin"))
+        .filter(|origin_folder| origin_folder.join("LocalContent").is_dir());
+    Some(EAPathData {
+        exe_path: get_exe_path()?,
+        local_content_path,
+        compat_folder: None,
+    })
 }
 
 #[cfg(target_os = "windows")]
@@ -239,5 +287,19 @@ impl FromSettingsString for EAPlatform {
         EAPlatform {
             settings: load_settings(s),
         }
+    }
+}
+
+#[cfg(test)]
+mod manifest_tests {
+    use super::manifest_ids;
+
+    #[test]
+    fn manifest_ids_are_decoded_and_split() {
+        assert_eq!(
+            manifest_ids("OFB-EAST%3a52735,OFB-EAST%3A1"),
+            vec!["OFB-EAST:52735", "OFB-EAST:1"]
+        );
+        assert!(manifest_ids("").is_empty());
     }
 }
